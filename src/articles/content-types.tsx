@@ -407,7 +407,7 @@ export function Photo1({ src, alt, caption, loading = 'lazy', className, editorI
   return (
     <EditorLabel name="Photo1" id={editorId}>
       <figure className={`rounded-lg overflow-hidden border border-border shadow-lg mb-6 ${className ?? ''}`}>
-        <img src={src} alt={alt} className="w-full h-auto" loading={loading} />
+        <img src={src} alt={alt} className="w-full h-auto min-h-[200px] object-contain bg-card" loading={loading} />
         {caption && <figcaption className="px-4 py-2 text-sm text-muted-foreground text-center bg-card">{caption}</figcaption>}
       </figure>
     </EditorLabel>
@@ -428,7 +428,7 @@ export function Photo2({ items, caption, className, editorId }: Photo2Props) {
         <div className="grid grid-cols-2 gap-0">
           {items.map(item => (
             <div key={item.src} className="overflow-hidden">
-              <img src={item.src} alt={item.alt} className="w-full h-auto" loading={item.loading ?? 'lazy'} />
+              <img src={item.src} alt={item.alt} className="w-full h-auto min-h-[200px] object-contain bg-card" loading={item.loading ?? 'lazy'} />
             </div>
           ))}
         </div>
@@ -748,7 +748,7 @@ function ScreenshotFigure({ src, alt, summaryEn, className }: { src: string; alt
       onMouseLeave={() => setHovered(false)}
       onClick={() => setHovered(h => !h)}
     >
-      <img src={src} alt={alt} className="w-full h-auto brightness-[0.85]" loading="lazy" />
+      <img src={src} alt={alt} className="w-full h-auto min-h-[120px] object-contain bg-card brightness-[0.85]" loading="lazy" />
       <div
         className="absolute inset-0 flex items-center justify-center p-3 transition-opacity duration-200"
         style={{ backgroundColor: 'hsl(var(--background) / 0.92)', opacity: hovered ? 1 : 0, pointerEvents: hovered ? 'auto' : 'none' }}
@@ -904,12 +904,13 @@ export function FloatingToc() {
   }, [sections])
 
   const scrollTo = useCallback((id: string) => {
-    setTocOpen(false)
     const el = document.getElementById(id)
-    if (el) {
-      const top = el.getBoundingClientRect().top + window.scrollY - 96
-      window.scrollTo({ top, behavior: 'smooth' })
-    }
+    if (!el) return
+    const top = el.getBoundingClientRect().top + window.scrollY - 96
+    setTocOpen(false)
+    requestAnimationFrame(() => {
+      window.scrollTo({ top, behavior: 'instant' })
+    })
   }, [])
 
   useEffect(() => {

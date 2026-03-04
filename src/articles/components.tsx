@@ -140,6 +140,7 @@ export function ArticleHeader({
 
 interface ArticleFooterProps {
   role: string
+  bio?: string
   fellowAt?: string
   fellowLink?: string
   fellowUrl?: string
@@ -147,14 +148,14 @@ interface ArticleFooterProps {
   editorId?: string
 }
 
-export function ArticleFooter({ role, fellowAt, fellowLink, fellowUrl, copyright }: ArticleFooterProps) {
+export function ArticleFooter({ role, bio, fellowAt, fellowLink, fellowUrl, copyright }: ArticleFooterProps) {
   return (
     <footer className="mt-16 pt-8 border-t border-border">
-      <div className="flex items-center gap-3 mb-6">
+      <div className="flex items-start gap-3 mb-6">
         <img
           src="/foto-avatar-sm.webp"
           alt="Santiago Fernández de Valderrama"
-          className="w-12 h-12 rounded-full"
+          className="w-12 h-12 rounded-full shrink-0"
           width={48}
           height={48}
         />
@@ -180,6 +181,9 @@ export function ArticleFooter({ role, fellowAt, fellowLink, fellowUrl, copyright
           </p>
         </div>
       </div>
+      {bio && (
+        <p className="text-sm text-muted-foreground leading-relaxed mb-6">{bio}</p>
+      )}
       <div className="flex gap-3 mb-8">
         <a href="https://linkedin.com/in/santifer" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#0A66C2]/10 border border-[#0A66C2]/20 text-sm font-medium text-[#0A66C2] hover:bg-[#0A66C2]/20 transition-colors">
           <svg viewBox="0 0 24 24" className="w-4 h-4" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
@@ -327,7 +331,7 @@ export function CaseStudyCta({ heading, body, ctaLabel, ctaHref, external, secon
       <div className="my-10 relative rounded-2xl p-[1.5px] bg-gradient-theme">
         <div className="p-6 sm:p-8 rounded-[calc(1rem-1.5px)] bg-card">
           <p className="font-display font-semibold text-foreground text-lg mb-2">{heading}</p>
-          <p className="text-muted-foreground leading-relaxed mb-4">{body}</p>
+          {body && <p className="text-muted-foreground leading-relaxed mb-4">{body}</p>}
           <div className="flex gap-3">
             {external ? (
               <a
@@ -400,13 +404,14 @@ export function ArticleFigure({ src, alt, title, caption, width = 1200, height =
 // ---------------------------------------------------------------------------
 
 export function InlineWorkflowDownload({ href, label, fileSize }: { href: string; label: string; fileSize: string }) {
+  const isExternal = href.startsWith('http')
   return (
     <a
       href={href}
-      download
+      {...(isExternal ? { target: '_blank', rel: 'noopener noreferrer' } : { download: true })}
       className="inline-flex items-center gap-1.5 px-3 py-1.5 mb-6 text-xs font-medium rounded-md bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
     >
-      <Download className="w-3.5 h-3.5" />
+      {isExternal ? <ExternalLink className="w-3.5 h-3.5" /> : <Download className="w-3.5 h-3.5" />}
       {label}
       <span className="text-primary/60">({fileSize})</span>
     </a>
@@ -443,10 +448,10 @@ export function WorkflowDownloadCard({ icon, name, subtitle, description, href, 
       </div>
       <a
         href={href}
-        download
+        {...(href.startsWith('http') ? { target: '_blank', rel: 'noopener noreferrer' } : { download: true })}
         className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-card border border-border hover:border-primary/50 transition-colors text-sm font-medium text-foreground"
       >
-        <Download className="w-4 h-4 text-primary" />
+        {href.startsWith('http') ? <ExternalLink className="w-4 h-4 text-primary" /> : <Download className="w-4 h-4 text-primary" />}
         {downloadLabel}
       </a>
     </div>

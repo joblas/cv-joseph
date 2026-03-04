@@ -199,6 +199,9 @@ export const pseoContent = {
     },
     footer: {
       role: 'AI Product Manager · Solutions Architect',
+      bio: 'Construyó y vendió un negocio de 16 años en 2025. Ahora aplica el mismo pensamiento de sistemas a AI enterprise — como FDE, Solutions Architect o AI Production Manager.',
+      fellowAt: 'Teaching Fellow en',
+      fellowLink: 'AI Product Academy',
       copyright: 'Todos los derechos reservados.',
     },
   },
@@ -402,6 +405,9 @@ export const pseoContent = {
     },
     footer: {
       role: 'AI Product Manager · Solutions Architect',
+      bio: 'Built and sold a 16-year business in 2025. Now applying the same systems thinking to enterprise AI — as an FDE, Solutions Architect, or AI Production Manager.',
+      fellowAt: 'Teaching Fellow at',
+      fellowLink: 'AI Product Academy',
       copyright: 'All rights reserved.',
     },
   },

@@ -13,7 +13,6 @@ import {
   CaseStudyCta,
   InlineWorkflowDownload,
   WorkflowGrid,
-  DownloadAllButton,
 } from './articles/components'
 import {
   H2,
@@ -110,6 +109,8 @@ function buildJsonLd(lang: Lang) {
       'n8n workflows', 'n8n ai agent', 'ai agent case study', 'customer service AI',
       'WhatsApp AI agent', 'ElevenLabs voice agent', 'voice AI', 'HITL', 'human in the loop',
       'ia para pymes', 'agente ia whatsapp', 'multi-model orchestration', 'OpenRouter',
+      'FDE portfolio', 'solutions architect AI', 'AI production manager', 'enterprise AI patterns',
+      'voice AI platform', 'conversational AI case study', 'agentic workflows',
     ],
     images: ['https://santifer.io/jacobo/og-jacobo-agent.png'],
     breadcrumbHome: t.nav.breadcrumbHome,
@@ -404,6 +405,18 @@ export default function JacoboAgent({ lang = 'en' }: { lang?: Lang }) {
         <Photo1 editorId="aircall-routing-diagram" src={`/jacobo/aircall-routing-${lang === 'es' ? 'es' : 'en'}.webp`} alt={lang === 'es' ? 'Diagrama de routing Aircall' : 'Aircall routing diagram'} />
 
         <BulletList editorId="voice-highlights" items={t.sections.channels.voice.highlights} className="mb-8" />
+
+        {/* Coca-Cola production incident */}
+        <DetailCard
+          editorId="coca-cola-incident"
+          icon={<Mic className="w-4 h-4 text-primary" />}
+          title={t.sections.channels.cocaColaAnecdote.heading}
+          description={t.sections.channels.cocaColaAnecdote.body}
+        >
+          <p className="font-medium text-foreground text-sm mb-2">{t.sections.channels.cocaColaAnecdote.diagnosis.heading}</p>
+          <BulletList editorId="coca-cola-diagnosis" marker="number" variant="in-card" items={t.sections.channels.cocaColaAnecdote.diagnosis.items} />
+          <Callout editorId="coca-cola-takeaway">{t.sections.channels.cocaColaAnecdote.takeaway}</Callout>
+        </DetailCard>
 
         {/* Missed call recovery */}
         <H4 id="missed-call-recovery" icon={<PhoneMissed className="w-5 h-5 text-primary" />}>{t.sections.channels.missedCallRecovery.heading}</H4>
@@ -731,7 +744,27 @@ export default function JacoboAgent({ lang = 'en' }: { lang?: Lang }) {
         />
 
         {/* ROI punchline */}
-        <Callout editorId="results-roi-punchline" className="mb-8">{t.sections.results.roi}</Callout>
+        <Callout editorId="results-roi-punchline" className="mb-4">{t.sections.results.roi}</Callout>
+
+        {/* Industry benchmarks */}
+        <Prose editorId="results-benchmarks" className="mb-4">{t.sections.results.benchmarks}</Prose>
+
+        {/* Exit narrative */}
+        <InfoCard editorId="results-exit-narrative" className="mb-8">
+          <p className="text-base text-foreground leading-relaxed font-medium">{t.sections.results.exitNarrative}</p>
+        </InfoCard>
+
+        {/* CTA #1 — After Results */}
+        <CaseStudyCta
+          editorId="cta-after-results"
+          heading={t.cta.heading}
+          body={t.cta.body}
+          ctaLabel={`${t.cta.label} →`}
+          ctaHref="https://linkedin.com/in/santifer"
+          external
+          secondaryLabel={`${(t.cta as any).labelSecondary} →`}
+          secondaryHref="mailto:hola@santifer.io"
+        />
 
         {/* ================================================================ */}
         {/*  DECISIONS (ADRs)                                                */}
@@ -809,6 +842,18 @@ export default function JacoboAgent({ lang = 'en' }: { lang?: Lang }) {
           )}
         />
 
+        {/* CTA #2 — After Enterprise Patterns */}
+        <CaseStudyCta
+          editorId="cta-after-enterprise"
+          heading={(t as any).ctaAfterEnterprise.heading}
+          body={t.cta.body}
+          ctaLabel={`${t.cta.label} →`}
+          ctaHref="https://linkedin.com/in/santifer"
+          external
+          secondaryLabel={`${(t.cta as any).labelSecondary} →`}
+          secondaryHref="mailto:hola@santifer.io"
+        />
+
         {/* ================================================================ */}
         {/*  DOWNLOADS                                                       */}
         {/* ================================================================ */}
@@ -824,13 +869,19 @@ export default function JacoboAgent({ lang = 'en' }: { lang?: Lang }) {
           downloadLabel={t.downloads.inlineLabel}
         />
 
-        {/* Download all ZIP */}
-        <DownloadAllButton
-          editorId="download-all-zip"
-          href="/jacobo/workflows/jacobo-all-workflows.zip"
-          label={t.downloads.section.downloadAllLabel}
-          fileSize={t.downloads.section.downloadAllSize}
-        />
+        {/* GitHub repo link */}
+        <div className="flex justify-center mb-4">
+          <a
+            href="https://github.com/santifer-dev/jacobo-workflows"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-primary text-primary-foreground font-medium hover:bg-primary/90 transition-colors text-sm"
+          >
+            <svg viewBox="0 0 24 24" className="w-4 h-4" fill="currentColor"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
+            {(t.downloads as any).githubCta}
+          </a>
+        </div>
+        <Prose editorId="downloads-github-note" className="text-center text-sm mb-6">{(t.downloads as any).githubNote}</Prose>
 
         {/* Import instructions */}
         <H3>{t.downloads.section.importHeading}</H3>
@@ -842,12 +893,12 @@ export default function JacoboAgent({ lang = 'en' }: { lang?: Lang }) {
         <FaqSection editorId="faq" heading={t.faq.heading} items={t.faq.items} />
 
         {/* ================================================================ */}
-        {/*  RECRUITER CTA                                                   */}
+        {/*  RECRUITER CTA #3 — After Downloads (short version)              */}
         {/* ================================================================ */}
         <CaseStudyCta
-          editorId="recruiter-cta"
-          heading={t.cta.heading}
-          body={t.cta.body}
+          editorId="cta-after-downloads"
+          heading={(t as any).ctaAfterDownloads.heading}
+          body=""
           ctaLabel={`${t.cta.label} →`}
           ctaHref="https://linkedin.com/in/santifer"
           external
@@ -864,6 +915,10 @@ export default function JacoboAgent({ lang = 'en' }: { lang?: Lang }) {
       <ArticleFooter
         editorId="footer"
         role={t.footer.role}
+        bio={(t.footer as any).bio}
+        fellowAt={(t.footer as any).fellowAt}
+        fellowLink={(t.footer as any).fellowLink}
+        fellowUrl="https://maven.com/marily-nika/ai-pm-bootcamp?utm_source=santifer&utm_medium=casestudy&utm_campaign=jacobo"
         copyright={t.footer.copyright}
       />
     </ArticleLayout>

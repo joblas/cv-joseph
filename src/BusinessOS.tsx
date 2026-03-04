@@ -1139,6 +1139,10 @@ export default function BusinessOS({ lang = 'en' }: { lang?: Lang }) {
 
       <ArticleFooter
         role={t.footer.role}
+        bio={(t.footer as any).bio}
+        fellowAt={(t.footer as any).fellowAt}
+        fellowLink={(t.footer as any).fellowLink}
+        fellowUrl="https://maven.com/marily-nika/ai-pm-bootcamp?utm_source=santifer&utm_medium=casestudy&utm_campaign=business-os"
         copyright={t.footer.copyright}
       />
     </ArticleLayout>
