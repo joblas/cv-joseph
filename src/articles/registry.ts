@@ -24,12 +24,12 @@ export const articleRegistry: ArticleConfig[] = [
     titles: { es: 'n8n para PMs', en: 'n8n for PMs' },
     seo: {
       es: {
-        title: 'Qué es n8n y cómo lo usan los Product Managers para automatizar con IA',
-        description: 'Guía práctica de n8n para Product Managers: qué es, cómo automatizar sprint reports y clasificar feedback con IA. 2 workflows importables gratis, prompt listo y tutorial paso a paso.',
+        title: 'n8n para Product Managers: Automatiza con IA',
+        description: 'Guía práctica de n8n para PMs: automatiza sprint reports y clasifica feedback con IA. 2 workflows gratis y tutorial.',
       },
       en: {
-        title: 'n8n for Product Managers: Automate Sprint Reports & Classify Feedback with AI',
-        description: 'Practical cheat sheet for Product Managers: automate sprint reports and classify feedback with AI using n8n. 2 importable workflow templates, a ready-to-use prompt, and step-by-step guide.',
+        title: 'n8n for Product Managers: Automate with AI',
+        description: 'Practical n8n cheat sheet for PMs: automate sprint reports and classify feedback with AI. 2 free workflow templates.',
       },
     },
     sectionLabels: {
@@ -65,12 +65,12 @@ export const articleRegistry: ArticleConfig[] = [
     titles: { es: 'Agente IA Jacobo', en: 'AI Agent Jacobo' },
     seo: {
       es: {
-        title: 'Jacobo: Agente IA Omnicanal con Sub-agentes y Tool Calling — 90% Autoservicio | santifer.io',
-        description: 'Case study: cómo construí un agente IA omnicanal con arquitectura de sub-agentes, tool calling y orquestación multi-modelo (n8n + ElevenLabs) que logra 90% de autoservicio en atención al cliente.',
+        title: 'Jacobo: Agente IA Omnicanal — 90% Autoservicio',
+        description: 'Case study: agente IA omnicanal con sub-agentes, tool calling y orquestación multi-modelo (n8n + ElevenLabs). 90% autoservicio.',
       },
       en: {
-        title: 'Jacobo: Multi-Agent AI with Sub-Agent Orchestration & Tool Calling — 90% Self-Service | santifer.io',
-        description: 'Case study: how I built an omnichannel AI agent with sub-agent architecture, tool calling and multi-model orchestration (n8n + ElevenLabs) achieving 90% self-service for customer support.',
+        title: 'Jacobo: Multi-Agent AI — 90% Self-Service',
+        description: 'Case study: omnichannel AI agent with sub-agents, tool calling & multi-model orchestration (n8n + ElevenLabs). 90% self-service.',
       },
     },
     sectionLabels: {
@@ -118,11 +118,11 @@ export const articleRegistry: ArticleConfig[] = [
     titles: { es: 'Business OS', en: 'Business OS' },
     seo: {
       es: {
-        title: 'Cómo Construí un Business OS Custom para +30.000 Reparaciones con Airtable y n8n (170h/Mes Ahorradas) | santifer.io',
-        description: 'Case study: Business OS custom con 12 bases de Airtable, 2100 campos y n8n que ahorra 170h/mes en una empresa de reparación de móviles.',
+        title: 'Business OS Custom: Airtable + n8n — 170h/Mes',
+        description: 'Case study: Business OS custom con 12 bases Airtable, 2100 campos y n8n que ahorra 170h/mes en reparación de móviles.',
       },
       en: {
-        title: 'How I Built a Custom Business OS for 30,000+ Repairs with Airtable & n8n (170h/Month Saved) | santifer.io',
+        title: 'Custom Business OS: Airtable + n8n — 170h/Mo',
         description: 'Case study: custom Business OS with 12 Airtable bases, 2100 fields, and n8n saving 170h/month at a phone repair business.',
       },
     },
@@ -167,12 +167,12 @@ export const articleRegistry: ArticleConfig[] = [
     titles: { es: 'SEO Programático', en: 'Programmatic SEO' },
     seo: {
       es: {
-        title: 'SEO Programático: Caso de Éxito en Reparación de Móviles en España | santifer.io',
-        description: 'Case study: cómo posicioné un negocio de reparación de móviles en +60 ciudades españolas con SEO programático, Airtable como CMS headless y Astro.',
+        title: 'SEO Programático: +60 Ciudades con Airtable',
+        description: 'Case study: posicioné un negocio de reparación en +60 ciudades con SEO programático, Airtable como CMS headless y Astro.',
       },
       en: {
-        title: 'Programmatic SEO: How I Ranked a Repair Business in 60+ Cities | santifer.io',
-        description: 'Case study: how I ranked a phone repair business in 60+ Spanish cities using programmatic SEO with Airtable as headless CMS and Astro.',
+        title: 'Programmatic SEO: 60+ Cities with Airtable',
+        description: 'Case study: ranked a phone repair business in 60+ Spanish cities using programmatic SEO with Airtable as headless CMS and Astro.',
       },
     },
     sectionLabels: {

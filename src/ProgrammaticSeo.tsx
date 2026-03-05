@@ -24,12 +24,17 @@ function buildJsonLd(lang: Lang) {
     alternativeHeadline: t.seo.title,
     description: t.seo.description,
     datePublished: '2026-02-25',
-    dateModified: '2026-02-25',
-    keywords: ['programmatic SEO', 'Airtable', 'headless CMS', 'Astro', 'n8n', 'DataForSEO', 'crawl budget', 'phone repair', 'static site generation'],
-    images: [],
+    dateModified: '2026-03-04',
+    keywords: ['programmatic SEO', 'Airtable', 'headless CMS', 'Astro', 'n8n', 'DataForSEO', 'crawl budget', 'phone repair', 'static site generation', 'city pages SEO'],
+    images: ['https://santifer.io/pseo/og-programmatic-seo.png'],
     breadcrumbHome: t.nav.breadcrumbHome,
     breadcrumbCurrent: t.nav.breadcrumbCurrent,
     faq: t.faq.items,
+    articleType: 'TechArticle',
+    about: [
+      { '@type': 'SoftwareApplication', name: 'Airtable', url: 'https://airtable.com', applicationCategory: 'Database Platform' },
+      { '@type': 'SoftwareApplication', name: 'Astro', url: 'https://astro.build', applicationCategory: 'Static Site Generator' },
+    ],
   })
 }
 
@@ -42,7 +47,9 @@ export default function ProgrammaticSeo({ lang = 'en' }: { lang?: Lang }) {
     altSlug: t.altSlug,
     title: t.seo.title,
     description: t.seo.description,
+    image: 'https://santifer.io/pseo/og-programmatic-seo.png',
     publishedTime: '2026-02-25',
+    modifiedTime: '2026-03-04',
     articleTags: 'programmatic SEO,Airtable,Astro,n8n,DataForSEO,crawl budget,phone repair',
     jsonLd: buildJsonLd(lang),
     xDefaultSlug: 'seo-programatico',
@@ -51,6 +58,7 @@ export default function ProgrammaticSeo({ lang = 'en' }: { lang?: Lang }) {
   return (
     <ArticleLayout lang={lang}>
       <ArticleHeader
+        editorId="hero-header"
         kicker={t.header.kicker}
         h1={t.header.h1}
         subtitle={t.header.subtitle}
@@ -203,6 +211,7 @@ export default function ProgrammaticSeo({ lang = 'en' }: { lang?: Lang }) {
       </article>
 
       <ArticleFooter
+        editorId="article-footer"
         role={t.footer.role}
         bio={(t.footer as any).bio}
         fellowAt={(t.footer as any).fellowAt}

@@ -24,8 +24,8 @@ function buildJsonLd(lang: N8nLang) {
     alternativeHeadline: t.seo.title,
     description: t.seo.description,
     datePublished: '2026-02-24',
-    dateModified: '2026-02-24',
-    keywords: ['n8n', 'product manager', 'automation', 'AI', 'workflow', 'sprint report', 'feedback classification', 'no-code'],
+    dateModified: '2026-03-04',
+    keywords: ['n8n', 'product manager', 'automation', 'AI', 'workflow', 'sprint report', 'feedback classification', 'no-code', 'n8n tutorial', 'AI workflow automation'],
     images: [
       'https://santifer.io/workflows/n8n-sprint-report-automation-workflow.webp',
       'https://santifer.io/workflows/n8n-ai-feedback-classification-workflow.webp',
@@ -64,6 +64,7 @@ export default function N8nForPMs({ lang = 'en' }: { lang?: N8nLang }) {
     description: t.seo.description,
     image: 'https://santifer.io/workflows/n8n-ai-feedback-classification-workflow.webp',
     publishedTime: '2026-02-24',
+    modifiedTime: '2026-03-04',
     articleTags: 'n8n,product manager,automation,AI,workflow,no-code',
     jsonLd: buildJsonLd(lang),
     xDefaultSlug: 'n8n-para-pms',
@@ -74,6 +75,7 @@ export default function N8nForPMs({ lang = 'en' }: { lang?: N8nLang }) {
   return (
     <ArticleLayout lang={lang}>
         <ArticleHeader
+          editorId="hero-header"
           kicker={t.header.kicker}
           kickerLink={BOOTCAMP_URL}
           h1={t.header.h1}
@@ -374,6 +376,7 @@ export default function N8nForPMs({ lang = 'en' }: { lang?: N8nLang }) {
         </article>
 
         <ArticleFooter
+          editorId="article-footer"
           role={t.footer.role}
           fellowAt={t.footer.fellowAt}
           fellowLink={t.footer.fellowLink}
