@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build && npx tsx --tsconfig tsconfig.app.json scripts/validate-articles.ts && npx tsx --tsconfig tsconfig.app.json scripts/prerender.tsx",
+    "build": "tsc -b && vite build && npx tsx --tsconfig tsconfig.app.json scripts/generate-sitemap.ts && npx tsx --tsconfig tsconfig.app.json scripts/validate-articles.ts && npx tsx --tsconfig tsconfig.app.json scripts/prerender.tsx",
     "validate-articles": "npx tsx --tsconfig tsconfig.app.json scripts/validate-articles.ts",
     "validate-articles:fix": "npx tsx --tsconfig tsconfig.app.json scripts/validate-articles.ts --fix",
     "lint": "eslint .",
