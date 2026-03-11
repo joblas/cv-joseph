@@ -1201,28 +1201,6 @@ function App() {
   const t = translations[lang]
   const hydrated = useHydrated()
 
-  // Scroll to hash anchor on load/navigation
-  // Multi-pass: each attempt re-queries the DOM (element may not exist yet on cross-page nav)
-  // Final pass adds a highlight flash to confirm the target visually
-  useEffect(() => {
-    if (!location.hash) return
-    const hash = location.hash
-    const scroll = () => {
-      const el = document.querySelector(hash)
-      el?.scrollIntoView({ behavior: 'instant' })
-      return el
-    }
-    const t1 = setTimeout(scroll, 50)
-    const t2 = setTimeout(scroll, 300)
-    const t3 = setTimeout(() => {
-      const el = scroll()
-      if (el instanceof HTMLElement) {
-        el.classList.add('hash-highlight')
-        el.addEventListener('animationend', () => el.classList.remove('hash-highlight'), { once: true })
-      }
-    }, 800)
-    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3) }
-  }, [location.hash, location.pathname])
 
   // SEO: Dynamic meta tags based on language
   const seoData = seo[lang]

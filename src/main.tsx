@@ -24,7 +24,8 @@ class ChatErrorBoundary extends Component<{ children: ReactNode }, { hasError: b
 
 /** Reset scroll + fade-in on route change (no animation on initial load to match prerender) */
 function PageTransition({ children }: { children: ReactNode }) {
-  const { pathname } = useLocation()
+  const location = useLocation()
+  const { pathname } = location
   const initialPathname = useRef(pathname)
   const [hasNavigated, setHasNavigated] = useState(false)
 
@@ -32,8 +33,29 @@ function PageTransition({ children }: { children: ReactNode }) {
     if (pathname !== initialPathname.current) {
       setHasNavigated(true)
     }
-    window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
-  }, [pathname])
+
+    if (location.hash) {
+      // Hash scroll: multi-pass to handle async rendering + highlight on final pass
+      const hash = location.hash
+      const scroll = () => {
+        const el = document.querySelector(hash)
+        el?.scrollIntoView({ behavior: 'instant' })
+        return el
+      }
+      const t1 = setTimeout(scroll, 50)
+      const t2 = setTimeout(scroll, 300)
+      const t3 = setTimeout(() => {
+        const el = scroll()
+        if (el instanceof HTMLElement) {
+          el.classList.add('hash-highlight')
+          el.addEventListener('animationend', () => el.classList.remove('hash-highlight'), { once: true })
+        }
+      }, 800)
+      return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3) }
+    } else {
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+    }
+  }, [pathname, location.hash, location.key])
 
   return (
     <div key={pathname} style={hasNavigated ? { animation: 'page-fade-in 0.25s ease-out' } : undefined}>
