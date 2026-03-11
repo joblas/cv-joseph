@@ -540,44 +540,38 @@ export default function FloatingChat({ lang }: FloatingChatProps) {
                           message.content
                         )}
                       </div>
-                      {/* RAG source badges */}
+                      {/* RAG source badges — same style as quick prompts */}
                       {message.role === 'assistant' && message.ragSources && message.ragSources.length > 0 && !isLoading && (
-                        <div className="mt-2 px-1">
-                          <div className="flex items-center gap-1 mb-1">
-                            <FileText className="w-3 h-3 text-muted-foreground" />
-                            <span className={`text-muted-foreground font-medium ${isMobile ? 'text-[11px]' : 'text-[9px]'}`}>
-                              {lang === 'es' ? 'Fuentes' : 'Sources'}
-                            </span>
-                          </div>
-                          <div className="flex flex-wrap gap-1.5">
-                            {message.ragSources.map((source, si) => {
-                              const articleName = source.article_id.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-                              const sectionName = source.section_id.replace(/([A-Z])/g, ' $1').replace(/^./, c => c.toUpperCase()).trim();
-                              const isCurrentPage = location.pathname === (lang === 'es' ? source.page_path_es : source.page_path_en);
-                              const targetPath = lang === 'es' ? source.page_path_es : source.page_path_en;
+                        <div className="flex flex-wrap gap-1.5 mt-2 px-1">
+                          {message.ragSources.map((source, si) => {
+                            const articleName = source.article_id.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+                            const sectionName = source.section_id.replace(/([A-Z])/g, ' $1').replace(/^./, c => c.toUpperCase()).trim();
+                            const isCurrentPage = location.pathname === (lang === 'es' ? source.page_path_es : source.page_path_en);
+                            const targetPath = lang === 'es' ? source.page_path_es : source.page_path_en;
 
-                              return (
-                                <button
-                                  key={`${source.article_id}-${source.section_id}-${si}`}
-                                  onClick={() => {
-                                    if (isCurrentPage && source.section_anchor) {
-                                      const el = document.querySelector(source.section_anchor);
-                                      el?.scrollIntoView({ behavior: 'smooth' });
-                                    } else if (targetPath) {
-                                      navigate(targetPath + (source.section_anchor || ''));
-                                      setIsOpen(false);
-                                    }
-                                  }}
-                                  className={`inline-flex items-center gap-1 bg-primary/8 text-primary border border-primary/15 rounded-md px-2 py-0.5 cursor-pointer hover:bg-primary/15 hover:border-primary/30 transition-colors ${
-                                    isMobile ? 'text-xs' : 'text-[10px]'
-                                  }`}
-                                >
-                                  <FileText className="w-3 h-3 shrink-0 opacity-60" />
-                                  <span>{articleName}{sectionName ? ` · ${sectionName}` : ''}</span>
-                                </button>
-                              );
-                            })}
-                          </div>
+                            return (
+                              <button
+                                key={`${source.article_id}-${source.section_id}-${si}`}
+                                onClick={() => {
+                                  if (isCurrentPage && source.section_anchor) {
+                                    const el = document.querySelector(source.section_anchor);
+                                    el?.scrollIntoView({ behavior: 'smooth' });
+                                  } else if (targetPath) {
+                                    navigate(targetPath + (source.section_anchor || ''));
+                                    setIsOpen(false);
+                                  }
+                                }}
+                                className={`flex items-center gap-1.5 rounded-full font-medium bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 hover:border-primary/40 active:bg-primary/30 transition-colors duration-200 ${
+                                  isMobile
+                                    ? 'px-3 py-1.5 text-xs'
+                                    : 'px-2.5 py-1 text-[10px]'
+                                }`}
+                              >
+                                <FileText className="w-3 h-3 shrink-0" />
+                                {articleName}{sectionName ? ` · ${sectionName}` : ''}
+                              </button>
+                            );
+                          })}
                         </div>
                       )}
                     </div>
