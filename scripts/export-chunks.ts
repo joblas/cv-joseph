@@ -178,10 +178,12 @@ function parseI18n(source: I18nSource): Chunk[] {
     }
   }
 
-  // Extract each section (nested under en.sections)
+  // Extract each section (nested under en.sections) — only if it has a real page anchor
   const sections = en.sections as Record<string, unknown> | undefined
   if (sections && typeof sections === 'object') {
     for (const [sectionKey, sectionValue] of Object.entries(sections)) {
+      const anchor = resolveAnchor(sectionKey)
+      if (!anchor) continue // skip sections without a navigable anchor
       const text = extractText(sectionValue)
       if (!text.trim()) continue
 
@@ -190,20 +192,21 @@ function parseI18n(source: I18nSource): Chunk[] {
         metadata: {
           ...baseMetadata,
           section_id: sectionKey,
-          section_anchor: resolveAnchor(sectionKey),
+          section_anchor: anchor,
         },
       })
     }
   }
 
-  // Extract top-level content keys (not under sections) that have registry anchors
+  // Extract top-level content keys — only those with a real page anchor
   const skipKeys = new Set(['en', 'es', 'header', 'intro', 'tldr', 'heroMetrics', 'sections'])
   for (const [key, value] of Object.entries(en)) {
     if (skipKeys.has(key)) continue
     if (sections && key in sections) continue
+    const anchor = resolveAnchor(key)
+    if (!anchor) continue // skip metadata keys (slug, seo, footer, etc.)
     const text = extractText(value)
     if (!text.trim()) continue
-    const anchor = resolveAnchor(key)
     chunks.push({
       content: text.trim(),
       metadata: {
