@@ -252,7 +252,7 @@ const ARTICLE_KEYWORDS = {
   'n8n-for-pms':          ['n8n', 'nodemation'],
   'jacobo':               ['jacobo', 'agente ia', 'ai agent', 'whatsapp', 'multi-agent', 'multiagent'],
   'business-os':          ['business os', 'erp', 'airtable bases', 'crm', 'inventory'],
-  'programmatic-seo':     ['seo programático', 'programmatic seo', 'web programática', 'programmatic web'],
+  'programmatic-seo':     ['seo programático', 'programmatic seo', 'web programática', 'programmatic web', 'decision engine', 'indexable', 'dataforseo', 'seo pipeline', 'seo automatizado', 'automated seo'],
   'self-healing-chatbot': ['chatbot', 'this chat', 'este chat', 'evals', 'self-healing', 'closed-loop', 'langfuse', 'rag'],
   'santifer-irepair':     ['santifer irepair', 'irepair', 'repair business', 'taller de reparación'],
 }
@@ -950,9 +950,10 @@ function streamResponse({
           }
 
           // Send source badges AFTER response
-          // 1. Start with RAG sources filtered to mentioned articles (deep-links to sections)
-          // 2. Add keyword-detected articles not already covered by RAG (links to article root)
-          // 3. Fallback to home page if nothing else matched
+          // 1. RAG sources filtered to mentioned articles (deep-links to sections)
+          // 2. Keyword-detected articles not covered by RAG (links to article root)
+          // 3. Home fallback only if RAG was used but no specific articles matched
+          // 4. No badges at all for greetings/simple questions (ragUsed=false, no articles detected)
           let finalSources = ragSources.length > 0
             ? filterSourcesByResponse(ragSources, fullOutput)
             : []
@@ -966,10 +967,14 @@ function streamResponse({
             }
           }
 
-          if (finalSources.length === 0) {
+          // Home fallback only when RAG was active but nothing specific matched
+          if (finalSources.length === 0 && ragUsed) {
             finalSources = [HOME_SOURCE]
           }
-          controller.enqueue(encoder.encode(`event: rag-sources\ndata: ${JSON.stringify(finalSources)}\n\n`))
+
+          if (finalSources.length > 0) {
+            controller.enqueue(encoder.encode(`event: rag-sources\ndata: ${JSON.stringify(finalSources)}\n\n`))
+          }
 
           if (langfuse) waitUntil(langfuse.flushAsync())
           controller.enqueue(encoder.encode('data: [DONE]\n\n'))
