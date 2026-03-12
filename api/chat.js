@@ -247,6 +247,27 @@ function extractSources(chunks) {
   return sources
 }
 
+// Keywords that signal the response actually references a given article
+const ARTICLE_KEYWORDS = {
+  'n8n-for-pms':          ['n8n', 'nodemation'],
+  'jacobo':               ['jacobo', 'agente ia', 'ai agent', 'whatsapp', 'multi-agent', 'multiagent'],
+  'business-os':          ['business os', 'erp', 'airtable bases', 'crm', 'inventory'],
+  'programmatic-seo':     ['seo programático', 'programmatic seo', 'web programática', 'programmatic web'],
+  'self-healing-chatbot': ['chatbot', 'this chat', 'este chat', 'evals', 'self-healing', 'closed-loop', 'langfuse', 'rag'],
+  'santifer-irepair':     ['santifer irepair', 'irepair', 'repair business', 'taller de reparación'],
+}
+
+/** Filter RAG sources to only those whose article is actually mentioned in the response */
+function filterSourcesByResponse(sources, responseText) {
+  if (!responseText || sources.length === 0) return sources
+  const lower = responseText.toLowerCase()
+  return sources.filter(s => {
+    const keywords = ARTICLE_KEYWORDS[s.article_id]
+    if (!keywords) return true // unknown article — keep it
+    return keywords.some(kw => lower.includes(kw))
+  })
+}
+
 // ---------------------------------------------------------------------------
 // RAG: full agentic search pipeline
 // ---------------------------------------------------------------------------
@@ -717,12 +738,7 @@ function streamResponse({
   const readableStream = new ReadableStream({
     async start(controller) {
       try {
-        // Send RAG sources before text (for frontend badges)
-        if (ragSources.length > 0) {
-          controller.enqueue(encoder.encode(`event: rag-sources\ndata: ${JSON.stringify(ragSources)}\n\n`))
-        }
-
-        // Send degraded status if applicable
+        // Send degraded status early (informational — doesn't depend on response content)
         if (ragDegraded) {
           controller.enqueue(encoder.encode(`event: rag-status\ndata: ${JSON.stringify({ status: 'degraded', reason: ragDegradedReason })}\n\n`))
         }
@@ -886,6 +902,14 @@ function streamResponse({
           // Online scoring (Block 2): score every response asynchronously
           if (langfuse && trace && fullOutput) {
             waitUntil(scoreTrace(trace.id, lastUserMessage, fullOutput, ragUsed, langfuse))
+          }
+
+          // Send RAG sources AFTER response — filtered to only articles actually mentioned
+          if (ragSources.length > 0) {
+            const filtered = filterSourcesByResponse(ragSources, fullOutput)
+            if (filtered.length > 0) {
+              controller.enqueue(encoder.encode(`event: rag-sources\ndata: ${JSON.stringify(filtered)}\n\n`))
+            }
           }
 
           if (langfuse) waitUntil(langfuse.flushAsync())
