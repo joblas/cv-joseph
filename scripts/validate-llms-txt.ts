@@ -91,7 +91,7 @@ const PROOF_POINTS: ProofPoint[] = [
   },
   {
     source: 'chatbot-i18n.ts → evals',
-    terms: ['56', 'CI gate', 'trace-to-eval'],
+    terms: ['71', 'CI gate', 'trace-to-eval'],
   },
   {
     source: 'chatbot-i18n.ts → cost',

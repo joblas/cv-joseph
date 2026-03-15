@@ -155,7 +155,14 @@ Risk prediction dashboard for project portfolios. ML model trained on synthetic 
 Productivity system for Solutions Architects working with multiple DTC clients. Context switching from 30min to 30sec, automatic guardrails for production operations, auto-generated SESSION_BRIEF on project open, ADRs and complete operation logging.
 
 ### santifer.io (This Portfolio)
-Interactive CV with self-healing AI chatbot. RAG pipeline (Supabase pgvector + OpenAI embeddings + Haiku reranking), 6-layer jailbreak defense (50+ keyword patterns, canary tokens, fingerprinting, anti-extract, real-time safety scoring, adversarial red team), 56 automated evals with CI gate, closed-loop improvement (trace-to-eval, adversarial testing, prompt versioning via Langfuse). Batch eval with Sonnet scores intent, quality, safety and jailbreak detection; alerts via Resend. <$0.005/conversation, $0 infrastructure.
+Interactive CV with self-healing AI chatbot, voice mode (OpenAI Realtime API), and agentic observability. RAG pipeline (Supabase pgvector + OpenAI embeddings + Haiku reranking), 6-layer jailbreak defense (50+ keyword patterns, canary tokens, fingerprinting, anti-extract, real-time safety scoring, adversarial red team), 71 automated evals (10 categories including multi-turn, source badges, and voice) with CI gate, closed-loop improvement (trace-to-eval, adversarial testing, prompt versioning via Langfuse). Batch eval with Sonnet scores intent, quality, safety and jailbreak detection; alerts via Resend. Custom ops dashboard with 8 tabs: conversations, costs, RAG, security, evals, voice, prompts, system. Developer feedback loop: Claude Code queries Langfuse traces and generates fixes. <$0.005/conversation text, ~$0.25/session voice, $0 infrastructure.
+
+### Published Case Studies
+- [The Self-Healing Chatbot](https://santifer.io/self-healing-chatbot): LLMOps case study — agentic observability, 71 evals, voice mode, closed-loop
+- [AI Agent Jacobo](https://santifer.io/ai-agent-jacobo): Omnichannel multi-agent AI — 90% self-service, voice + WhatsApp
+- [Business OS](https://santifer.io/business-os-for-airtable): Custom ERP with 12 Airtable bases, 2100 fields, 170h/month saved
+- [Programmatic SEO](https://santifer.io/programmatic-seo): 4,730 pages from Airtable as headless CMS, 2M+ impressions
+- [n8n for PMs](https://santifer.io/n8n-for-pms): Automation cheat sheet for product managers
 
 ## Lightning Session: n8n for Product Managers (Maven, Feb 2026)
 

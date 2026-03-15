@@ -133,6 +133,81 @@ function validatePrerenderHtml(id: string, slug: string, lang: 'es' | 'en'): Iss
     issues.push({ severity: 'warn', msg: `Multiple H1 tags found: ${h1s.length} (should be exactly 1)` })
   }
 
+  // 10. article:published_time and article:modified_time present
+  if (!html.includes('article:published_time')) {
+    issues.push({ severity: 'warn', msg: 'article:published_time missing in prerender' })
+  }
+  if (!html.includes('article:modified_time')) {
+    issues.push({ severity: 'warn', msg: 'article:modified_time missing in prerender' })
+  }
+
+  // 11. JSON-LD has image property (Google recommends for Article rich results)
+  const articleJsonLd = jsonLdBlocks.find(block =>
+    block.includes('"TechArticle"') || block.includes('"Article"')
+  )
+  if (articleJsonLd && !articleJsonLd.includes('"image"')) {
+    issues.push({ severity: 'warn', msg: 'Article JSON-LD missing "image" property (recommended for rich results)' })
+  }
+
+  // 12. Title tag length (ideal ≤60)
+  if (titleMatch) {
+    const titleLen = titleMatch[1].length
+    if (titleLen > 70) {
+      issues.push({ severity: 'warn', msg: `Title tag very long: ${titleLen} chars (ideal ≤60, Google truncates ~65-70)` })
+    }
+  }
+
+  return issues
+}
+
+// ---------------------------------------------------------------------------
+// Global checks (not per-article)
+// ---------------------------------------------------------------------------
+
+function validateGlobalFiles(): Issue[] {
+  const issues: Issue[] = []
+
+  // robots.txt: key AI crawlers present
+  const robotsPath = resolve(dist, 'robots.txt')
+  if (existsSync(robotsPath)) {
+    const robots = readFileSync(robotsPath, 'utf-8')
+    const requiredCrawlers = ['GPTBot', 'ChatGPT-User', 'PerplexityBot', 'ClaudeBot', 'OAI-SearchBot']
+    for (const crawler of requiredCrawlers) {
+      if (!robots.includes(crawler)) {
+        issues.push({ severity: 'warn', msg: `robots.txt missing AI crawler: ${crawler}` })
+      }
+    }
+    if (!robots.includes('Sitemap:')) {
+      issues.push({ severity: 'warn', msg: 'robots.txt missing Sitemap directive' })
+    }
+  } else {
+    issues.push({ severity: 'error', msg: 'robots.txt not found in dist/' })
+  }
+
+  // llms.txt: present and not stale
+  const llmsPath = resolve(dist, 'llms.txt')
+  if (existsSync(llmsPath)) {
+    const llms = readFileSync(llmsPath, 'utf-8')
+    // Check that eval count matches (search for the number in registry seoMeta)
+    if (llms.includes('56 automated evals') || llms.includes('56 evals')) {
+      issues.push({ severity: 'warn', msg: 'llms.txt contains stale eval count "56" — should match current count' })
+    }
+  } else {
+    issues.push({ severity: 'warn', msg: 'llms.txt not found in dist/' })
+  }
+
+  // security headers: check vercel.json
+  const vercelJsonPath = resolve(dist, '..', 'vercel.json')
+  if (existsSync(vercelJsonPath)) {
+    const vercelJson = readFileSync(vercelJsonPath, 'utf-8')
+    const requiredHeaders = ['X-Content-Type-Options', 'Referrer-Policy', 'Permissions-Policy']
+    for (const header of requiredHeaders) {
+      if (!vercelJson.includes(header)) {
+        issues.push({ severity: 'warn', msg: `vercel.json missing security header: ${header}` })
+      }
+    }
+  }
+
   return issues
 }
 
@@ -144,10 +219,10 @@ console.log('\n[validate-prerender] Post-prerender SEO validation\n')
 
 let totalErrors = 0
 let totalWarnings = 0
-const results: ArticleResult[] = []
 
+// Per-article checks
 for (const article of articleRegistry) {
-  if (article.type === 'bridge') continue // bridge pages have minimal SEO
+  if (article.type === 'bridge') continue
 
   for (const [lang, slug] of Object.entries(article.slugs) as ['es' | 'en', string][]) {
     const issues = validatePrerenderHtml(article.id, slug, lang)
@@ -167,6 +242,24 @@ for (const article of articleRegistry) {
       console.log(`\x1b[32m✓\x1b[0m ${article.id} [${lang}] — clean`)
     }
   }
+}
+
+// Global checks (robots.txt, llms.txt, vercel.json)
+const globalIssues = validateGlobalFiles()
+const globalErrors = globalIssues.filter(i => i.severity === 'error').length
+const globalWarnings = globalIssues.filter(i => i.severity === 'warn').length
+totalErrors += globalErrors
+totalWarnings += globalWarnings
+
+if (globalIssues.length > 0) {
+  const icon = globalErrors > 0 ? '\x1b[31m✗\x1b[0m' : '\x1b[33m⚠\x1b[0m'
+  console.log(`\n${icon} Global files — ${globalErrors} errors, ${globalWarnings} warnings`)
+  for (const issue of globalIssues) {
+    const prefix = issue.severity === 'error' ? '\x1b[31m  ERR\x1b[0m' : '\x1b[33m  WARN\x1b[0m'
+    console.log(`${prefix}  ${issue.msg}`)
+  }
+} else {
+  console.log(`\n\x1b[32m✓\x1b[0m Global files — clean`)
 }
 
 console.log(`\nArticle pages: ${articleRegistry.filter(a => a.type !== 'bridge').length * 2} | Errors: ${totalErrors} | Warnings: ${totalWarnings}\n`)
