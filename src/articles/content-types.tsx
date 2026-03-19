@@ -1322,7 +1322,12 @@ interface ArchitectureDiagramProps {
 }
 
 export function ArchitectureDiagram({ src, thumbnail, alt, label, subtitle, editorId }: ArchitectureDiagramProps) {
+  const [mounted, setMounted] = useState(false)
   const [open, setOpen] = useState(false)
+
+  // Client-only — avoid hydration mismatch (#418)
+  useEffect(() => setMounted(true), [])
+  if (!mounted) return null
   const iframeRef = useCallback((iframe: HTMLIFrameElement | null) => {
     if (!iframe) return
     // Sync theme on load + inject Escape listener into iframe
