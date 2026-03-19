@@ -52,7 +52,7 @@ export function ArticleLayout({ lang, children }: { lang?: 'es' | 'en'; children
 
   return (
     <EditorModeProvider>
-      <div className="min-h-screen bg-background text-foreground bg-[length:24px_24px] [background-image:radial-gradient(circle,hsl(var(--muted-foreground)/0.15)_1px,transparent_1px)]">
+      <div className="min-h-screen bg-background text-foreground bg-[length:24px_24px] [background-image:radial-gradient(circle,hsl(var(--dot-grid))_1px,transparent_1px)]">
         <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
           {children}
         </main>

@@ -106,11 +106,27 @@ function useTheme() {
   }, [])
 
   const toggleTheme = useCallback(() => {
+    // Kill all transitions for instant theme switch
+    document.documentElement.style.setProperty('--theme-transition', 'none')
+    document.querySelectorAll('*').forEach(el => {
+      (el as HTMLElement).style.transition = 'none'
+    })
+
     const next = !isDark
     setIsDark(next)
     document.documentElement.classList.toggle('dark', next)
     document.documentElement.classList.toggle('light', !next)
     localStorage.setItem('theme', next ? 'dark' : 'light')
+
+    // Re-enable transitions after repaint
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        document.documentElement.style.removeProperty('--theme-transition')
+        document.querySelectorAll('*').forEach(el => {
+          (el as HTMLElement).style.transition = ''
+        })
+      })
+    })
   }, [isDark])
 
   return { isDark, toggleTheme }

@@ -488,7 +488,7 @@ export const translations = {
     },
     redditPost: {
       hook: 'Automaticé mi búsqueda de empleo con agentes IA — 516 evaluaciones, 66 aplicaciones, zero screening manual.',
-      upvotes: '466',
+      upvotes: '464',
       comments: '265',
       subreddit: 'r/SideProject',
       cta: 'Leer en Reddit',
@@ -715,7 +715,7 @@ export const translations = {
       title: 'santifer',
       subtitle: 'Pregúntame sobre mi experiencia',
       greeting:
-        '¡Hola! Soy **santifer**, el avatar de Santiago. Pregúntame lo que quieras — experiencia, proyectos, lo que me mueve.',
+        '¡Hola! Soy **@santifer**. Pregúntame lo que quieras: experiencia, proyectos, lo que me mueve.',
       error: 'Error al enviar. Inténtalo de nuevo.',
       offline: 'Parece que no hay conexión a internet. Comprueba tu red e inténtalo de nuevo.',
       prompts: [
@@ -1229,7 +1229,7 @@ export const translations = {
     },
     redditPost: {
       hook: 'I automated my job search with AI agents — 516 evaluations, 66 applications, zero manual screening.',
-      upvotes: '466',
+      upvotes: '464',
       comments: '265',
       subreddit: 'r/SideProject',
       cta: 'Read on Reddit',
@@ -1456,7 +1456,7 @@ export const translations = {
       title: 'santifer',
       subtitle: 'Ask me about my experience',
       greeting:
-        "Hi! I'm **santifer**, Santiago's avatar. Ask me anything — experience, projects, what makes him tick.",
+        "Hi! I'm **@santifer**. Ask me anything: experience, projects, what drives me.",
       error: 'Error sending. Please try again.',
       offline: 'Looks like you\'re offline. Check your connection and try again.',
       prompts: [
