@@ -13,17 +13,22 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 const I18N_PATH = resolve(__dirname, '../src/i18n.ts')
 
 interface RedditPost {
-  url: string
-  // Fields we update in i18n.ts
-  upvotesKey: string
-  commentsKey: string
+  jsonUrl: string
+  /** Substring of the Reddit URL to match the correct block in i18n.ts */
+  urlMatch: string
+  label: string
 }
 
 const POSTS: RedditPost[] = [
   {
-    url: 'https://old.reddit.com/r/SideProject/comments/1rw1lg4/i_automated_my_job_search_with_ai_agents_516/.json',
-    upvotesKey: 'upvotes',
-    commentsKey: 'comments',
+    jsonUrl: 'https://old.reddit.com/r/SideProject/comments/1rw1lg4/i_automated_my_job_search_with_ai_agents_516/.json',
+    urlMatch: '1rw1lg4',
+    label: 'r/SideProject',
+  },
+  {
+    jsonUrl: 'https://old.reddit.com/r/n8n/comments/1sc3i30/i_built_a_whatsapp_voice_ai_agent_in_n8n_that/.json',
+    urlMatch: '1sc3i30',
+    label: 'r/n8n',
   },
 ]
 
@@ -53,20 +58,24 @@ async function main() {
   let changed = false
 
   for (const post of POSTS) {
-    const stats = await fetchRedditStats(post.url)
+    const stats = await fetchRedditStats(post.jsonUrl)
     if (!stats) {
-      console.log('  ⏭ Skipped (fetch failed)')
+      console.log(`  ⏭ ${post.label}: skipped (fetch failed)`)
       continue
     }
 
     const upvoteStr = String(stats.ups)
     const commentStr = String(stats.comments)
 
-    // Replace only inside redditPost blocks (ES + EN)
-    // Match the full redditPost object and update numbers within it
-    const newI18n = i18n.replace(
-      /redditPost:\s*\{[^}]+\}/g,
-      (block) => block
+    // Match the specific redditPosts array entry by its unique URL substring
+    // then update upvotes and comments within that block
+    const blockRegex = new RegExp(
+      `(\\{[^}]*${post.urlMatch}[^}]*\\})`,
+      'g'
+    )
+
+    const newI18n = i18n.replace(blockRegex, (block) =>
+      block
         .replace(/(upvotes:\s*['"])\d+(['"])/, `$1${upvoteStr}$2`)
         .replace(/(comments:\s*['"])\d+(['"])/, `$1${commentStr}$2`)
     )
@@ -74,9 +83,9 @@ async function main() {
     if (newI18n !== i18n) {
       i18n = newI18n
       changed = true
-      console.log(`  ✓ r/SideProject: ${upvoteStr} upvotes, ${commentStr} comments`)
+      console.log(`  ✓ ${post.label}: ${upvoteStr} upvotes, ${commentStr} comments`)
     } else {
-      console.log(`  ⏭ r/SideProject: no changes (${upvoteStr} upvotes, ${commentStr} comments)`)
+      console.log(`  ⏭ ${post.label}: no changes (${upvoteStr} upvotes, ${commentStr} comments)`)
     }
   }
 

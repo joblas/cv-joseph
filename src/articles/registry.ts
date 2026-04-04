@@ -198,6 +198,7 @@ export const articleRegistry: ArticleConfig[] = [
         { '@type': 'SoftwareApplication', name: 'WATI', url: 'https://www.wati.io' },
         { '@type': 'SoftwareApplication', name: 'Airtable', url: 'https://airtable.com' },
       ],
+      discussionUrl: 'https://www.reddit.com/r/n8n/comments/1sc3i30/i_built_a_whatsapp_voice_ai_agent_in_n8n_that/',
     },
   },
   {
