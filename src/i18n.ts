@@ -410,6 +410,10 @@ const _translationsEn = {
       role: 'Autonomous Truck Technician',
       period: '2016 - 2018 · Autonomous Vehicles',
       desc: 'Led system integration for a 10-truck autonomous fleet (~90% uptime). Drive-by-wire integration, log analysis, root cause analysis, and end-to-end testing across the fleet.',
+      press: [
+        { title: 'Uber Acquires Self-Driving Truck Startup Otto', publisher: 'Transport Topics', url: 'https://www.ttnews.com/articles/uber-acquires-self-driving-truck-startup-otto' },
+        { title: 'Otto + Uber: Self-Driving Trucks', publisher: 'Mashable', url: 'https://mashable.com/article/otto-uber-self-driving-truck' },
+      ],
       testimonial: {
         quote:
           "End-to-end ownership of a 10-truck autonomous fleet — from drive-by-wire integration to daily operations and root cause analysis.",
@@ -426,6 +430,8 @@ const _translationsEn = {
       tesauro: {
         title: '2,900-Mile Cross-Country Demo',
         desc: 'Supported a 2,900-mile cross-country autonomous demonstration with zero critical failures. Conducted 10+ executive and investor demonstrations.',
+        videoUrl: 'https://vimeo.com/prontoai',
+        videoLabel: 'Watch Demo Video',
       },
       testimonial: {
         quote:

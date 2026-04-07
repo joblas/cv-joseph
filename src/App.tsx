@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo, useReducer, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'motion/react'
-import { Mail, ExternalLink, Briefcase, GraduationCap, Award, Code, Users, Globe, Bot, Zap, Database, Layout, BadgeCheck, FolderGit2, Sparkles, Download, Github, Package, MessageSquare, Receipt, CalendarCheck, Shield, FileText, GitBranch, GitFork, Star, Terminal, Lock, Network, Calendar, Percent, UserCheck, Image, TrendingUp, Timer, SkipForward, ThumbsUp, MessageCircle, Share2, ChevronRight, List, ArrowUp } from 'lucide-react'
+import { Mail, ExternalLink, Briefcase, GraduationCap, Award, Code, Users, Globe, Bot, Zap, Database, Layout, BadgeCheck, FolderGit2, Sparkles, Download, Github, Package, MessageSquare, Receipt, CalendarCheck, Shield, FileText, GitBranch, GitFork, Star, Terminal, Lock, Network, Calendar, Percent, UserCheck, Image, TrendingUp, Timer, SkipForward, ThumbsUp, MessageCircle, Share2, ChevronRight, List, ArrowUp, Newspaper } from 'lucide-react'
 import { translations, seo } from './i18n'
 import { useHomeSeo } from './articles/use-article-seo'
 import { getTechIcon } from './tech-icons'
@@ -255,12 +255,11 @@ function useTypewriterRotation(roles: readonly string[], { typeSpeed = 80, delet
 }
 
 const HOME_TOC_SECTIONS = [
-  { id: 'experience', es: 'Experience', en: 'Experience' },
-  { id: 'projects', es: 'Projects', en: 'Projects' },
-  { id: 'speaking', es: 'Sharing', en: 'Sharing' },
-  { id: 'education', es: 'Education', en: 'Education' },
-  { id: 'tech', es: 'Skills & Stack', en: 'Skills & Stack' },
-  { id: 'contact', es: 'Contact', en: 'Contact' },
+  { id: 'experience', label: 'Experience' },
+  { id: 'projects', label: 'Projects' },
+  { id: 'education', label: 'Education' },
+  { id: 'tech', label: 'Skills & Stack' },
+  { id: 'contact', label: 'Contact' },
 ] as const
 
 function HomeToc() {
@@ -358,7 +357,7 @@ function HomeToc() {
                   : 'text-muted-foreground/60 hover:text-foreground/80'
                 }`}
               >
-                {section.en}
+                {section.label}
               </button>
             </li>
           )
@@ -1828,6 +1827,17 @@ function App() {
                 <div>
                   <h4 className="font-display font-bold mb-2">{t.experience.pronto.tesauro.title}</h4>
                   <p className="text-sm text-muted-foreground">{t.experience.pronto.tesauro.desc}</p>
+                  {t.experience.pronto.tesauro.videoUrl && (
+                    <a
+                      href={t.experience.pronto.tesauro.videoUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 mt-3 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" />
+                      {t.experience.pronto.tesauro.videoLabel}
+                    </a>
+                  )}
                 </div>
               </div>
             </div>
@@ -1873,6 +1883,24 @@ function App() {
               <p className="text-primary font-medium mb-1">{t.experience.uberAtg.role}</p>
               <p className="text-sm text-muted-foreground mb-2">{t.experience.uberAtg.period}</p>
               <p className="text-muted-foreground">{t.experience.uberAtg.desc}</p>
+
+              {/* Press coverage */}
+              {t.experience.uberAtg.press.length > 0 && (
+                <div className="flex flex-wrap gap-3 mt-4">
+                  {t.experience.uberAtg.press.map((article: { title: string; publisher: string; url: string }) => (
+                    <a
+                      key={article.url}
+                      href={article.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-card border border-border text-xs text-muted-foreground hover:text-foreground hover:border-primary/30 transition-all"
+                    >
+                      <Newspaper className="w-3 h-3 text-primary shrink-0" />
+                      <span>{article.publisher}</span>
+                    </a>
+                  ))}
+                </div>
+              )}
 
               {/* Testimonial */}
               <a href="https://www.linkedin.com/in/joseph-blas/" target="_blank" rel="noopener noreferrer" className="block group">
@@ -2202,9 +2230,19 @@ function App() {
                   }`}
                 >
                   <div className="flex items-start justify-between mb-3">
-                    <h3 className={`font-display text-xl font-bold transition-colors ${
-                      isTool ? 'group-hover:text-tool' : 'group-hover:text-primary'
-                    }`}>{project.title}</h3>
+                    <div className="flex items-center gap-3">
+                      {project.title === 'OpenClaw' && (
+                        <div className="w-8 h-8 rounded-lg overflow-hidden bg-black flex items-center justify-center shrink-0">
+                          <picture>
+                            <source srcSet="/logo-openclaw.webp" type="image/webp" />
+                            <img src="/logo-openclaw.png" alt="OpenClaw" className="w-full h-full object-contain" width={32} height={32} loading="lazy" decoding="async" />
+                          </picture>
+                        </div>
+                      )}
+                      <h3 className={`font-display text-xl font-bold transition-colors ${
+                        isTool ? 'group-hover:text-tool' : 'group-hover:text-primary'
+                      }`}>{project.title}</h3>
+                    </div>
                     <div className="flex items-center gap-2">
                       <span className={`badge px-2 py-0.5 ${
                         isTool
@@ -2407,7 +2445,8 @@ function App() {
         </div>
       </section>
 
-      {/* Sharing — Teaching + LinkedIn */}
+      {/* Sharing — Teaching + LinkedIn (hidden when no content) */}
+      {(t.speaking.items.length > 0 || t.redditPosts.length > 0 || t.linkedinPosts.items.length > 0 || t.speaking.aiFluency.title) && (
       <section id="speaking" className="py-16 md:py-24 bg-muted/30" style={{ contentVisibility: 'auto', containIntrinsicSize: 'auto 800px' }}>
         <div className="max-w-5xl mx-auto px-6">
           <AnimatedSection>
@@ -2596,6 +2635,7 @@ function App() {
           )}
         </div>
       </section>
+      )}
 
       {/* Education & Certifications */}
       <section id="education" className="py-16 md:py-24" style={{ contentVisibility: 'auto', containIntrinsicSize: 'auto 1000px' }}>
