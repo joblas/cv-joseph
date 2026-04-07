@@ -1380,13 +1380,8 @@ function CertLogo({ logo }: { logo: string }) {
         <path d="M66.5,0H52.4l25.7,65h14.1L66.5,0z M25.7,0L0,65h14.4l5.3-13.6h26.9L51.8,65h14.4L40.5,0C40.5,0,25.7,0,25.7,0z M24.3,39.3l8.8-22.8l8.8,22.8H24.3z"/>
       </svg>
     ),
-    airtable: (
-      <svg viewBox="0 0 200 170" className="w-6 h-6" aria-hidden="true">
-        <path fill="#FCB400" d="M90.039 12.368 24.079 39.66c-3.667 1.519-3.63 6.729.062 8.192l66.235 26.266a24.58 24.58 0 0 0 18.12 0l66.236-26.266c3.69-1.463 3.729-6.673.062-8.192l-65.96-27.292a24.58 24.58 0 0 0-18.795 0"/>
-        <path fill="#18BFFF" d="M105.312 88.46v65.617c0 3.12 3.147 5.258 6.048 4.108l73.806-28.648a4.42 4.42 0 0 0 2.79-4.108V59.813c0-3.121-3.147-5.258-6.048-4.108l-73.806 28.648a4.42 4.42 0 0 0-2.79 4.108"/>
-        <path fill="#F82B60" d="m88.078 91.846-21.904 10.576-2.224 1.075-46.238 22.155c-2.93 1.414-6.672-.722-6.672-3.978V60.088c0-1.178.604-2.195 1.414-2.96a5 5 0 0 1 1.12-.84c1.104-.663 2.68-.84 4.02-.31L87.71 83.76c3.564 1.414 3.844 6.408.368 8.087"/>
-        <path fill="#8B8B8B" d="m88.078 91.846-21.904 10.576-53.72-45.295a5 5 0 0 1 1.12-.839c1.104-.663 2.68-.84 4.02-.31L87.71 83.76c3.564 1.414 3.844 6.408.368 8.087"/>
-      </svg>
+    openclaw: (
+      <img src="/logo-openclaw.svg" alt="OpenClaw" className="w-6 h-6" width={24} height={24} loading="lazy" decoding="async" />
     ),
     make: (
       <svg viewBox="0 0 24 24" className="w-6 h-6" aria-hidden="true">
@@ -1602,11 +1597,8 @@ function App() {
               <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
                 <div className="flex-1 flex flex-col">
                   <div className="flex items-start justify-between mb-4">
-                    <div className="w-12 h-12 rounded-xl overflow-hidden bg-black flex items-center justify-center shrink-0">
-                      <picture>
-                        <source srcSet="/logo-openclaw.webp" type="image/webp" />
-                        <img src="/logo-openclaw.png" alt="OpenClaw" className="w-full h-full object-contain p-1" width={48} height={48} loading="lazy" decoding="async" />
-                      </picture>
+                    <div className="w-12 h-12 rounded-xl overflow-hidden bg-black flex items-center justify-center shrink-0 p-1.5">
+                      <img src="/logo-openclaw.svg" alt="OpenClaw" className="w-full h-full object-contain" width={48} height={48} loading="lazy" decoding="async" />
                     </div>
                     <span className="badge px-3 py-1 bg-gold/20 text-gold">Multi-Agent · n8n</span>
                   </div>
@@ -2016,7 +2008,7 @@ function App() {
 
                   {/* Tech badges */}
                   <div className="flex flex-wrap gap-2 mb-6">
-                    {['Claude Code', 'Airtable', 'Shopify', 'Make.com', 'Bash', 'MCP'].map((tech) => (
+                    {['Claude Code', 'OpenClaw', 'Shopify', 'Make.com', 'Bash', 'MCP'].map((tech) => (
                       <span key={tech} className="px-2 py-1 rounded-md text-xs bg-gold/10 text-gold border border-gold/20">{tech}</span>
                     ))}
                   </div>
@@ -2232,11 +2224,8 @@ function App() {
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-3">
                       {project.title === 'OpenClaw' && (
-                        <div className="w-8 h-8 rounded-lg overflow-hidden bg-black flex items-center justify-center shrink-0">
-                          <picture>
-                            <source srcSet="/logo-openclaw.webp" type="image/webp" />
-                            <img src="/logo-openclaw.png" alt="OpenClaw" className="w-full h-full object-contain" width={32} height={32} loading="lazy" decoding="async" />
-                          </picture>
+                        <div className="w-8 h-8 rounded-lg overflow-hidden bg-black flex items-center justify-center shrink-0 p-1">
+                          <img src="/logo-openclaw.svg" alt="OpenClaw" className="w-full h-full object-contain" width={32} height={32} loading="lazy" decoding="async" />
                         </div>
                       )}
                       <h3 className={`font-display text-xl font-bold transition-colors ${
@@ -2723,7 +2712,7 @@ function App() {
 
               <div className="space-y-1 rounded-xl overflow-hidden border border-border">
                 {t.certifications.items.map((cert, i) => {
-                  // Alternate background by logical group: 0-3 tech, 4-7 fluency, 8-10 airtable, 11 make
+                  // Alternate background by logical group: 0-3 tech, 4-7 fluency, 8-10 openclaw, 11 make
                   const group = i < 4 ? 0 : i < 8 ? 1 : i < 11 ? 2 : 3
                   const isAlt = group % 2 === 1
                   return (
