@@ -2,33 +2,32 @@
  * SVG Architecture Diagram — 12 Airtable Bases
  * Vertical layout — CMS on its own row
  */
-export default function ArchitectureDiagram({ lang = 'en' }: { lang?: 'es' | 'en' }) {
-  const es = lang === 'es'
+export default function ArchitectureDiagram() {
   const l = {
-    title: es ? 'Arquitectura del Business OS' : 'Business OS Architecture',
-    subtitle: es ? '12 bases interconectadas · 2.100+ campos · 50+ automatizaciones' : '12 interconnected bases · 2,100+ fields · 50+ automations',
-    erp: es ? 'ERP Central' : 'Central ERP',
-    erpSub: es ? 'OTS · Inventario · Compras · Reservas · Garantías' : 'OTS · Inventory · Purchasing · Bookings · Warranties',
-    erpBadge: es ? '496 campos' : '496 fields',
+    title: 'Business OS Architecture',
+    subtitle: '12 interconnected bases · 2,100+ fields · 50+ automations',
+    erp: 'Central ERP',
+    erpSub: 'OTS · Inventory · Purchasing · Bookings · Warranties',
+    erpBadge: '496 fields',
     crm: 'CRM',
-    crmSub: es ? 'Clientes · Scoring · Tiers' : 'Customers · Scoring · Tiers',
-    accounting: es ? 'Contabilidad' : 'Accounting',
-    accountingSub: es ? 'Facturas · Conciliación · Gastos' : 'Invoices · Reconciliation · Expenses',
-    cms: es ? 'CMS Web' : 'Web CMS',
-    cmsSub: es ? '1.534 campos · 647 fórmulas' : '1,534 fields · 647 formulas',
-    parts: es ? 'Catálogo Piezas' : 'Parts Catalog',
-    accessories: es ? 'Catálogo Accesorios' : 'Accessories Catalog',
+    crmSub: 'Customers · Scoring · Tiers',
+    accounting: 'Accounting',
+    accountingSub: 'Invoices · Reconciliation · Expenses',
+    cms: 'Web CMS',
+    cmsSub: '1,534 fields · 647 formulas',
+    parts: 'Parts Catalog',
+    accessories: 'Accessories Catalog',
     feedback: 'Feedback',
-    reviews: es ? 'Reseñas' : 'Reviews',
-    kwr: es ? 'KWR Auto' : 'Auto KWR',
-    gbp: es ? 'Posts GBP' : 'GBP Posts',
-    content: es ? 'Contenido' : 'Content',
+    reviews: 'Reviews',
+    kwr: 'Auto KWR',
+    gbp: 'GBP Posts',
+    content: 'Content',
     gpt: 'Custom GPT',
-    automations: es ? '50+ Automatizaciones nativas de Airtable' : '50+ Native Airtable Automations',
-    legendHub: es ? 'Hub central' : 'Central hub',
-    legendCore: es ? 'Módulos core' : 'Core modules',
-    legendData: es ? 'Catálogos' : 'Catalogs',
-    legendSatellite: es ? 'Satélites' : 'Satellites',
+    automations: '50+ Native Airtable Automations',
+    legendHub: 'Central hub',
+    legendCore: 'Core modules',
+    legendData: 'Catalogs',
+    legendSatellite: 'Satellites',
   }
 
   const W = 580

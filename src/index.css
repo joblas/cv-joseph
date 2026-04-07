@@ -347,9 +347,9 @@ button, a, [role="button"], summary { cursor: pointer; }
     /* No transition — instant theme switch for clean dot grid + orb change */
   }
 
-  /* Accesibilidad: tamaños mínimos WCAG AA */
+  /* Accessibility: minimum WCAG AA sizes */
   .text-xs {
-    font-size: 0.875rem; /* 14px — mínimo legible */
+    font-size: 0.875rem; /* 14px — minimum readable */
     line-height: 1.4;
   }
 

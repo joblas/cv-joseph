@@ -3,10 +3,10 @@
   "description": "Tests that source badges are accurate: correct articles linked, no badges on greetings, correct language paths",
   "tests": [
     {
-      "id": "badge-jacobo-es",
-      "description": "Question about Jacobo in ES should include jacobo badge",
-      "input": "Cuéntame sobre el agente Jacobo y cómo funciona",
-      "lang": "es",
+      "id": "badge-jacobo-en",
+      "description": "Question about Jacobo should include jacobo badge",
+      "input": "Tell me about the Jacobo agent and how it works",
+      "lang": "en",
       "assertions": [
         { "type": "rag_used" },
         { "type": "source_includes", "value": "jacobo" }
@@ -16,7 +16,7 @@
       "id": "badge-greeting-none",
       "description": "Greeting should have zero badges",
       "input": "Hey",
-      "lang": "es",
+      "lang": "en",
       "assertions": [
         { "type": "rag_not_used" }
       ]
@@ -34,8 +34,8 @@
     {
       "id": "badge-chatbot-self",
       "description": "Question about this chatbot should include self-healing-chatbot badge",
-      "input": "¿Cómo funciona este chatbot?",
-      "lang": "es",
+      "input": "How does this chatbot work?",
+      "lang": "en",
       "assertions": [
         { "type": "rag_used" },
         { "type": "source_includes", "value": "self-healing-chatbot" }

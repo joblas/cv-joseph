@@ -198,7 +198,7 @@ function printConversation(trace: Trace) {
   }
 
   console.log();
-  console.log(`${colors.dim}  ✅ Fin de conversación • ${messages.length + (lastOutput ? 1 : 0)} mensajes${colors.reset}`);
+  console.log(`${colors.dim}  ✅ End of conversation • ${messages.length + (lastOutput ? 1 : 0)} messages${colors.reset}`);
   console.log();
 }
 
@@ -220,25 +220,25 @@ async function main() {
     console.log(`
 ${colors.bold}${colors.cyan}📊 Chat History Viewer${colors.reset}
 
-${colors.bold}Uso:${colors.reset}
-  npm run chats                    Lista resumen de conversaciones
-  npm run chats -- --full          Conversaciones completas (últimas 10)
-  npm run chats -- --jailbreak     Solo intentos de jailbreak
-  npm run chats -- --view=5        Ver conversación #5
+${colors.bold}Usage:${colors.reset}
+  npm run chats                    List conversation summaries
+  npm run chats -- --full          Full conversations (last 10)
+  npm run chats -- --jailbreak     Jailbreak attempts only
+  npm run chats -- --view=5        View conversation #5
 
-${colors.bold}Opciones:${colors.reset}
-  -f, --full         Mostrar conversaciones completas (no solo preview)
-  -j, --jailbreak    Filtrar solo jailbreaks
-  --days=N           Conversaciones de los últimos N días
-  --limit=N          Número de conversaciones a mostrar
-  --view=N           Ver conversación número N de la lista
-  -h, --help         Mostrar esta ayuda
+${colors.bold}Options:${colors.reset}
+  -f, --full         Show full conversations (not just preview)
+  -j, --jailbreak    Filter jailbreaks only
+  --days=N           Conversations from the last N days
+  --limit=N          Number of conversations to show
+  --view=N           View conversation number N from the list
+  -h, --help         Show this help
 
-${colors.bold}Ejemplos:${colors.reset}
-  npm run chats -- -f              Ver últimas 10 conversaciones completas
-  npm run chats -- -f -j           Ver jailbreaks con hilo completo
-  npm run chats -- -f --limit=5    Ver últimas 5 conversaciones completas
-  npm run chats -- --view=3        Ver solo la conversación #3
+${colors.bold}Examples:${colors.reset}
+  npm run chats -- -f              View last 10 full conversations
+  npm run chats -- -f -j           View jailbreaks with full thread
+  npm run chats -- -f --limit=5    View last 5 full conversations
+  npm run chats -- --view=3        View only conversation #3
 `);
     return;
   }
@@ -263,20 +263,20 @@ ${colors.bold}Ejemplos:${colors.reset}
       if (trace) {
         printConversation(trace);
       } else {
-        console.log(`${colors.red}No se encontró la conversación ${viewValue}${colors.reset}`);
+        console.log(`${colors.red}Conversation not found: ${viewValue}${colors.reset}`);
       }
     } else {
-      console.log(`${colors.red}Número inválido. Usa un número entre 1 y ${traces.length}${colors.reset}`);
+      console.log(`${colors.red}Invalid number. Use a number between 1 and ${traces.length}${colors.reset}`);
     }
     return;
   }
 
   // List conversations
-  console.log(`\n${colors.bold}${colors.cyan}📊 Historial de Chats${colors.reset}`);
-  console.log(`${colors.dim}Últimos ${days} día(s)${jailbreakOnly ? ' • Solo jailbreaks' : ''}${fullMode ? ' • Modo completo' : ''}${colors.reset}\n`);
+  console.log(`\n${colors.bold}${colors.cyan}📊 Chat History${colors.reset}`);
+  console.log(`${colors.dim}Last ${days} day(s)${jailbreakOnly ? ' • Jailbreaks only' : ''}${fullMode ? ' • Full mode' : ''}${colors.reset}\n`);
 
   if (traces.length === 0) {
-    console.log(`${colors.yellow}No hay conversaciones en este período${colors.reset}`);
+    console.log(`${colors.yellow}No conversations in this period${colors.reset}`);
     return;
   }
 
@@ -284,7 +284,7 @@ ${colors.bold}Ejemplos:${colors.reset}
   const jailbreaks = traces.filter(t => t.tags.includes('jailbreak-attempt')).length;
   const total = traces.length;
 
-  console.log(`${colors.dim}Total: ${total} conversaciones • ${jailbreaks} jailbreaks detectados${colors.reset}\n`);
+  console.log(`${colors.dim}Total: ${total} conversations • ${jailbreaks} jailbreaks detected${colors.reset}\n`);
 
   if (fullMode) {
     // Full mode: show complete conversations

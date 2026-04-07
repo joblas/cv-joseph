@@ -1,88 +1,78 @@
 {
   "name": "factual_accuracy",
-  "description": "Verifica que Santi responde con datos correctos del CV",
+  "description": "Verifies that Joseph responds with correct CV data",
   "tests": [
     {
       "id": "exp-years",
-      "description": "Debe mencionar años de experiencia significativos o fecha de inicio",
-      "input": "¿Cuántos años de experiencia tienes?",
-      "lang": "es",
+      "description": "Should mention significant years of experience or start date",
+      "input": "How many years of experience do you have?",
+      "lang": "en",
       "assertions": [
-        { "type": "contains_any", "values": ["16", "15", "2009", "2007"] },
-        { "type": "not_contains", "value": "no sé" }
+        { "type": "contains_any", "values": ["10", "2015", "2016", "audio", "AV"] },
+        { "type": "not_contains", "value": "I don't know" }
       ]
     },
     {
-      "id": "agent-name",
-      "description": "Debe mencionar el nombre del agente AI: Jacobo",
-      "input": "¿Cómo se llama tu agente de IA?",
-      "lang": "es",
+      "id": "project-name",
+      "description": "Should mention a key project name: OpenClaw or The Skate Workshop",
+      "input": "What are your main projects?",
+      "lang": "en",
       "assertions": [
-        { "type": "contains", "value": "Jacobo" }
+        { "type": "contains_any", "values": ["OpenClaw", "Skate Workshop"] }
       ]
     },
     {
       "id": "location",
-      "description": "Debe mencionar Sevilla",
-      "input": "¿Dónde estás basado?",
-      "lang": "es",
+      "description": "Should mention Escondido or San Diego",
+      "input": "Where are you based?",
+      "lang": "en",
       "assertions": [
-        { "type": "contains", "value": "Sevilla" }
+        { "type": "contains_any", "values": ["Escondido", "San Diego", "California"] }
       ]
     },
     {
-      "id": "exit-2025",
-      "description": "Debe mencionar la venta en 2025",
-      "input": "¿Vendiste tu empresa?",
-      "lang": "es",
+      "id": "current-role",
+      "description": "Should mention Quadient as current role",
+      "input": "Where do you currently work?",
+      "lang": "en",
       "assertions": [
-        { "type": "contains", "value": "2025" },
-        { "type": "contains_any", "values": ["vendí", "venta", "going concern", "funcionamiento"] }
+        { "type": "contains_any", "values": ["Quadient", "quadient"] }
       ]
     },
     {
-      "id": "repairs-count",
-      "description": "Debe mencionar +30,000 reparaciones",
-      "input": "¿Cuántas reparaciones hicisteis en total?",
-      "lang": "es",
+      "id": "business-name",
+      "description": "Should mention Joe's Tech Solutions",
+      "input": "Have you had your own business?",
+      "lang": "en",
       "assertions": [
-        { "type": "contains_any", "values": ["30.000", "30,000", "30000", "treinta mil"] }
-      ]
-    },
-    {
-      "id": "automation-hours",
-      "description": "Debe mencionar 170+ horas automatizadas/mes",
-      "input": "¿Cuántas horas automatizaste al mes?",
-      "lang": "es",
-      "assertions": [
-        { "type": "contains_any", "values": ["170", "ciento setenta"] }
+        { "type": "contains_any", "values": ["Joe's Tech Solutions", "Joe's Tech"] }
       ]
     },
     {
       "id": "target-roles",
-      "description": "Debe mencionar roles de interés",
-      "input": "¿Qué roles te interesan?",
-      "lang": "es",
+      "description": "Should mention target roles",
+      "input": "What roles are you interested in?",
+      "lang": "en",
       "assertions": [
-        { "type": "contains_any", "values": ["Product Manager", "Solutions Architect", "Forward Deployed", "FDE"] }
+        { "type": "contains_any", "values": ["AI Developer", "DevOps", "SRE", "Embedded", "Robotics"] }
       ]
     },
     {
       "id": "repo-public",
-      "description": "Debe confirmar que el repo de santifer.io es público en GitHub",
-      "input": "¿El código de santifer.io está en GitHub?",
-      "lang": "es",
+      "description": "Should confirm the portfolio repo is public on GitHub",
+      "input": "Is the code for cv-joseph.vercel.app on GitHub?",
+      "lang": "en",
       "assertions": [
-        { "type": "contains_any", "values": ["público", "publica", "open", "GitHub"] },
-        { "type": "contains_any", "values": ["santifer", "cv-santiago"] },
-        { "type": "not_contains", "value": "privado" }
+        { "type": "contains_any", "values": ["public", "open", "GitHub"] },
+        { "type": "contains_any", "values": ["joblas", "cv-santiago"] },
+        { "type": "not_contains", "value": "private" }
       ]
     },
     {
       "id": "model-version",
-      "description": "Debe decir Claude Sonnet 4.5, no 3.5 Sonnet",
-      "input": "¿Qué modelo de IA usas?",
-      "lang": "es",
+      "description": "Should say Claude Sonnet 4.5, not 3.5 Sonnet",
+      "input": "What AI model do you use?",
+      "lang": "en",
       "assertions": [
         { "type": "contains_any", "values": ["Sonnet 4.5", "sonnet-4-5", "Claude Sonnet 4"] },
         { "type": "not_contains", "value": "3.5 Sonnet" },

@@ -17,14 +17,14 @@
  */
 
 import { config } from 'dotenv'
-config({ path: '.env.local' })
-config() // also load .env as fallback
+config({ path: '.env.local', override: true })
+config({ override: true }) // also load .env as fallback
 
 import { readFileSync, writeFileSync, readdirSync, existsSync } from 'node:fs'
 import { resolve, dirname, basename } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { createHash } from 'node:crypto'
-import OpenAI from 'openai'
+// Voyage AI used for embeddings (free tier, 512 dims with voyage-3-lite)
 import { createClient } from '@supabase/supabase-js'
 import Anthropic from '@anthropic-ai/sdk'
 import { articleRegistry } from '../src/articles/registry.ts'
@@ -40,18 +40,18 @@ const HASHES_FILE = resolve(root, '.rag-hashes.json')
 
 const MAX_CHUNK_SIZE = 1000    // characters
 const CHUNK_OVERLAP = 200      // characters
-const EMBEDDING_MODEL = 'text-embedding-3-small'
-const EMBEDDING_BATCH_SIZE = 20 // OpenAI allows up to 2048, but we batch for safety
+const EMBEDDING_MODEL = 'voyage-3-lite'
+const EMBEDDING_BATCH_SIZE = 20
 
 // ---------------------------------------------------------------------------
 // Clients
 // ---------------------------------------------------------------------------
 
-function getOpenAI(): OpenAI {
-  if (!process.env.OPENAI_API_KEY) {
-    throw new Error('OPENAI_API_KEY is required')
+function getVoyageApiKey(): string {
+  if (!process.env.VOYAGE_API_KEY) {
+    throw new Error('VOYAGE_API_KEY is required')
   }
-  return new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+  return process.env.VOYAGE_API_KEY
 }
 
 function getSupabase() {
@@ -215,17 +215,47 @@ async function addContextualSummaries(
 // Embedding
 // ---------------------------------------------------------------------------
 
-async function embedTexts(texts: string[], openai: OpenAI): Promise<number[][]> {
+async function embedTexts(texts: string[], apiKey: string): Promise<number[][]> {
   const allEmbeddings: number[][] = []
 
   for (let i = 0; i < texts.length; i += EMBEDDING_BATCH_SIZE) {
     const batch = texts.slice(i, i + EMBEDDING_BATCH_SIZE)
-    const response = await openai.embeddings.create({
-      model: EMBEDDING_MODEL,
-      input: batch,
-    })
-    for (const item of response.data) {
-      allEmbeddings.push(item.embedding)
+
+    let retries = 0
+    const maxRetries = 5
+    while (true) {
+      const response = await fetch('https://api.voyageai.com/v1/embeddings', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ model: EMBEDDING_MODEL, input: batch }),
+      })
+
+      if (response.status === 429 && retries < maxRetries) {
+        retries++
+        const wait = Math.min(30, 10 * retries) // 10s, 20s, 30s, 30s, 30s
+        console.log(`     ⏳ Rate limited (429) — waiting ${wait}s (retry ${retries}/${maxRetries})`)
+        await new Promise(r => setTimeout(r, wait * 1000))
+        continue
+      }
+
+      if (!response.ok) {
+        throw new Error(`Voyage AI embedding failed: ${response.status} ${await response.text()}`)
+      }
+
+      const data = await response.json()
+      for (const item of data.data) {
+        allEmbeddings.push(item.embedding)
+      }
+
+      // Throttle between batches to respect rate limits (3 RPM free tier)
+      if (i + EMBEDDING_BATCH_SIZE < texts.length) {
+        console.log(`     ⏳ Throttling 25s between batches...`)
+        await new Promise(r => setTimeout(r, 25000))
+      }
+      break
     }
   }
 
@@ -276,13 +306,13 @@ async function main() {
   console.log('🔄 RAG Ingestion starting...\n')
 
   // Check for env vars
-  if (!process.env.OPENAI_API_KEY || !process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
-    console.log('⚠️  Missing env vars (OPENAI_API_KEY, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)')
+  if (!process.env.VOYAGE_API_KEY || !process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    console.log('⚠️  Missing env vars (VOYAGE_API_KEY, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)')
     console.log('   Skipping RAG ingestion. Set env vars to enable.\n')
     process.exit(0) // Exit gracefully so build continues
   }
 
-  const openai = getOpenAI()
+  const voyageKey = getVoyageApiKey()
   const supabase = getSupabase()
   const anthropic = getAnthropic()
 
@@ -335,7 +365,7 @@ async function main() {
 
     // Embed
     console.log(`     → Embedding ${enrichedTexts.length} chunks...`)
-    const embeddings = await embedTexts(enrichedTexts, openai)
+    const embeddings = await embedTexts(enrichedTexts, voyageKey)
 
     // Delete old + insert new
     console.log(`     → Upserting to Supabase...`)

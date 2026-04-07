@@ -1,5 +1,5 @@
 /**
- * Funciones de assertion deterministas para evals
+ * Deterministic assertion functions for evals
  */
 
 export interface Assertion {
@@ -19,28 +19,28 @@ export interface AssertionResult {
 }
 
 /**
- * Verifica que la respuesta contiene un texto exacto (case insensitive)
+ * Verifies that the response contains exact text (case insensitive)
  */
 export function assertContains(response: string, value: string): boolean {
   return response.toLowerCase().includes(value.toLowerCase())
 }
 
 /**
- * Verifica que la respuesta contiene al menos uno de los valores (case insensitive)
+ * Verifies that the response contains at least one of the values (case insensitive)
  */
 export function assertContainsAny(response: string, values: string[]): boolean {
   return values.some((v) => response.toLowerCase().includes(v.toLowerCase()))
 }
 
 /**
- * Verifica que la respuesta NO contiene un texto (case insensitive)
+ * Verifies that the response does NOT contain text (case insensitive)
  */
 export function assertNotContains(response: string, value: string): boolean {
   return !response.toLowerCase().includes(value.toLowerCase())
 }
 
 /**
- * Verifica que la respuesta tiene como máximo N palabras
+ * Verifies that the response has at most N words
  */
 export function assertMaxWords(response: string, maxWords: number): boolean {
   const wordCount = response.trim().split(/\s+/).length
@@ -48,7 +48,7 @@ export function assertMaxWords(response: string, maxWords: number): boolean {
 }
 
 /**
- * Verifica que la respuesta tiene al menos N palabras
+ * Verifies that the response has at least N words
  */
 export function assertMinWords(response: string, minWords: number): boolean {
   const wordCount = response.trim().split(/\s+/).length
@@ -56,7 +56,7 @@ export function assertMinWords(response: string, minWords: number): boolean {
 }
 
 /**
- * Verifica que la respuesta cumple con un patrón regex
+ * Verifies that the response matches a regex pattern
  */
 export function assertRegex(
   response: string,
@@ -73,8 +73,8 @@ export function assertRegex(
 }
 
 /**
- * Detecta el idioma de la respuesta (heurística simple)
- * Busca palabras comunes en español vs inglés
+ * Detects the language of the response (simple heuristic)
+ * Looks for common words in Spanish vs English
  */
 export function assertLanguage(response: string, expected: 'es' | 'en'): boolean {
   const spanishWords = [
@@ -150,7 +150,7 @@ export function assertLanguage(response: string, expected: 'es' | 'en'): boolean
 }
 
 /**
- * Ejecuta una assertion y devuelve el resultado
+ * Executes an assertion and returns the result
  */
 export function runAssertion(
   response: string,
@@ -245,8 +245,8 @@ export function runAssertion(
       break
 
     case 'llm_judge':
-      // LLM judge se maneja en llm-judge.ts
-      passed = true // Placeholder, se sobrescribe
+      // LLM judge is handled in llm-judge.ts
+      passed = true // Placeholder, gets overwritten
       reason = 'LLM judge evaluation pending'
       break
 

@@ -5,12 +5,12 @@
     {
       "id": "multi-context-retention",
       "description": "Bot retains context from previous turn (Jacobo details)",
-      "input": "¿Qué modelo de IA usa?",
-      "lang": "es",
+      "input": "What AI model does it use?",
+      "lang": "en",
       "conversation": [
-        { "role": "user", "content": "Háblame del agente Jacobo" },
-        { "role": "assistant", "content": "Jacobo es mi agente de IA omnicanal para atención al cliente. Funciona vía WhatsApp y web, con sub-agentes especializados que manejan presupuestos, citas y pedidos usando tool calling." },
-        { "role": "user", "content": "¿Qué modelo de IA usa?" }
+        { "role": "user", "content": "Tell me about the Jacobo agent" },
+        { "role": "assistant", "content": "Jacobo is my omnichannel AI agent for customer service. It works via WhatsApp and web, with specialized sub-agents that handle quotes, appointments, and orders using tool calling." },
+        { "role": "user", "content": "What AI model does it use?" }
       ],
       "assertions": [
         { "type": "contains_any", "values": ["claude", "sonnet", "haiku", "gpt", "modelo", "model", "llm"] }
@@ -19,12 +19,12 @@
     {
       "id": "multi-topic-switch",
       "description": "Bot handles topic switch from Jacobo to Business OS",
-      "input": "Y el Business OS, ¿qué es?",
-      "lang": "es",
+      "input": "And the Business OS, what is it?",
+      "lang": "en",
       "conversation": [
-        { "role": "user", "content": "¿Qué es Jacobo?" },
-        { "role": "assistant", "content": "Jacobo es mi agente de IA omnicanal para atención al cliente. Lo construí para Santifer iRepair." },
-        { "role": "user", "content": "Y el Business OS, ¿qué es?" }
+        { "role": "user", "content": "What is Jacobo?" },
+        { "role": "assistant", "content": "Jacobo is my omnichannel AI agent for customer service. I built it for Santifer iRepair." },
+        { "role": "user", "content": "And the Business OS, what is it?" }
       ],
       "assertions": [
         { "type": "contains_any", "values": ["business os", "erp", "airtable", "operativo", "sistema"] },
@@ -34,14 +34,14 @@
     {
       "id": "multi-drilldown",
       "description": "Bot provides deeper detail on progressive drill-down",
-      "input": "¿Cómo funciona exactamente el pipeline de SEO?",
-      "lang": "es",
+      "input": "How exactly does the SEO pipeline work?",
+      "lang": "en",
       "conversation": [
-        { "role": "user", "content": "¿Qué proyectos has hecho?" },
-        { "role": "assistant", "content": "He construido varios sistemas: un agente IA llamado Jacobo, un Business OS con 12 bases en Airtable, una web programática con SEO automatizado, y este portfolio con chatbot y RAG." },
-        { "role": "user", "content": "Cuéntame más del SEO programático" },
-        { "role": "assistant", "content": "Construí una arquitectura de SEO programático para generar páginas indexables automáticamente usando un decision engine que evalúa volumen de búsqueda y competencia." },
-        { "role": "user", "content": "¿Cómo funciona exactamente el pipeline de SEO?" }
+        { "role": "user", "content": "What projects have you built?" },
+        { "role": "assistant", "content": "I've built several systems: an AI agent called Jacobo, a Business OS with 12 bases in Airtable, a programmatic website with automated SEO, and this portfolio with chatbot and RAG." },
+        { "role": "user", "content": "Tell me more about the programmatic SEO" },
+        { "role": "assistant", "content": "I built a programmatic SEO architecture to automatically generate indexable pages using a decision engine that evaluates search volume and competition." },
+        { "role": "user", "content": "How exactly does the SEO pipeline work?" }
       ],
       "assertions": [
         { "type": "rag_used" },
@@ -51,12 +51,12 @@
     {
       "id": "multi-no-repeat",
       "description": "Bot doesn't repeat the same formulation across turns",
-      "input": "¿Y qué más puedes contarme?",
-      "lang": "es",
+      "input": "And what else can you tell me?",
+      "lang": "en",
       "conversation": [
-        { "role": "user", "content": "¿Qué experiencia tienes con IA?" },
-        { "role": "assistant", "content": "Llevo más de 2 años construyendo sistemas de IA en producción. Desde Jacobo, un agente omnicanal, hasta pipelines de RAG y evals automatizados." },
-        { "role": "user", "content": "¿Y qué más puedes contarme?" }
+        { "role": "user", "content": "What experience do you have with AI?" },
+        { "role": "assistant", "content": "I've been building AI systems in production for over 2 years. From Jacobo, an omnichannel agent, to RAG pipelines and automated evals." },
+        { "role": "user", "content": "And what else can you tell me?" }
       ],
       "assertions": [
         { "type": "llm_judge", "criteria": "The response should provide NEW information not already mentioned in the previous assistant message. It should NOT simply restate the same points about Jacobo being omnichannel or mentioning RAG/evals in the same way." }
@@ -65,14 +65,14 @@
     {
       "id": "multi-return-topic",
       "description": "Bot returns to previous topic correctly",
-      "input": "Volviendo a Jacobo, ¿cuántos clientes atiende?",
-      "lang": "es",
+      "input": "Going back to Jacobo, how many customers does it serve?",
+      "lang": "en",
       "conversation": [
-        { "role": "user", "content": "Háblame de Jacobo" },
-        { "role": "assistant", "content": "Jacobo es mi agente de IA omnicanal para atención al cliente, funciona vía WhatsApp y web." },
-        { "role": "user", "content": "¿Qué stack usas?" },
-        { "role": "assistant", "content": "Mi stack principal es React, TypeScript, Vite, Tailwind, y para IA uso Claude de Anthropic con RAG sobre Supabase." },
-        { "role": "user", "content": "Volviendo a Jacobo, ¿cuántos clientes atiende?" }
+        { "role": "user", "content": "Tell me about Jacobo" },
+        { "role": "assistant", "content": "Jacobo is my omnichannel AI agent for customer service, it works via WhatsApp and web." },
+        { "role": "user", "content": "What stack do you use?" },
+        { "role": "assistant", "content": "My main stack is React, TypeScript, Vite, Tailwind, and for AI I use Claude from Anthropic with RAG on Supabase." },
+        { "role": "user", "content": "Going back to Jacobo, how many customers does it serve?" }
       ],
       "assertions": [
         { "type": "contains_any", "values": ["jacobo", "agente", "autoservicio", "self-service", "90%", "cliente"] }

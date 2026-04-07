@@ -53,7 +53,7 @@ const PromptIcon = ({ icon }: { icon: string }) => {
   return <Icon className="w-3.5 h-3.5" aria-hidden="true" />;
 };
 
-// Hook para detectar móvil
+// Hook to detect mobile
 function useIsMobile() {
   const [isMobile, setIsMobile] = useState(false);
 
@@ -201,7 +201,7 @@ export default function FloatingChat({ lang }: FloatingChatProps) {
     return () => container.removeEventListener('scroll', onScroll);
   }, [isOpen]);
 
-  // Scroll automático: only if user hasn't scrolled up
+  // Auto scroll: only if user hasn't scrolled up
   useEffect(() => {
     if (!isOpen || !isAtBottomRef.current) return;
     messagesEndRef.current?.scrollIntoView({
@@ -224,7 +224,7 @@ export default function FloatingChat({ lang }: FloatingChatProps) {
     return () => window.removeEventListener('openChat', handleOpenChat);
   }, []);
 
-  // Bloquear scroll del body cuando el chat está abierto en móvil
+  // Block body scroll when chat is open on mobile
   useEffect(() => {
     if (isMobile && isOpen) {
       const scrollY = window.scrollY;
@@ -548,7 +548,7 @@ export default function FloatingChat({ lang }: FloatingChatProps) {
 
   return (
     <>
-      {/* Chat Button - avatar con animación sutil */}
+      {/* Chat Button - avatar with subtle animation */}
       <motion.button
         initial={{ opacity: 0, scale: 0.8 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -618,7 +618,7 @@ export default function FloatingChat({ lang }: FloatingChatProps) {
         </AnimatePresence>
       </motion.button>
 
-      {/* Chat Panel - Fullscreen en móvil, flotante en desktop */}
+      {/* Chat Panel - Fullscreen on mobile, floating on desktop */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -636,7 +636,7 @@ export default function FloatingChat({ lang }: FloatingChatProps) {
                 : 'bottom-24 right-6 w-[360px] max-w-[calc(100vw-3rem)] h-[500px] max-h-[calc(100vh-8rem)] rounded-2xl border overflow-hidden'
             }`}
           >
-            {/* Header - con avatar y botón de cerrar en móvil */}
+            {/* Header - with avatar and close button on mobile */}
             <div
               className="p-4 border-b border-border bg-gradient-theme-10 flex items-center justify-between"
               style={
@@ -650,7 +650,7 @@ export default function FloatingChat({ lang }: FloatingChatProps) {
                   <source srcSet="/foto-avatar-sm.webp" type="image/webp" />
                   <img
                     src="/foto-avatar-sm.webp"
-                    alt="santifer avatar"
+                    alt="joseph avatar"
                     className="w-10 h-10 rounded-full object-cover ring-2 ring-primary/20"
                     width={40}
                     height={40}
@@ -723,9 +723,7 @@ export default function FloatingChat({ lang }: FloatingChatProps) {
                           {/* Degradation banner */}
                           {message.role === 'assistant' && message.ragDegraded && (
                             <div className={`mb-1 px-3 py-1 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 ${isMobile ? 'text-xs' : 'text-[11px]'}`}>
-                              {lang === 'en'
-                                ? 'Answering without full access to my articles.'
-                                : 'Respondiendo sin acceso completo a mis artículos.'}
+                              Answering without full access to my articles.
                             </div>
                           )}
                           <div
@@ -788,7 +786,7 @@ export default function FloatingChat({ lang }: FloatingChatProps) {
                           {message.role === 'assistant' && message.ragSources && message.ragSources.length > 0 && !isLoading && !isStreaming && (
                             <div className="flex flex-wrap gap-1.5 mt-2 px-1">
                               {message.ragSources.map((source, si) => {
-                                const targetPath = lang === 'es' ? source.page_path_es : source.page_path_en;
+                                const targetPath = source.page_path_en;
                                 const sectionLabels = getSectionLabels()[targetPath] || {};
                                 const anchorId = source.section_anchor.replace(/^#/, '');
                                 const sectionName = sectionLabels[anchorId] || '';
@@ -831,7 +829,7 @@ export default function FloatingChat({ lang }: FloatingChatProps) {
                     ),
                   )}
 
-                  {/* Quick Prompts - animación estilo Story, colores originales */}
+                  {/* Quick Prompts - Story-style animation, original colors */}
                   {showPrompts && !isLoading && (
                     <motion.div
                       initial={{ opacity: 0, y: 15 }}
@@ -932,7 +930,7 @@ export default function FloatingChat({ lang }: FloatingChatProps) {
             {mode === 'voice' && voiceMode.voiceSources.length > 0 && (
               <div className="flex flex-wrap justify-center gap-1.5 px-4 py-2 border-t border-border/50 bg-card/80">
                 {voiceMode.voiceSources.map((source, si) => {
-                  const targetPath = lang === 'es' ? source.page_path_es : source.page_path_en;
+                  const targetPath = source.page_path_en;
                   const sectionLabels = getSectionLabels()[targetPath] || {};
                   const anchorId = source.section_anchor.replace(/^#/, '');
                   const sectionName = sectionLabels[anchorId] || '';

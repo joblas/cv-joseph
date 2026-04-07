@@ -392,7 +392,7 @@ export function useVoiceMode() {
         if (history.length > 0) {
           const historyText = history
             .filter(m => m.content && m.content.trim())
-            .map(m => `${m.role === 'user' ? 'User' : 'Santiago'}: ${m.content}`)
+            .map(m => `${m.role === 'user' ? 'User' : 'Joseph'}: ${m.content}`)
             .join('\n');
 
           if (historyText) {

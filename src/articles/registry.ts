@@ -46,29 +46,29 @@ export interface ArticleConfig {
 export const articleRegistry: ArticleConfig[] = [
   {
     id: 'n8n-for-pms',
-    slugs: { es: 'n8n-para-pms', en: 'n8n-for-pms' },
-    titles: { es: 'n8n para PMs', en: 'n8n for PMs' },
+    slugs: { es: 'n8n-for-pms', en: 'n8n-for-pms' },
+    titles: { es: 'n8n for PMs', en: 'n8n for PMs' },
     seo: {
       es: {
-        title: 'n8n para PMs: Cheat Sheet + Templates IA Gratis | santifer.io',
-        description: 'Cheat sheet de n8n para Product Managers: automatiza sprint reports y clasifica feedback con IA. 2 templates importables gratis. Tutorial paso a paso.',
+        title: 'n8n for PMs: Cheat Sheet + Free AI Templates | Joseph Blas',
+        description: 'n8n cheat sheet for Product Managers: automate sprint reports and classify feedback with AI. 2 free importable workflow templates. Step-by-step tutorial.',
       },
       en: {
-        title: 'n8n for PMs: Cheat Sheet + Free AI Templates | santifer.io',
+        title: 'n8n for PMs: Cheat Sheet + Free AI Templates | Joseph Blas',
         description: 'n8n cheat sheet for Product Managers: automate sprint reports and classify feedback with AI. 2 free importable workflow templates. Step-by-step tutorial.',
       },
     },
     sectionLabels: {
       es: {
-        'time-sinks': 'Tareas que Roban Tiempo',
+        'time-sinks': 'Time Sinks',
         'workflow-1': 'Workflow 1',
         'workflow-2': 'Workflow 2',
-        'the-pattern': 'El Patrón',
-        'get-started': 'Empieza',
-        'lessons': 'Lecciones',
+        'the-pattern': 'The Pattern',
+        'get-started': 'Get Started',
+        'lessons': 'Lessons',
         'faq': 'FAQ',
-        'import': 'Importar',
-        'resources': 'Recursos',
+        'import': 'Import',
+        'resources': 'Resources',
       },
       en: {
         'time-sinks': 'Time Sinks',
@@ -85,8 +85,8 @@ export const articleRegistry: ArticleConfig[] = [
     type: 'collab',
     ragReady: true,
     i18nFile: 'src/n8n-i18n.ts',
-    ogImage: 'https://santifer.io/workflows/n8n-ai-feedback-classification-workflow.webp',
-    heroImage: 'https://santifer.io/workflows/n8n-sprint-report-automation-workflow.webp',
+    ogImage: 'https://cv-joseph.vercel.app/workflows/n8n-ai-feedback-classification-workflow.webp',
+    heroImage: 'https://cv-joseph.vercel.app/workflows/n8n-sprint-report-automation-workflow.webp',
     component: () => import('../N8nForPMs.tsx'),
     seoMeta: {
       datePublished: '2026-02-24',
@@ -94,7 +94,7 @@ export const articleRegistry: ArticleConfig[] = [
       keywords: ['n8n', 'n8n tutorial', 'n8n templates', 'n8n AI', 'n8n workflow', 'n8n automation', 'n8n cheat sheet', 'product manager', 'AI workflow automation', 'sprint report automation', 'feedback classification AI', 'no-code automation', 'n8n for product managers', 'workflow templates free'],
       articleType: 'TechArticle',
       articleTags: 'n8n,product manager,automation,AI,workflow,no-code',
-      images: ['https://santifer.io/workflows/n8n-sprint-report-automation-workflow.webp', 'https://santifer.io/workflows/n8n-ai-feedback-classification-workflow.webp'],
+      images: ['https://cv-joseph.vercel.app/workflows/n8n-sprint-report-automation-workflow.webp', 'https://cv-joseph.vercel.app/workflows/n8n-ai-feedback-classification-workflow.webp'],
       about: [
         { '@type': 'SoftwareApplication', name: 'n8n', url: 'https://n8n.io', applicationCategory: 'Workflow Automation' },
         { '@type': 'Thing', name: 'Product Management Automation' },
@@ -118,12 +118,12 @@ export const articleRegistry: ArticleConfig[] = [
   },
   {
     id: 'jacobo',
-    slugs: { es: 'agente-ia-jacobo', en: 'ai-agent-jacobo' },
-    titles: { es: 'Agente IA Jacobo', en: 'AI Agent Jacobo' },
+    slugs: { es: 'ai-agent-jacobo', en: 'ai-agent-jacobo' },
+    titles: { es: 'AI Agent Jacobo', en: 'AI Agent Jacobo' },
     seo: {
       es: {
-        title: 'Jacobo: Agente IA Omnicanal — 90% Autoservicio',
-        description: 'Case study: agente IA omnicanal con sub-agentes, tool calling y orquestación multi-modelo (n8n + ElevenLabs). 90% autoservicio.',
+        title: 'Jacobo: Multi-Agent AI — 90% Self-Service',
+        description: 'Case study: omnichannel AI agent with sub-agents, tool calling & multi-model orchestration (n8n + ElevenLabs). 90% self-service.',
       },
       en: {
         title: 'Jacobo: Multi-Agent AI — 90% Self-Service',
@@ -132,21 +132,21 @@ export const articleRegistry: ArticleConfig[] = [
     },
     sectionLabels: {
       es: {
-        'the-problem': 'El Problema',
-        'architecture': 'Arquitectura',
-        'e2e-flows': 'Flujos E2E',
-        'main-router': 'Los Dos Cerebros',
-        'natural-language-booking': 'Deep Dive: Citas',
-        'deep-dive-quotes': 'Deep Dive: Presupuestos',
+        'the-problem': 'The Problem',
+        'architecture': 'Architecture',
+        'e2e-flows': 'E2E Flows',
+        'main-router': 'The Two Brains',
+        'natural-language-booking': 'Deep Dive: Booking',
+        'deep-dive-quotes': 'Deep Dive: Quotes',
         'deep-dive-others': 'Deep Dive: Tools',
-        'results': 'Resultados',
+        'results': 'Results',
         'decisions': 'ADRs',
-        'platform-evolution': 'Evolución',
-        'what-id-do-differently': 'Lecciones',
-        'enterprise-patterns': 'Patrones',
+        'platform-evolution': 'Evolution',
+        'what-id-do-differently': 'Lessons',
+        'enterprise-patterns': 'Patterns',
         'run-it-yourself': 'Workflows',
         'faq': 'FAQ',
-        'resources': 'Recursos',
+        'resources': 'Resources',
       },
       en: {
         'the-problem': 'The Problem',
@@ -169,8 +169,8 @@ export const articleRegistry: ArticleConfig[] = [
     type: 'case-study',
     ragReady: true,
     i18nFile: 'src/jacobo-i18n.ts',
-    ogImage: 'https://santifer.io/jacobo/og-jacobo-agent.webp',
-    heroImage: 'https://santifer.io/jacobo/santiago-headphones-thinking.webp',
+    ogImage: 'https://cv-joseph.vercel.app/jacobo/og-jacobo-agent.webp',
+    heroImage: 'https://cv-joseph.vercel.app/jacobo/santiago-headphones-thinking.webp',
     component: () => import('../JacoboAgent.tsx'),
     seoMeta: {
       datePublished: '2026-02-25',
@@ -178,7 +178,7 @@ export const articleRegistry: ArticleConfig[] = [
       keywords: ['multi-agent AI', 'multi agent orchestration', 'AI agent', 'sub-agent architecture', 'tool calling production', 'n8n workflows', 'n8n ai agent', 'ai agent case study', 'customer service AI', 'WhatsApp AI agent', 'ElevenLabs voice agent', 'voice AI', 'HITL', 'human in the loop', 'ia para pymes', 'agente ia whatsapp', 'multi-model orchestration', 'OpenRouter', 'FDE portfolio', 'solutions architect AI', 'AI production manager', 'enterprise AI patterns', 'voice AI platform', 'conversational AI case study', 'agentic workflows'],
       articleType: 'TechArticle',
       articleTags: 'AI agent,multi-agent,n8n,ElevenLabs,HITL,tool calling,WhatsApp,voice AI',
-      images: ['https://santifer.io/jacobo/og-jacobo-agent.webp'],
+      images: ['https://cv-joseph.vercel.app/jacobo/og-jacobo-agent.webp'],
       about: [
         { '@type': 'SoftwareApplication', name: 'n8n', url: 'https://n8n.io', applicationCategory: 'Workflow Automation' },
         { '@type': 'SoftwareApplication', name: 'ElevenLabs', url: 'https://elevenlabs.io', applicationCategory: 'Voice AI' },
@@ -203,12 +203,12 @@ export const articleRegistry: ArticleConfig[] = [
   },
   {
     id: 'business-os',
-    slugs: { es: 'business-os-para-airtable', en: 'business-os-for-airtable' },
+    slugs: { es: 'business-os-for-airtable', en: 'business-os-for-airtable' },
     titles: { es: 'Business OS', en: 'Business OS' },
     seo: {
       es: {
-        title: 'Business OS Custom: Airtable + n8n — 170h/Mes',
-        description: 'Case study: Business OS custom con 12 bases Airtable, 2100 campos y n8n que ahorra 170h/mes en reparación de móviles.',
+        title: 'Custom Business OS: Airtable + n8n — 170h/Mo',
+        description: 'Case study: custom Business OS with 12 Airtable bases, 2100 fields, and n8n saving 170h/month at a phone repair business.',
       },
       en: {
         title: 'Custom Business OS: Airtable + n8n — 170h/Mo',
@@ -217,19 +217,19 @@ export const articleRegistry: ArticleConfig[] = [
     },
     sectionLabels: {
       es: {
-        'why-custom': '¿Por Qué Custom?',
-        'overview': 'Vista General',
-        'e2e-flows': 'Flujos E2E',
-        'cross-cutting': 'Transversales',
-        'day-in-life': 'Un Día',
-        'before-after': 'Antes/Después',
-        'impact': 'Impacto',
+        'why-custom': 'Why Custom?',
+        'overview': 'Overview',
+        'e2e-flows': 'E2E Flows',
+        'cross-cutting': 'Cross-Cutting',
+        'day-in-life': 'A Day',
+        'before-after': 'Before/After',
+        'impact': 'Impact',
         'decisions': 'ADRs',
-        'platform-evolution': 'Evolución',
-        'lessons': 'Lecciones',
-        'replicability': 'Patrones',
+        'platform-evolution': 'Evolution',
+        'lessons': 'Lessons',
+        'replicability': 'Patterns',
         'faq': 'FAQ',
-        'resources': 'Recursos',
+        'resources': 'Resources',
       },
       en: {
         'why-custom': 'Why Custom?',
@@ -250,8 +250,8 @@ export const articleRegistry: ArticleConfig[] = [
     type: 'case-study',
     ragReady: true,
     i18nFile: 'src/business-os-i18n.ts',
-    ogImage: 'https://santifer.io/business-os/og-business-os.webp',
-    heroImage: 'https://santifer.io/business-os/web-landing-hero.webp',
+    ogImage: 'https://cv-joseph.vercel.app/business-os/og-business-os.webp',
+    heroImage: 'https://cv-joseph.vercel.app/business-os/web-landing-hero.webp',
     component: () => import('../BusinessOS.tsx'),
     seoMeta: {
       datePublished: '2026-02-25',
@@ -259,7 +259,7 @@ export const articleRegistry: ArticleConfig[] = [
       keywords: ['Business OS', 'Airtable ERP', 'Airtable as ERP', 'no-code ERP', 'Airtable automation', 'CRM gamification', 'phone repair', 'inventory management', 'custom ERP case study', 'repair shop management', 'programmatic SEO', 'Airtable CRM', 'single source of truth', 'business operating system', 'multi-base architecture'],
       articleType: 'TechArticle',
       articleTags: 'Business OS,Airtable,n8n,ERP,CRM,automation,phone repair',
-      images: ['https://santifer.io/business-os/og-business-os.webp'],
+      images: ['https://cv-joseph.vercel.app/business-os/og-business-os.webp'],
       about: [
         { '@type': 'SoftwareApplication', name: 'Airtable', url: 'https://airtable.com', applicationCategory: 'Database Platform' },
         { '@type': 'SoftwareApplication', name: 'n8n', url: 'https://n8n.io', applicationCategory: 'Workflow Automation' },
@@ -278,41 +278,41 @@ export const articleRegistry: ArticleConfig[] = [
   },
   {
     id: 'programmatic-seo',
-    slugs: { es: 'seo-programatico', en: 'programmatic-seo' },
-    titles: { es: 'SEO Programático', en: 'Programmatic SEO' },
+    slugs: { es: 'programmatic-seo', en: 'programmatic-seo' },
+    titles: { es: 'Programmatic SEO', en: 'Programmatic SEO' },
     seo: {
       es: {
-        title: 'SEO Programático: 4.000+ Páginas desde un ERP | santifer.io',
-        description: 'Case study: cómo generé 4.730 landing pages estáticas con Airtable, DataForSEO y crawl budget optimization. 2M+ impresiones, 19K+ clicks.',
+        title: 'Programmatic SEO: 4,000+ Pages from an ERP | Joseph Blas',
+        description: 'Case study: 4,730 static landing pages from Airtable as headless CMS with DataForSEO crawl budget optimization and Astro SSG. 2M+ impressions, 19K+ clicks.',
       },
       en: {
-        title: 'Programmatic SEO: 4,000+ Pages from an ERP | santifer.io',
+        title: 'Programmatic SEO: 4,000+ Pages from an ERP | Joseph Blas',
         description: 'Case study: 4,730 static landing pages from Airtable as headless CMS with DataForSEO crawl budget optimization and Astro SSG. 2M+ impressions, 19K+ clicks.',
       },
     },
     sectionLabels: {
       es: {
-        'opportunity': 'La Oportunidad',
-        'the-numbers': 'Los Números',
-        'two-strategies': 'Dos Estrategias',
-        'architecture': 'La Arquitectura',
-        'url-taxonomy': 'Taxonomía URLs',
-        'cms-deep-dive': 'El CMS',
-        'page-anatomy': 'Anatomía de Página',
-        'decision-engine': 'Motor de Decisión',
+        'opportunity': 'The Opportunity',
+        'the-numbers': 'The Numbers',
+        'two-strategies': 'Two Strategies',
+        'architecture': 'The Architecture',
+        'url-taxonomy': 'URL Taxonomy',
+        'cms-deep-dive': 'The CMS',
+        'page-anatomy': 'Page Anatomy',
+        'decision-engine': 'Decision Engine',
         'crawl-budget': 'Crawl Budget',
         'pipeline': 'Pipeline',
-        'content-automation': 'Automatización',
-        'image-pipeline': 'Pipeline de Imágenes',
-        'reviews-pipeline': 'Pipeline de Reseñas',
-        'before-after-pipeline': 'Pipeline Antes/Después',
-        'growth': 'Crecimiento',
-        'results': 'Resultados',
-        'starting-point': 'El Punto de Partida',
+        'content-automation': 'Automation',
+        'image-pipeline': 'Image Pipeline',
+        'reviews-pipeline': 'Reviews Pipeline',
+        'before-after-pipeline': 'Before/After Pipeline',
+        'growth': 'Growth',
+        'results': 'Results',
+        'starting-point': 'The Starting Point',
         'stack': 'Stack',
-        'lessons': 'Lecciones',
+        'lessons': 'Lessons',
         'faq': 'FAQ',
-        'resources': 'Recursos',
+        'resources': 'Resources',
       },
       en: {
         'opportunity': 'The Opportunity',
@@ -341,8 +341,8 @@ export const articleRegistry: ArticleConfig[] = [
     type: 'case-study',
     ragReady: true,
     i18nFile: 'src/pseo-i18n.ts',
-    ogImage: 'https://santifer.io/pseo/og-programmatic-seo.webp',
-    heroImage: 'https://santifer.io/pseo/ss-repair-page-hero.webp',
+    ogImage: 'https://cv-joseph.vercel.app/pseo/og-programmatic-seo.webp',
+    heroImage: 'https://cv-joseph.vercel.app/pseo/ss-repair-page-hero.webp',
     component: () => import('../ProgrammaticSeo.tsx'),
     seoMeta: {
       datePublished: '2026-02-25',
@@ -350,7 +350,7 @@ export const articleRegistry: ArticleConfig[] = [
       keywords: ['programmatic SEO', 'Airtable', 'headless CMS', 'Astro', 'DataForSEO', 'crawl budget', 'phone repair', 'static site generation', 'local SEO', 'ERP'],
       articleType: 'TechArticle',
       articleTags: 'programmatic SEO,Airtable,Astro,DataForSEO,crawl budget,phone repair,ERP,local SEO',
-      images: ['https://santifer.io/pseo/og-programmatic-seo.png'],
+      images: ['https://cv-joseph.vercel.app/pseo/og-programmatic-seo.png'],
       about: [
         { '@type': 'SoftwareApplication', name: 'Airtable', url: 'https://airtable.com', applicationCategory: 'Database Platform' },
         { '@type': 'SoftwareApplication', name: 'Astro', url: 'https://astro.build', applicationCategory: 'Static Site Generator' },
@@ -369,12 +369,12 @@ export const articleRegistry: ArticleConfig[] = [
   },
   {
     id: 'self-healing-chatbot',
-    slugs: { es: 'chatbot-que-se-cura-solo', en: 'self-healing-chatbot' },
-    titles: { es: 'El Chatbot Que Se Cura Solo', en: 'The Self-Healing Chatbot' },
+    slugs: { es: 'self-healing-chatbot', en: 'self-healing-chatbot' },
+    titles: { es: 'The Self-Healing Chatbot', en: 'The Self-Healing Chatbot' },
     seo: {
       es: {
-        title: 'El Chatbot Que Se Cura Solo: De Widget a LLMOps en Producción',
-        description: 'Case study: cómo evolucioné un chatbot de 50 líneas a un sistema LLMOps con RAG agéntico, defensa de jailbreak en 6 capas, 71 evals y closed-loop automático.',
+        title: 'The Self-Healing Chatbot: From Widget to Production LLMOps',
+        description: 'Case study: production LLMOps with agentic observability, 6-layer defense, 71 evals, voice mode, and a closed-loop that generates tests from real failures.',
       },
       en: {
         title: 'The Self-Healing Chatbot: From Widget to Production LLMOps',
@@ -383,18 +383,18 @@ export const articleRegistry: ArticleConfig[] = [
     },
     sectionLabels: {
       es: {
-        'genesis': 'La Génesis',
-        'evolution': 'La Evolución',
-        'architecture': 'Arquitectura',
-        'how-it-was-built': 'Cómo Se Construyó',
-        'rag': 'RAG Agéntico',
-        'defense': 'Defensa',
-        'agentic-observability': 'Observabilidad Agéntica',
-        'evals': 'Los 71 Tests',
-        'closed-loop': 'El Loop Cerrado',
-        'cost': 'Coste Real',
-        'voice': 'Modo Voz',
-        'lessons': 'Lecciones',
+        'genesis': 'The Genesis',
+        'evolution': 'The Evolution',
+        'architecture': 'Architecture',
+        'how-it-was-built': 'How It Was Built',
+        'rag': 'Agentic RAG',
+        'defense': 'Defense',
+        'agentic-observability': 'Agentic Observability',
+        'evals': 'The 71 Tests',
+        'closed-loop': 'The Closed Loop',
+        'cost': 'Real Cost',
+        'voice': 'Voice Mode',
+        'lessons': 'Lessons',
         'faq': 'FAQ',
       },
       en: {
@@ -416,8 +416,8 @@ export const articleRegistry: ArticleConfig[] = [
     type: 'case-study',
     ragReady: true,
     i18nFile: 'src/chatbot-i18n.ts',
-    ogImage: 'https://santifer.io/chatbot/og-self-healing-chatbot.webp',
-    heroImage: 'https://santifer.io/chatbot/hero-self-healing-chatbot.webp',
+    ogImage: 'https://cv-joseph.vercel.app/chatbot/og-self-healing-chatbot.webp',
+    heroImage: 'https://cv-joseph.vercel.app/chatbot/hero-self-healing-chatbot.webp',
     component: () => import('../SelfHealingChatbot.tsx'),
     seoMeta: {
       datePublished: '2026-03-11',
@@ -425,7 +425,7 @@ export const articleRegistry: ArticleConfig[] = [
       keywords: ['LLMOps', 'self-healing chatbot', 'agentic RAG', 'jailbreak defense', 'prompt injection', 'LLM evaluation', 'closed loop LLM', 'Langfuse', 'prompt versioning', 'adversarial testing', 'trace-to-eval', 'hybrid search pgvector', 'AI portfolio', 'chatbot evals', 'CI gate LLM', 'voice mode chatbot', 'OpenAI Realtime API', 'speech-to-speech AI', 'agentic observability', 'developer feedback loop', 'AI maintaining AI'],
       articleType: 'TechArticle',
       articleTags: 'LLMOps,self-healing chatbot,agentic RAG,jailbreak defense,Langfuse,evals,closed-loop,prompt injection',
-      images: ['https://santifer.io/chatbot/og-self-healing-chatbot.webp'],
+      images: ['https://cv-joseph.vercel.app/chatbot/og-self-healing-chatbot.webp'],
       about: [
         { '@type': 'SoftwareApplication', name: 'Langfuse', url: 'https://langfuse.com', applicationCategory: 'LLM Observability' },
         { '@type': 'SoftwareApplication', name: 'Supabase', url: 'https://supabase.com', applicationCategory: 'Database' },
@@ -449,12 +449,12 @@ export const articleRegistry: ArticleConfig[] = [
   },
   {
     id: 'career-ops',
-    slugs: { es: 'career-ops', en: 'career-ops-system' },
+    slugs: { es: 'career-ops-system', en: 'career-ops-system' },
     titles: { es: 'Career-Ops', en: 'Career-Ops' },
     seo: {
       es: {
-        title: 'Career-Ops: Agente IA que Automatiza Mi Búsqueda de Empleo',
-        description: 'Case study: agente IA multi-agente que evalúa ofertas en 10 dimensiones, crea CV con IA personalizados por oferta y automatiza aplicaciones. 631 evaluaciones.',
+        title: 'Career-Ops: How I Built My Own AI Job Search Tool',
+        description: 'Case study: AI job search tool built as a multi-agent system. AI resume builder, 10D scoring, automated job application with HITL. 631 evaluations.',
       },
       en: {
         title: 'Career-Ops: How I Built My Own AI Job Search Tool',
@@ -463,16 +463,16 @@ export const articleRegistry: ArticleConfig[] = [
     },
     sectionLabels: {
       es: {
-        'the-problem': 'El Problema',
+        'the-problem': 'The Problem',
         'architecture': 'Multi-Agent System',
-        'scoring': 'Scoring 10D',
-        'pipeline': 'El Pipeline',
+        'scoring': '10D Scoring',
+        'pipeline': 'The Pipeline',
         'pdf': 'AI Resume Builder',
-        'before-after': 'Antes/Después',
-        'results': 'Resultados',
-        'lessons': 'Lecciones',
+        'before-after': 'Before/After',
+        'results': 'Results',
+        'lessons': 'Lessons',
         'faq': 'FAQ',
-        'related': 'Relacionados',
+        'related': 'Related',
       },
       en: {
         'the-problem': 'The Problem',
@@ -490,8 +490,8 @@ export const articleRegistry: ArticleConfig[] = [
     type: 'case-study',
     ragReady: true,
     i18nFile: 'src/career-ops-i18n.ts',
-    ogImage: 'https://santifer.io/career-ops/og-career-ops.webp',
-    heroImage: 'https://santifer.io/career-ops/hero-career-ops.webp',
+    ogImage: 'https://cv-joseph.vercel.app/career-ops/og-career-ops.webp',
+    heroImage: 'https://cv-joseph.vercel.app/career-ops/hero-career-ops.webp',
     component: () => import('../CareerOps.tsx'),
     seoMeta: {
       datePublished: '2026-03-17',
@@ -499,7 +499,7 @@ export const articleRegistry: ArticleConfig[] = [
       keywords: ['ai job search', 'ai job search tool', 'ai powered job search', 'ai resume builder', 'ai resume', 'multi agent system', 'multi agent orchestration', 'automated job application', 'ATS-optimized resume', 'Claude Code', 'batch processing', 'HITL', 'job search automation', 'career-ops', 'ai auto apply', 'agente ia', 'crear cv con ia', 'automatizacion con ia', 'sistema multiagente', 'busqueda de empleo ia'],
       articleType: 'TechArticle',
       articleTags: 'multi-agent,job search,Claude Code,ATS,batch processing,HITL,automation,Playwright',
-      images: ['https://santifer.io/career-ops/og-career-ops.webp'],
+      images: ['https://cv-joseph.vercel.app/career-ops/og-career-ops.webp'],
       about: [
         { '@type': 'SoftwareApplication', name: 'Claude Code', url: 'https://claude.ai', applicationCategory: 'AI Agent' },
         { '@type': 'SoftwareApplication', name: 'Playwright', url: 'https://playwright.dev', applicationCategory: 'Browser Automation' },
@@ -519,39 +519,103 @@ export const articleRegistry: ArticleConfig[] = [
         { '@type': 'SoftwareApplication', name: 'Node.js', url: 'https://nodejs.org' },
       ],
       discussionUrl: 'https://www.reddit.com/r/SideProject/comments/1rw1lg4/i_automated_my_job_search_with_ai_agents_516/',
-      relatedLink: 'https://dev.to/santifer/i-built-a-multi-agent-job-search-system-with-claude-code-631-evaluations-12-modes-2cd0',
+      relatedLink: 'https://github.com/joblas/career-ops',
     },
   },
   {
-    id: 'santifer-irepair',
-    slugs: { es: 'santifer-irepair', en: 'santifer-irepair-founder' },
-    titles: { es: 'Santifer iRepair', en: 'Santifer iRepair' },
+    id: 'openclaw',
+    slugs: { es: 'openclaw', en: 'openclaw' },
+    titles: { es: 'OpenClaw', en: 'OpenClaw' },
     seo: {
       es: {
-        title: 'Santifer iRepair Sevilla | Reparación de Móviles desde 2009',
-        description: 'La tienda de reparación de móviles fundada por Santiago en 2009 sigue abierta en Sevilla. 30.000+ reparaciones. Encuentra la tienda o conoce al fundador.',
+        title: 'I Built a 22-Agent AI Team to Run My Business | Joseph Blas',
+        description: '22 specialized AI agents running real business operations 24/7. Org chart, model tiering, infrastructure, and real workflows. Built on OpenClaw.',
       },
       en: {
-        title: 'Santifer iRepair Seville | Phone Repair since 2009',
-        description: 'The phone repair shop founded by Santiago in 2009 is still open in Seville, Spain. 30,000+ repairs. Find the shop or meet the founder.',
+        title: 'I Built a 22-Agent AI Team to Run My Business | Joseph Blas',
+        description: '22 specialized AI agents running real business operations 24/7. Org chart, model tiering, infrastructure, and real workflows. Built on OpenClaw.',
+      },
+    },
+    sectionLabels: {
+      es: {
+        'org-chart': 'Org Chart',
+        'model-tiers': 'Model Tiers',
+        'infrastructure': 'Infrastructure',
+        'workflows': 'Workflows',
+        'why-it-matters': 'Why It Matters',
+        'lessons': 'Lessons',
+        'faq': 'FAQ',
+        'resources': 'Resources',
+      },
+      en: {
+        'org-chart': 'Org Chart',
+        'model-tiers': 'Model Tiers',
+        'infrastructure': 'Infrastructure',
+        'workflows': 'Workflows',
+        'why-it-matters': 'Why It Matters',
+        'lessons': 'Lessons',
+        'faq': 'FAQ',
+        'resources': 'Resources',
+      },
+    },
+    type: 'case-study',
+    ragReady: true,
+    i18nFile: 'src/openclaw-i18n.ts',
+    ogImage: 'https://cv-joseph.vercel.app/articles/openclaw-org-chart.webp',
+    heroImage: 'https://cv-joseph.vercel.app/articles/openclaw-org-chart.webp',
+    component: () => import('../OpenClaw.tsx'),
+    seoMeta: {
+      datePublished: '2026-02-18',
+      dateModified: '2026-02-18',
+      keywords: ['AI agents', 'multi-agent system', 'OpenClaw', 'agent architecture', 'small business AI', 'AI automation', 'Claude', 'n8n', 'model tiering', 'AI team', '22 agents', 'agent runtime', 'AI orchestration', 'business automation', 'AI consultancy'],
+      articleType: 'TechArticle',
+      articleTags: 'AI agents,multi-agent,OpenClaw,architecture,small business,Claude,n8n,automation',
+      images: ['https://cv-joseph.vercel.app/articles/openclaw-org-chart.webp'],
+      about: [
+        { '@type': 'SoftwareApplication', name: 'OpenClaw', applicationCategory: 'Agent Runtime' },
+        { '@type': 'SoftwareApplication', name: 'n8n', url: 'https://n8n.io', applicationCategory: 'Workflow Automation' },
+        { '@type': 'Thing', name: 'Multi-Agent AI Systems' },
+      ],
+      extra: { proficiencyLevel: 'Expert', dependencies: 'OpenClaw, n8n, Claude API, Telegram, Slack, GitHub, Stripe, Tailscale, systemd' },
+      citation: [
+        { '@type': 'WebPage', name: 'Original blog post: 22-Agent AI Team Architecture', url: 'https://www.joestechsolutions.com/blog/22-agent-ai-team-architecture' },
+      ],
+      mentions: [
+        { '@type': 'SoftwareApplication', name: 'OpenClaw' },
+        { '@type': 'SoftwareApplication', name: 'n8n', url: 'https://n8n.io' },
+        { '@type': 'SoftwareApplication', name: 'Claude', url: 'https://claude.ai' },
+        { '@type': 'SoftwareApplication', name: 'Tailscale', url: 'https://tailscale.com' },
+      ],
+    },
+  },
+  {
+    id: 'av-career',
+    slugs: { es: 'av-career', en: 'av-career' },
+    titles: { es: 'AV Career', en: 'AV Career' },
+    seo: {
+      es: {
+        title: 'Joseph Blas | 15+ Years in Autonomous Vehicles',
+        description: "From Google's Self-Driving Car to Pronto.ai. 15+ years building autonomous vehicles: Firefly, Uber ATG, 2,900-mile cross-country demo.",
+      },
+      en: {
+        title: 'Joseph Blas | 15+ Years in Autonomous Vehicles',
+        description: "From Google's Self-Driving Car to Pronto.ai. 15+ years building autonomous vehicles: Firefly, Uber ATG, 2,900-mile cross-country demo.",
       },
     },
     sectionLabels: { es: {}, en: {} },
     type: 'bridge',
     component: () => import('../SantiferIRepair.tsx'),
-    xDefaultSlug: 'santifer-irepair',
+    xDefaultSlug: 'av-career',
   },
 ]
 
 // Derived maps for GlobalNav and routing
 export function getAltPaths(): Record<string, string> {
   const map: Record<string, string> = {
-    '/': '/en',
+    '/': '/',
     '/en': '/',
-    '/sobre-mi': '/about',
-    '/about': '/sobre-mi',
-    '/privacidad': '/privacy',
-    '/privacy': '/privacidad',
+    '/about': '/about',
+    '/privacy': '/privacy',
   }
   for (const article of articleRegistry) {
     map[`/${article.slugs.es}`] = `/${article.slugs.en}`
@@ -562,9 +626,8 @@ export function getAltPaths(): Record<string, string> {
 
 export function getPageTitles(): Record<string, string> {
   const map: Record<string, string> = {
-    '/': 'Portfolio de Santiago',
-    '/en': "Santiago's Portfolio",
-    '/sobre-mi': 'Sobre Mí',
+    '/': "Joseph's Portfolio",
+    '/en': "Joseph's Portfolio",
     '/about': 'About',
   }
   for (const article of articleRegistry) {
@@ -585,9 +648,6 @@ export function getSectionLabels(): Record<string, Record<string, string>> {
 
 /** All ES slugs (for lang detection: if pathname matches an ES slug → lang is 'es') */
 export function getEsSlugs(): Set<string> {
-  const slugs = new Set<string>(['/', '/privacidad', '/sobre-mi'])
-  for (const article of articleRegistry) {
-    slugs.add(`/${article.slugs.es}`)
-  }
-  return slugs
+  // English-only site — no Spanish slugs
+  return new Set<string>()
 }

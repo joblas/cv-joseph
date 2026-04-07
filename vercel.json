@@ -61,30 +61,32 @@
     }
   ],
   "redirects": [
-    { "source": "/jacobo", "destination": "/agente-ia-jacobo", "permanent": true },
-    { "source": "/en/", "destination": "/en", "permanent": true },
+    { "source": "/jacobo", "destination": "/ai-agent-jacobo", "permanent": true },
+    { "source": "/agente-ia-jacobo", "destination": "/ai-agent-jacobo", "permanent": true },
+    { "source": "/en", "destination": "/", "permanent": true },
+    { "source": "/en/", "destination": "/", "permanent": true },
+    { "source": "/sobre-mi", "destination": "/about", "permanent": true },
+    { "source": "/privacidad", "destination": "/privacy", "permanent": true },
+    { "source": "/n8n-para-pms", "destination": "/n8n-for-pms", "permanent": true },
+    { "source": "/business-os-para-airtable", "destination": "/business-os-for-airtable", "permanent": true },
+    { "source": "/seo-programatico", "destination": "/programmatic-seo", "permanent": true },
+    { "source": "/chatbot-que-se-cura-solo", "destination": "/self-healing-chatbot", "permanent": true },
     { "source": "/:path+/", "destination": "/:path+", "permanent": true }
   ],
   "rewrites": [
-    { "source": "/en", "destination": "/en/index.html" },
-    { "source": "/n8n-para-pms", "destination": "/n8n-para-pms/index.html" },
     { "source": "/n8n-for-pms", "destination": "/n8n-for-pms/index.html" },
-    { "source": "/agente-ia-jacobo", "destination": "/agente-ia-jacobo/index.html" },
     { "source": "/ai-agent-jacobo", "destination": "/ai-agent-jacobo/index.html" },
-    { "source": "/business-os-para-airtable", "destination": "/business-os-para-airtable/index.html" },
     { "source": "/business-os-for-airtable", "destination": "/business-os-for-airtable/index.html" },
-    { "source": "/seo-programatico", "destination": "/seo-programatico/index.html" },
     { "source": "/programmatic-seo", "destination": "/programmatic-seo/index.html" },
-    { "source": "/santifer-irepair", "destination": "/santifer-irepair/index.html" },
-    { "source": "/santifer-irepair-founder", "destination": "/santifer-irepair-founder/index.html" },
-    { "source": "/chatbot-que-se-cura-solo", "destination": "/chatbot-que-se-cura-solo/index.html" },
+    { "source": "/joblas-portfolio", "destination": "/joblas-portfolio/index.html" },
+    { "source": "/joblas-portfolio-founder", "destination": "/joblas-portfolio-founder/index.html" },
     { "source": "/self-healing-chatbot", "destination": "/self-healing-chatbot/index.html" },
     { "source": "/career-ops", "destination": "/career-ops/index.html" },
     { "source": "/career-ops-system", "destination": "/career-ops-system/index.html" },
-    { "source": "/sobre-mi", "destination": "/index.html" },
-    { "source": "/about", "destination": "/index.html" },
-    { "source": "/privacidad", "destination": "/index.html" },
-    { "source": "/privacy", "destination": "/index.html" }
+    { "source": "/openclaw", "destination": "/openclaw/index.html" },
+    { "source": "/av-career", "destination": "/av-career/index.html" },
+    { "source": "/about", "destination": "/about/index.html" },
+    { "source": "/privacy", "destination": "/privacy/index.html" }
   ],
   "crons": [
     {

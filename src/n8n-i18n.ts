@@ -27,234 +27,16 @@ Rules:
 
 Feedback: {{ $json.Feedback }}`
 
-export const n8nContent = {
-  es: {
-    slug: 'n8n-para-pms',
-    altSlug: 'n8n-for-pms',
-    readingTime: '5 min de lectura',
-    seo: {
-      title: 'n8n para PMs: Cheat Sheet + Templates IA Gratis | santifer.io',
-      description: 'Cheat sheet de n8n para Product Managers: automatiza sprint reports y clasifica feedback con IA. 2 templates importables gratis. Tutorial paso a paso.',
-    },
-    nav: {
-      back: 'santifer.io',
-      breadcrumbHome: 'Inicio',
-      breadcrumbCurrent: 'n8n para PMs',
-    },
-    header: {
-      kicker: 'Lightning Session — <a>AI Product Academy de Marily Nika</a>',
-      h1: 'n8n para Product Managers: Cheat Sheet con Templates',
-      subtitle: 'Guía práctica: automatiza sprint reports y clasifica feedback con IA usando workflows de n8n — sin escribir código. 2 templates importables gratis.',
-      date: '24 feb 2026',
-    },
-    intro: {
-      hook: '¿Cuántas horas a la semana dedicas a trabajo que no tiene nada que ver con producto?',
-      body: 'Yo lo medí. Veinte. Algunas semanas, treinta. Sprint reports que se comen un día entero. Feedback disperso en cinco herramientas que tenía que leer, clasificar y convertir en tickets uno por uno. Status updates escritos desde cero cada lunes.',
-      punchline: 'No era product manager. Era un router de datos muy caro. Moviendo información entre herramientas que deberían hablarse entre ellas. Gastaba 170 horas al mes en esto en mi propia empresa antes de automatizarlo todo. Los dos workflows son gratis, importables como JSON, y corren en el free tier de n8n Cloud. Sin infraestructura, sin pedir permiso a ingeniería. Hoy te enseño cómo montarlos en una tarde.',
-    },
-    previewCta: {
-      text: 'Esto es un adelanto de lo que enseño como Teaching Fellow en el <a>AI PM Bootcamp de Marily Nika</a>. El curso completo cubre de principio a fin cómo construir productos de IA — desde discovery hasta producción.',
-    },
-    timeSinks: {
-      heading: 'Las 5 Tareas que te Roban el Tiempo (20-30 h/semana)',
-      columns: { num: '#', sink: 'Tarea', hours: 'Horas/semana', pattern: 'Patrón de automatización' },
-      rows: [
-        { num: '1', sink: 'Sprint reports', hours: '8-12/sprint', pattern: 'Schedule → Query → Format → Send' },
-        { num: '2', sink: 'Clasificar feedback', hours: '5-10', pattern: 'Trigger → AI Classify → Route' },
-        { num: '3', sink: 'Mover datos entre herramientas', hours: '3-5', pattern: 'Trigger → Extract → Create → Notify' },
-        { num: '4', sink: 'Mantener al equipo sincronizado', hours: '2-4', pattern: 'Schedule → Aggregate → Summarize → Post' },
-        { num: '5', sink: 'Preparar decisiones', hours: '1-2/reunión', pattern: 'Schedule → Multi-query → Compile → Send' },
-      ],
-    },
-    workflow1: {
-      heading: 'Workflow 1: El Viernes Automatizable',
-      description: 'Sprint report automático que se publica en Slack cada viernes a las 9am.',
-      pipelineLabels: [
-        { name: 'Schedule', detail: '(Vie 9am)' },
-        { name: 'Airtable', detail: '(leer sprint)' },
-        { name: 'Code', detail: '(formatear)' },
-        { name: 'Slack', detail: '(publicar)' },
-      ],
-      imgAlt: 'Workflow n8n de sprint report automatizado para product managers: Schedule Trigger cada viernes → Leer datos del sprint en Airtable → Formatear reporte con nodo Code → Publicar en canal de Slack',
-      imgTitle: 'Workflow 1: Sprint Report Automatizado con n8n',
-      figcaption: 'Workflow 1 en n8n: sprint report automatizado — Schedule → Airtable → Code → Slack',
-      nodesHeading: 'Nodos clave:',
-      nodes: [
-        { name: 'Schedule Trigger:', detail: 'Cada semana, viernes, 9:00 AM' },
-        { name: 'Airtable:', detail: 'Filtrar por Sprint = Actual, Status = Done' },
-        { name: 'Code node:', detail: 'Agrupar por asignado, contar story points, formatear como Slack markdown' },
-        { name: 'Slack:', detail: 'Publicar en #sprint-updates' },
-      ],
-      quote: 'Tu sprint report llega cada viernes a las 9:05. No hiciste nada.',
-      downloadLabel: 'Descargar Workflow 1 JSON',
-    },
-    transition: {
-      line1: 'No hay IA en el Workflow 1. Es pura fontanería de datos.',
-      line2: 'Cuatro nodos que te ahorran 4-6 horas por sprint. Ahora imagina qué pasa cuando le añadimos inteligencia.',
-    },
-    workflow2: {
-      heading: 'Workflow 2: El Router Inteligente',
-      description: 'Clasificación de feedback con IA que envía bugs, features y preguntas al canal de Slack correcto. Un nodo de IA convierte un flujo mecánico en un flujo inteligente.',
-      pipelineLabels: [
-        { name: 'Form Trigger', detail: '' },
-        { name: 'AI Classify', detail: '(LLM)' },
-        { name: 'Switch', detail: '(Bug/Feature/Question)' },
-        { name: 'Slack', detail: '+ Airtable' },
-      ],
-      imgAlt: 'Workflow n8n de clasificación de feedback con IA para product managers: Form Trigger → Clasificador IA con Claude → Nodo Switch enruta bugs, features y preguntas a canales de Slack separados → Log en Airtable',
-      imgTitle: 'Workflow 2: Clasificación de Feedback con IA en n8n',
-      figcaption: 'Workflow 2 en n8n: clasificador de feedback con IA — Form → Claude AI → Switch → Slack + Airtable',
-      nodesHeading: 'Nodos clave:',
-      nodes: [
-        { name: 'n8n Form Trigger:', detail: 'Nombre, Email, Texto de Feedback, Área de Producto' },
-        { name: 'Basic LLM Chain:', detail: 'Clasificar feedback con IA' },
-        { name: 'Switch:', detail: 'Redirigir según resultado del LLM (BUG / FEATURE / QUESTION)' },
-        { name: 'Slack:', detail: 'Canal diferente por categoría' },
-        { name: 'Airtable:', detail: 'Registrar cada feedback clasificado' },
-      ],
-      promptHeading: 'El Prompt de Clasificación',
-      promptCopyLabel: 'Copiar prompt',
-      promptCopiedLabel: '¡Copiado!',
-      whyWorksHeading: '¿Por qué funciona este prompt?',
-      whyWorks: [
-        { label: 'Role', detail: 'establece contexto ("product feedback classifier")' },
-        { label: 'Signal words', detail: 'por categoría guían el pattern matching del LLM' },
-        { label: 'Tiebreaker rule', detail: 'resuelve casos ambiguos (bugs > features > questions)' },
-        { label: 'Safe default', detail: 'nada se pierde' },
-        { label: 'Strict output', detail: 'hace que el nodo Switch sea fiable' },
-      ],
-      quote: 'Un nodo de IA convirtió un flujo mecánico en un flujo inteligente.',
-      ambiguousHeading: 'La Prueba Ambigua',
-      ambiguousExample: '"Estaría genial que el export pudiera manejar más de 100 filas sin crashear."',
-      ambiguousExplanation1: '¿Es un feature request ("estaría genial") o un bug ("crashear")? La tiebreaker rule del prompt lo resuelve: si el feedback contiene un bug y un feature request, clasificar como BUG — lo roto tiene prioridad.',
-      ambiguousExplanation2: 'Si no estás de acuerdo con esa clasificación, cambias una línea del prompt. No un retrain del modelo. No un ticket para data science. Una línea de texto. Escribiste acceptance criteria, no código — y esa es una decisión de producto, no de ingeniería.',
-      downloadLabel: 'Descargar Workflow 2 JSON',
-    },
-    pattern: {
-      heading: 'El Patrón',
-      description: 'Ambos workflows siguen la misma estructura:',
-      labels: {
-        trigger: 'TRIGGER',
-        read: 'READ',
-        process: 'PROCESS',
-        act: 'ACT',
-        when: 'cuándo',
-        getData: 'obtener datos',
-        transform: 'transformar/clasificar',
-        notify: 'notificar/registrar',
-      },
-      worksFor: 'Este patrón sirve para:',
-      useCases: [
-        'Priorizar tickets de soporte',
-        'Redirigir leads de ventas',
-        'Priorizar quejas de clientes',
-        'Clasificar respuestas NPS',
-        'Procesar envíos de formularios',
-      ],
-      punchline: 'El flujo no cambia. El prompt sí.',
-    },
-    bootcampCta: {
-      heading: '¿Quieres ir más allá en AI Product Management?',
-      body: 'Lo que acabas de leer es una fracción de lo que cubro en el AI PM Bootcamp de Marily Nika. El programa completo te lleva de "quiero usar IA" a "estoy lanzando productos de IA" — con proyectos reales, no teoría. Es donde me formé, y ahora enseño ahí como Fellow.',
-      cta: 'Únete a la próxima cohorte',
-    },
-    getStarted: {
-      heading: 'Empieza',
-      steps: [
-        { num: 1, text: '<a>n8n Cloud (14 días gratis)</a> — regístrate y empieza a construir' },
-        { num: 2, text: 'Elige la tarea más aburrida de tu viernes' },
-        { num: 3, text: 'Monta un workflow esta semana' },
-      ],
-      bonusStep: '¿Quieres aprender AI Product Management de principio a fin? Echa un vistazo al <a>AI PM Bootcamp de la Dra. Marily Nika</a> — donde me formé y ahora enseño como Fellow.',
-      quote: 'La primera automatización es la más difícil. La segunda lleva la mitad de tiempo.',
-    },
-    lessons: {
-      heading: 'Lo que Aprendí Automatizando 170 Horas al Mes',
-      items: [
-        {
-          title: 'Automatiza la tarea aburrida primero.',
-          detail: 'El caso de uso vistoso es tentador. Pero los sprint reports me devolvieron 12 horas cada dos semanas — más que cualquier integración ingeniosa que monté.',
-        },
-        {
-          title: 'Tu base de datos es el cerebro.',
-          detail: 'No montes una "base de datos de automatización" aparte. Jira, Airtable y Sheets ya contienen el 90% de los datos que tus workflows necesitan.',
-        },
-        {
-          title: 'Automatiza el trigger, no solo la tarea.',
-          detail: 'Un workflow que corre "cuando pulso un botón" ahorra tiempo. Uno que corre "cuando se cierra un deal" ahorra tiempo Y te saca del loop por completo. El segundo vale 10x más.',
-        },
-        {
-          title: 'Empieza con uno.',
-          detail: 'Intenté automatizar todo a la vez y acabé con 14 workflows medio rotos y cero ahorro de tiempo. Un workflow funcionando fiablemente le gana a cinco en borrador.',
-        },
-      ],
-    },
-    faq: {
-      heading: 'Preguntas Frecuentes',
-      items: [
-        {
-          q: '¿Qué es n8n?',
-          a: 'n8n es una plataforma de automatización de workflows open source. Te permite conectar herramientas (Slack, Jira, Airtable, APIs) y crear flujos de trabajo visuales sin código. A diferencia de Zapier o Make, es self-hostable y tiene nodos de IA nativos para integrar LLMs directamente en tus automatizaciones.',
-        },
-        {
-          q: '¿Puede n8n conectarse a Jira / Salesforce / mi herramienta?',
-          a: 'Sí. Más de 400 integraciones — Jira, Salesforce, Notion, Linear, HubSpot, Zendesk, Google Sheets. Si lo usas, n8n probablemente se conecta.',
-        },
-        {
-          q: '¿n8n es gratis?',
-          a: 'Self-hosted es gratis para siempre (open source, sin límites). En cloud tienes 14 días de prueba gratis del plan Pro, sin tarjeta. Después desde 24 €/mes. Para lo que se muestra aquí, el trial sobra.',
-        },
-        {
-          q: '¿Qué LLM debería usar para el clasificador?',
-          a: 'El que tu empresa ya pague. El prompt funciona igual con Claude, GPT-4 o Gemini. El patrón de clasificación no cambia con el modelo.',
-        },
-        {
-          q: '¿n8n o Make? ¿En qué se diferencia de Zapier?',
-          a: 'n8n es open source, self-hostable, con nodos de IA nativos y un canvas visual que te deja ver la lógica de branching. Zapier es genial para triggers simples. Make tiene buen pricing. n8n es para cuando necesitas branching, IA, loops y control total — y está creciendo un 647% anual en España.',
-        },
-        {
-          q: '¿Y si la IA clasifica algo mal?',
-          a: 'Cambias el prompt. Añades un signal word, ajustas la tiebreaker rule, añades una categoría. Iteras en texto plano, no en código. Y el log de Airtable te permite revisar y corregir.',
-        },
-        {
-          q: '¿Puedo descargar los templates de n8n de este artículo?',
-          a: 'Sí. Los 2 workflows están disponibles como archivos JSON importables directamente en n8n Cloud (free tier). Descárgalos desde la sección "Importa los Workflows" y en 5 minutos están funcionando.',
-        },
-      ],
-    },
-    import: {
-      heading: 'Importa los Workflows',
-      description: 'Descarga los archivos JSON e impórtalos directamente en tu instancia de n8n:',
-      wf1Label: 'Workflow 1 — El Viernes Automatizable',
-      wf2Label: 'Workflow 2 — El Router Inteligente',
-      howToHeading: 'Cómo importar:',
-      howToText: 'En n8n, pulsa el botón +, selecciona "Import from File" y elige el JSON. Después conecta tus credenciales de Slack, Airtable e IA.',
-    },
-    resources: {
-      heading: 'Recursos',
-      items: [
-        { label: 'n8n Documentation', url: 'https://docs.n8n.io' },
-        { label: 'Airtable node docs', url: 'https://docs.n8n.io/integrations/builtin/app-nodes/n8n-nodes-base.airtable/' },
-        { label: 'AI nodes guide', url: 'https://docs.n8n.io/integrations/builtin/cluster-nodes/' },
-      ],
-    },
-    footer: {
-      role: 'AI Product Manager · Solutions Architect',
-      fellowAt: 'Teaching Fellow en',
-      fellowLink: 'AI Product Academy',
-      copyright: 'Todos los derechos reservados.',
-    },
-  },
-  en: {
+const _en = {
     slug: 'n8n-for-pms',
     altSlug: 'n8n-para-pms',
     readingTime: '5 min read',
     seo: {
-      title: 'n8n for PMs: Cheat Sheet + Free AI Templates | santifer.io',
+      title: 'n8n for PMs: Cheat Sheet + Free AI Templates | cv-joseph.vercel.app',
       description: 'n8n cheat sheet for Product Managers: automate sprint reports and classify feedback with AI. 2 free importable workflow templates. Step-by-step tutorial.',
     },
     nav: {
-      back: 'santifer.io',
+      back: 'cv-joseph.vercel.app',
       breadcrumbHome: 'Home',
       breadcrumbCurrent: 'n8n for PMs',
     },
@@ -457,8 +239,9 @@ export const n8nContent = {
       fellowLink: 'AI Product Academy',
       copyright: 'All rights reserved.',
     },
-  },
-} as const
+  }
+
+export const n8nContent = { es: _en, en: _en } as const
 
 /** Helper to get content for a given language */
 export function getN8nContent(lang: N8nLang) {

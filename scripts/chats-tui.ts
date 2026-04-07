@@ -220,12 +220,12 @@ async function exportAllChats(traces: Trace[], traceDetails: (Trace | null)[], j
 
   const header = [
     '╔══════════════════════════════════════════════════════════╗',
-    '║          HISTORIAL DE CONVERSACIONES - SANTI BOT        ║',
+    '║          CONVERSATION HISTORY - SANTI BOT               ║',
     '╚══════════════════════════════════════════════════════════╝',
     '',
-    `Exportado: ${now.toLocaleString('es-ES')}`,
-    `Período: últimos ${days} día(s)${jailbreakOnly ? ' (solo jailbreaks)' : ''}`,
-    `Total: ${traces.length} conversaciones`,
+    `Exported: ${now.toLocaleString('en-US')}`,
+    `Period: last ${days} day(s)${jailbreakOnly ? ' (jailbreaks only)' : ''}`,
+    `Total: ${traces.length} conversations`,
     `Jailbreaks: ${traces.filter(t => t.tags.includes('jailbreak-attempt')).length}`,
     '',
   ].join('\n');
@@ -351,16 +351,16 @@ async function main() {
 
   if (traces.length === 0) {
     process.stdout.write(SHOW_CURSOR);
-    console.log(`${YELLOW}No hay conversaciones${jailbreakOnly ? ' de jailbreak' : ''} en los últimos ${days} día(s)${RESET}`);
+    console.log(`${YELLOW}No conversations${jailbreakOnly ? ' (jailbreak)' : ''} in the last ${days} day(s)${RESET}`);
     process.exit(0);
   }
 
   // Fetch all trace details once
-  process.stdout.write(`${DIM}Descargando ${traces.length} conversaciones...${RESET}\n`);
+  process.stdout.write(`${DIM}Downloading ${traces.length} conversations...${RESET}\n`);
   traceDetails = await fetchAllTraceDetails(traces);
 
   // Export all chats to txt (reusing cached details)
-  process.stdout.write(`${DIM}Exportando a logs/...${RESET}\n`);
+  process.stdout.write(`${DIM}Exporting to logs/...${RESET}\n`);
   const exportPath = await exportAllChats(traces, traceDetails, jailbreakOnly, days);
   process.stdout.write(`${GREEN}✅ Guardado: ${exportPath}${RESET}\n`);
 

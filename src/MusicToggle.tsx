@@ -1,7 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { getEsSlugs } from './articles/registry';
 
 const STORAGE_KEY = 'ambient-music';
 const VOL_DEFAULT = 0.3;
@@ -201,12 +199,12 @@ function N7Badge() {
 }
 
 /** Tooltip styled as a comm transmission */
-function CommTooltip({ playing, lang, dismissed }: { playing: boolean; lang: 'es' | 'en'; dismissed?: boolean }) {
+function CommTooltip({ playing, dismissed }: { playing: boolean; dismissed?: boolean }) {
   const text = playing
     ? 'Uncharted Worlds'
     : dismissed
-      ? (lang === 'es' ? 'Sin respuesta. Normandy fuera.' : 'Logging off. Normandy out.')
-      : (lang === 'es' ? 'Comandante, tenemos una señal' : 'Commander, we have a signal');
+      ? ('Logging off. Normandy out.')
+      : ('Commander, we have a signal');
 
   return (
     <motion.div
@@ -246,10 +244,6 @@ export default function MusicToggle() {
   const chatOpenRef = useRef(false);
   const wasPlayingRef = useRef(false);
 
-  // Detect lang reactively from route
-  const { pathname } = useLocation();
-  const esSlugs = getEsSlugs();
-  const lang = esSlugs.has(pathname) ? 'es' : 'en';
 
   useEffect(() => {
     const audio = new Audio('/audio/ambient-loop.mp3');
@@ -393,7 +387,7 @@ export default function MusicToggle() {
         )}
       </AnimatePresence>
       <AnimatePresence>
-        {showTooltip && <CommTooltip playing={playing} lang={lang} dismissed={dismissed} />}
+        {showTooltip && <CommTooltip playing={playing} dismissed={dismissed} />}
       </AnimatePresence>
       {/* Pulse ring — same style as chat avatar */}
       {incoming && (

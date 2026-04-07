@@ -1,19 +1,19 @@
 /* TEAM */
-Builder: Santiago Fernandez de Valderrama Aparicio
-Role: AI Product Manager · Solutions Architect · Forward Deployed Engineer
-Contact: hi@santifer.io
-Site: https://santifer.io
-Location: Seville, Spain
-LinkedIn: https://linkedin.com/in/santifer
-GitHub: https://github.com/santifer
+Builder: Joseph Blas
+Role: AI Developer · AV Systems Veteran · Multi-Agent Systems
+Contact: blasj408@gmail.com
+Site: https://cv-joseph.vercel.app
+Location: Escondido / San Diego, CA
+LinkedIn: https://linkedin.com/in/joseph-blas
+GitHub: https://github.com/joblas
 
 /* THANKS */
 AI Pair: Claude Code (Anthropic)
+Portfolio Template: github.com/santifer/cv-santiago
 
 /* SITE */
 Stack: React 19, TypeScript, Vite, Tailwind CSS, Motion
 AI: Claude API (claude-sonnet-4-6), streaming via Vercel Edge
-Quality: 55+ evals, 6-layer security, Langfuse observability, closed-loop quality
 Hosting: Vercel
 Standards: llms.txt, security.txt, JSON-LD, Open Graph
 

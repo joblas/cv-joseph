@@ -32,6 +32,7 @@ import { businessOsContent } from '../src/business-os-i18n.ts';
 import { pseoContent } from '../src/pseo-i18n.ts';
 import { chatbotContent } from '../src/chatbot-i18n.ts';
 import { careerOpsContent } from '../src/career-ops-i18n.ts';
+import { openclawContent } from '../src/openclaw-i18n.ts';
 
 // Map article id → i18n content for JSON-LD generation
 const i18nMap: Record<string, Record<string, { header: { h1: string }; nav: { breadcrumbHome: string; breadcrumbCurrent: string }; faq: { items: readonly { q: string; a: string }[] } }>> = {
@@ -41,6 +42,7 @@ const i18nMap: Record<string, Record<string, { header: { h1: string }; nav: { br
   'programmatic-seo': pseoContent,
   'self-healing-chatbot': chatbotContent,
   'career-ops': careerOpsContent,
+  'openclaw': openclawContent,
 };
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -141,13 +143,13 @@ let enPage = indexHtml
   .replace(/<title>[^<]*<\/title>/, `<title>${esc(enSeo.title)}</title>`)
   .replace(/<meta name="title" content="[^"]*" \/>/, `<meta name="title" content="${esc(enSeo.title)}" />`)
   .replace(/<meta name="description" content="[^"]*" \/>/, `<meta name="description" content="${esc(enSeo.description)}" />`)
-  .replace(/<link rel="canonical" href="[^"]*" \/>/, '<link rel="canonical" href="https://santifer.io/en" />')
-  .replace(/<meta property="og:url" content="[^"]*" \/>/, '<meta property="og:url" content="https://santifer.io/en" />')
+  .replace(/<link rel="canonical" href="[^"]*" \/>/, '<link rel="canonical" href="https://cv-joseph.vercel.app/en" />')
+  .replace(/<meta property="og:url" content="[^"]*" \/>/, '<meta property="og:url" content="https://cv-joseph.vercel.app/en" />')
   .replace(/<meta property="og:title" content="[^"]*" \/>/, `<meta property="og:title" content="${esc(enSeo.title)}" />`)
   .replace(/<meta property="og:description" content="[^"]*" \/>/, `<meta property="og:description" content="${esc(enSeo.description)}" />`)
   .replace(/<meta property="og:locale" content="es_ES" \/>/, '<meta property="og:locale" content="en_US" />')
   .replace(/<meta property="og:locale:alternate" content="en_US" \/>/, '<meta property="og:locale:alternate" content="es_ES" />')
-  .replace(/<meta name="twitter:url" content="[^"]*" \/>/, '<meta name="twitter:url" content="https://santifer.io/en" />')
+  .replace(/<meta name="twitter:url" content="[^"]*" \/>/, '<meta name="twitter:url" content="https://cv-joseph.vercel.app/en" />')
   .replace(/<meta name="twitter:title" content="[^"]*" \/>/, `<meta name="twitter:title" content="${esc(enSeo.title)}" />`)
   .replace(/<meta name="twitter:description" content="[^"]*" \/>/, `<meta name="twitter:description" content="${esc(enSeo.description)}" />`);
 
@@ -161,12 +163,12 @@ const aboutJsonLd = {
   dateModified: '2026-03-27',
   mainEntity: {
     '@type': 'Person',
-    '@id': 'https://santifer.io/#person',
-    name: 'Santiago Fernández de Valderrama Aparicio',
-    alternateName: ['Santiago Fernández de Valderrama', 'santifer', 'Santi'],
-    url: 'https://santifer.io',
-    image: 'https://santifer.io/foto-avatar.png',
-    email: 'hola@santifer.io',
+    '@id': 'https://cv-joseph.vercel.app/#person',
+    name: 'Joseph Blas',
+    alternateName: ['Joseph Blas', 'joblas'],
+    url: 'https://cv-joseph.vercel.app',
+    image: 'https://cv-joseph.vercel.app/foto-avatar.png',
+    email: 'blasj408@gmail.com',
     jobTitle: ['AI Product Manager', 'Solutions Architect (No/Low-Code & AI)', 'AI Forward Deployed Engineer'],
     knowsAbout: [
       { '@type': 'Thing', name: 'Artificial Intelligence', url: 'https://en.wikipedia.org/wiki/Artificial_intelligence' },
@@ -198,28 +200,28 @@ const aboutJsonLd = {
     ],
     founder: {
       '@type': 'Organization',
-      name: 'Santifer iRepair',
-      url: 'https://santiferirepair.es',
-      foundingDate: '2009',
+      name: 'Joseph Blas',
+      url: 'https://cv-joseph.vercel.app',
+      foundingDate: '2024',
     },
     sameAs: [
-      'https://www.linkedin.com/in/santifer',
-      'https://github.com/santifer',
-      'https://x.com/santifer',
-      'https://dev.to/santifer',
-      'https://santifer.substack.com',
-      'https://contentdigest.santifer.io',
-      'https://www.youtube.com/@santifer_io',
+      'https://www.linkedin.com/in/joseph-blas',
+      'https://github.com/joblas',
+      'https://x.com/joblas',
+      'https://dev.to/joblas',
+      'https://joblas.substack.com',
+      'https://contentdigest.cv-joseph.vercel.app',
+      'https://www.youtube.com/@joblas',
       'https://stackoverflow.com/users/32541743',
       'https://orcid.org/0009-0006-2192-7210',
-      'https://www.crunchbase.com/person/santiago-fernandez-de-valderrama',
-      'https://huggingface.co/santifer',
+      'https://www.crunchbase.com/person/joseph-blas',
+      'https://huggingface.co/joblas',
       'https://www.wikidata.org/wiki/Q138710224',
-      'https://www.facebook.com/santifer.io/',
+      'https://www.facebook.com/joblas/',
     ],
     subjectOf: {
       '@type': 'NewsArticle',
-      headline: 'Salir de compras: Una solución exprés para el teléfono',
+      headline: 'Going shopping: A quick fix for the phone',
       publisher: { '@type': 'NewsMediaOrganization', name: 'Diario de Sevilla' },
       datePublished: '2014-06-19',
       url: 'https://www.diariodesevilla.es/vivirensevilla/Salir-compras-solucion-expres-telefono_0_817718799.html',
@@ -241,8 +243,8 @@ for (const lang of ['es', 'en'] as const) {
   const t = aboutContent[lang];
   const slug = t.slug;
   const altSlug = t.altSlug;
-  const url = `https://santifer.io/${slug}`;
-  const altUrl = `https://santifer.io/${altSlug}`;
+  const url = `https://cv-joseph.vercel.app/${slug}`;
+  const altUrl = `https://cv-joseph.vercel.app/${altSlug}`;
   const altLang = lang === 'es' ? 'en' : 'es';
   const ogLocale = lang === 'es' ? 'es_ES' : 'en_US';
   const ogLocaleAlt = lang === 'es' ? 'en_US' : 'es_ES';
@@ -266,7 +268,7 @@ for (const lang of ['es', 'en'] as const) {
     renderedHtml = '';
   }
 
-  const hreflangLinks = `<link rel="alternate" hreflang="${lang}" href="${url}" /><link rel="alternate" hreflang="${altLang}" href="${altUrl}" /><link rel="alternate" hreflang="x-default" href="https://santifer.io/sobre-mi" />`;
+  const hreflangLinks = `<link rel="alternate" hreflang="${lang}" href="${url}" /><link rel="alternate" hreflang="${altLang}" href="${altUrl}" /><link rel="alternate" hreflang="x-default" href="https://cv-joseph.vercel.app/sobre-mi" />`;
 
   let result = indexHtml
     .replace('<div id="root"></div>', `<div id="root">${renderedHtml}</div>`)
@@ -310,14 +312,14 @@ function buildArticlePage(
 ): string {
   const slug = config.slugs[lang];
   const altSlug = config.slugs[lang === 'es' ? 'en' : 'es'];
-  const url = `https://santifer.io/${slug}`;
-  const altUrl = `https://santifer.io/${altSlug}`;
+  const url = `https://cv-joseph.vercel.app/${slug}`;
+  const altUrl = `https://cv-joseph.vercel.app/${altSlug}`;
   const altLang = lang === 'es' ? 'en' : 'es';
   const htmlLang = lang;
   const ogLocale = lang === 'es' ? 'es_ES' : 'en_US';
   const ogLocaleAlt = lang === 'es' ? 'en_US' : 'es_ES';
   const articleSeo = config.seo[lang];
-  const xDefaultHref = `https://santifer.io/${config.xDefaultSlug || config.slugs.es}`;
+  const xDefaultHref = `https://cv-joseph.vercel.app/${config.xDefaultSlug || config.slugs.es}`;
 
   let renderedHtml: string;
   try {
@@ -348,7 +350,7 @@ function buildArticlePage(
     .replace(/<meta name="twitter:title" content="[^"]*" \/>/, `<meta name="twitter:title" content="${esc(articleSeo.title)}" />`)
     .replace(/<meta name="twitter:description" content="[^"]*" \/>/, `<meta name="twitter:description" content="${esc(articleSeo.description)}" />`)
     // OG image — replace with article-specific image if configured
-    .replace(/<meta property="og:image" content="[^"]*" \/>/, `<meta property="og:image" content="${esc(config.ogImage || 'https://santifer.io/og-image.webp')}" />`)
+    .replace(/<meta property="og:image" content="[^"]*" \/>/, `<meta property="og:image" content="${esc(config.ogImage || 'https://cv-joseph.vercel.app/og-image.webp')}" />`)
     .replace(/<meta property="og:image:alt" content="[^"]*" \/>/, `<meta property="og:image:alt" content="${esc(articleSeo.title)}" />`)
     .replace(/<meta name="twitter:image" content="[^"]*" \/>/, config.ogImage ? `<meta name="twitter:image" content="${esc(config.ogImage)}" />` : '');
 
@@ -358,7 +360,7 @@ function buildArticlePage(
     const articleMetaTags = [
       `<meta property="article:published_time" content="${seoMeta.datePublished}" />`,
       `<meta property="article:modified_time" content="${seoMeta.dateModified}" />`,
-      `<meta property="article:author" content="https://www.linkedin.com/in/santifer" />`,
+      `<meta property="article:author" content="https://www.linkedin.com/in/joseph-blas" />`,
       `<meta property="article:tag" content="${esc(seoMeta.articleTags)}" />`,
     ].join('\n    ');
     result = result.replace('</head>', `    ${articleMetaTags}\n  </head>`);
@@ -371,8 +373,8 @@ function buildArticlePage(
     if (t) {
       const jsonLd = buildArticleJsonLd({
         lang,
-        url: `https://santifer.io/${slug}`,
-        altUrl: `https://santifer.io/${altSlug}`,
+        url: `https://cv-joseph.vercel.app/${slug}`,
+        altUrl: `https://cv-joseph.vercel.app/${altSlug}`,
         headline: t.header.h1,
         alternativeHeadline: articleSeo.title,
         description: articleSeo.description,
@@ -480,7 +482,7 @@ await inlineCriticalCSS();
 const notFoundHtml = indexHtml
   .replace('<div id="root"></div>', `<div id="root"><div style="min-height:80vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 1.5rem"><p style="font-size:6rem;font-weight:bold;color:var(--primary);margin-bottom:1rem;font-family:var(--font-display)">404</p><h1 style="font-size:1.5rem;font-weight:600;color:var(--foreground);margin-bottom:0.5rem">Page not found</h1><p style="color:var(--muted-foreground);margin-bottom:2rem;max-width:28rem">The page you're looking for doesn't exist or has been moved.</p><a href="/" style="display:inline-flex;align-items:center;gap:0.5rem;padding:0.75rem 1.5rem;border-radius:0.75rem;background:var(--primary);color:var(--primary-foreground);font-weight:500;text-decoration:none">← Back to home</a></div></div>`)
   .replace(/<meta name="robots" content="[^"]*" \/>/, '<meta name="robots" content="noindex, nofollow" />')
-  .replace(/<title>[^<]*<\/title>/, '<title>404 — Page not found | santifer.io</title>');
+  .replace(/<title>[^<]*<\/title>/, '<title>404 — Page not found | cv-joseph.vercel.app</title>');
 
 // Add noindex if no robots meta exists
 if (!notFoundHtml.includes('name="robots"')) {

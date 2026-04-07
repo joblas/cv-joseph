@@ -42,7 +42,7 @@
           "__rl": true,
           "value": "appXXXXXXXXXXXXXXX",
           "mode": "list",
-          "cachedResultName": "santifer iRepair",
+          "cachedResultName": "Joe's Tech Solutions",
           "cachedResultUrl": "https://airtable.com/appXXXXXXXXXXXXXXX"
         },
         "table": {
@@ -93,7 +93,7 @@
     },
     {
       "parameters": {
-        "jsonSchemaExample": "{\n  \"modelo\": \"Apple iPhone XS Max\",\n  \"reparacion\": \"Batería\",\n  \"precio\": \"65.9 €\",\n  \"stock\": true,\n  \"urlSantifer\": \"https://santiferirepair.es/reparar-iphone/xs-max\",\n  \"urlCita\": \"https://santifer-citav2-componentes.youcanbook.me/?MOD=Apple%20iPhone%20XS%20Max&REP=Bater%C3%ADa\",\n  \"urlPresupuesto\": \"https://airtable.com/embed/shrXXXXXXXXXXXXXXX?prefill_Modelo=Apple%20iPhone%2015%20Plus&prefill_Averia=Vibrador\",\n  \"urlDiagnostico\":\"https://santifer-citadiag.youcanbook.me/?MOD=Apple%20iPhone%20XS%20Max\",\n  \"idPiezaAirtableParaPedido\": \"rec12312iajsdkj9123\",\n  \"idModeloAirtableParaPedido\": \"receRdxJPz8QwWXzo\"\n}\n"
+        "jsonSchemaExample": "{\n  \"modelo\": \"Apple iPhone XS Max\",\n  \"reparacion\": \"Batería\",\n  \"precio\": \"65.9 €\",\n  \"stock\": true,\n  \"urlJoesTech\": \"https://joestechsolutions.com/reparar-iphone/xs-max\",\n  \"urlCita\": \"https://joestech-citav2-componentes.youcanbook.me/?MOD=Apple%20iPhone%20XS%20Max&REP=Bater%C3%ADa\",\n  \"urlPresupuesto\": \"https://airtable.com/embed/shrXXXXXXXXXXXXXXX?prefill_Modelo=Apple%20iPhone%2015%20Plus&prefill_Averia=Vibrador\",\n  \"urlDiagnostico\":\"https://joestech-citadiag.youcanbook.me/?MOD=Apple%20iPhone%20XS%20Max\",\n  \"idPiezaAirtableParaPedido\": \"rec12312iajsdkj9123\",\n  \"idModeloAirtableParaPedido\": \"receRdxJPz8QwWXzo\"\n}\n"
       },
       "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
       "typeVersion": 1.2,
@@ -136,7 +136,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const items = $input.all();\n\nconst filteredItems = items.map(item => {\n  // Clonamos sólo el contenido de output\n  const data = { ...item.json.output };\n\n  // 1) Validación de urlSantifer\n  if (!data.urlSantifer || !data.urlSantifer.includes('santiferirepair.es')) {\n    data.urlSantifer = 'NO DISPONIBLE EN WEB AUN';\n  }\n\n  // 2) Reglas de eliminación de campos\n  if (data.precio === 'PRESUPUESTO') {\n    // Caso PRESUPUESTO: borramos urlCita e idPieza\n    delete data.urlCita;\n    delete data.idPiezaAirtableParaPedido;\n\n  } else if (data.stock === true) {\n    // Caso stock disponible: borramos urlPresupuesto e idPieza\n    delete data.urlPresupuesto;\n    delete data.idPiezaAirtableParaPedido;\n    delete data.idModeloAirtableParaPedido;\n\n  } else if (data.stock === false) {\n    // Caso sin stock: borramos urlCita y urlPresupuesto\n    delete data.urlCita;\n    delete data.urlPresupuesto;\n  }\n\n  // 3) Devolvemos el resultado, manteniendo el wrapper `output`\n  return { json: { output: data } };\n});\n\nreturn filteredItems;\n"
+        "jsCode": "const items = $input.all();\n\nconst filteredItems = items.map(item => {\n  // Clonamos sólo el contenido de output\n  const data = { ...item.json.output };\n\n  // 1) Validación de urlJoesTech\n  if (!data.urlJoesTech || !data.urlJoesTech.includes('joestechsolutions.com')) {\n    data.urlJoesTech = 'NO DISPONIBLE EN WEB AUN';\n  }\n\n  // 2) Reglas de eliminación de campos\n  if (data.precio === 'PRESUPUESTO') {\n    // Caso PRESUPUESTO: borramos urlCita e idPieza\n    delete data.urlCita;\n    delete data.idPiezaAirtableParaPedido;\n\n  } else if (data.stock === true) {\n    // Caso stock disponible: borramos urlPresupuesto e idPieza\n    delete data.urlPresupuesto;\n    delete data.idPiezaAirtableParaPedido;\n    delete data.idModeloAirtableParaPedido;\n\n  } else if (data.stock === false) {\n    // Caso sin stock: borramos urlCita y urlPresupuesto\n    delete data.urlCita;\n    delete data.urlPresupuesto;\n  }\n\n  // 3) Devolvemos el resultado, manteniendo el wrapper `output`\n  return { json: { output: data } };\n});\n\nreturn filteredItems;\n"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -176,7 +176,7 @@
           "__rl": true,
           "value": "appXXXXXXXXXXXXXXX",
           "mode": "list",
-          "cachedResultName": "santifer iRepair",
+          "cachedResultName": "Joe's Tech Solutions",
           "cachedResultUrl": "https://airtable.com/appXXXXXXXXXXXXXXX"
         },
         "table": {

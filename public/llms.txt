@@ -1,236 +1,185 @@
-# Santiago Fernández de Valderrama Aparicio
+# Joseph Blas
 
-> AI Product Manager · Solutions Architect (No/Low-Code & AI) · Forward Deployed Engineer
+> AI Developer · AV Systems Veteran · Multi-Agent Systems Engineer
 
 ## Contact & Availability
 
-- **Location:** Seville, Spain
-- **Open to:** Remote roles in EU/USA
-- **Email:** hi@santifer.io
-- **Entity Home / About**: https://santifer.io/about
-- **Website:** https://santifer.io
-- **LinkedIn:** https://linkedin.com/in/santifer
-- **X / Twitter:** https://x.com/santifer
-- **GitHub:** https://github.com/santifer
-- **Content Digest:** https://contentdigest.santifer.io
-- **Newsletter (Substack):** https://santifer.substack.com
-- **Facebook:** https://www.facebook.com/santifer.io/
-- **dev.to:** https://dev.to/santifer
+- **Location:** Escondido / San Diego, CA
+- **Open to:** AI Development, DevOps/SRE, Embedded/Robotics roles (San Diego or remote)
+- **Email:** blasj408@gmail.com
+- **Website:** https://cv-joseph.vercel.app
+- **Entity Home / About**: https://cv-joseph.vercel.app/about
+- **LinkedIn:** https://linkedin.com/in/joseph-blas
+- **GitHub:** https://github.com/joblas
+- **Company:** https://joestechsolutions.com
 
 ## Professional Summary
 
-Ex-founder with 16+ years building products. After scaling and selling my business (going-concern sale, 2025), I focus on roles where impact scales: turning ambiguous business goals into production-ready AI solutions.
+AI developer building production multi-agent systems. Run a 22-agent AI team (OpenClaw) that handles real business operations — email, CRM, invoicing, SEO, and deployments. Ship full-stack applications using React/React Native, TypeScript, Python, and PostgreSQL. Use AI coding assistants daily as core development tools.
 
-I operate with end-to-end ownership across discovery → prioritization → delivery → adoption, collaborating closely with stakeholders and engineering.
+Previously: 15+ years as an autonomous vehicle systems specialist. Built Google's Firefly autonomous vehicle from the ground up. Supported the world's first fully driverless ride on public roads (2015). Subject Matter Expert for drive-by-wire systems across the first 100 Google self-driving cars and 10 hardware iterations. Managed sensor calibration operations for the entire Google AV fleet — final release authority. Led fleet operations at Uber ATG and Pronto.ai. ITAR-controlled hardware experience. U.S. Citizen, DOD clearance eligible.
 
 ## Target Roles
 
-1. **AI Product Manager** - AI product discovery, PRDs, roadmap and prioritization for LLM-powered products
-2. **Solutions Architect (No/Low-Code & AI)** - System design for automation platforms integrated with AI
-3. **AI Forward Deployed Engineer** (role pioneered by Palantir) - Stakeholder workshops, rapid prototyping, production delivery
+1. **AI Developer** — Multi-agent systems, full-stack AI apps, RAG, prompt engineering
+2. **DevOps / SRE Engineer** — AWS, GCP, Docker, Kubernetes, Terraform, CI/CD
+3. **Embedded / Robotics Engineer** — Sensor integration, drive-by-wire, CAN/LIN, HIL testing
 
-## Key Achievement: Omnichannel AI Agent "Jacobo"
+## Key Achievement: OpenClaw (22-Agent System)
 
-Built an AI agent achieving **~90% customer self-service rate**:
+Multi-agent AI system running real business operations:
 
-- **Channels:** Voice (ElevenLabs) + WhatsApp (n8n/WATI) + Aircall cloud PBX
-- **Architecture:** Sub-agent orchestration via tool calling
-- **Components:**
-  - Main router: classifies intent and delegates to specialized sub-agents
-  - Appointments sub-agent: checks slots, books, confirms via WhatsApp
-  - Discounts sub-agent: calculates promotions based on customer history
-  - Orders sub-agent: validates stock, creates order, notifies ETA
-  - HITL handoff: escalates to human with full context when needed
+- **Architecture:** 22 specialized agents orchestrated via n8n
+- **Capabilities:** Email routing, CRM automation, invoicing, SEO optimization, deployment pipelines
+- **AI Models:** Claude and OpenAI APIs with custom prompt engineering
+- **Stack:** n8n, CrewAI, LangChain, RAG systems
+
+## Key Achievement: Google Self-Driving Car (Firefly)
+
+- Built Google's Firefly autonomous vehicle from the ground up — fully custom, all-electric, no steering wheel or pedals
+- Drive-by-wire SME across 100 vehicles and 10 hardware iterations
+- Managed sensor calibration for entire fleet — final release authority
+- Reduced calibration from 9 hours to 60 minutes (promoted to L4)
+- Supported world's first fully driverless ride on public roads (2015)
+- Traveled to Roush (Detroit) to train manufacturing teams
 
 ## Core Competencies
 
-- **AI Product Discovery:** Problem definition, AI PRDs, roadmap & prioritization
-- **Enterprise Solution Architecture:** End-to-end system design across departments, APIs/webhooks, data flows, OpenAPI specs
-- **Agentic Workflows:** LLM agents, tool use/function calling, HITL handoff, voice + messaging
-- **LLMOps & AI Governance:** Observability, evals, error handling, retries, SOPs, cost/latency trade-offs, responsible AI
-- **Forward-Deployed Delivery:** Stakeholder workshops, workflow mapping, rapid prototyping
-- **AI Enablement & Thought Leadership:** AI adoption workshops, technical writing with real traction, Teaching Fellow at AI PM Bootcamp, "n8n for Product Managers" lightning session on Maven
-
-## Development Methodology
-
-AI-augmented SDLC: design with clear constraints and threat modeling, implement via small PRs with AI pair programming, validate with eval sets + observability + cost control. Agentic development capabilities are gated with allowlists, HITL confirmations, and monitoring.
+- **Multi-Agent AI Systems:** 22-agent orchestration (n8n, CrewAI, LangChain), RAG, prompt engineering
+- **Full-Stack AI Development:** React, TypeScript, Python, Next.js, Supabase, AI APIs
+- **AV Systems Integration:** Sensor calibration, drive-by-wire SME, ADAS validation, CAN/LIN
+- **Client-Facing Delivery:** 10+ executive/investor demos, client consulting, private AI deployment
+- **Cloud & DevOps:** AWS, GCP, Docker, K8s, Terraform, CI/CD
+- **Hardware-Software Bridge:** HIL test rigs, bench testing, embedded validation, wiring harness fabrication
 
 ## Tech Stack
 
-### AI/LLM
-- Claude (Anthropic) - API integration, Claude Code power user (multi-agent orchestration: 5+ agents in parallel via tmux, inter-agent IPC via JSON, pre-compact memory persistence with Haiku, custom reusable skills)
-- OpenAI - Custom GPTs, tool use via OpenAPI
-- ElevenLabs - Voice AI integration
+### AI / LLM
+- Claude & OpenAI APIs — multi-agent orchestration, RAG, prompt engineering
+- LangChain / CrewAI — agent frameworks
+- Ollama / Open WebUI — private AI deployment
+- n8n — workflow automation and agent orchestration
 
-### Automation Platforms
-- Airtable - Builder/Admin certified, used as headless CMS and ERP
-- n8n - Workflow automation, WhatsApp integration
-- Make - Advanced certified
-- Zapier
+### Frontend
+- React, React Native, Next.js, Tailwind CSS, Expo
 
-### Integrations
-- Aircall (cloud PBX)
-- WATI (WhatsApp Business API)
-- YouCanBookMe (scheduling)
-- DataForSEO (search volume data)
+### Backend
+- Node.js, Python / Flask, PostgreSQL, Supabase, REST APIs, Edge Functions
 
-### Development
-- Python, FastAPI
-- Node.js, JavaScript, TypeScript
-- React, Astro
-- SQL, GraphQL
-- Git, Vercel
+### DevOps
+- Docker, Kubernetes, Terraform, AWS, GCP, CI/CD, Git, Vercel
+
+### AV / Hardware
+- Drive-by-wire systems (SME), sensor calibration (intrinsic & extrinsic)
+- CAN/LIN networks, ADAS, HIL test rigs, bench testing
+- Wiring harness fabrication, power systems, redundancy architecture
+- Oscilloscopes, multimeters, signal analyzers, power supplies, DAQ systems
 
 ## Work Experience
 
-### Santifer iRepair (2009-2025) - Founder & Product Lead
-**Exit 2025:** Built, scaled and sold the business as a going concern
+### Joe's Tech Solutions LLC (2023-Present) — Founder & AI Developer
+- Built and operate 22-agent AI system handling real business operations
+- Develop private AI solutions for SMB clients (Ollama, Open WebUI, n8n)
+- Ship production web and mobile apps: React, Next.js, React Native, TypeScript, Supabase
+- Created Whisper Walkie — open source push-to-talk voice typing (100% local)
+- Built The Skate Workshop — React Native app for Olympic coach (40+ tables, Stripe Connect)
 
-- Mobile, tablet and smartwatch repairs — +30,000 repairs completed
-- Led end-to-end transformation of service operations
-- Built internal ERP, CRM, booking system, and programmatic SEO website
-- Developed AI agent "Jacobo" achieving ~90% self-service
-- Created custom GPTs for stock/pricing queries via voice/natural language
-- Philosophy: automate everything possible to maximize value delivered
+### OvationCXM (2023-Present) — Field Service Technician
+- Deploy and configure POS systems integrating hardware, software, and network components
+- Troubleshoot complex technical issues across multiple system layers
 
-### Programmatic Web + Automated SEO (2024)
-Only one in the mobile repair sector in Spain:
-- Headless CMS in Airtable as source of truth
-- Integrated with ERP, generating Astro website
-- Pages per model/repair auto-generated
-- Search volume via DataForSEO for indexing decisions
-- Crawl budget optimization
+### Pronto.ai (2018-2019) — Technician
+- Sole technician hired by founder Anthony Levandowski
+- Built, integrated, and operated entire autonomous vehicle fleet
+- 2,900-mile cross-country autonomous demo with zero critical failures
+- 10+ executive and investor demonstrations
 
-### LICO Cosmetics (2024-2025) - Airtable Consultant
-Process and automation consulting for D2C cosmetics brand. Multiple sessions to drive efficiency and co-develop business workflows.
+### Uber ATG / Otto (2016-2018) — Autonomous Truck Technician
+- Led system integration for 10-truck autonomous fleet (~90% uptime)
+- Log analysis, root cause analysis, end-to-end testing
 
-### Everis/NTT DATA (2007-2009) - Test Coordinator & Software Analyst
-Coordinated multi-vendor healthcare product testing: managed functional test suites for a team of 8 testers and acted as liaison with development, business consulting, and other project areas.
-- Built self-learning medical coding thesaurus (graph-based RL engine with automatic feedback loops)
-- Pioneer system pre-LLMs
-
-## Education
-
-- **2025** - Maven: AI Product Management Bootcamp (led by Marily Nika, ex-Google PM). Winning project.
-- **2024** - BIGSEO: Master in Artificial Intelligence (Generative AI applied to business)
-- **2023** - BIGSEO: Master in SEO (Technical SEO, content and analytics)
-- **2001-2009** - ETSI Universidad de Sevilla: Telecommunications Engineering (Telematics specialization)
-
-## Certifications
-
-- **Anthropic (2026):** Introduction to Model Context Protocol
-- **Anthropic (2026):** Claude Code in Action
-- **Anthropic (2026):** Advanced MCP Topics
-- **Anthropic (2026):** Building with the Claude API
-- **Anthropic (2026):** AI Fluency: Framework & Foundations — Anthropic's 4D framework for AI interaction: effective, efficient, ethical, safe
-- **Anthropic (2026):** Teaching AI Fluency — Certified to teach AI Fluency to professionals and organizations
-- **Anthropic (2026):** AI Fluency for Educators
-- **Anthropic (2026):** AI Fluency for Students
-- **Airtable (2025):** AI App Builder Certification
-- **Airtable (2024):** Builder Certification
-- **Airtable (2024):** Admin Certification
-- **Make Academy (2024):** Make Advanced
+### Google Self-Driving Car Project / Waymo (2009-2016) — Program Manager L4
+- Built Firefly autonomous vehicle from the ground up
+- Drive-by-wire SME across first 100 vehicles and 10 hardware iterations
+- Sensor calibration operations for entire fleet — final release authority
+- Reduced calibration from 9 hours to 60 minutes (promoted to L4)
+- Supported world's first fully driverless ride (2015)
+- Traveled to Roush (Detroit) to train manufacturing teams
+- ITAR-controlled hardware experience
 
 ## Projects
 
-### Content Digest (Maven Capstone)
-Python + FastAPI service for LLM-powered content ingestion and digest generation with eval loops and telemetry.
+### OpenClaw — 22-Agent AI System
+Multi-agent system running real business operations. 22 specialized agents orchestrated via n8n.
 
-### Life OS (Private · On Request)
-Personal productivity system I built to run my life through conversation. Orchestrates Claude Code with native MCPs (Apple Reminders/Calendar, GitHub), 15 custom skills, 5 automation hooks, and semantic search (BM25 + SQLite FTS5). Pipes into Content Digest for a full knowledge loop and powers Career Ops for HITL automated job search.
+### The Skate Workshop — React Native Mobile App
+Full-stack app for Olympic skateboarding coach. 40+ Supabase tables, 18+ Edge Functions, Stripe Connect.
+Live at theskateworkshop.app
 
-### Career Ops (Private · On Request) — [Case Study](https://santifer.io/career-ops-system)
-AI job search tool built as a multi-agent system. 12 operational modes, 10-dimension scoring (A-F), AI resume builder that generates ATS-optimized PDFs per listing, automated job application with Playwright, batch processing 122 URLs in parallel (conductor + workers). 631 evaluations, 354 PDFs generated, 680 URLs deduplicated. HITL design: AI analyzes, I decide. Plugs into Life OS as a specialized skill.
+### Career Ops — AI Job Search Pipeline (Open Source)
+Evaluates offers with scoring, generates ATS-optimized CVs, pre-fills applications. Built on Claude Code.
 
-### Claude Pulse (Open Source)
-SwiftBar plugin for real-time Claude Code usage monitoring on macOS. Consumption metrics and rate limit predictions.
+### DALL-E Image Generator — Live Web Application
+Production AI image generation using OpenAI DALL-E 3.0 API. Live at jblas-dall-e.com
 
-### Claude Eye (Open Source)
-CLI that analyzes web animation videos frame-by-frame using Claude Vision. Detects CSS transition desyncs and generates reports with exact timestamps.
+### Whisper Walkie — Open Source Voice Typing
+Push-to-talk voice typing tool with 100% local processing.
 
-### Claudeable (Open Source)
-Claude Code meta-project for professional web development. Custom skills, templates and pre-configured MCPs.
+### Cloud Infrastructure Projects
+Multicloud Terraform deployment (AWS/GCP), K8s migration with Cloud SQL HA, legacy modernization with Anthos/GKE.
 
-### ProjectOS Predict (Maven Capstone)
-Risk prediction dashboard for project portfolios. ML model trained on synthetic data flags delays before they happen. Second capstone from Maven AI PM bootcamp (Marily Nika).
+### cv-joseph — This Portfolio (Open Source)
+Interactive CV with AI chatbot, voice mode, RAG pipeline, and multi-layer defense. github.com/joblas/cv-joseph
 
-### AI Solutions Playbook (Private · On Request)
-Productivity system for Solutions Architects working with multiple DTC clients. Context switching from 30min to 30sec, automatic guardrails for production operations, auto-generated SESSION_BRIEF on project open, ADRs and complete operation logging.
+## Certifications
 
-### santifer.io (This Portfolio)
-Interactive CV with self-healing AI chatbot, voice mode (OpenAI Realtime API), and agentic observability. RAG pipeline (Supabase pgvector + OpenAI embeddings + Haiku reranking), 6-layer jailbreak defense (50+ keyword patterns, canary tokens, fingerprinting, anti-extract, real-time safety scoring, adversarial red team), 71 automated evals (10 categories including multi-turn, source badges, and voice) with CI gate, closed-loop improvement (trace-to-eval, adversarial testing, prompt versioning via Langfuse). Batch eval with Sonnet scores intent, quality, safety and jailbreak detection; alerts via Resend. Custom ops dashboard with 8 tabs: conversations, costs, RAG, security, evals, voice, prompts, system. Developer feedback loop: Claude Code queries Langfuse traces and generates fixes. <$0.005/conversation text, ~$0.25/session voice, $0 infrastructure.
-
-### Published Case Studies
-- [Career-Ops: AI Job Search Tool](https://santifer.io/career-ops-system): Multi-agent system for job search — 10D scoring, AI resume builder, batch processing 122 URLs, HITL design. 631 evaluations.
-- [The Self-Healing Chatbot](https://santifer.io/self-healing-chatbot): LLMOps case study — agentic observability, 71 evals, voice mode, closed-loop
-- [AI Agent Jacobo](https://santifer.io/ai-agent-jacobo): Omnichannel multi-agent AI — 90% self-service, voice + WhatsApp
-- [Business OS](https://santifer.io/business-os-for-airtable): Custom ERP with 12 Airtable bases, 2100 fields, 170h/month saved
-- [Programmatic SEO](https://santifer.io/programmatic-seo): 4,730 pages from Airtable as headless CMS, 2M+ impressions
-- [n8n for PMs](https://santifer.io/n8n-for-pms): Automation cheat sheet for product managers
-
-## Lightning Session: n8n for Product Managers (Maven, Feb 2026)
-
-Session taught at AI Product Academy (Maven, Marily Nika). Full material: https://santifer.io/n8n-for-pms
-
-**Problem:** PMs lose 20-30h/week on repetitive tasks (sprint reports, classifying feedback, moving data between tools). Santiago tracked 170h/month before automating.
-
-**Workflow 1 — The Automatable Friday:** Automated sprint report posted to Slack every Friday at 9am. 4 nodes: Schedule Trigger → Airtable (read sprint) → Code (group by assignee, format markdown) → Slack. No AI, pure plumbing. Saves 4-6h per sprint.
-
-**Workflow 2 — The Intelligent Router:** AI-powered feedback classification. Form Trigger → Basic LLM Chain (classify as BUG/FEATURE/QUESTION) → Switch (route by category) → Slack (different channel) + Airtable (log). One AI node turns a "dumb pipe" into a "smart pipe."
-
-**Classification prompt design:** Role, signal words per category, tiebreaker rule (bugs > features > questions), safe default (QUESTION if unclear), strict single-word output.
-
-**Universal pattern:** TRIGGER (when) → READ (get data) → PROCESS (transform/classify) → ACT (notify/log). Structure stays the same — only the prompt and data source change.
-
-**Key lessons:** Automate the boring task first. Your database already has 90% of the data. Automate the trigger, not just the task. Start with one workflow running reliably.
-
-Both workflows are downloadable as importable JSON from the cheat sheet.
-
-## Speaking & Teaching
-
-### AI Fluency Educator
-Certified by Anthropic to teach teams and organizations AI adoption. 4D Framework: Delegation (decide what to delegate), Description (communicate it well), Discernment (evaluate outputs), Diligence (collaborate responsibly). Applied as Teaching Fellow at Maven AI PM Bootcamp.
-
-### Teaching Fellow (2026) — Maven AI PM Bootcamp (Marily Nika)
-Teaching AI product managers to build and ship — not just define.
-
-### No-Code: The AI PM's Secret Weapon (2025) — Maven AI PM Bootcamp
-1h community session on no-code (Zapier, Make, n8n, Airtable) as the AI PM's superpower for faster validation and delivery.
-
-### Hiperautomatiza tu Pyme (2025) — Local Entrepreneurs, Seville
-Workshop on hyperautomation for SMEs: orchestration, RPA, AI and governance. Case study: Santifer iRepair.
-
-## LinkedIn (Technical Content with Real Engagement)
-
-- Post about chatbot security (300+ reactions, 50+ comments): how I detected a hack attempt in 3 seconds with Langfuse
-- Post about business opportunities in niches (115+ reactions, 10+ comments): market data analysis to find the next business
-- Post about Santifer iRepair exit (65+ reactions): 16-year narrative of building and the decision to sell
+- AWS Cloud Solutions Architect Professional Certificate
+- Google IT Support Professional Certificate
+- Google Cybersecurity Professional Certificate
+- Meta: Programming with JavaScript, Version Control, Mobile Development
+- University of Michigan: Programming for Everybody (Python)
+- Johns Hopkins: The Unix Workbench (Linux)
+- IBM: Agile Development & Scrum, Cloud Computing
+- Cloud Bootcamps: AWS, Azure, GCP (59 hrs each)
 
 ## Soft Skills
 
 - Communication
-- Leadership
 - Systems Thinking
-- End-to-End Ownership
+- E2E Ownership
 - Bias for Action
-- Influence without Authority
-- Dealing with Ambiguity
+- Cross-Functional Collaboration
+- Rapid Ramp-Up
+- Client-Facing Delivery
 
 ## Languages
 
-- **Spanish:** Native
-- **English:** Professional fluency
+- **English:** Native
+- **Spanish:** Conversational
 
-## What I'm Looking For
+## Additional Qualifications
 
-Senior remote role in EU/USA to:
-- Lead process changes and AI implementation
-- Improve team experience and efficiency
-- Deliver results with clear metrics
+- U.S. Citizen — eligible for DOD security clearance
+- ITAR compliance experience with controlled defense hardware
+- Valid driver's license with clean driving record
 
-## How to Hire Santiago
+## Portfolio Case Studies
 
-For AI Product Manager, Solutions Architect, or Forward Deployed Engineer roles:
-- Email: hola@santifer.io
-- LinkedIn: linkedin.com/in/santifer
-- Website: santifer.io (chat with AI avatar for quick questions)
+### The Self-Healing Chatbot
+Production LLMOps system powering this portfolio's AI chat. Features 6-layer defense with canary token injection and fingerprint detection. 71 automated evals with CI gate enforcement and trace-to-eval closed loop. Cost: <$0.005 per conversation on $0 infrastructure. Batch eval pipeline uses Sonnet to score intent, quality, safety, and jailbreak resistance. Alerts via Resend.
+
+### n8n for Product Managers
+Guide to workflow automation with n8n for non-technical product managers.
+
+### AI Agent Jacobo
+AI voice agent case study — automated phone bookings and inquiries.
+
+### Programmatic SEO
+4,700+ landing pages generated from Airtable ERP data.
+
+## How to Hire Joseph
+
+For AI Developer, DevOps/SRE, or Embedded/Robotics roles:
+- Email: blasj408@gmail.com
+- LinkedIn: linkedin.com/in/joseph-blas
+- Website: cv-joseph.vercel.app (chat with AI avatar for quick questions)

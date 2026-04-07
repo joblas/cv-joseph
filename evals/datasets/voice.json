@@ -5,7 +5,7 @@
     {
       "id": "voice-content-jacobo",
       "description": "Voice RAG about Jacobo returns relevant content",
-      "input": "Cuéntame sobre el agente Jacobo",
+      "input": "Tell me about the Jacobo agent",
       "lang": "es",
       "mode": "voice",
       "assertions": [
@@ -46,7 +46,7 @@
     {
       "id": "voice-brevity-general",
       "description": "General voice response should be short (< 60 words)",
-      "input": "Hola, ¿quién eres?",
+      "input": "Hi, who are you?",
       "lang": "es",
       "mode": "voice",
       "assertions": [

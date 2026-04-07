@@ -32,56 +32,34 @@ interface ProofPoint {
 const PROOF_POINTS: ProofPoint[] = [
   // -- Projects (i18n.ts → projects) --
   {
-    source: 'i18n.ts → projects → AI Solutions Playbook',
-    terms: ['AI Solutions Playbook', 'context switching', 'SESSION_BRIEF'],
+    source: 'i18n.ts → projects → OpenClaw',
+    terms: ['OpenClaw', '22', 'n8n'],
   },
   {
-    source: 'i18n.ts → projects → Content Digest',
-    terms: ['Content Digest'],
-  },
-  {
-    source: 'i18n.ts → projects → Life OS',
-    terms: ['Life OS'],
+    source: 'i18n.ts → projects → Skate Workshop',
+    terms: ['Skate Workshop', 'React Native', 'Supabase'],
   },
   {
     source: 'i18n.ts → projects → Career Ops',
     terms: ['Career Ops'],
   },
   {
-    source: 'i18n.ts → projects → Claude Pulse',
-    terms: ['Claude Pulse'],
+    source: 'i18n.ts → projects → cv-joseph',
+    terms: ['cv-joseph', 'chatbot', 'RAG'],
   },
   {
-    source: 'i18n.ts → projects → Claude Eye',
-    terms: ['Claude Eye'],
+    source: 'i18n.ts → projects → DALL-E',
+    terms: ['DALL-E'],
   },
   {
-    source: 'i18n.ts → projects → Claudeable',
-    terms: ['Claudeable'],
-  },
-  {
-    source: 'i18n.ts → projects → ProjectOS Predict',
-    terms: ['ProjectOS Predict'],
+    source: 'i18n.ts → projects → Whisper Walkie',
+    terms: ['Whisper Walkie'],
   },
 
-  // -- Claude Code Power User (i18n.ts → claudeCode) --
+  // -- AI Coding Power User (i18n.ts → claudeCode) --
   {
     source: 'i18n.ts → claudeCode',
-    terms: ['multi-agent', 'IPC', 'memory persistence', 'custom', 'skills'],
-  },
-
-  // -- Speaking & Teaching (i18n.ts → speaking) --
-  {
-    source: 'i18n.ts → speaking → AI Fluency Educator',
-    terms: ['AI Fluency Educator', '4D', 'Delegation', 'Discernment'],
-  },
-  {
-    source: 'i18n.ts → speaking → Teaching Fellow',
-    terms: ['Teaching Fellow'],
-  },
-  {
-    source: 'i18n.ts → speaking → Hiperautomatiza',
-    terms: ['Hiperautomatiza'],
+    terms: ['multi-agent', 'RAG', 'prompt engineering'],
   },
 
   // -- Self-Healing Chatbot (chatbot-i18n.ts) --
@@ -110,12 +88,12 @@ const PROOF_POINTS: ProofPoint[] = [
 
   // -- Key experience points --
   {
-    source: 'i18n.ts → experience → Jacobo',
-    terms: ['Jacobo', '90%', 'self-service'],
+    source: 'i18n.ts → experience → Google / Waymo',
+    terms: ['Firefly', 'drive-by-wire', 'sensor calibration'],
   },
   {
-    source: 'i18n.ts → experience → pSEO',
-    terms: ['Programmatic', 'Airtable', 'DataForSEO'],
+    source: 'i18n.ts → experience → Pronto / Uber',
+    terms: ['Pronto', '2,900', 'autonomous'],
   },
 ]
 

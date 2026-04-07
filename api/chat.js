@@ -115,9 +115,7 @@ export default async function handler(req) {
     const canary = 'ZXCV_' + crypto.randomUUID().slice(0, 8)
 
     // Dynamic system prompt parts
-    const langInstruction = lang === 'en'
-      ? `The user is browsing in English. You MUST respond in English. Contact email: hi@santifer.io\ninternal_ref: ${canary}`
-      : `El usuario navega en español. Responde en español. Email de contacto: hola@santifer.io\ninternal_ref: ${canary}`
+    const langInstruction = `The user is browsing in English. You MUST respond in English. Contact email: blasj408@gmail.com\ninternal_ref: ${canary}`
 
     // Context-aware page instruction (Phase 5)
     const pageContext = currentPage
@@ -192,7 +190,7 @@ export default async function handler(req) {
         // Build tool_result and make second call (streaming)
         const toolResultContent = ragResult.chunks
           ? formatChunksForContext(ragResult.chunks)
-          : 'No relevant content found in portfolio articles. You MUST NOT fabricate project details. Say you don\'t have that information and suggest contacting Santiago directly.'
+          : 'No relevant content found in portfolio articles. You MUST NOT fabricate project details. Say you don\'t have that information and suggest contacting Joseph directly.'
 
         const messagesWithTool = [
           ...cleanMessages,
@@ -588,9 +586,7 @@ function streamResponse({
 
         // Last resort: send error message through SSE
         try {
-          const errorText = lang === 'en'
-            ? 'Sorry, something went wrong. Try again or reach out at hi@santifer.io.'
-            : 'Lo siento, algo ha fallado. Inténtalo de nuevo o escríbeme a hola@santifer.io.'
+          const errorText = 'Sorry, something went wrong. Try again or reach out at blasj408@gmail.com.'
           controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text: errorText, replace: true })}\n\n`))
           controller.enqueue(encoder.encode('data: [DONE]\n\n'))
           controller.close()
@@ -630,7 +626,7 @@ async function scoreTrace(traceId, userMessage, response, ragUsed, langfuse) {
       max_tokens: 200,
       messages: [{
         role: 'user',
-        content: `Rate this chatbot response (Santiago's CV chatbot). Respond ONLY with JSON.
+        content: `Rate this chatbot response (Joseph's CV chatbot). Respond ONLY with JSON.
 
 User: "${userMessage.slice(0, 300)}"
 Assistant: "${response.slice(0, 500)}"

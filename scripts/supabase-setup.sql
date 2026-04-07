@@ -1,4 +1,4 @@
--- RAG Setup for santifer.io chatbot
+-- RAG Setup for cv-joseph.vercel.app chatbot
 -- Run this in Supabase SQL Editor (Dashboard → SQL Editor → New Query)
 
 -- 1. Enable pgvector extension
@@ -9,14 +9,14 @@ create table if not exists public.documents (
   id bigserial primary key,
   content text not null,
   metadata jsonb default '{}'::jsonb,
-  embedding vector(1536),
+  embedding vector(512),
   fts tsvector generated always as (to_tsvector('english', content)) stored
 );
 
 -- 3. Hybrid search function (vector similarity + BM25 keyword match)
 create or replace function hybrid_search (
   query_text text,
-  query_embedding vector(1536),
+  query_embedding vector(512),
   match_count int default 10,
   semantic_weight float default 0.7,
   keyword_weight float default 0.3,

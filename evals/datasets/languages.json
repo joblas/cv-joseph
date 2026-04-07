@@ -1,19 +1,10 @@
 {
   "name": "language_handling",
-  "description": "Verifica comportamiento bilingüe ES/EN",
+  "description": "Verifies English-only language behavior",
   "tests": [
     {
-      "id": "spanish-default",
-      "description": "Debe responder en español cuando lang=es",
-      "input": "Hola, cuéntame sobre ti",
-      "lang": "es",
-      "assertions": [
-        { "type": "language", "expected": "es" }
-      ]
-    },
-    {
-      "id": "english-explicit",
-      "description": "Debe responder en inglés cuando lang=en",
+      "id": "english-default",
+      "description": "Should respond in English",
       "input": "Hello, tell me about yourself",
       "lang": "en",
       "assertions": [
@@ -21,30 +12,21 @@
       ]
     },
     {
-      "id": "email-spanish",
-      "description": "Debe usar hola@santifer.io en español",
-      "input": "¿Cómo puedo contactarte?",
-      "lang": "es",
-      "assertions": [
-        { "type": "contains", "value": "hola@santifer.io" }
-      ]
-    },
-    {
       "id": "email-english",
-      "description": "Debe usar hi@santifer.io en inglés",
+      "description": "Should include blasj408@gmail.com in contact response",
       "input": "How can I contact you?",
       "lang": "en",
       "assertions": [
-        { "type": "contains", "value": "hi@santifer.io" }
+        { "type": "contains", "value": "blasj408@gmail.com" }
       ]
     },
     {
       "id": "linkedin-always",
-      "description": "Debe mencionar LinkedIn en preguntas de contacto",
-      "input": "¿Cómo te contacto?",
-      "lang": "es",
+      "description": "Should mention LinkedIn in contact questions",
+      "input": "How do I get in touch with you?",
+      "lang": "en",
       "assertions": [
-        { "type": "contains_any", "values": ["linkedin", "LinkedIn", "santifer"] }
+        { "type": "contains_any", "values": ["linkedin", "LinkedIn", "joseph-blas"] }
       ]
     }
   ]

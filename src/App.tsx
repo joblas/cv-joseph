@@ -255,12 +255,12 @@ function useTypewriterRotation(roles: readonly string[], { typeSpeed = 80, delet
 }
 
 const HOME_TOC_SECTIONS = [
-  { id: 'experience', es: 'Experiencia', en: 'Experience' },
-  { id: 'projects', es: 'Proyectos', en: 'Projects' },
-  { id: 'speaking', es: 'Compartiendo', en: 'Sharing' },
-  { id: 'education', es: 'Formación', en: 'Education' },
+  { id: 'experience', es: 'Experience', en: 'Experience' },
+  { id: 'projects', es: 'Projects', en: 'Projects' },
+  { id: 'speaking', es: 'Sharing', en: 'Sharing' },
+  { id: 'education', es: 'Education', en: 'Education' },
   { id: 'tech', es: 'Skills & Stack', en: 'Skills & Stack' },
-  { id: 'contact', es: 'Contacto', en: 'Contact' },
+  { id: 'contact', es: 'Contact', en: 'Contact' },
 ] as const
 
 function HomeToc({ lang }: { lang: Lang }) {
@@ -493,13 +493,13 @@ function parseHighlights(text: string): ParsedHighlights {
       i += 2
     }
     // Check for + (Tipo C: gradiente solo en encendido final)
-    // Si +digit (ej: +15), mostrar como "15+" (convención internacional)
+    // If +digit (e.g. +15), display as "15+" (international convention)
     else if (text[i] === '+') {
       const nextIsDigit = /\d/.test(text[i + 1] || '')
       const start = clean.length
       i++ // skip opening +
       if (nextIsDigit) {
-        // Leer dígitos primero, luego añadir + después (15+ en vez de +15)
+        // Read digits first, then add + after (15+ instead of +15)
         while (i < text.length && /\d/.test(text[i])) {
           clean += text[i]
           i++
@@ -534,7 +534,7 @@ function parseHighlights(text: string): ParsedHighlights {
   return { clean, ranges, typewriterRanges, finalRanges, permanentRanges, slowRanges }
 }
 
-// Renderiza texto con rangos destacados y soporte para transición
+// Renders text with highlighted ranges and transition support
 // Tipos de highlight:
 // - typewriter (Tipo B): gradiente durante typewriter, luego normal
 // - final (Tipo C): normal durante typewriter, gradiente en encendido final
@@ -543,7 +543,7 @@ function renderHighlightedText(
   text: string,
   _ranges: [number, number][],  // kept for API compatibility
   options?: {
-    dimmed?: boolean           // texto atenuado (después del typewriter)
+    dimmed?: boolean           // dimmed text (after typewriter)
     finalReveal?: boolean      // Tipo C se enciende con gradiente
     revealed?: boolean         // resto del texto se enciende
     typewriterRanges?: [number, number][]  // Tipo B
@@ -582,7 +582,7 @@ function renderHighlightedText(
   // Tipo C: atenuados hasta que finalReveal=true (se encienden ANTES que el resto)
   const isFinalLowOpacity = dimmed && !finalReveal
 
-  // UN SOLO TIMING para TODO - sincronización perfecta
+  // SINGLE TIMING for ALL - perfect synchronization
   const timing = 'duration-[2500ms] ease-in-out'
 
   // If no special ranges, render as plain text
@@ -665,7 +665,7 @@ function renderHighlightedText(
           pushHighlightWords(segment, currentStart, showGradient,
             showGradient ? 'opacity-0' : isFinalLowOpacity ? 'opacity-15' : 'opacity-100')
         } else {
-          // permanent: siempre gradiente (mientras no esté revealed)
+          // permanent: always gradient (while not revealed)
           const showGradient = !revealed
           pushHighlightWords(segment, currentStart, showGradient,
             showGradient ? 'opacity-0' : 'opacity-100')
@@ -1109,17 +1109,17 @@ function ReflectiveTypewriter({
               const isCompleted = completedHookLines[pIdx]?.[lIdx] !== undefined
 
               // Unificar renderizado para permitir transiciones CSS suaves
-              // El texto a mostrar: completado > actual (displayText) > vacío
+              // Text to show: completed > current (displayText) > empty
               const textToShow = isCompleted
                 ? completedHookLines[pIdx][lIdx]
                 : (isCurrentLine && phase === 'hook')
                   ? displayText
                   : ''
 
-              // Tipo B highlights activos SOLO mientras se escribe esta línea
+              // Type B highlights active ONLY while typing this line
               const highlightsActive = isCurrentLine && phase === 'hook'
 
-              // Solo renderizar si hay texto o es la línea actual
+              // Only render if there is text or it is the current line
               if (!textToShow && !isCurrentLine) return null
 
               return (
@@ -1147,7 +1147,7 @@ function ReflectiveTypewriter({
   )
 }
 
-// Sección de historia con typewriter y animaciones
+// Story section with typewriter and animations
 function StorySection({ t }: { t: (typeof translations)[Lang] }) {
   const [typewriterComplete, setTypewriterComplete] = useState(false)
   const [textDimmed, setTextDimmed] = useState(false)
@@ -1189,10 +1189,10 @@ function StorySection({ t }: { t: (typeof translations)[Lang] }) {
     if (!typewriterComplete || sequenceStartedRef.current) return
     sequenceStartedRef.current = true
 
-    // Secuencia de animación post-typewriter:
-    // 1. Esperar a que Tipo B (Construir) termine de desvanecerse (~2.5s transición)
-    // 2. Dimmed: todo se atenúa
-    // 3. FinalReveal: Tipo C se enciende con gradiente (+15 años + sistemas)
+    // Post-typewriter animation sequence:
+    // 1. Wait for Type B (Build) to finish fading (~2.5s transition)
+    // 2. Dimmed: everything fades
+    // 3. FinalReveal: Type C lights up with gradient (+15 years + systems)
     // 4. Revealed: resto del texto se enciende, Tipo C MANTIENE gradiente
 
     // Step 1: Dim everything (2500ms - espera a que Tipo B haya perdido gradiente)
@@ -1217,7 +1217,7 @@ function StorySection({ t }: { t: (typeof translations)[Lang] }) {
     }
   }, [typewriterComplete])
 
-  // Scroll-past-as-skip: si el usuario scrollea pasando la sección, auto-skip
+  // Scroll-past-as-skip: if user scrolls past the section, auto-skip
   useEffect(() => {
     if (typewriterComplete) return
     const section = sectionRef.current
@@ -1242,10 +1242,10 @@ function StorySection({ t }: { t: (typeof translations)[Lang] }) {
       <div className="absolute inset-0 pointer-events-none" style={{
         background: 'linear-gradient(90deg, transparent 0%, hsl(var(--background)) 25%, hsl(var(--background)) 75%, transparent 100%)',
       }} />
-      {/* Fade vertical: transparente arriba → fondo sólido abajo */}
+      {/* Vertical fade: transparent top → solid background bottom */}
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/50 to-background pointer-events-none" />
       <div className="relative z-10 max-w-5xl mx-auto px-6">
-        {/* Hook emocional con typewriter reflexivo + botón skip */}
+        {/* Emotional hook with reflective typewriter + skip button */}
         <div className="relative pb-12">
           <ReflectiveTypewriter
             context={t.story.context}
@@ -1260,7 +1260,7 @@ function StorySection({ t }: { t: (typeof translations)[Lang] }) {
             onStart={() => setAnimationStarted(true)}
           />
 
-          {/* Botón skip — posición absoluta debajo del texto, en el padding reservado */}
+          {/* Skip button — absolute position below text, in reserved padding */}
           <AnimatePresence>
             {animationStarted && !typewriterComplete && (
               <motion.button
@@ -1277,7 +1277,7 @@ function StorySection({ t }: { t: (typeof translations)[Lang] }) {
           </AnimatePresence>
         </div>
 
-        {/* Contenido que aparece después del typewriter - expansión suave (instantánea si scroll-skip) */}
+        {/* Content appearing after typewriter - smooth expansion (instant if scroll-skip) */}
         <motion.div
           initial={{ height: 0, opacity: 0 }}
           animate={typewriterComplete
@@ -1331,7 +1331,7 @@ function StorySection({ t }: { t: (typeof translations)[Lang] }) {
             })}
           </div>
 
-          {/* Burbujas de navegación - delays sincronizados */}
+          {/* Navigation bubbles - synchronized delays */}
           <motion.div
             initial={{ opacity: 0, y: 15 }}
             animate={typewriterComplete ? { opacity: 1, y: 0 } : { opacity: 0, y: 15 }}
@@ -1460,7 +1460,7 @@ function App() {
                 {/* Inner border */}
                 <div className="absolute inset-2 rounded-full bg-gradient-theme-50 p-[2px]">
                   <div className="w-full h-full rounded-full overflow-hidden">
-                    <img src="/foto-avatar-sm.webp" srcSet="/foto-avatar-sm.webp 192w, /foto-avatar.webp 384w" sizes="(max-width: 768px) 160px, 192px" alt="Santiago Fernández de Valderrama" className="w-full h-full object-cover" width={192} height={192} fetchPriority="high" />
+                    <img src="/foto-avatar-sm.webp" srcSet="/foto-avatar-sm.webp 192w, /foto-avatar.webp 384w" sizes="(max-width: 768px) 160px, 192px" alt="Joseph Blas" className="w-full h-full object-cover" width={192} height={192} fetchPriority="high" />
                   </div>
                 </div>
               </div>
@@ -1481,25 +1481,15 @@ function App() {
               className="text-center md:text-left"
             >
               <p className="text-lg text-muted-foreground mb-2">
-                {lang === 'es' ? 'Hola, soy' : "Hi, I'm"} <Link to={lang === 'es' ? '/sobre-mi' : '/about'} className="text-gradient-theme font-semibold hover:opacity-80 transition-opacity">@santifer</Link>,
+                {"Hi, I'm"} <Link to={'/about'} className="text-gradient-theme font-semibold hover:opacity-80 transition-opacity">@joseph</Link>,
               </p>
               <h1 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mb-4 leading-tight">
                 <span className="text-gradient-theme">{hydrated ? roleText : t.greetingRoles[0]}</span>
                 {hydrated && <span className="inline-block w-[3px] h-[0.85em] bg-primary ml-1 rounded-sm translate-y-[2px]" style={{ animation: 'blink 1s step-end infinite' }} />}
                 <br />
-                {lang === 'es' ? (
-                  <>
-                    {t.greeting}
-                    <br />
-                    LLMOps que se <BeamPill>curan solos.</BeamPill>
-                  </>
-                ) : (
-                  <>
-                    {t.greeting} <BeamPill>self-healing</BeamPill>
-                    <br />
-                    {t.role}
-                  </>
-                )}
+                {t.greeting} <BeamPill>self-healing</BeamPill>
+                <br />
+                {t.role}
               </h1>
 
               <div className="flex flex-wrap justify-center md:justify-start gap-3">
@@ -1525,7 +1515,7 @@ function App() {
       {/* Summary - Con storytelling integrado */}
       <StorySection t={t} />
 
-      {/* Experience - Con preámbulo de competencias */}
+      {/* Experience - With competencies preamble */}
       <section id="experience" className="py-16 md:py-24 bg-muted/30" style={{ contentVisibility: 'auto', containIntrinsicSize: 'auto 2000px' }}>
         <div className="max-w-5xl mx-auto px-6">
           <AnimatedSection>
@@ -1537,7 +1527,7 @@ function App() {
             </h2>
           </AnimatedSection>
 
-          {/* Preámbulo: Cómo trabajo + Competencias */}
+          {/* Preamble: How I work + Competencies */}
           <AnimatedSection delay={0.1}>
             <div className="mb-12 p-6 rounded-2xl bg-card/50">
               <p className="text-lg text-muted-foreground text-center max-w-3xl mx-auto mb-6">
@@ -1566,16 +1556,13 @@ function App() {
               <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mb-2">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl overflow-hidden bg-[#888] shrink-0">
-                    <picture>
-                      <source srcSet="/logo-santifer.webp" type="image/webp" />
-                      <img src="/logo-santifer.jpg" alt={t.experience.santifer.company} className="w-full h-full object-cover" width={40} height={40} loading="lazy" decoding="async" />
-                    </picture>
+                    <img src="/foto-avatar-sm.webp" alt={t.experience.santifer.company} className="w-full h-full object-cover" width={40} height={40} loading="lazy" decoding="async" />
                   </div>
                   <h3 className="font-display text-2xl font-bold">{t.experience.santifer.company}</h3>
                 </div>
-                <Link to={lang === 'en' ? '/santifer-irepair-founder' : '/santifer-irepair'} className="text-sm text-primary hover:underline flex items-center gap-1">
-                  santifer irepair
-                </Link>
+                <a href="https://joestechsolutions.com" target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline flex items-center gap-1">
+                  joestechsolutions.com
+                </a>
                 <span className="text-sm text-muted-foreground">{t.experience.santifer.location}</span>
               </div>
               <p className="text-primary font-medium mb-1">{t.experience.santifer.role}</p>
@@ -1598,7 +1585,7 @@ function App() {
                       {'src' in logo ? (
                         <img src={logo.src} alt={logo.name} className="h-5 w-auto shrink-0 invert opacity-60 hover:opacity-80 dark:invert-0 dark:opacity-70 dark:hover:opacity-90" loading="lazy" width={20} height={20} />
                       ) : (
-                        <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 shrink-0 opacity-60 dark:opacity-70" aria-hidden="true" dangerouslySetInnerHTML={{ __html: logo.icon }} />
+                        <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 shrink-0 opacity-60 dark:opacity-70" aria-hidden="true" dangerouslySetInnerHTML={{ __html: logo.icon || '' }} />
                       )}
                       <span className="text-sm font-medium opacity-60 dark:opacity-70">{logo.name}</span>
                     </div>
@@ -1696,14 +1683,14 @@ function App() {
                     )
                   })}
                 </ul>
-                <Link to={t.experience.santifer.jacobo.caseStudyUrl} className="inline-flex items-center gap-2 mt-auto pt-4 text-sm font-medium text-primary hover:text-primary/80 transition-colors duration-200 group/cta">
+                {t.experience.santifer.jacobo.soldWith && <a href={t.experience.santifer.jacobo.caseStudyUrl || undefined} target={t.experience.santifer.jacobo.caseStudyUrl ? "_blank" : undefined} rel={t.experience.santifer.jacobo.caseStudyUrl ? "noopener noreferrer" : undefined} className="inline-flex items-center gap-2 mt-auto pt-4 text-sm font-medium text-primary hover:text-primary/80 transition-colors duration-200 group/cta">
                   <span className="px-4 py-2 rounded-lg bg-primary/10 border border-primary/30 group-hover/cta:bg-primary/20 group-hover/cta:border-primary/50 transition-all duration-200">{t.experience.santifer.jacobo.soldWith}</span>
                   <ChevronRight className="w-4 h-4 group-hover/cta:translate-x-0.5 transition-transform duration-200" />
-                </Link>
+                </a>}
               </div>
             </AnimatedSection>
 
-            {/* Large card - Web Programática + SEO */}
+            {/* Large card - Programmatic Web + SEO */}
             <AnimatedSection delay={0.2} className="col-span-2 row-span-2">
               <div className="h-full p-6 rounded-2xl bg-gradient-to-br from-accent/10 to-primary/10 border border-accent/20 hover:border-accent/40 transition-colors duration-200 group flex flex-col">
                 <div className="flex items-start justify-between mb-4">
@@ -1731,10 +1718,10 @@ function App() {
                     )
                   })}
                 </ul>
-                <Link to={t.experience.santifer.webSeo.caseStudyUrl} className="inline-flex items-center gap-2 mt-auto pt-4 text-sm font-medium text-accent hover:text-accent/80 transition-colors duration-200 group/cta">
+                {t.experience.santifer.webSeo.codeAvailable && <a href={t.experience.santifer.webSeo.caseStudyUrl || undefined} target={t.experience.santifer.webSeo.caseStudyUrl ? "_blank" : undefined} rel={t.experience.santifer.webSeo.caseStudyUrl ? "noopener noreferrer" : undefined} className="inline-flex items-center gap-2 mt-auto pt-4 text-sm font-medium text-accent hover:text-accent/80 transition-colors duration-200 group/cta">
                   <span className="px-4 py-2 rounded-lg bg-accent/10 border border-accent/30 group-hover/cta:bg-accent/20 group-hover/cta:border-accent/50 transition-all duration-200">{t.experience.santifer.webSeo.codeAvailable}</span>
                   <ChevronRight className="w-4 h-4 group-hover/cta:translate-x-0.5 transition-transform duration-200" />
-                </Link>
+                </a>}
               </div>
             </AnimatedSection>
 
@@ -1751,7 +1738,7 @@ function App() {
 
             {/* ERP card */}
             <AnimatedSection delay={0.3}>
-              <Link to={t.experience.santifer.erp.caseStudyUrl} className="block h-full p-5 rounded-2xl bg-card border border-border hover:border-primary/30 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/5 transition-all duration-200 flex flex-col group/card">
+              <Link to={t.experience.santifer.erp.caseStudyUrl || '/'} className="block h-full p-5 rounded-2xl bg-card border border-border hover:border-primary/30 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/5 transition-all duration-200 flex flex-col group/card">
                 <Database className="w-5 h-5 text-primary mb-3" />
                 <p className="font-medium text-sm mb-1">{t.experience.santifer.erp.title}</p>
                 <p className="text-sm text-muted-foreground">{t.experience.santifer.erp.desc}</p>
@@ -1764,7 +1751,7 @@ function App() {
 
             {/* GPTs card */}
             <AnimatedSection delay={0.35}>
-              <Link to={t.experience.santifer.gpts.caseStudyUrl} className="block h-full p-5 rounded-2xl bg-card border border-border hover:border-primary/30 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/5 transition-all duration-200 flex flex-col group/card">
+              <a href={t.experience.santifer.gpts.caseStudyUrl || undefined} target={t.experience.santifer.gpts.caseStudyUrl ? "_blank" : undefined} rel={t.experience.santifer.gpts.caseStudyUrl ? "noopener noreferrer" : undefined} className="block h-full p-5 rounded-2xl bg-card border border-border hover:border-primary/30 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/5 transition-all duration-200 flex flex-col group/card">
                 <Bot className="w-5 h-5 text-accent mb-3" />
                 <p className="font-medium text-sm mb-1">{t.experience.santifer.gpts.title}</p>
                 <p className="text-sm text-muted-foreground">{t.experience.santifer.gpts.desc}</p>
@@ -1772,12 +1759,12 @@ function App() {
                   <span className="text-xs font-medium text-primary">{t.experience.santifer.gpts.metric}</span>
                   <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/0 group-hover/card:text-primary group-hover/card:translate-x-0.5 transition-all duration-200" />
                 </div>
-              </Link>
+              </a>
             </AnimatedSection>
 
             {/* Reservas card */}
             <AnimatedSection delay={0.4}>
-              <Link to={t.experience.santifer.reservas.caseStudyUrl} className="block h-full p-5 rounded-2xl bg-card border border-border hover:border-primary/30 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/5 transition-all duration-200 flex flex-col group/card">
+              <a href={t.experience.santifer.reservas.caseStudyUrl || undefined} target={t.experience.santifer.reservas.caseStudyUrl ? "_blank" : undefined} rel={t.experience.santifer.reservas.caseStudyUrl ? "noopener noreferrer" : undefined} className="block h-full p-5 rounded-2xl bg-card border border-border hover:border-primary/30 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/5 transition-all duration-200 flex flex-col group/card">
                 <Timer className="w-5 h-5 text-primary mb-3" />
                 <p className="font-medium text-sm mb-1">{t.experience.santifer.reservas.title}</p>
                 <p className="text-sm text-muted-foreground">{t.experience.santifer.reservas.desc}</p>
@@ -1785,12 +1772,12 @@ function App() {
                   <span className="text-xs font-medium text-accent">{t.experience.santifer.reservas.metric}</span>
                   <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/0 group-hover/card:text-primary group-hover/card:translate-x-0.5 transition-all duration-200" />
                 </div>
-              </Link>
+              </a>
             </AnimatedSection>
 
             {/* CRM card */}
             <AnimatedSection delay={0.45}>
-              <Link to={t.experience.santifer.crm.caseStudyUrl} className="block h-full p-5 rounded-2xl bg-card border border-border hover:border-primary/30 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/5 transition-all duration-200 flex flex-col group/card">
+              <a href={t.experience.santifer.crm.caseStudyUrl || undefined} target={t.experience.santifer.crm.caseStudyUrl ? "_blank" : undefined} rel={t.experience.santifer.crm.caseStudyUrl ? "noopener noreferrer" : undefined} className="block h-full p-5 rounded-2xl bg-card border border-border hover:border-primary/30 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/5 transition-all duration-200 flex flex-col group/card">
                 <Users className="w-5 h-5 text-accent mb-3" />
                 <p className="font-medium text-sm mb-1">{t.experience.santifer.crm.title}</p>
                 <p className="text-sm text-muted-foreground">{t.experience.santifer.crm.desc}</p>
@@ -1798,12 +1785,12 @@ function App() {
                   <span className="text-xs font-medium text-primary">{t.experience.santifer.crm.metric}</span>
                   <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/0 group-hover/card:text-primary group-hover/card:translate-x-0.5 transition-all duration-200" />
                 </div>
-              </Link>
+              </a>
             </AnimatedSection>
 
             {/* GenAI Marketing card */}
             <AnimatedSection delay={0.5}>
-              <Link to={t.experience.santifer.genAI.caseStudyUrl} className="block h-full p-5 rounded-2xl bg-card border border-border hover:border-primary/30 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/5 transition-all duration-200 flex flex-col group/card">
+              <a href={t.experience.santifer.genAI.caseStudyUrl || undefined} target={t.experience.santifer.genAI.caseStudyUrl ? "_blank" : undefined} rel={t.experience.santifer.genAI.caseStudyUrl ? "noopener noreferrer" : undefined} className="block h-full p-5 rounded-2xl bg-card border border-border hover:border-primary/30 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/5 transition-all duration-200 flex flex-col group/card">
                 <Sparkles className="w-5 h-5 text-primary mb-3" />
                 <p className="font-medium text-sm mb-1">{t.experience.santifer.genAI.title}</p>
                 <p className="text-sm text-muted-foreground">{t.experience.santifer.genAI.desc}</p>
@@ -1811,25 +1798,122 @@ function App() {
                   <span className="text-xs font-medium text-accent">{t.experience.santifer.genAI.metric}</span>
                   <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/0 group-hover/card:text-primary group-hover/card:translate-x-0.5 transition-all duration-200" />
                 </div>
-              </Link>
+              </a>
             </AnimatedSection>
           </div>
 
-          {/* LICO Cosmetics */}
+          {/* Pronto.ai */}
           <AnimatedSection delay={0.5} className="mt-16">
             <div className="mb-6">
               <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mb-2">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl overflow-hidden bg-[#F5F3EE] flex items-center justify-center shrink-0">
+                  <div className="w-10 h-10 rounded-xl overflow-hidden bg-white flex items-center justify-center shrink-0 p-1">
                     <picture>
-                      <source srcSet="/logo-lico.webp" type="image/webp" />
-                      <img src="/logo-lico.png" alt={t.experience.lico.company} className="w-full h-full object-contain p-1" width={40} height={40} loading="lazy" decoding="async" />
+                      <source srcSet="/logo-pronto.webp" type="image/webp" />
+                      <img src="/logo-pronto.png" alt={t.experience.pronto.company} className="w-full h-full object-contain" width={40} height={40} loading="lazy" decoding="async" />
+                    </picture>
+                  </div>
+                  <h3 className="font-display text-2xl font-bold">{t.experience.pronto.company}</h3>
+                </div>
+                <a href="https://pronto.ai" target="_blank" rel="noopener noreferrer nofollow" className="text-sm text-accent hover:underline flex items-center gap-1">
+                  pronto.ai <ExternalLink className="w-3 h-3" aria-hidden="true" />
+                </a>
+                <span className="text-sm text-muted-foreground">{t.experience.pronto.location}</span>
+              </div>
+              <p className="text-primary font-medium mb-1">{t.experience.pronto.role}</p>
+              <p className="text-sm text-muted-foreground mb-2">{t.experience.pronto.period}</p>
+              <p className="text-muted-foreground">{t.experience.pronto.desc}</p>
+            </div>
+            <div className="mt-6 p-6 rounded-2xl bg-gradient-to-br from-primary/10 to-accent/10 border border-primary/20">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center shrink-0">
+                  <Bot className="w-6 h-6 text-primary" />
+                </div>
+                <div>
+                  <h4 className="font-display font-bold mb-2">{t.experience.pronto.tesauro.title}</h4>
+                  <p className="text-sm text-muted-foreground">{t.experience.pronto.tesauro.desc}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Testimonial */}
+            <a href="https://www.linkedin.com/in/joseph-blas/" target="_blank" rel="noopener noreferrer" className="block group">
+              <blockquote className="mt-6 p-4 rounded-xl bg-primary/5 border border-primary/10 group-hover:border-[hsl(var(--linkedin)/0.3)] transition-colors">
+                <p className="text-sm text-muted-foreground italic mb-4">
+                  "{t.experience.pronto.testimonial.quote}"
+                </p>
+                <footer className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                    <Zap className="w-5 h-5 text-primary" />
+                  </div>
+                  <div className="flex-1">
+                    <span className="text-sm font-medium text-foreground block">{t.experience.pronto.testimonial.author}</span>
+                    <span className="text-xs text-muted-foreground">{t.experience.pronto.testimonial.role}</span>
+                  </div>
+                  <LinkedInLogo className="w-4 h-4 text-[hsl(var(--linkedin))]" />
+                </footer>
+              </blockquote>
+            </a>
+          </AnimatedSection>
+
+          {/* Uber ATG */}
+          <AnimatedSection delay={0.6} className="mt-16">
+            <div className="mb-6">
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mb-2">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl overflow-hidden bg-black flex items-center justify-center shrink-0">
+                    <picture>
+                      <source srcSet="/logo-uber.webp" type="image/webp" />
+                      <img src="/logo-uber.png" alt={t.experience.uberAtg.company} className="w-full h-full object-contain p-1" width={40} height={40} loading="lazy" decoding="async" />
+                    </picture>
+                  </div>
+                  <h3 className="font-display text-2xl font-bold">{t.experience.uberAtg.company}</h3>
+                </div>
+                <a href="https://www.uber.com/us/en/autonomous/" target="_blank" rel="noopener noreferrer nofollow" className="text-sm text-accent hover:underline flex items-center gap-1">
+                  uber.com <ExternalLink className="w-3 h-3" aria-hidden="true" />
+                </a>
+                <span className="text-sm text-muted-foreground">{t.experience.uberAtg.location}</span>
+              </div>
+              <p className="text-primary font-medium mb-1">{t.experience.uberAtg.role}</p>
+              <p className="text-sm text-muted-foreground mb-2">{t.experience.uberAtg.period}</p>
+              <p className="text-muted-foreground">{t.experience.uberAtg.desc}</p>
+
+              {/* Testimonial */}
+              <a href="https://www.linkedin.com/in/joseph-blas/" target="_blank" rel="noopener noreferrer" className="block group">
+                <blockquote className="mt-6 p-4 rounded-xl bg-primary/5 border border-primary/10 group-hover:border-[hsl(var(--linkedin)/0.3)] transition-colors">
+                  <p className="text-sm text-muted-foreground italic mb-4">
+                    "{t.experience.uberAtg.testimonial.quote}"
+                  </p>
+                  <footer className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                      <Zap className="w-5 h-5 text-primary" />
+                    </div>
+                    <div className="flex-1">
+                      <span className="text-sm font-medium text-foreground block">{t.experience.uberAtg.testimonial.author}</span>
+                      <span className="text-xs text-muted-foreground">{t.experience.uberAtg.testimonial.role}</span>
+                    </div>
+                    <LinkedInLogo className="w-4 h-4 text-[hsl(var(--linkedin))]" />
+                  </footer>
+                </blockquote>
+              </a>
+            </div>
+          </AnimatedSection>
+
+          {/* Waymo / Google Self-Driving Car Project */}
+          <AnimatedSection delay={0.7} className="mt-16">
+            <div className="mb-6">
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mb-2">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl overflow-hidden bg-white flex items-center justify-center shrink-0">
+                    <picture>
+                      <source srcSet="/logo-waymo.webp" type="image/webp" />
+                      <img src="/logo-waymo.png" alt={t.experience.lico.company} className="w-full h-full object-contain p-1" width={40} height={40} loading="lazy" decoding="async" />
                     </picture>
                   </div>
                   <h3 className="font-display text-2xl font-bold">{t.experience.lico.company}</h3>
                 </div>
-                <a href="https://licocosmetics.es" target="_blank" rel="noopener noreferrer nofollow" className="text-sm text-accent hover:underline flex items-center gap-1">
-                  licocosmetics.es <ExternalLink className="w-3 h-3" aria-hidden="true" />
+                <a href="https://waymo.com" target="_blank" rel="noopener noreferrer nofollow" className="text-sm text-accent hover:underline flex items-center gap-1">
+                  waymo.com <ExternalLink className="w-3 h-3" aria-hidden="true" />
                 </a>
                 <span className="text-sm text-muted-foreground">{t.experience.lico.location}</span>
               </div>
@@ -1838,16 +1922,15 @@ function App() {
               <p className="text-muted-foreground">{t.experience.lico.desc}</p>
 
               {/* Testimonial */}
-              <a href="https://www.linkedin.com/in/santifer/details/recommendations/" target="_blank" rel="noopener noreferrer" className="block group">
+              <a href="https://www.linkedin.com/in/joseph-blas/" target="_blank" rel="noopener noreferrer" className="block group">
                 <blockquote className="mt-6 p-4 rounded-xl bg-accent/5 border border-accent/10 group-hover:border-[hsl(var(--linkedin)/0.3)] transition-colors">
                   <p className="text-sm text-muted-foreground italic mb-4">
                     "{t.experience.lico.testimonial.quote}"
                   </p>
                   <footer className="flex items-center gap-3">
-                    <picture>
-                      <source srcSet="/juan-sabate.webp" type="image/webp" />
-                      <img src="/juan-sabate.jpeg" alt={t.experience.lico.testimonial.author} className="w-10 h-10 rounded-full object-cover" width={40} height={40} loading="lazy" decoding="async" />
-                    </picture>
+                    <div className="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center shrink-0">
+                      <Zap className="w-5 h-5 text-accent" />
+                    </div>
                     <div className="flex-1">
                       <span className="text-sm font-medium text-foreground block">{t.experience.lico.testimonial.author}</span>
                       <span className="text-xs text-muted-foreground">{t.experience.lico.testimonial.role}</span>
@@ -1857,57 +1940,6 @@ function App() {
                 </blockquote>
               </a>
             </div>
-          </AnimatedSection>
-
-          {/* Everis */}
-          <AnimatedSection delay={0.6} className="mt-16">
-            <div className="mb-6">
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mb-2">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl overflow-hidden bg-white flex items-center justify-center shrink-0 p-1.5">
-                    <picture>
-                      <source srcSet="/logo-everis.webp" type="image/webp" />
-                      <img src="/logo-everis.jpg" alt={t.experience.everis.company} className="w-full h-full object-contain" width={40} height={40} loading="lazy" decoding="async" />
-                    </picture>
-                  </div>
-                  <h3 className="font-display text-2xl font-bold">{t.experience.everis.company}</h3>
-                </div>
-              </div>
-              <p className="text-primary font-medium mb-1">{t.experience.everis.role}</p>
-              <p className="text-sm text-muted-foreground mb-2">{t.experience.everis.period}</p>
-              <p className="text-muted-foreground">{t.experience.everis.desc}</p>
-            </div>
-            <div className="mt-6 p-6 rounded-2xl bg-gradient-to-br from-primary/10 to-accent/10 border border-primary/20">
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center shrink-0">
-                  <Bot className="w-6 h-6 text-primary" />
-                </div>
-                <div>
-                  <h4 className="font-display font-bold mb-2">{t.experience.everis.tesauro.title}</h4>
-                  <p className="text-sm text-muted-foreground">{t.experience.everis.tesauro.desc}</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Testimonial */}
-            <a href="https://www.linkedin.com/in/santifer/details/recommendations/" target="_blank" rel="noopener noreferrer" className="block group">
-              <blockquote className="mt-6 p-4 rounded-xl bg-primary/5 border border-primary/10 group-hover:border-[hsl(var(--linkedin)/0.3)] transition-colors">
-                <p className="text-sm text-muted-foreground italic mb-4">
-                  "{t.experience.everis.testimonial.quote}"
-                </p>
-                <footer className="flex items-center gap-3">
-                  <picture>
-                    <source srcSet="/manuel-lopez.webp" type="image/webp" />
-                    <img src="/manuel-lopez.jpeg" alt={t.experience.everis.testimonial.author} className="w-10 h-10 rounded-full object-cover" width={40} height={40} loading="lazy" decoding="async" />
-                  </picture>
-                  <div className="flex-1">
-                    <span className="text-sm font-medium text-foreground block">{t.experience.everis.testimonial.author}</span>
-                    <span className="text-xs text-muted-foreground">{t.experience.everis.testimonial.role}</span>
-                  </div>
-                  <LinkedInLogo className="w-4 h-4 text-[hsl(var(--linkedin))]" />
-                </footer>
-              </blockquote>
-            </a>
           </AnimatedSection>
         </div>
       </section>
@@ -2020,17 +2052,13 @@ function App() {
 
             // Separar proyectos
             const allProjects = t.projects.items as readonly Project[]
-            const contentDigest = allProjects.find(p => p.title === 'Content Digest')!
-            const lifeOS = allProjects.find(p => p.title === 'Life OS')!
+            const openClaw = allProjects.find(p => p.title === 'OpenClaw')!
+            const skateWorkshop = allProjects.find(p => p.title === 'The Skate Workshop')!
             const careerOps = allProjects.find(p => p.title === 'Career Ops')!
-            const santiferIo = allProjects.find(p => p.title === 'santifer.io')!
-            const selfHealingChatbot = allProjects.find(p => p.title === 'Self-Healing Chatbot')!
-            // Tools que dependen de santifer.io
-            const claudeEye = allProjects.find(p => p.title === 'Claude Eye')!
-            const claudeable = allProjects.find(p => p.title === 'Claudeable')!
-            // Fila 4: Claude Pulse + ProjectOS Predict
-            const claudePulse = allProjects.find(p => p.title === 'Claude Pulse')!
-            const projectOSPredict = allProjects.find(p => p.title === 'ProjectOS Predict')!
+            const cvJoseph = allProjects.find(p => p.title === 'cv-joseph')!
+            const dalleGenerator = allProjects.find(p => p.title === 'DALL-E Image Generator')!
+            const whisperWalkie = allProjects.find(p => p.title === 'Whisper Walkie')!
+            const cloudInfra = allProjects.find(p => p.title === 'Cloud Infrastructure')!
 
             // Helper para parsear **bold** a elementos con estilo
             const parseBold = (text: string): React.ReactNode[] => {
@@ -2042,18 +2070,16 @@ function App() {
             // Refs para cada tarjeta (para calcular posiciones de conexiones)
             const containerRef = useRef<HTMLDivElement>(null)
             const cardRefs = {
-              contentDigest: useRef<HTMLDivElement>(null),
-              lifeOS: useRef<HTMLDivElement>(null),
+              openClaw: useRef<HTMLDivElement>(null),
+              skateWorkshop: useRef<HTMLDivElement>(null),
               careerOps: useRef<HTMLDivElement>(null),
-              santiferIo: useRef<HTMLDivElement>(null),
-              selfHealingChatbot: useRef<HTMLDivElement>(null),
-              claudeEye: useRef<HTMLDivElement>(null),
-              claudeable: useRef<HTMLDivElement>(null),
-              claudePulse: useRef<HTMLDivElement>(null),
-              projectOSPredict: useRef<HTMLDivElement>(null),
+              cvJoseph: useRef<HTMLDivElement>(null),
+              dalleGenerator: useRef<HTMLDivElement>(null),
+              whisperWalkie: useRef<HTMLDivElement>(null),
+              cloudInfra: useRef<HTMLDivElement>(null),
             }
 
-            // Hook para calcular líneas de conexión SVG
+            // Hook to calculate SVG connection lines
             const [lines, setLines] = useState<string[]>([])
             const { ref: visibilityRef, isInView: isVisible } = useInView(0.1)
 
@@ -2078,7 +2104,7 @@ function App() {
                   }
                 }
 
-                // Definir conexiones según el grafo
+                // Define connections per graph
                 type Connection = {
                   from: React.RefObject<HTMLDivElement | null>
                   fromEdge: Edge
@@ -2088,36 +2114,31 @@ function App() {
                   toRatio?: number
                 }
 
-                // En móvil: conexiones verticales simples (tarjetas apiladas)
+                // On mobile: simple vertical connections (stacked cards)
                 // En desktop: grafo complejo con conexiones horizontales y diagonales
                 const connections: Connection[] = isMobile ? [
-                  // Móvil: flujo vertical simple
-                  { from: cardRefs.lifeOS, fromEdge: 'bottom', to: cardRefs.careerOps, toEdge: 'top' },
-                  { from: cardRefs.careerOps, fromEdge: 'bottom', to: cardRefs.santiferIo, toEdge: 'top' },
-                  { from: cardRefs.santiferIo, fromEdge: 'bottom', to: cardRefs.selfHealingChatbot, toEdge: 'top' },
-                  { from: cardRefs.selfHealingChatbot, fromEdge: 'bottom', to: cardRefs.claudeEye, toEdge: 'top' },
-                  { from: cardRefs.claudeEye, fromEdge: 'bottom', to: cardRefs.claudeable, toEdge: 'top' },
-                  { from: cardRefs.claudeable, fromEdge: 'bottom', to: cardRefs.claudePulse, toEdge: 'top' },
-                  { from: cardRefs.claudePulse, fromEdge: 'bottom', to: cardRefs.contentDigest, toEdge: 'top' },
-                  { from: cardRefs.contentDigest, fromEdge: 'bottom', to: cardRefs.projectOSPredict, toEdge: 'top' },
+                  // Mobile: simple vertical flow
+                  { from: cardRefs.openClaw, fromEdge: 'bottom', to: cardRefs.skateWorkshop, toEdge: 'top' },
+                  { from: cardRefs.skateWorkshop, fromEdge: 'bottom', to: cardRefs.careerOps, toEdge: 'top' },
+                  { from: cardRefs.careerOps, fromEdge: 'bottom', to: cardRefs.cvJoseph, toEdge: 'top' },
+                  { from: cardRefs.cvJoseph, fromEdge: 'bottom', to: cardRefs.dalleGenerator, toEdge: 'top' },
+                  { from: cardRefs.dalleGenerator, fromEdge: 'bottom', to: cardRefs.whisperWalkie, toEdge: 'top' },
+                  { from: cardRefs.whisperWalkie, fromEdge: 'bottom', to: cardRefs.cloudInfra, toEdge: 'top' },
                 ] : [
-                  // Desktop: grafo complejo
-                  // Fila 1: Life OS ↔ Career Ops (horizontal)
-                  { from: cardRefs.lifeOS, fromEdge: 'right', to: cardRefs.careerOps, toEdge: 'left' },
-                  // Fila 1 → Fila 2: diagonales hacia santifer.io + chatbot
-                  { from: cardRefs.lifeOS, fromEdge: 'bottom', to: cardRefs.santiferIo, toEdge: 'top' },
-                  { from: cardRefs.careerOps, fromEdge: 'bottom', to: cardRefs.selfHealingChatbot, toEdge: 'top' },
-                  // Fila 2: santifer.io ↔ chatbot (horizontal)
-                  { from: cardRefs.santiferIo, fromEdge: 'right', to: cardRefs.selfHealingChatbot, toEdge: 'left' },
-                  // Fila 2 → Fila 3: hacia tools
-                  { from: cardRefs.santiferIo, fromEdge: 'bottom', to: cardRefs.claudeEye, toEdge: 'top' },
-                  { from: cardRefs.selfHealingChatbot, fromEdge: 'bottom', to: cardRefs.claudeable, toEdge: 'top' },
-                  // Fila 3 → Fila 4
-                  { from: cardRefs.claudeEye, fromEdge: 'bottom', to: cardRefs.claudePulse, toEdge: 'top' },
-                  { from: cardRefs.claudeable, fromEdge: 'bottom', to: cardRefs.contentDigest, toEdge: 'top' },
-                  // Fila 4 → Fila 5: diagonales hacia ProjectOS
-                  { from: cardRefs.claudePulse, fromEdge: 'bottom', to: cardRefs.projectOSPredict, toEdge: 'top', toRatio: 0.25 },
-                  { from: cardRefs.contentDigest, fromEdge: 'bottom', to: cardRefs.projectOSPredict, toEdge: 'top', toRatio: 0.75 },
+                  // Desktop: dependency graph
+                  // Row 1: OpenClaw ↔ Skate Workshop (horizontal)
+                  { from: cardRefs.openClaw, fromEdge: 'right', to: cardRefs.skateWorkshop, toEdge: 'left' },
+                  // Row 1 → Row 2: down to Career Ops + cv-joseph
+                  { from: cardRefs.openClaw, fromEdge: 'bottom', to: cardRefs.careerOps, toEdge: 'top' },
+                  { from: cardRefs.skateWorkshop, fromEdge: 'bottom', to: cardRefs.cvJoseph, toEdge: 'top' },
+                  // Row 2: Career Ops ↔ cv-joseph (horizontal)
+                  { from: cardRefs.careerOps, fromEdge: 'right', to: cardRefs.cvJoseph, toEdge: 'left' },
+                  // Row 2 → Row 3: tools
+                  { from: cardRefs.careerOps, fromEdge: 'bottom', to: cardRefs.dalleGenerator, toEdge: 'top' },
+                  { from: cardRefs.cvJoseph, fromEdge: 'bottom', to: cardRefs.whisperWalkie, toEdge: 'top' },
+                  // Row 3 → Row 4: Cloud Infra
+                  { from: cardRefs.dalleGenerator, fromEdge: 'bottom', to: cardRefs.cloudInfra, toEdge: 'top', toRatio: 0.25 },
+                  { from: cardRefs.whisperWalkie, fromEdge: 'bottom', to: cardRefs.cloudInfra, toEdge: 'top', toRatio: 0.75 },
                 ]
 
                 const paths = connections.map(conn => {
@@ -2125,19 +2146,19 @@ function App() {
                   const end = getPoint(conn.to, conn.toEdge, conn.toRatio ?? 0.5)
                   if (!start || !end) return ''
 
-                  // Móvil: líneas rectas simples | Desktop: curvas Bézier
+                  // Mobile: simple straight lines | Desktop: Bezier curves
                   if (isMobile) {
                     return `M ${start.x} ${start.y} L ${end.x} ${end.y}`
                   }
 
-                  // Determinar si es conexión horizontal o vertical
+                  // Determine if connection is horizontal or vertical
                   const isHorizontal = conn.fromEdge === 'left' || conn.fromEdge === 'right'
                   if (isHorizontal) {
-                    // Curva Bézier horizontal
+                    // Horizontal Bezier curve
                     const midX = (start.x + end.x) / 2
                     return `M ${start.x} ${start.y} C ${midX} ${start.y}, ${midX} ${end.y}, ${end.x} ${end.y}`
                   } else {
-                    // Curva Bézier vertical
+                    // Vertical Bezier curve
                     const midY = (start.y + end.y) / 2
                     return `M ${start.x} ${start.y} C ${start.x} ${midY}, ${end.x} ${midY}, ${end.x} ${end.y}`
                   }
@@ -2218,13 +2239,25 @@ function App() {
                   </div>
                   <div className="flex flex-col gap-3 mt-auto">
                     {project.caseStudyUrl && (
-                      <Link
-                        to={project.caseStudyUrl}
-                        className="inline-flex items-center gap-2 text-sm font-medium text-accent hover:text-accent/80 transition-colors duration-200 group/cta"
-                      >
-                        <span className="px-4 py-2 rounded-lg bg-accent/10 border border-accent/30 group-hover/cta:bg-accent/20 group-hover/cta:border-accent/50 transition-all duration-200">{project.caseStudyLabel}</span>
-                        <ChevronRight className="w-4 h-4 group-hover/cta:translate-x-0.5 transition-transform duration-200" />
-                      </Link>
+                      project.caseStudyUrl.startsWith('/') ? (
+                        <Link
+                          to={project.caseStudyUrl}
+                          className="inline-flex items-center gap-2 text-sm font-medium text-accent hover:text-accent/80 transition-colors duration-200 group/cta"
+                        >
+                          <span className="px-4 py-2 rounded-lg bg-accent/10 border border-accent/30 group-hover/cta:bg-accent/20 group-hover/cta:border-accent/50 transition-all duration-200">{project.caseStudyLabel}</span>
+                          <ChevronRight className="w-4 h-4 group-hover/cta:translate-x-0.5 transition-transform duration-200" />
+                        </Link>
+                      ) : (
+                        <a
+                          href={project.caseStudyUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-2 text-sm font-medium text-accent hover:text-accent/80 transition-colors duration-200 group/cta"
+                        >
+                          <span className="px-4 py-2 rounded-lg bg-accent/10 border border-accent/30 group-hover/cta:bg-accent/20 group-hover/cta:border-accent/50 transition-all duration-200">{project.caseStudyLabel}</span>
+                          <ChevronRight className="w-4 h-4 group-hover/cta:translate-x-0.5 transition-transform duration-200" />
+                        </a>
+                      )
                     )}
                     {project.link && (
                       <div className="flex items-center gap-3">
@@ -2270,7 +2303,7 @@ function App() {
 
             return (
               <div ref={(el) => { containerRef.current = el; visibilityRef(el) }} className="mb-12 relative">
-                {/* SVG de conexiones - absoluto, z-0 para quedar detrás */}
+                {/* Connection SVGs - absolute, z-0 to stay behind */}
                 <svg
                   className="absolute inset-0 pointer-events-none"
                   style={{ zIndex: 0, overflow: 'visible' }}
@@ -2292,50 +2325,40 @@ function App() {
                   ))}
                 </svg>
 
-                {/* Fila 1: Life OS + Career Ops */}
+                {/* Row 1: OpenClaw + Skate Workshop (highlights) */}
                 <div className="grid md:grid-cols-2 gap-6 mb-6 relative z-10">
                   <AnimatedSection delay={0.1}>
-                    <ProjectCard project={lifeOS} cardRef={cardRefs.lifeOS} />
+                    <ProjectCard project={openClaw} variant="highlight" cardRef={cardRefs.openClaw} />
                   </AnimatedSection>
                   <AnimatedSection delay={0.15}>
-                    <ProjectCard project={careerOps} cardRef={cardRefs.careerOps} />
+                    <ProjectCard project={skateWorkshop} variant="highlight" cardRef={cardRefs.skateWorkshop} />
                   </AnimatedSection>
                 </div>
 
-                {/* Fila 2: santifer.io + Self-Healing Chatbot (highlight) */}
+                {/* Row 2: Career Ops + cv-joseph */}
                 <div className="grid md:grid-cols-2 gap-6 mb-6 relative z-10">
                   <AnimatedSection delay={0.2}>
-                    <ProjectCard project={santiferIo} variant="highlight" cardRef={cardRefs.santiferIo} />
+                    <ProjectCard project={careerOps} cardRef={cardRefs.careerOps} />
                   </AnimatedSection>
                   <AnimatedSection delay={0.25}>
-                    <ProjectCard project={selfHealingChatbot} variant="highlight" cardRef={cardRefs.selfHealingChatbot} />
+                    <ProjectCard project={cvJoseph} cardRef={cardRefs.cvJoseph} />
                   </AnimatedSection>
                 </div>
 
-                {/* Fila 3: Claude Eye + Claudeable — tools */}
+                {/* Row 3: DALL-E + Whisper Walkie */}
                 <div className="grid md:grid-cols-2 gap-6 mb-6 relative z-10">
                   <AnimatedSection delay={0.25}>
-                    <ProjectCard project={claudeEye} variant="tool-static" cardRef={cardRefs.claudeEye} />
+                    <ProjectCard project={dalleGenerator} cardRef={cardRefs.dalleGenerator} />
                   </AnimatedSection>
                   <AnimatedSection delay={0.3}>
-                    <ProjectCard project={claudeable} variant="tool-static" cardRef={cardRefs.claudeable} />
+                    <ProjectCard project={whisperWalkie} cardRef={cardRefs.whisperWalkie} />
                   </AnimatedSection>
                 </div>
 
-                {/* Fila 4: Claude Pulse + Content Digest */}
-                <div className="grid md:grid-cols-2 gap-6 mb-6 relative z-10">
-                  <AnimatedSection delay={0.35}>
-                    <ProjectCard project={claudePulse} variant="tool-static" cardRef={cardRefs.claudePulse} />
-                  </AnimatedSection>
-                  <AnimatedSection delay={0.4}>
-                    <ProjectCard project={contentDigest} cardRef={cardRefs.contentDigest} />
-                  </AnimatedSection>
-                </div>
-
-                {/* Fila 5: ProjectOS Predict (full width) */}
+                {/* Row 4: Cloud Infrastructure (full width) */}
                 <div className="relative z-10">
-                  <AnimatedSection delay={0.45}>
-                    <ProjectCard project={projectOSPredict} cardRef={cardRefs.projectOSPredict} />
+                  <AnimatedSection delay={0.35}>
+                    <ProjectCard project={cloudInfra} cardRef={cardRefs.cloudInfra} />
                   </AnimatedSection>
                 </div>
               </div>
@@ -2477,7 +2500,7 @@ function App() {
                     <img src="/foto-avatar.webp" alt="" role="presentation" width={384} height={384} className="w-10 h-10 rounded-full shrink-0 mt-0.5" />
                     <div className="flex-1 min-w-0">
                       <div className="flex justify-between items-start gap-2">
-                        <p className="text-sm text-foreground leading-relaxed">{rp.hook}<span className="text-muted-foreground">...</span> <span className="text-[#FF4500] group-hover:text-[#FF4500] transition-colors">ver más</span></p>
+                        <p className="text-sm text-foreground leading-relaxed">{rp.hook}<span className="text-muted-foreground">...</span> <span className="text-[#FF4500] group-hover:text-[#FF4500] transition-colors">read more</span></p>
                         <svg viewBox="0 0 24 24" className="w-4 h-4 shrink-0 mt-0.5" fill="#FF4500">
                           <path d="M12 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0zm5.01 4.744c.688 0 1.25.561 1.25 1.249a1.25 1.25 0 0 1-2.498.056l-2.597-.547-.8 3.747c1.824.07 3.48.632 4.674 1.488.308-.309.73-.491 1.207-.491.968 0 1.754.786 1.754 1.754 0 .716-.435 1.333-1.01 1.614a3.111 3.111 0 0 1 .042.52c0 2.694-3.13 4.87-7.004 4.87-3.874 0-7.004-2.176-7.004-4.87 0-.183.015-.366.043-.534A1.748 1.748 0 0 1 4.028 12c0-.968.786-1.754 1.754-1.754.463 0 .898.196 1.207.49 1.207-.883 2.878-1.43 4.744-1.487l.885-4.182a.342.342 0 0 1 .14-.197.35.35 0 0 1 .238-.042l2.906.617a1.214 1.214 0 0 1 1.108-.701zM9.25 12C8.561 12 8 12.562 8 13.25c0 .687.561 1.248 1.25 1.248.687 0 1.248-.561 1.248-1.249 0-.688-.561-1.249-1.249-1.249zm5.5 0c-.687 0-1.248.561-1.248 1.25 0 .687.561 1.248 1.249 1.248.688 0 1.249-.561 1.249-1.249 0-.687-.562-1.249-1.25-1.249zm-5.466 3.99a.327.327 0 0 0-.231.094.33.33 0 0 0 0 .463c.842.842 2.484.913 2.961.913.477 0 2.105-.056 2.961-.913a.361.361 0 0 0 .029-.463.33.33 0 0 0-.464 0c-.547.533-1.684.73-2.512.73-.828 0-1.979-.196-2.512-.73a.326.326 0 0 0-.232-.095z"/>
                         </svg>
@@ -2518,7 +2541,7 @@ function App() {
                     <img src="/foto-avatar.webp" alt="" role="presentation" width={384} height={384} className="w-10 h-10 rounded-full shrink-0 mt-0.5" />
                     <div className="flex-1 min-w-0">
                       <div className="flex justify-between items-start gap-2">
-                        <p className="text-sm text-foreground leading-relaxed">{post.hook}<span className="text-muted-foreground">...</span> <span className="text-[hsl(var(--linkedin))] group-hover:text-[hsl(var(--linkedin))] transition-colors">ver más</span></p>
+                        <p className="text-sm text-foreground leading-relaxed">{post.hook}<span className="text-muted-foreground">...</span> <span className="text-[hsl(var(--linkedin))] group-hover:text-[hsl(var(--linkedin))] transition-colors">read more</span></p>
                         <LinkedInLogo className="w-4 h-4 text-[hsl(var(--linkedin))] shrink-0 mt-0.5" />
                       </div>
                     </div>
@@ -2594,7 +2617,9 @@ function App() {
               </AnimatedSection>
 
               <div className="space-y-4">
-                {t.education.items.map((item, i) => (
+                {t.education.items.map((baseItem, i) => {
+                  const item = baseItem as typeof baseItem & { projectLink?: string; projectLabel?: string; testimonial?: { quote: string; photo: string; author: string; role: string } }
+                  return (
                   <AnimatedSection key={i} delay={0.1 + i * 0.1}>
                     <div className="p-5 rounded-2xl bg-card border border-border hover:border-primary/30 transition-colors duration-200 group">
                       <div className="flex items-start justify-between">
@@ -2603,7 +2628,7 @@ function App() {
                           <h3 className="font-display font-semibold mt-1 group-hover:text-primary transition-colors">{item.title}</h3>
                           <p className="text-sm text-muted-foreground mt-1">
                             {item.desc}
-                            {('projectLink' in item && item.projectLink) && (
+                            {item.projectLink && (
                               <>
                                 {' '}
                                 <a
@@ -2621,8 +2646,8 @@ function App() {
                         </div>
                       </div>
                       {/* Testimonial if exists */}
-                      {'testimonial' in item && item.testimonial && (
-                        <a href="https://www.linkedin.com/in/santifer/details/recommendations/" target="_blank" rel="noopener noreferrer" className="block group">
+                      {item.testimonial && (
+                        <a href="https://www.linkedin.com/in/joseph-blas/" target="_blank" rel="noopener noreferrer" className="block group">
                           <blockquote className="mt-4 p-4 rounded-xl bg-primary/5 border border-primary/10 group-hover:border-[hsl(var(--linkedin)/0.3)] transition-colors">
                             <p className="text-sm text-muted-foreground italic mb-4">
                               "{item.testimonial.quote}"
@@ -2643,7 +2668,8 @@ function App() {
                       )}
                     </div>
                   </AnimatedSection>
-                ))}
+                  )
+                })}
 
               </div>
             </div>
@@ -2783,7 +2809,7 @@ function App() {
                 {t.cta.contact}
               </a>
               <a
-                href="https://linkedin.com/in/santifer/"
+                href="https://linkedin.com/in/joseph-blas/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-full border border-border hover:border-primary/50 transition-colors duration-200 hover:bg-primary/5"
@@ -2795,10 +2821,10 @@ function App() {
             </div>
           </AnimatedSection>
           <p className="mt-12 text-xs text-muted-foreground">
-            &copy; {new Date().getFullYear()} Santiago Fernández de Valderrama
+            &copy; {new Date().getFullYear()} Joseph Blas
             <span className="mx-2 text-border">|</span>
-            <Link to={lang === 'es' ? '/privacidad' : '/privacy'} className="hover:text-primary transition-colors">
-              {lang === 'es' ? 'Privacidad' : 'Privacy'}
+            <Link to={'/privacy'} className="hover:text-primary transition-colors">
+              {'Privacy'}
             </Link>
           </p>
         </div>

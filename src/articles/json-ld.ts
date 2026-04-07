@@ -37,32 +37,26 @@ interface JsonLdOptions {
 
 const PERSON = {
   '@type': 'Person',
-  '@id': 'https://santifer.io/#person',
-  name: 'Santiago Fernández de Valderrama Aparicio',
-  url: 'https://santifer.io',
-  jobTitle: 'AI Product Manager',
+  '@id': 'https://cv-joseph.vercel.app/#person',
+  name: 'Joseph Blas',
+  url: 'https://cv-joseph.vercel.app',
+  jobTitle: 'AI Developer',
   sameAs: [
-    'https://www.linkedin.com/in/santifer',
-    'https://github.com/santifer',
-    'https://x.com/santifer',
-    'https://dev.to/santifer',
-    'https://santifer.substack.com',
-    'https://contentdigest.santifer.io',
-    'https://www.youtube.com/@santifer_io',
-    'https://www.wikidata.org/wiki/Q138710224',
-    'https://www.facebook.com/santifer.io/',
+    'https://www.linkedin.com/in/joseph-blas',
+    'https://github.com/joblas',
+    'https://joestechsolutions.com',
   ],
 }
 
 const WEBSITE = {
   '@type': 'WebSite',
-  '@id': 'https://santifer.io/#website',
-  name: 'santifer.io',
-  url: 'https://santifer.io',
+  '@id': 'https://cv-joseph.vercel.app/#website',
+  name: 'Joseph Blas | AI Developer',
+  url: 'https://cv-joseph.vercel.app',
 }
 
 export function buildArticleJsonLd(opts: JsonLdOptions) {
-  const inLanguage = opts.lang === 'es' ? 'es' : 'en'
+  const inLanguage = 'en'
 
   const graph: Record<string, unknown>[] = [
     {
@@ -71,7 +65,7 @@ export function buildArticleJsonLd(opts: JsonLdOptions) {
       headline: opts.headline,
       alternativeHeadline: opts.alternativeHeadline,
       description: opts.description,
-      author: { '@id': 'https://santifer.io/#person' },
+      author: { '@id': 'https://cv-joseph.vercel.app/#person' },
       ...(opts.publisher ? {
         publisher: {
           '@type': 'Organization',
@@ -86,7 +80,7 @@ export function buildArticleJsonLd(opts: JsonLdOptions) {
       mainEntityOfPage: opts.url,
       image: opts.images,
       inLanguage,
-      isPartOf: { '@id': 'https://santifer.io/#website' },
+      isPartOf: { '@id': 'https://cv-joseph.vercel.app/#website' },
       ...(opts.about ? { about: opts.about } : {}),
       ...(opts.extra || {}),
       ...(opts.citation ? { citation: opts.citation } : {}),
@@ -101,7 +95,7 @@ export function buildArticleJsonLd(opts: JsonLdOptions) {
     {
       '@type': 'BreadcrumbList',
       itemListElement: [
-        { '@type': 'ListItem', position: 1, name: opts.breadcrumbHome, item: 'https://santifer.io' },
+        { '@type': 'ListItem', position: 1, name: opts.breadcrumbHome, item: 'https://cv-joseph.vercel.app' },
         { '@type': 'ListItem', position: 2, name: opts.breadcrumbCurrent, item: opts.url },
       ],
     },

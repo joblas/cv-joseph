@@ -13,37 +13,37 @@ export default function SantiferIRepair({ lang }: { lang: IRepairLang }) {
     '@graph': [
       {
         '@type': 'Person',
-        '@id': 'https://santifer.io/#person',
-        name: 'Santiago Fernández de Valderrama',
-        url: 'https://santifer.io',
+        '@id': 'https://cv-joseph.vercel.app/#person',
+        name: 'Joseph Blas',
+        url: 'https://cv-joseph.vercel.app',
         jobTitle: 'Product Manager & AI Builder',
         sameAs: [
-          'https://linkedin.com/in/santifer',
-          'https://github.com/santifer',
+          'https://linkedin.com/in/joseph-blas',
+          'https://github.com/joblas',
         ],
       },
       {
         '@type': 'WebSite',
-        '@id': 'https://santifer.io/#website',
-        url: 'https://santifer.io',
-        name: 'santifer.io',
-        publisher: { '@id': 'https://santifer.io/#person' },
+        '@id': 'https://cv-joseph.vercel.app/#website',
+        url: 'https://cv-joseph.vercel.app',
+        name: 'cv-joseph.vercel.app',
+        publisher: { '@id': 'https://cv-joseph.vercel.app/#person' },
       },
       {
         '@type': 'BreadcrumbList',
         itemListElement: [
-          { '@type': 'ListItem', position: 1, name: t.nav.breadcrumbHome, item: `https://santifer.io${lang === 'en' ? '/en' : '/'}` },
-          { '@type': 'ListItem', position: 2, name: t.nav.breadcrumbCurrent, item: `https://santifer.io/${t.slug}` },
+          { '@type': 'ListItem', position: 1, name: t.nav.breadcrumbHome, item: `https://cv-joseph.vercel.app${lang === 'en' ? '/en' : '/'}` },
+          { '@type': 'ListItem', position: 2, name: t.nav.breadcrumbCurrent, item: `https://cv-joseph.vercel.app/${t.slug}` },
         ],
       },
       {
         '@type': 'WebPage',
-        '@id': `https://santifer.io/${t.slug}#webpage`,
-        url: `https://santifer.io/${t.slug}`,
+        '@id': `https://cv-joseph.vercel.app/${t.slug}#webpage`,
+        url: `https://cv-joseph.vercel.app/${t.slug}`,
         name: t.seo.title,
         description: t.seo.description,
-        about: { '@id': 'https://santifer.io/#person' },
-        isPartOf: { '@id': 'https://santifer.io/#website' },
+        about: { '@id': 'https://cv-joseph.vercel.app/#person' },
+        isPartOf: { '@id': 'https://cv-joseph.vercel.app/#website' },
         inLanguage: ['es', 'en'],
       },
     ],
@@ -55,11 +55,11 @@ export default function SantiferIRepair({ lang }: { lang: IRepairLang }) {
     altSlug: t.altSlug,
     title: t.seo.title,
     description: t.seo.description,
-    image: 'https://santifer.io/business-os/og-business-os.webp',
+    image: 'https://cv-joseph.vercel.app/business-os/og-business-os.webp',
     publishedTime: '2026-03-08',
-    articleTags: 'Santifer iRepair, phone repair, Seville, exit, founder',
+    articleTags: 'AV career, autonomous vehicles, Google, Waymo, Pronto.ai',
     jsonLd,
-    xDefaultSlug: 'santifer-irepair',
+    xDefaultSlug: 'av-career',
   })
 
   useEffect(() => {
@@ -105,7 +105,7 @@ export default function SantiferIRepair({ lang }: { lang: IRepairLang }) {
           <div className="flex items-center gap-4 p-6 pb-0">
             <img
               src="/logo-santifer.webp"
-              alt="Santifer iRepair logo"
+              alt="Joe's Tech Solutions logo"
               className="w-16 h-16 rounded-full border-2 border-primary/20 shrink-0 object-cover"
               width={64}
               height={64}
@@ -115,7 +115,7 @@ export default function SantiferIRepair({ lang }: { lang: IRepairLang }) {
           <p className="text-muted-foreground text-sm leading-relaxed px-6 pt-3 whitespace-pre-line">{t.cards.shop.body}</p>
           <div className="px-6 pb-2">
             <a
-              href="https://www.google.com/maps/search/Santifer+iRepair+Sevilla"
+              href="https://www.google.com/maps/search/Joes+Tech+Solutions+Escondido"
               target="_blank"
               rel="noopener noreferrer nofollow"
               className="inline-flex items-center justify-center gap-2 w-full px-5 py-2.5 rounded-lg bg-card border border-border text-sm font-medium text-muted-foreground hover:text-foreground hover:border-primary/30 transition-colors"
@@ -126,7 +126,7 @@ export default function SantiferIRepair({ lang }: { lang: IRepairLang }) {
           </div>
           <div className="px-6 pb-6">
             <a
-              href="https://santiferirepair.es"
+              href="https://joestechsolutions.com"
               target="_blank"
               rel="noopener noreferrer nofollow"
               className="inline-flex items-center justify-center gap-2 w-full px-5 py-2.5 rounded-lg bg-primary text-primary-foreground font-medium hover:bg-primary/90 transition-colors text-sm"
@@ -142,7 +142,7 @@ export default function SantiferIRepair({ lang }: { lang: IRepairLang }) {
           <div className="flex items-center gap-4 p-6 pb-0">
             <img
               src="/foto-avatar-sm.webp"
-              alt="Santiago Fernández de Valderrama"
+              alt="Joseph Blas"
               className="w-16 h-16 rounded-full border-2 border-primary/20 shrink-0"
               width={64}
               height={64}

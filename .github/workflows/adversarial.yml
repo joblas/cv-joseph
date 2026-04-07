@@ -18,7 +18,7 @@ jobs:
       - run: npm ci
       - name: Run adversarial tests
         env:
-          CHAT_API_URL: https://santifer.io/api/chat
+          CHAT_API_URL: https://cv-joseph.vercel.app/api/chat
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: npm run adversarial -- --attacks=20
       - name: Upload report
