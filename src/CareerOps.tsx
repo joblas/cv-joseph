@@ -62,8 +62,8 @@ function buildJsonLd(lang: Lang) {
     headline: t.header.h1,
     alternativeHeadline: t.seo.title,
     description: t.seo.description,
-    datePublished: '2026-03-17',
-    dateModified: '2026-03-17',
+    datePublished: '2026-04-07',
+    dateModified: '2026-04-07',
     keywords: [
       'multi-agent job search', 'job search automation', 'Claude Code', 'ATS-optimized CV',
       'ai resume builder', 'ai resume', 'ai powered job search', 'multi agent system',
@@ -97,8 +97,8 @@ export default function CareerOps({ lang = 'en' }: { lang?: Lang }) {
     title: t.seo.title,
     description: t.seo.description,
     image: 'https://cv-joseph.vercel.app/career-ops/og-career-ops.webp',
-    publishedTime: '2026-03-17',
-    modifiedTime: '2026-03-17',
+    publishedTime: '2026-04-07',
+    modifiedTime: '2026-04-07',
     articleTags: 'multi-agent,job search,Claude Code,ATS,batch processing,HITL,automation',
     jsonLd: buildJsonLd(lang),
     xDefaultSlug: 'career-ops-system',
@@ -110,6 +110,7 @@ export default function CareerOps({ lang = 'en' }: { lang?: Lang }) {
     <ArticleLayout lang={lang}>
       <FloatingToc />
       <ArticleHeader
+        editorId="hero-header"
         kicker={t.header.kicker}
         h1={t.header.h1}
         subtitle={t.header.subtitle}
@@ -131,7 +132,7 @@ export default function CareerOps({ lang = 'en' }: { lang?: Lang }) {
       <StatusBadge text={t.header.badge} />
       <MetricsGrid items={t.heroMetrics} columns={5} compact />
 
-      <GitHubRepoBadge repo="joblas/career-ops" stars="9.1K" forks="1.6K" />
+      <GitHubRepoBadge repo="joblas/career-ops" stars="0" forks="0" />
 
       <Callout className="bg-accent/10 border-accent/40">{t.tldr}</Callout>
       <Callout>{t.metaCallout}</Callout>
@@ -176,6 +177,7 @@ export default function CareerOps({ lang = 'en' }: { lang?: Lang }) {
           hdSrc="/career-ops/scan.webp"
           alt={'Scan mode in action: Claude Code agent launching DailyRemote search with 8 queries, reading pipeline.md and scan-history.tsv for dedup'}
           caption={'Scan mode: background agent searching AI/LLM offers on DailyRemote with automatic dedup'}
+          width={1400} height={800}
         />
 
         {/* ================================================================ */}
@@ -194,24 +196,28 @@ export default function CareerOps({ lang = 'en' }: { lang?: Lang }) {
           hdSrc="/career-ops/datadog.webp"
           alt={'Real evaluation: Datadog Staff AI Engineer, MCP Services — Score 4.55/5, archetype AI Platform + Agentic Workflows, role summary with 7 dimensions'}
           caption={'Real evaluation: Datadog Staff AI Engineer — score 4.55/5, detected archetype, structured role summary'}
+          width={1400} height={800}
         />
         <DiagramZoom
           src="/career-ops/report1.webp"
           hdSrc="/career-ops/report1.webp"
           alt={'CV Match: table of 6 JD requirements mapped against CV proof points with strength rating (Strong/Very Strong/Moderate)'}
           caption={'Block B) CV Match: each JD requirement mapped against real CV proof points'}
+          width={1400} height={800}
         />
         <DiagramZoom
           src="/career-ops/report2.webp"
           hdSrc="/career-ops/report2.webp"
           alt={'CV Match (cont.) + Gaps and Mitigation: requirements 7-10 and gap analysis with severity and mitigation plan'}
           caption={'CV Match (cont.) + Gaps: the system identifies gaps and proposes mitigation with severity'}
+          width={1400} height={800}
         />
         <DiagramZoom
           src="/career-ops/report3.webp"
           hdSrc="/career-ops/report3.webp"
           alt={'Gaps (cont.) + Level and Strategy: IC5 level detection, "Sell Staff without lying" plan with experience framing'}
           caption={'Block C) Level and Strategy: seniority detection + honest positioning plan'}
+          width={1400} height={800}
         />
 
         <H3>{s.scoring.distribution.heading}</H3>
@@ -271,12 +277,14 @@ export default function CareerOps({ lang = 'en' }: { lang?: Lang }) {
             hdSrc="/career-ops/pdf-wave-cv.webp"
             alt={'Personalized CV for Wave: rewritten summary, competencies adapted to Voice AI + Multi-Agent, bullets reordered by relevance'}
             caption={'ATS-optimized CV'}
+            width={700} height={900}
           />
           <DiagramZoom
             src="/career-ops/pdf-wave-cover.webp"
             hdSrc="/career-ops/pdf-wave-cover.webp"
             alt={'Cover letter for Wave: gradient header, Jacobo as voice + WhatsApp proof point, links to case studies and dashboard'}
             caption={'Personalized cover letter'}
+            width={700} height={900}
           />
         </div>
 
@@ -356,7 +364,7 @@ export default function CareerOps({ lang = 'en' }: { lang?: Lang }) {
         />
       </article>
 
-      <ArticleFooter lang={lang} utmCampaign="career-ops" />
+      <ArticleFooter editorId="article-footer" lang={lang} utmCampaign="career-ops" />
     </ArticleLayout>
   )
 }

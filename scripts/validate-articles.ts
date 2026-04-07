@@ -33,6 +33,7 @@ const SOURCE_MAP: Record<string, string> = {
   'av-career': 'src/SantiferIRepair.tsx',
   'self-healing-chatbot': 'src/SelfHealingChatbot.tsx',
   'career-ops': 'src/CareerOps.tsx',
+  'openclaw': 'src/OpenClaw.tsx',
 }
 
 // ---------------------------------------------------------------------------

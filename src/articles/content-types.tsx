@@ -1327,10 +1327,14 @@ interface ArchitectureDiagramProps {
   label: string
   /** Optional subtitle under the label */
   subtitle?: string
+  /** Thumbnail width for CLS prevention */
+  thumbnailWidth?: number
+  /** Thumbnail height for CLS prevention */
+  thumbnailHeight?: number
   editorId?: string
 }
 
-export function ArchitectureDiagram({ src, thumbnail, alt, label, subtitle, editorId }: ArchitectureDiagramProps) {
+export function ArchitectureDiagram({ src, thumbnail, alt, label, subtitle, thumbnailWidth, thumbnailHeight, editorId }: ArchitectureDiagramProps) {
   const [open, setOpen] = useState(false)
   const iframeRef = useCallback((iframe: HTMLIFrameElement | null) => {
     if (!iframe) return
@@ -1393,6 +1397,8 @@ export function ArchitectureDiagram({ src, thumbnail, alt, label, subtitle, edit
           <img
             src={thumbnail}
             alt={alt}
+            width={thumbnailWidth}
+            height={thumbnailHeight}
             className="w-full h-auto opacity-80 group-hover:opacity-100 transition-opacity duration-300"
             loading="lazy"
           />

@@ -193,27 +193,27 @@ const _en = {
       items: [
         {
           q: 'Can n8n connect to Jira / Salesforce / my tool?',
-          a: 'Yes. Over 400 integrations — Jira, Salesforce, Notion, Linear, HubSpot, Zendesk, Google Sheets. If you use it, n8n probably connects to it.',
+          a: 'Yes. n8n ships with over 400 native integrations covering CRMs (Salesforce, HubSpot), project management (Jira, Linear, Notion, Asana), databases (Postgres, MySQL, Airtable), messaging (Slack, Discord, Teams), and cloud services (AWS, GCP, Azure). For tools without a native node, the HTTP Request node lets you call any REST or GraphQL API with full control over headers, authentication, pagination, and error handling. Webhook triggers let external systems push events into n8n in real time. You can also build custom nodes in TypeScript if you need reusable logic for an internal API. OAuth2, API key, and basic auth are all supported out of the box. In practice, I have not found a single SaaS tool that n8n cannot connect to — either natively or through HTTP.',
         },
         {
           q: 'Is n8n free?',
-          a: 'Self-hosted is free forever (open source, no limits). Cloud gives you a 14-day free trial of the Pro plan, no credit card required. After that, plans start at €24/month. The trial is more than enough for everything shown here.',
+          a: 'Self-hosted is free forever under the Sustainable Use License — no record limits, no execution caps, full access to every node including AI nodes. Cloud gives you a 14-day free trial of the Pro plan with no credit card required, which includes 2,500 workflow executions per month and all integrations. After the trial, Cloud plans start at €24/month for the Starter tier. The trial is more than enough for everything shown here. If you outgrow Cloud pricing, self-hosting on a $5/month VPS gives you unlimited executions with the same feature set. Either way, both workflows in this article run within the free trial without hitting any limits.',
         },
         {
           q: 'What LLM should I use for the classifier?',
-          a: 'Whatever your company already pays for. The prompt works the same with Claude, GPT-4, or Gemini. The classification pattern doesn\'t change with the model.',
+          a: 'Whatever your company already pays for. The classification prompt in Workflow 2 works identically with Claude, GPT-4, Gemini, or any instruction-following model — the accuracy difference is negligible for structured classification tasks like bug vs feature vs question routing. The prompt uses explicit signal words, a tiebreaker rule, and strict single-word output format, which constrains the model enough that even smaller models like Claude Haiku or GPT-4o-mini perform well. If you need to minimize cost at scale, Haiku or GPT-4o-mini at under $0.001 per classification handles thousands of feedback items per dollar. The architectural pattern — prompt with categories, signal words, and tiebreaker — transfers across any LLM provider without modification.',
         },
         {
           q: 'How is this different from Zapier or Make?',
-          a: 'Open source, self-hostable, AI nodes built in, and a visual canvas that lets you see the branching logic. Zapier is great for simple triggers. n8n is for when you need branching, AI, loops, and full control.',
+          a: 'Three fundamental differences. First, n8n is open source and self-hostable — your data never leaves your infrastructure if you choose to self-host, which matters for regulated industries handling customer feedback. Second, n8n has native AI nodes (Basic LLM Chain, AI Agent, Vector Store) built into the canvas, not bolted on as premium add-ons. You drag an AI classification node into a workflow the same way you drag a Slack node. Third, the visual canvas shows branching logic, loops, and error handling as a flowchart you can inspect node by node. Zapier excels at simple linear triggers — new row in Sheets, send Slack message. But when you need conditional branching, retry logic, loops over arrays, and AI classification in a single workflow, n8n handles it natively without workarounds.',
         },
         {
           q: 'What if the AI classifies something wrong?',
-          a: 'You change the prompt. Add a new signal word, adjust the tiebreaker rule, add a category. You iterate in plain English, not in code. And the Airtable log lets you review and correct.',
+          a: 'You change the prompt — not the code. If the classifier misroutes a feature request as a bug, you add a signal word to the feature category or adjust the tiebreaker rule. If you need a fourth category like PRAISE, you add it to the prompt and add a new branch in the Switch node — a five-minute change. The Airtable log captures every classification with the original feedback text, assigned category, and timestamp. Review it weekly: sort by category, spot patterns, and refine the prompt accordingly. This is acceptance criteria iteration, not model retraining. You wrote the rules in plain English, so you change them in plain English. The feedback loop between the Airtable log and the prompt is what makes classification accuracy improve over time.',
         },
         {
           q: 'Can I download the n8n templates from this article?',
-          a: 'Yes. Both workflows are available as JSON files you can import directly into n8n Cloud (free tier). Download them from the "Import Workflows" section and they\'ll be running in 5 minutes.',
+          a: 'Yes. Both workflows are available as JSON files that you import directly into any n8n instance — Cloud or self-hosted. Download them from the Import Workflows section at the bottom of this article. In n8n, click the + button, select Import from File, and choose the JSON. The workflow structure, node configuration, and prompt text are all included. You only need to connect your own credentials: Slack OAuth token, Airtable API key, and an AI provider key for Workflow 2. The entire import-to-running process takes under five minutes. The workflows are also version-controlled, so if I update the classification prompt or add a new node, you can re-import without losing your credential configuration.',
         },
       ],
     },

@@ -246,7 +246,7 @@ function buildJsonLd(lang: Lang) {
     alternativeHeadline: t.seo.title,
     description: t.seo.description,
     datePublished: '2026-02-25',
-    dateModified: '2026-03-09',
+    dateModified: '2026-04-07',
     keywords: ['programmatic SEO', 'Airtable', 'headless CMS', 'Astro', 'DataForSEO', 'crawl budget', 'phone repair', 'static site generation', 'local SEO', 'ERP'],
     images: ['https://cv-joseph.vercel.app/pseo/og-programmatic-seo.png'],
     breadcrumbHome: t.nav.breadcrumbHome,
@@ -272,7 +272,7 @@ export default function ProgrammaticSeo({ lang = 'en' }: { lang?: Lang }) {
     description: t.seo.description,
     image: 'https://cv-joseph.vercel.app/pseo/og-programmatic-seo.png',
     publishedTime: '2026-02-25',
-    modifiedTime: '2026-03-10',
+    modifiedTime: '2026-04-07',
     articleTags: 'programmatic SEO,Airtable,Astro,DataForSEO,crawl budget,phone repair,ERP,local SEO',
     jsonLd: buildJsonLd(lang),
     xDefaultSlug: 'programmatic-seo',
@@ -1050,7 +1050,7 @@ export default function ProgrammaticSeo({ lang = 'en' }: { lang?: Lang }) {
         <ResourcesList heading={t.resources.heading} items={t.resources.items} />
       </article>
 
-      <ArticleFooter lang={lang} utmCampaign="pseo" />
+      <ArticleFooter editorId="article-footer" lang={lang} utmCampaign="pseo" />
     </ArticleLayout>
   )
 }

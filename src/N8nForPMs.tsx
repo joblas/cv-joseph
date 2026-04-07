@@ -34,7 +34,7 @@ function buildJsonLd(lang: N8nLang) {
     alternativeHeadline: t.seo.title,
     description: t.seo.description,
     datePublished: '2026-02-24',
-    dateModified: '2026-03-06',
+    dateModified: '2026-04-07',
     keywords: ['n8n', 'product manager', 'automation', 'AI', 'workflow', 'sprint report', 'feedback classification', 'no-code', 'n8n tutorial', 'AI workflow automation'],
     images: [
       'https://cv-joseph.vercel.app/workflows/n8n-sprint-report-automation-workflow.webp',
@@ -76,7 +76,7 @@ export default function N8nForPMs({ lang = 'en' }: { lang?: N8nLang }) {
     description: t.seo.description,
     image: 'https://cv-joseph.vercel.app/workflows/n8n-ai-feedback-classification-workflow.webp',
     publishedTime: '2026-02-24',
-    modifiedTime: '2026-03-06',
+    modifiedTime: '2026-04-07',
     articleTags: 'n8n,product manager,automation,AI,workflow,no-code',
     jsonLd: buildJsonLd(lang),
     xDefaultSlug: 'n8n-for-pms',
@@ -177,6 +177,7 @@ export default function N8nForPMs({ lang = 'en' }: { lang?: N8nLang }) {
             hdSrc="/workflows/n8n-sprint-report-automation-workflow-hd.webp"
             alt={t.workflow1.imgAlt}
             caption={t.workflow1.figcaption}
+            width={1400} height={800}
           />
 
           <InfoCard heading={t.workflow1.nodesHeading}>
@@ -214,6 +215,7 @@ export default function N8nForPMs({ lang = 'en' }: { lang?: N8nLang }) {
             hdSrc="/workflows/n8n-ai-feedback-classification-workflow-hd.webp"
             alt={t.workflow2.imgAlt}
             caption={t.workflow2.figcaption}
+            width={1400} height={800}
           />
 
           <InfoCard heading={t.workflow2.nodesHeading}>
@@ -353,7 +355,7 @@ export default function N8nForPMs({ lang = 'en' }: { lang?: N8nLang }) {
           <ResourcesList heading={t.resources.heading} items={t.resources.items} />
         </article>
 
-        <ArticleFooter lang={lang} utmCampaign="n8n-for-pms" />
+        <ArticleFooter editorId="article-footer" lang={lang} utmCampaign="n8n-for-pms" />
     </ArticleLayout>
   )
 }

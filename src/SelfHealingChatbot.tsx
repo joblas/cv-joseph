@@ -101,7 +101,7 @@ function buildJsonLd(lang: Lang) {
     alternativeHeadline: t.seo.title,
     description: t.seo.description,
     datePublished: '2026-03-11',
-    dateModified: '2026-03-14',
+    dateModified: '2026-04-07',
     keywords: [
       'LLMOps', 'self-healing chatbot', 'agentic RAG', 'jailbreak defense', 'prompt injection',
       'LLM evaluation', 'closed loop LLM', 'Langfuse', 'prompt versioning', 'adversarial testing',
@@ -138,7 +138,7 @@ export default function SelfHealingChatbot({ lang = 'en' }: { lang?: Lang }) {
     description: t.seo.description,
     image: 'https://cv-joseph.vercel.app/chatbot/og-self-healing-chatbot.webp',
     publishedTime: '2026-03-11',
-    modifiedTime: '2026-03-14',
+    modifiedTime: '2026-04-07',
     articleTags: 'LLMOps,self-healing chatbot,agentic RAG,jailbreak defense,Langfuse,evals,closed-loop,prompt injection',
     jsonLd: buildJsonLd(lang),
     xDefaultSlug: 'self-healing-chatbot',
@@ -150,6 +150,7 @@ export default function SelfHealingChatbot({ lang = 'en' }: { lang?: Lang }) {
     <ArticleLayout lang={lang}>
       <FloatingToc />
       <ArticleHeader
+        editorId="hero-header"
         kicker={t.header.kicker}
         h1={t.header.h1}
         subtitle={t.header.subtitle}
@@ -219,6 +220,7 @@ export default function SelfHealingChatbot({ lang = 'en' }: { lang?: Lang }) {
           alt={'Interactive diagram: 10 phases of the chatbot architecture with narrated audio, zoom and pan'}
           label={'Interactive Architecture'}
           subtitle={'10 phases · narrated audio · zoom + pan'}
+          thumbnailWidth={1400} thumbnailHeight={800}
         />
         <Prose className="text-xs !text-muted-foreground/60 -mt-4 mb-6">{'This diagram was generated with a Claude Code skill that reads the architecture JSON and produces an interactive HTML with narrated audio, pan/zoom, and dark mode. Same philosophy as the chatbot: automate the repetitive.'
         }</Prose>
@@ -259,18 +261,21 @@ export default function SelfHealingChatbot({ lang = 'en' }: { lang?: Lang }) {
           hdSrc="/chatbot/dashboard-evals.webp"
           alt={'LLMOps Dashboard: Evals tab — 95.8% pass rate, 71 tests, 10 categories with per-category progress bars'}
           caption={'Evals tab: 95.8% pass rate across 71 tests, breakdown by category'}
+          width={1400} height={800}
         />
         <DiagramZoom
           src="/chatbot/dashboard-conversations.webp"
           hdSrc="/chatbot/dashboard-conversations.webp"
           alt={'LLMOps Dashboard: Conversations tab — real conversation list with cost, tags, language, and trace detail with spans'}
           caption={'Conversations tab: real conversations with per-trace cost, auto-tags, and latency spans'}
+          width={1400} height={800}
         />
         <DiagramZoom
           src="/chatbot/dashboard-security.webp"
           hdSrc="/chatbot/dashboard-security.webp"
           alt={'LLMOps Dashboard: Security tab — 96.7% safety, security funnel, recent jailbreak attempts with detail'}
           caption={'Security tab: security funnel, 96.7% safety score, real-time jailbreak attempts'}
+          width={1400} height={800}
         />
 
         {/* ================================================================ */}
@@ -528,7 +533,7 @@ export default function SelfHealingChatbot({ lang = 'en' }: { lang?: Lang }) {
         />
       </article>
 
-      <ArticleFooter lang={lang} utmCampaign="self-healing-chatbot" />
+      <ArticleFooter editorId="article-footer" lang={lang} utmCampaign="self-healing-chatbot" />
     </ArticleLayout>
   )
 }

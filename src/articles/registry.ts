@@ -90,7 +90,7 @@ export const articleRegistry: ArticleConfig[] = [
     component: () => import('../N8nForPMs.tsx'),
     seoMeta: {
       datePublished: '2026-02-24',
-      dateModified: '2026-03-06',
+      dateModified: '2026-04-07',
       keywords: ['n8n', 'n8n tutorial', 'n8n templates', 'n8n AI', 'n8n workflow', 'n8n automation', 'n8n cheat sheet', 'product manager', 'AI workflow automation', 'sprint report automation', 'feedback classification AI', 'no-code automation', 'n8n for product managers', 'workflow templates free'],
       articleType: 'TechArticle',
       articleTags: 'n8n,product manager,automation,AI,workflow,no-code',
@@ -174,7 +174,7 @@ export const articleRegistry: ArticleConfig[] = [
     component: () => import('../JacoboAgent.tsx'),
     seoMeta: {
       datePublished: '2026-02-25',
-      dateModified: '2026-03-07',
+      dateModified: '2026-04-07',
       keywords: ['multi-agent AI', 'multi agent orchestration', 'AI agent', 'sub-agent architecture', 'tool calling production', 'n8n workflows', 'n8n ai agent', 'ai agent case study', 'customer service AI', 'WhatsApp AI agent', 'ElevenLabs voice agent', 'voice AI', 'HITL', 'human in the loop', 'ia para pymes', 'agente ia whatsapp', 'multi-model orchestration', 'OpenRouter', 'FDE portfolio', 'solutions architect AI', 'AI production manager', 'enterprise AI patterns', 'voice AI platform', 'conversational AI case study', 'agentic workflows'],
       articleType: 'TechArticle',
       articleTags: 'AI agent,multi-agent,n8n,ElevenLabs,HITL,tool calling,WhatsApp,voice AI',
@@ -255,7 +255,7 @@ export const articleRegistry: ArticleConfig[] = [
     component: () => import('../BusinessOS.tsx'),
     seoMeta: {
       datePublished: '2026-02-25',
-      dateModified: '2026-03-06',
+      dateModified: '2026-04-07',
       keywords: ['Business OS', 'Airtable ERP', 'Airtable as ERP', 'no-code ERP', 'Airtable automation', 'CRM gamification', 'phone repair', 'inventory management', 'custom ERP case study', 'repair shop management', 'programmatic SEO', 'Airtable CRM', 'single source of truth', 'business operating system', 'multi-base architecture'],
       articleType: 'TechArticle',
       articleTags: 'Business OS,Airtable,n8n,ERP,CRM,automation,phone repair',
@@ -346,7 +346,7 @@ export const articleRegistry: ArticleConfig[] = [
     component: () => import('../ProgrammaticSeo.tsx'),
     seoMeta: {
       datePublished: '2026-02-25',
-      dateModified: '2026-03-10',
+      dateModified: '2026-04-07',
       keywords: ['programmatic SEO', 'Airtable', 'headless CMS', 'Astro', 'DataForSEO', 'crawl budget', 'phone repair', 'static site generation', 'local SEO', 'ERP'],
       articleType: 'TechArticle',
       articleTags: 'programmatic SEO,Airtable,Astro,DataForSEO,crawl budget,phone repair,ERP,local SEO',
@@ -421,7 +421,7 @@ export const articleRegistry: ArticleConfig[] = [
     component: () => import('../SelfHealingChatbot.tsx'),
     seoMeta: {
       datePublished: '2026-03-11',
-      dateModified: '2026-03-14',
+      dateModified: '2026-04-07',
       keywords: ['LLMOps', 'self-healing chatbot', 'agentic RAG', 'jailbreak defense', 'prompt injection', 'LLM evaluation', 'closed loop LLM', 'Langfuse', 'prompt versioning', 'adversarial testing', 'trace-to-eval', 'hybrid search pgvector', 'AI portfolio', 'chatbot evals', 'CI gate LLM', 'voice mode chatbot', 'OpenAI Realtime API', 'speech-to-speech AI', 'agentic observability', 'developer feedback loop', 'AI maintaining AI'],
       articleType: 'TechArticle',
       articleTags: 'LLMOps,self-healing chatbot,agentic RAG,jailbreak defense,Langfuse,evals,closed-loop,prompt injection',
@@ -495,7 +495,7 @@ export const articleRegistry: ArticleConfig[] = [
     component: () => import('../CareerOps.tsx'),
     seoMeta: {
       datePublished: '2026-03-17',
-      dateModified: '2026-03-17',
+      dateModified: '2026-04-07',
       keywords: ['ai job search', 'ai job search tool', 'ai powered job search', 'ai resume builder', 'ai resume', 'multi agent system', 'multi agent orchestration', 'automated job application', 'ATS-optimized resume', 'Claude Code', 'batch processing', 'HITL', 'job search automation', 'career-ops', 'ai auto apply', 'agente ia', 'crear cv con ia', 'automatizacion con ia', 'sistema multiagente', 'busqueda de empleo ia'],
       articleType: 'TechArticle',
       articleTags: 'multi-agent,job search,Claude Code,ATS,batch processing,HITL,automation,Playwright',
@@ -566,7 +566,7 @@ export const articleRegistry: ArticleConfig[] = [
     component: () => import('../OpenClaw.tsx'),
     seoMeta: {
       datePublished: '2026-02-18',
-      dateModified: '2026-02-18',
+      dateModified: '2026-04-07',
       keywords: ['AI agents', 'multi-agent system', 'OpenClaw', 'agent architecture', 'small business AI', 'AI automation', 'Claude', 'n8n', 'model tiering', 'AI team', '22 agents', 'agent runtime', 'AI orchestration', 'business automation', 'AI consultancy'],
       articleType: 'TechArticle',
       articleTags: 'AI agents,multi-agent,OpenClaw,architecture,small business,Claude,n8n,automation',

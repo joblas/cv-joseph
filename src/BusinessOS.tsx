@@ -75,7 +75,7 @@ function buildJsonLd(lang: Lang) {
     alternativeHeadline: t.seo.title,
     description: t.seo.description,
     datePublished: '2026-02-25',
-    dateModified: '2026-03-06',
+    dateModified: '2026-04-07',
     keywords: ['Business OS', 'Airtable ERP', 'Airtable as ERP', 'no-code ERP', 'Airtable automation', 'CRM gamification', 'phone repair', 'inventory management', 'custom ERP case study', 'repair shop management', 'programmatic SEO', 'Airtable CRM', 'single source of truth', 'business operating system', 'multi-base architecture'],
     images: ['https://cv-joseph.vercel.app/business-os/og-business-os.webp'],
     breadcrumbHome: t.nav.breadcrumbHome,
@@ -103,7 +103,7 @@ export default function BusinessOS({ lang = 'en' }: { lang?: Lang }) {
     description: t.seo.description,
     image: 'https://cv-joseph.vercel.app/business-os/og-business-os.webp',
     publishedTime: '2026-02-25',
-    modifiedTime: '2026-03-06',
+    modifiedTime: '2026-04-07',
     articleTags: 'Business OS,Airtable,n8n,ERP,CRM,automation,phone repair',
     jsonLd: buildJsonLd(lang),
     xDefaultSlug: 'business-os-for-airtable',
@@ -667,7 +667,7 @@ export default function BusinessOS({ lang = 'en' }: { lang?: Lang }) {
         <ResourcesList heading={t.resources.heading} items={t.resources.items} />
       </article>
 
-      <ArticleFooter lang={lang} utmCampaign="business-os" />
+      <ArticleFooter editorId="article-footer" lang={lang} utmCampaign="business-os" />
     </ArticleLayout>
   )
 }

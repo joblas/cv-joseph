@@ -32,8 +32,8 @@ function buildJsonLd(lang: OpenClawLang) {
     headline: t.header.h1,
     alternativeHeadline: t.seo.title,
     description: t.seo.description,
-    datePublished: '2026-02-18',
-    dateModified: '2026-02-18',
+    datePublished: '2026-04-07',
+    dateModified: '2026-04-07',
     keywords: ['AI agents', 'multi-agent system', 'OpenClaw', 'agent architecture', 'small business AI', 'AI automation', 'Claude', 'n8n', 'model tiering', 'AI team'],
     images: [
       'https://cv-joseph.vercel.app/articles/openclaw-org-chart.webp',
@@ -67,8 +67,8 @@ export default function OpenClaw({ lang = 'en' }: { lang?: OpenClawLang }) {
     title: t.seo.title,
     description: t.seo.description,
     image: 'https://cv-joseph.vercel.app/articles/openclaw-org-chart.webp',
-    publishedTime: '2026-02-18',
-    modifiedTime: '2026-02-18',
+    publishedTime: '2026-04-07',
+    modifiedTime: '2026-04-07',
     articleTags: 'AI agents,multi-agent,OpenClaw,architecture,small business,Claude,n8n',
     jsonLd: buildJsonLd(lang),
     xDefaultSlug: 'openclaw',
@@ -123,6 +123,7 @@ export default function OpenClaw({ lang = 'en' }: { lang?: OpenClawLang }) {
           hdSrc="/articles/openclaw-org-chart.webp"
           alt={t.orgChart.imgAlt}
           caption={t.orgChart.imgCaption}
+          width={1400} height={800}
         />
 
         {/* CTO Card */}
@@ -206,6 +207,7 @@ export default function OpenClaw({ lang = 'en' }: { lang?: OpenClawLang }) {
           hdSrc="/articles/openclaw-standup.webp"
           alt={t.workflows.morningStandups.imgAlt}
           caption={t.workflows.morningStandups.imgCaption}
+          width={1400} height={800}
         />
 
         {/* Lead to Invoice */}
@@ -269,7 +271,7 @@ export default function OpenClaw({ lang = 'en' }: { lang?: OpenClawLang }) {
         <ResourcesList heading={t.resources.heading} items={t.resources.items} />
       </article>
 
-      <ArticleFooter lang={lang} utmCampaign="openclaw" />
+      <ArticleFooter editorId="article-footer" lang={lang} utmCampaign="openclaw" />
     </ArticleLayout>
   )
 }

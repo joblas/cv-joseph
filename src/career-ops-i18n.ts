@@ -241,27 +241,27 @@ const _en = {
       items: [
         {
           q: 'Is this gaming the system?',
-          a: 'Career-Ops automates analysis, not decisions. I read every report before applying. I review every PDF before sending. Same philosophy as a CRM: the system organizes, I decide.',
+          a: 'Career-Ops automates analysis, not decisions. Every evaluation report is reviewed before I decide whether to apply. Every generated PDF is inspected to verify that keywords are reformulated from real experience, not fabricated. The apply mode fills form fields but stops before clicking submit — I make the final call on every application. This is the same HITL philosophy behind any CRM or applicant tracking system: the tool organizes, filters, and prepares, but a human provides the judgment. The system explicitly discourages applying to roles scoring below 4.0 out of 5, recommending against wasting both my time and the recruiter\'s time on poor-fit applications. Quality over quantity is a design principle, not a slogan.',
         },
         {
           q: 'Why Claude Code and not a script pipeline?',
-          a: 'A script cannot reason. Career-Ops adapts scoring based on company context, reformulates keywords without fabricating, and generates narrative reports — not filled templates.',
+          a: 'A script pipeline follows fixed rules — it cannot reason about context, weigh ambiguous signals, or generate narrative analysis. Career-Ops uses Claude Code as an LLM agent that reads the full job description, cross-references it against my CV and portfolio proof points, and produces a 10-dimension evaluation with contextual reasoning for each score. It detects when a role title says Senior but the responsibilities suggest Staff level. It recognizes when a startup listing compensation as competitive likely means below market. It reformulates keywords from my real experience to match the JD vocabulary without fabricating skills I do not have. The output is a narrative evaluation report with specific rationale per dimension, not a template with blanks filled in. That reasoning capability is why an LLM agent outperforms any deterministic script for this task.',
         },
         {
           q: 'What does it cost to run?',
-          a: 'Zero marginal cost per evaluation. Career-Ops runs on my Claude Max 20x plan ($200/mo), which I use for everything: portfolio, chatbot, articles, and Career-Ops. 631 evaluations without a single extra invoice.',
+          a: 'Zero marginal cost per evaluation. Career-Ops runs on my Claude Max 20x subscription at $200 per month, which covers all Claude Code usage across every project: portfolio development, chatbot maintenance, article writing, and Career-Ops itself. The 631 evaluations, 354 generated PDFs, and all batch processing sessions consumed no additional budget beyond the flat subscription. Each evaluation uses approximately 4,000-6,000 input tokens for the JD plus CV context and generates around 2,000 tokens of evaluation output. Under the Max plan, this volume is well within the included capacity. There is no per-API-call billing, no token metering, and no usage caps that would throttle batch processing. The economics make it viable to evaluate every offer the scanner finds rather than pre-filtering manually.',
         },
         {
           q: 'Does the apply mode fill forms automatically?',
-          a: 'It reads the page with Playwright, retrieves the cached evaluation, and generates coherent responses matching the scoring. I review before submitting — always.',
+          a: 'The apply mode uses Playwright to navigate to the application form, take a snapshot of all visible fields, and read the page structure including labels, placeholders, and required field indicators. It then retrieves the cached evaluation report for that company and role, which contains the 10-dimension scoring, matched proof points, and relevant keywords. From this context, it generates coherent responses for each form field: cover letter text draws from the evaluation personalization section, the motivation question pulls from the company research, and skills questions reference the specific proof points that scored highest in the CV match dimension. Every generated response is displayed for my review before any field is filled. I approve, edit, or reject each answer individually. The submit button is never clicked by the system — that is always my action.',
         },
         {
           q: 'What happens when the scanner finds a duplicate?',
-          a: 'scan-history.tsv stores 680 seen URLs. Dedup by exact URL match plus normalized company+role match against applications.md. Zero re-evaluations.',
+          a: 'The dedup system works in two layers. First, scan-history.tsv stores every URL the scanner has ever seen — currently 680+ entries — with a timestamp and source portal. Each new URL is checked against this file using exact string matching after normalization (stripping tracking parameters, trailing slashes, and query strings). Second, even if the URL is new, Career-Ops performs a fuzzy match against applications.md using a normalized company name plus role title comparison. This catches the common case where the same job is posted on multiple portals with different URLs. The company name is lowercased and stripped of suffixes like Inc or GmbH, and the role title is compared after removing seniority prefixes. If both layers pass, the offer enters the pipeline. If either catches a match, it is silently skipped. The result: zero duplicate evaluations across 631 processed offers.',
         },
         {
           q: 'Is it replicable?',
-          a: 'Requires Claude Code with Playwright access and a structured working directory. Skill files define the logic for each mode. Replicable, but not plug-and-play.',
+          a: 'Yes, with prerequisites. You need Claude Code with Playwright browser access enabled for portal scanning and form filling, plus a structured working directory following the data contract: cv.md as the canonical resume, a profile configuration file with your target roles and salary range, and a portals configuration listing the job boards and company career pages to scan. Each of the 12 operational modes is defined as a Claude Code skill file with its own context window, rules, and tool permissions. The system is open source on GitHub, so you can fork the repository and customize the scoring dimensions, archetypes, and evaluation criteria for your own career profile. It is replicable but not plug-and-play — you need to invest time adapting the profile, archetypes, and scoring weights to match your specific job search targets and professional background.',
         },
       ],
     },

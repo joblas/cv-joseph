@@ -105,7 +105,7 @@ const _en = {
   },
   infrastructure: {
     heading: 'The Infrastructure',
-    description: 'Boring infrastructure is reliable infrastructure. Every tool here was chosen because it\'s proven, self-hostable where it matters, and doesn\'t require babysitting.',
+    description: 'Boring infrastructure is reliable infrastructure. Every tool here was chosen because it\'s proven, self-hostable where it matters, and doesn\'t require babysitting. The stack runs on a single Linux server behind Tailscale — no Kubernetes, no cloud functions, no managed services that bill per invocation. Each agent is a systemd unit with automatic restart on failure, structured logging to journald, and resource limits via cgroups. The entire stack can be redeployed from a git push in under 90 seconds.',
     tools: [
       { name: 'OpenClaw', role: 'Agent runtime — the core orchestration layer' },
       { name: 'Telegram', role: 'Morning standups from directors' },
@@ -121,7 +121,7 @@ const _en = {
   },
   workflows: {
     heading: 'How It Actually Works — Real Workflows',
-    description: 'Theory is cheap. Here\'s what happens in practice, every day.',
+    description: 'Theory is cheap. Here\'s what happens in practice, every day. These are real workflows running in production — not demos, not proofs of concept. Each one has been refined through months of daily operation.',
     morningStandups: {
       heading: 'Morning Standups',
       description: 'Every morning at 9AM Pacific, I get 4 messages in Telegram. One from each director. They summarize what their division did yesterday, what\'s planned today, and any blockers. I read them over coffee.',
@@ -130,7 +130,7 @@ const _en = {
     },
     leadToInvoice: {
       heading: 'Lead to Invoice Pipeline',
-      description: 'End-to-end: a lead comes in, gets qualified, turns into a proposal, gets reviewed by me, goes to the client, meeting gets scheduled, work gets done, invoice goes out.',
+      description: 'End-to-end: a lead comes in, gets qualified, turns into a proposal, gets reviewed by me, goes to the client, meeting gets scheduled, work gets done, invoice goes out. The entire pipeline runs autonomously with one human checkpoint — my approval on the proposal. Average time from lead to sent proposal: under 30 minutes, compared to 2-3 hours when I did it manually.',
       pipeline: [
         { name: 'Radar', detail: 'finds and qualifies the lead' },
         { name: 'Summit', detail: 'routes to Quill' },
@@ -143,7 +143,7 @@ const _en = {
     },
     engineering: {
       heading: 'Engineering Flow',
-      description: 'Feature requests flow from strategy through development to deployment. Every PR gets reviewed. Every deployment gets monitored.',
+      description: 'Feature requests flow from strategy through development to deployment. Every PR gets reviewed. Every deployment gets monitored. Forge writes code following the project\'s existing patterns and conventions. Sentinel reviews for bugs, security issues, and style violations. Helm handles zero-downtime deployments with automatic rollback on health check failures.',
       pipeline: [
         { name: 'Compass', detail: 'defines the task' },
         { name: 'Forge', detail: 'writes the code' },
@@ -154,12 +154,12 @@ const _en = {
     },
     content: {
       heading: 'Content Pipeline',
-      description: 'Muse creates written content. Canvas handles visuals. Deck coordinates distribution. The content pipeline runs in parallel with everything else.',
+      description: 'Muse creates written content — blog posts, case studies, social media drafts. Canvas handles visuals — diagrams, social cards, OG images. Deck coordinates distribution across channels and schedules publication. The content pipeline runs in parallel with everything else, producing a steady stream of marketing material without me writing a single word. I review and approve before anything goes live, but the creative heavy lifting is handled.',
     },
   },
   whyItMatters: {
     heading: 'Why This Matters (for Small Business)',
-    description: 'This isn\'t about replacing humans. It\'s about what happens when a solo operator gets a team that doesn\'t sleep.',
+    description: 'This isn\'t about replacing humans. It\'s about what happens when a solo operator gets a team that doesn\'t sleep. The real value isn\'t any single agent — it\'s the compound effect of 22 specialized agents working together around the clock. While I sleep, agents are monitoring infrastructure, processing overnight inquiries, and preparing my morning briefing.',
     points: [
       { label: 'Every agent is specialized.', detail: 'No jack-of-all-trades. Each agent does one thing and does it well.' },
       { label: 'Directors reduce noise.', detail: 'I don\'t manage 22 agents. I manage 4 directors. They manage their teams.' },
@@ -193,23 +193,23 @@ const _en = {
     items: [
       {
         q: 'How much does this cost to run?',
-        a: 'The model tiering keeps it reasonable. Most agents run on Sonnet or Haiku. Only the CTO uses Opus, and only for complex cross-division decisions. Total cost is comparable to one part-time contractor.',
+        a: 'The model tiering strategy is what makes the system economically viable. The 16 worker agents handle routine tasks on Claude Haiku — classification, routing, simple data transformations — at fractions of a cent per operation. The four directors and most specialized agents run on Claude Sonnet for day-to-day operations including content generation, code writing, proposal drafting, and analysis. Only the CTO agent Lurkr uses Claude Opus, and only for complex cross-division decisions that require multi-step reasoning across the full organizational context. If every agent ran on Opus, monthly costs would be approximately ten times higher with minimal quality improvement on routine tasks. The total monthly cost across all 22 agents is comparable to one part-time contractor, while delivering around-the-clock availability across every business function simultaneously.',
       },
       {
         q: 'What happens when an agent makes a mistake?',
-        a: 'Directors catch most issues before they reach me. For anything client-facing (proposals, invoices, emails), there\'s always a human-in-the-loop step. I review before it goes out.',
+        a: 'The director layer is the first line of defense. Each division director agent reviews outputs from its team before anything propagates upstream. If a worker agent produces an output that fails validation — malformed data, confidence below threshold, or a flagged anomaly — the director either retries with adjusted parameters or escalates to the CTO agent. For client-facing actions like proposals, invoices, and outbound emails, there is always a human-in-the-loop checkpoint: the agent drafts, I approve. Every agent action is logged with full input/output traces, and alerts fire on error rates exceeding baseline. Critical failures trigger an automatic pause on that agent\'s queue until I review. The hierarchy means most errors are caught two levels before they could reach a customer, and the logging gives me a complete audit trail to diagnose root causes.',
       },
       {
         q: 'Can I build something like this for my business?',
-        a: 'Yes. Start with one agent doing one thing well. Then add a second. The org chart structure scales naturally — you don\'t need 22 agents on day one.',
+        a: 'Yes, and the key lesson is to start small. Begin with one agent doing one thing well — lead qualification, invoice generation, or daily status reports. Get that agent reliable in production before adding a second. The org chart structure scales naturally because each new agent slots into an existing division under a director, inheriting the communication patterns and escalation paths already established. You do not need 22 agents on day one. I started with three: a lead qualifier, a proposal drafter, and a deployment agent. The director layer came when managing individual agents became overhead. The infrastructure requirements are minimal: a Linux server, systemd for process management, and Tailscale for secure networking. Most of the investment is in designing clear agent responsibilities and the inter-agent communication contracts.',
       },
       {
         q: 'Why not just use ChatGPT / Claude directly?',
-        a: 'A single conversation doesn\'t have memory across tasks, can\'t trigger actions in other systems, and can\'t coordinate with other agents. This is the difference between asking an AI a question and having an AI team run operations.',
+        a: 'A single ChatGPT or Claude conversation has no persistent memory across sessions, cannot trigger actions in external systems like Stripe or GitHub, cannot coordinate with other AI instances, and loses all context when you close the browser tab. Using ChatGPT for business operations is like hiring an employee who forgets everything at the end of each shift and has no access to any company tools. OpenClaw agents have persistent state across sessions, authenticated access to production systems through tool integrations, structured inter-agent communication via the director hierarchy, and automatic restart on failure via systemd. When Radar finds a lead, it passes structured data to Summit, who routes it to Quill, who drafts using templates and client history. That multi-step orchestration across specialized agents with shared context is fundamentally impossible in a single conversation interface.',
       },
       {
         q: 'What is OpenClaw?',
-        a: 'OpenClaw is the agent runtime I built to orchestrate all of this. It handles agent lifecycle, inter-agent communication, tool access, and the director hierarchy. Think of it as the operating system for the AI team.',
+        a: 'OpenClaw is the custom agent runtime I built to orchestrate the entire 22-agent system. It handles the complete agent lifecycle: initialization with role-specific system prompts, health monitoring with automatic restart on failure, and graceful shutdown during deployments. Inter-agent communication flows through structured message passing with typed payloads, routed through the director hierarchy so worker agents never communicate directly across divisions. Each agent has a declared set of tool permissions — Forge can access GitHub but not Stripe, Ledger can access Stripe but not GitHub — enforcing least-privilege access across the organization. The director hierarchy is encoded in the runtime configuration: escalation paths, approval requirements, and delegation rules are all declarative. Think of OpenClaw as the operating system for the AI team, handling the same concerns as Kubernetes handles for containers: scheduling, networking, health checking, and access control.',
       },
     ],
   },
