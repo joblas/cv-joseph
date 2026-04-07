@@ -163,7 +163,7 @@ const _translationsEn = {
       },
       {
         title: 'The Skate Workshop',
-        badge: 'In production',
+        badge: 'in Beta',
         badgeBuilding: '',
         desc: 'Full-stack React Native mobile app for Olympic-level skateboarding coach. 40+ Supabase tables, 18+ Edge Functions, Stripe Connect marketplace, multiplayer SKATE game mode, real-time features.',
         tech: ['React Native', 'TypeScript', 'Supabase', 'Stripe Connect', 'Expo'],
@@ -369,7 +369,7 @@ const _translationsEn = {
       gpts: {
         title: 'Skate Workshop',
         desc: 'React Native app with 40+ tables, 18+ Edge Functions, Stripe Connect',
-        metric: 'In prod',
+        metric: 'in Beta',
         caseStudyUrl: '',
       },
       reservas: {
