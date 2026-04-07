@@ -366,4 +366,4 @@ Production
       },
     }
 
-export const chatbotContent = { es: _en, en: _en } as const
+export const chatbotContent = _en

@@ -1,9 +1,5 @@
-type Lang = 'es' | 'en'
-
 interface JsonLdOptions {
-  lang: Lang
   url: string
-  altUrl: string
   headline: string
   alternativeHeadline: string
   description: string
@@ -88,7 +84,6 @@ export function buildArticleJsonLd(opts: JsonLdOptions) {
       ...(opts.mentions ? { mentions: opts.mentions } : {}),
       ...(opts.discussionUrl ? { discussionUrl: opts.discussionUrl } : {}),
       ...(opts.relatedLink ? { relatedLink: opts.relatedLink } : {}),
-      workTranslation: { '@id': `${opts.altUrl}/#article` },
     },
     PERSON,
     WEBSITE,

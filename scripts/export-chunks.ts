@@ -28,12 +28,10 @@ const CHUNKS_DIR = resolve(root, 'scripts/chunks')
 
 interface ChunkMetadata {
   article_id: string
-  article_slug_en: string
-  article_slug_es: string
+  article_slug: string
   section_id: string
   section_anchor: string
-  page_path_en: string
-  page_path_es: string
+  page_path: string
   source_file: string
   format: 'i18n' | 'markdown' | 'plaintext'
 }
@@ -137,18 +135,12 @@ function parseI18n(source: I18nSource): Chunk[] {
     return []
   }
 
-  const en = source.content.en as Record<string, unknown> | undefined
-  if (!en) {
-    console.warn(`  ⚠ No .en key found in ${source.sourceFile}, skipping`)
-    return []
-  }
+  const content = source.content as Record<string, unknown>
 
   const baseMetadata: Omit<ChunkMetadata, 'section_id' | 'section_anchor'> = {
     article_id: source.articleId,
-    article_slug_en: `/${article.slugs.en}`,
-    article_slug_es: `/${article.slugs.es}`,
-    page_path_en: `/${article.slugs.en}`,
-    page_path_es: `/${article.slugs.es}`,
+    article_slug: `/${article.slug}`,
+    page_path: `/${article.slug}`,
     source_file: source.sourceFile,
     format: 'i18n',
   }
@@ -156,7 +148,7 @@ function parseI18n(source: I18nSource): Chunk[] {
   const chunks: Chunk[] = []
 
   // Build anchor lookup from registry sectionLabels (source of truth for HTML IDs)
-  const registryAnchors = new Set(Object.keys(article.sectionLabels.en))
+  const registryAnchors = new Set(Object.keys(article.sectionLabels))
 
   // Helper: resolve the correct HTML anchor for a given i18n key
   const resolveAnchor = (key: string): string => {
@@ -170,9 +162,9 @@ function parseI18n(source: I18nSource): Chunk[] {
 
   // Extract header + intro as a single "intro" chunk
   const introText = [
-    extractText(en.header),
-    extractText(en.intro),
-    typeof en.tldr === 'string' ? stripHtml(en.tldr) : extractText(en.tldr),
+    extractText(content.header),
+    extractText(content.intro),
+    typeof content.tldr === 'string' ? stripHtml(content.tldr) : extractText(content.tldr),
   ].filter(Boolean).join('\n')
 
   if (introText.trim()) {
@@ -183,8 +175,8 @@ function parseI18n(source: I18nSource): Chunk[] {
   }
 
   // Extract heroMetrics
-  if (en.heroMetrics) {
-    const metricsText = extractText(en.heroMetrics)
+  if (content.heroMetrics) {
+    const metricsText = extractText(content.heroMetrics)
     if (metricsText.trim()) {
       chunks.push({
         content: metricsText.trim(),
@@ -193,8 +185,8 @@ function parseI18n(source: I18nSource): Chunk[] {
     }
   }
 
-  // Extract each section (nested under en.sections) — only if it has a real page anchor
-  const sections = en.sections as Record<string, unknown> | undefined
+  // Extract each section — only if it has a real page anchor
+  const sections = content.sections as Record<string, unknown> | undefined
   if (sections && typeof sections === 'object') {
     for (const [sectionKey, sectionValue] of Object.entries(sections)) {
       const anchor = resolveAnchor(sectionKey)
@@ -214,8 +206,8 @@ function parseI18n(source: I18nSource): Chunk[] {
   }
 
   // Extract top-level content keys — only those with a real page anchor
-  const skipKeys = new Set(['en', 'es', 'header', 'intro', 'tldr', 'heroMetrics', 'sections'])
-  for (const [key, value] of Object.entries(en)) {
+  const skipKeys = new Set(['header', 'intro', 'tldr', 'heroMetrics', 'sections'])
+  for (const [key, value] of Object.entries(content)) {
     if (skipKeys.has(key)) continue
     if (sections && key in sections) continue
     const anchor = resolveAnchor(key)
@@ -268,12 +260,10 @@ function parsePlaintext(filePath: string, articleId: string): Chunk[] {
       content: trimmed,
       metadata: {
         article_id: articleId,
-        article_slug_en: '',
-        article_slug_es: '',
+        article_slug: '',
         section_id: currentSection,
         section_anchor: '',
-        page_path_en: '/llms.txt',
-        page_path_es: '/llms.txt',
+        page_path: '/llms.txt',
         source_file: filePath,
         format: 'plaintext',
       },
@@ -308,12 +298,10 @@ function parseMarkdown(content: string, articleId: string, sourceFile: string): 
           content: currentText.trim(),
           metadata: {
             article_id: articleId,
-            article_slug_en: '',
-            article_slug_es: '',
+            article_slug: '',
             section_id: sectionId,
             section_anchor: `#${sectionId}`,
-            page_path_en: '',
-            page_path_es: '',
+            page_path: '',
             source_file: sourceFile,
             format: 'markdown',
           },
@@ -339,12 +327,10 @@ function parseMarkdown(content: string, articleId: string, sourceFile: string): 
       content: currentText.trim(),
       metadata: {
         article_id: articleId,
-        article_slug_en: '',
-        article_slug_es: '',
+        article_slug: '',
         section_id: sectionId,
         section_anchor: `#${sectionId}`,
-        page_path_en: '',
-        page_path_es: '',
+        page_path: '',
         source_file: sourceFile,
         format: 'markdown',
       },
@@ -377,7 +363,7 @@ async function main() {
     if (chunks.length === 0) continue
 
     // Validate: every non-empty section_anchor must exist in registry sectionLabels
-    const validAnchors = new Set(Object.keys(article.sectionLabels.en))
+    const validAnchors = new Set(Object.keys(article.sectionLabels))
     for (const chunk of chunks) {
       const anchor = chunk.metadata.section_anchor
       if (anchor) {

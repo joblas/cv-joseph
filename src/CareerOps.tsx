@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { type CareerOpsLang as Lang } from './career-ops-i18n'
 import { buildArticleJsonLd } from './articles/json-ld'
 import { useArticleSeo } from './articles/use-article-seo'
 import {
@@ -53,12 +52,10 @@ const stackIcons: Record<string, React.ReactNode> = {
 // ---------------------------------------------------------------------------
 // buildJsonLd
 // ---------------------------------------------------------------------------
-function buildJsonLd(lang: Lang) {
-  const t = careerOpsContent[lang]
+function buildJsonLd() {
+  const t = careerOpsContent
   return buildArticleJsonLd({
-    lang,
     url: `https://cv-joseph.vercel.app/${t.slug}`,
-    altUrl: `https://cv-joseph.vercel.app/${t.altSlug}`,
     headline: t.header.h1,
     alternativeHeadline: t.seo.title,
     description: t.seo.description,
@@ -87,27 +84,24 @@ function buildJsonLd(lang: Lang) {
 // ===========================================================================
 // MAIN COMPONENT
 // ===========================================================================
-export default function CareerOps({ lang = 'en' }: { lang?: Lang }) {
-  const t = careerOpsContent[lang]
+export default function CareerOps() {
+  const t = careerOpsContent
 
   useArticleSeo({
-    lang,
     slug: t.slug,
-    altSlug: t.altSlug,
     title: t.seo.title,
     description: t.seo.description,
     image: 'https://cv-joseph.vercel.app/career-ops/og-career-ops.webp',
     publishedTime: '2026-04-07',
     modifiedTime: '2026-04-07',
     articleTags: 'multi-agent,job search,Claude Code,ATS,batch processing,HITL,automation',
-    jsonLd: buildJsonLd(lang),
-    xDefaultSlug: 'career-ops-system',
+    jsonLd: buildJsonLd(),
   })
 
   const s = t.sections
 
   return (
-    <ArticleLayout lang={lang}>
+    <ArticleLayout>
       <FloatingToc />
       <ArticleHeader
         editorId="hero-header"
@@ -364,7 +358,7 @@ export default function CareerOps({ lang = 'en' }: { lang?: Lang }) {
         />
       </article>
 
-      <ArticleFooter editorId="article-footer" lang={lang} utmCampaign="career-ops" />
+      <ArticleFooter editorId="article-footer" utmCampaign="career-ops" />
     </ArticleLayout>
   )
 }

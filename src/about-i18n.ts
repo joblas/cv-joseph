@@ -1,5 +1,3 @@
-export type AboutLang = 'es' | 'en'
-
 const _en = {
     slug: 'about',
     altSlug: 'sobre-mi',
@@ -65,4 +63,4 @@ const _en = {
     email: 'hi@cv-joseph.vercel.app',
   }
 
-export const aboutContent = { es: _en, en: _en } as const
+export const aboutContent = _en

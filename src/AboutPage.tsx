@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { MapPin, Mail, ExternalLink, Award, GraduationCap, Briefcase, ChevronRight, Clock, Newspaper, HelpCircle, Users } from 'lucide-react'
-import { aboutContent, type AboutLang } from './about-i18n'
+import { aboutContent } from './about-i18n'
 
 const SOCIAL_LINKS = [
   { name: 'LinkedIn', url: 'https://linkedin.com/in/joseph-blas' },
@@ -9,12 +9,9 @@ const SOCIAL_LINKS = [
   { name: 'Website', url: 'https://joestechsolutions.com' },
 ]
 
-export default function AboutPage({ lang = 'es' }: { lang?: AboutLang }) {
-  const t = aboutContent[lang]
-  const altSlug = t.altSlug
-
+export default function AboutPage() {
+  const t = aboutContent
   useEffect(() => {
-    document.documentElement.lang = lang
     document.title = t.seo.title
 
     let desc = document.querySelector('meta[name="description"]') as HTMLMetaElement
@@ -24,20 +21,6 @@ export default function AboutPage({ lang = 'es' }: { lang?: AboutLang }) {
     let canonical = document.querySelector('link[rel="canonical"]') as HTMLLinkElement
     if (!canonical) { canonical = document.createElement('link'); canonical.rel = 'canonical'; document.head.appendChild(canonical) }
     canonical.href = `https://cv-joseph.vercel.app/${t.slug}`
-
-    const hreflangs = [
-      { lang: 'es', href: 'https://cv-joseph.vercel.app/sobre-mi' },
-      { lang: 'en', href: 'https://cv-joseph.vercel.app/about' },
-      { lang: 'x-default', href: 'https://cv-joseph.vercel.app/about' },
-    ]
-    document.querySelectorAll('link[hreflang]').forEach(el => el.remove())
-    for (const hl of hreflangs) {
-      const link = document.createElement('link')
-      link.rel = 'alternate'
-      link.hreflang = hl.lang
-      link.href = hl.href
-      document.head.appendChild(link)
-    }
 
     let script = document.querySelector('script[data-about-jsonld]') as HTMLScriptElement
     if (!script) { script = document.createElement('script'); script.type = 'application/ld+json'; script.dataset.aboutJsonld = ''; document.head.appendChild(script) }
@@ -80,7 +63,7 @@ export default function AboutPage({ lang = 'es' }: { lang?: AboutLang }) {
       script?.remove()
       document.querySelectorAll('link[hreflang]').forEach(el => el.remove())
     }
-  }, [lang, t])
+  }, [t])
 
   return (
     <div className="min-h-screen bg-background text-foreground bg-[length:24px_24px] [background-image:radial-gradient(circle,hsl(var(--dot-grid))_1px,transparent_1px)]">
@@ -305,16 +288,6 @@ export default function AboutPage({ lang = 'es' }: { lang?: AboutLang }) {
             ))}
           </div>
         </section>
-
-        {/* Language toggle */}
-        <div className="text-center pt-6 border-t border-border">
-          <Link
-            to={`/${altSlug}`}
-            className="text-sm text-muted-foreground hover:text-primary transition-colors"
-          >
-            {'Read in English →'}
-          </Link>
-        </div>
 
         {/* Footer */}
         <footer className="mt-8 text-center">

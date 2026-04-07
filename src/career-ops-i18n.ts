@@ -1,5 +1,3 @@
-export type CareerOpsLang = 'es' | 'en'
-
 const _en = {
     slug: 'career-ops-system',
     altSlug: 'career-ops',
@@ -267,4 +265,4 @@ const _en = {
     },
   }
 
-export const careerOpsContent = { es: _en, en: _en } as const
+export const careerOpsContent = _en

@@ -1,12 +1,12 @@
 import { useEffect, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { ExternalLink, MapPin, ArrowRight } from 'lucide-react'
-import { irepairContent, type IRepairLang } from './irepair-i18n'
+import { irepairContent } from './irepair-i18n'
 import { useArticleSeo } from './articles/use-article-seo'
 import { ArticleLayout, MetricsGrid, CaseStudyCta } from './articles/components'
 
-export default function SantiferIRepair({ lang }: { lang: IRepairLang }) {
-  const t = irepairContent[lang]
+export default function SantiferIRepair() {
+  const t = irepairContent
 
   const jsonLd = useMemo(() => ({
     '@context': 'https://schema.org',
@@ -32,7 +32,7 @@ export default function SantiferIRepair({ lang }: { lang: IRepairLang }) {
       {
         '@type': 'BreadcrumbList',
         itemListElement: [
-          { '@type': 'ListItem', position: 1, name: t.nav.breadcrumbHome, item: `https://cv-joseph.vercel.app${lang === 'en' ? '/en' : '/'}` },
+          { '@type': 'ListItem', position: 1, name: t.nav.breadcrumbHome, item: 'https://cv-joseph.vercel.app/en' },
           { '@type': 'ListItem', position: 2, name: t.nav.breadcrumbCurrent, item: `https://cv-joseph.vercel.app/${t.slug}` },
         ],
       },
@@ -47,32 +47,29 @@ export default function SantiferIRepair({ lang }: { lang: IRepairLang }) {
         inLanguage: ['es', 'en'],
       },
     ],
-  }), [lang, t])
+  }), [t])
 
   useArticleSeo({
-    lang,
     slug: t.slug,
-    altSlug: t.altSlug,
     title: t.seo.title,
     description: t.seo.description,
     image: 'https://cv-joseph.vercel.app/business-os/og-business-os.webp',
     publishedTime: '2026-03-08',
     articleTags: 'AV career, autonomous vehicles, Google, Waymo, Pronto.ai',
     jsonLd,
-    xDefaultSlug: 'av-career',
   })
 
   useEffect(() => {
-    document.documentElement.lang = lang
-  }, [lang])
+    document.documentElement.lang = 'en'
+  }, [])
 
-  const homePath = lang === 'en' ? '/en' : '/'
-  const businessOsPath = lang === 'en' ? '/business-os-for-airtable' : '/business-os-para-airtable'
-  const jacoboPath = lang === 'en' ? '/ai-agent-jacobo' : '/agente-ia-jacobo'
-  const pseoPath = lang === 'en' ? '/programmatic-seo' : '/seo-programatico'
+  const homePath = '/en'
+  const businessOsPath = '/business-os-for-airtable'
+  const jacoboPath = '/ai-agent-jacobo'
+  const pseoPath = '/programmatic-seo'
 
   return (
-    <ArticleLayout lang={lang}>
+    <ArticleLayout>
       {/* Hero — storefront photo with glassmorphism text card */}
       <div className="relative -mx-4 sm:-mx-6 lg:-mx-8 -mt-8 md:-mt-12 mb-8 rounded-b-2xl overflow-hidden">
         <img

@@ -5,10 +5,7 @@ const _seoEn = {
     'AI Developer & AV Systems Veteran. 15+ years from building Google\'s self-driving car to 22-agent AI systems. React, TypeScript, Python. Full-stack AI apps in production.',
 };
 
-export const seo = {
-  es: _seoEn,
-  en: _seoEn,
-};
+export const seo = _seoEn;
 
 const _translationsEn = {
   greeting: 'who builds',
@@ -638,9 +635,4 @@ const _translationsEn = {
   },
 };
 
-export const translations = {
-  es: _translationsEn,
-  en: _translationsEn,
-} as const;
-
-export type Lang = 'es' | 'en';
+export const translations = _translationsEn;

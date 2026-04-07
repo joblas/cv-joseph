@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import { type N8nLang as Lang } from './n8n-i18n'
 import { buildArticleJsonLd } from './articles/json-ld'
 import { useArticleSeo } from './articles/use-article-seo'
 import {
@@ -91,12 +90,10 @@ const stackIcons: Record<string, React.ReactNode> = {
 // ---------------------------------------------------------------------------
 // buildJsonLd
 // ---------------------------------------------------------------------------
-function buildJsonLd(lang: Lang) {
-  const t = chatbotContent[lang]
+function buildJsonLd() {
+  const t = chatbotContent
   return buildArticleJsonLd({
-    lang,
     url: `https://cv-joseph.vercel.app/${t.slug}`,
-    altUrl: `https://cv-joseph.vercel.app/${t.altSlug}`,
     headline: t.header.h1,
     alternativeHeadline: t.seo.title,
     description: t.seo.description,
@@ -127,27 +124,24 @@ function buildJsonLd(lang: Lang) {
 // ===========================================================================
 // MAIN COMPONENT
 // ===========================================================================
-export default function SelfHealingChatbot({ lang = 'en' }: { lang?: Lang }) {
-  const t = chatbotContent[lang]
+export default function SelfHealingChatbot() {
+  const t = chatbotContent
 
   useArticleSeo({
-    lang,
     slug: t.slug,
-    altSlug: t.altSlug,
     title: t.seo.title,
     description: t.seo.description,
     image: 'https://cv-joseph.vercel.app/chatbot/og-self-healing-chatbot.webp',
     publishedTime: '2026-03-11',
     modifiedTime: '2026-04-07',
     articleTags: 'LLMOps,self-healing chatbot,agentic RAG,jailbreak defense,Langfuse,evals,closed-loop,prompt injection',
-    jsonLd: buildJsonLd(lang),
-    xDefaultSlug: 'self-healing-chatbot',
+    jsonLd: buildJsonLd(),
   })
 
   const s = t.sections
 
   return (
-    <ArticleLayout lang={lang}>
+    <ArticleLayout>
       <FloatingToc />
       <ArticleHeader
         editorId="hero-header"
@@ -533,7 +527,7 @@ export default function SelfHealingChatbot({ lang = 'en' }: { lang?: Lang }) {
         />
       </article>
 
-      <ArticleFooter editorId="article-footer" lang={lang} utmCampaign="self-healing-chatbot" />
+      <ArticleFooter editorId="article-footer" utmCampaign="self-healing-chatbot" />
     </ArticleLayout>
   )
 }

@@ -14,7 +14,7 @@ const PrivacyPolicy = lazy(() => import('./PrivacyPolicy'))
 const AboutPage = lazy(() => import('./AboutPage'))
 
 // Lazy-load article components from registry
-const articleComponents: Record<string, React.LazyExoticComponent<ComponentType<{ lang: 'es' | 'en' }>>> = {}
+const articleComponents: Record<string, React.LazyExoticComponent<ComponentType<Record<string, never>>>> = {}
 for (const article of articleRegistry) {
   articleComponents[article.id] = lazy(article.component)
 }
@@ -74,12 +74,10 @@ function GlobalChat() {
 
   if (!hydrated || pathname.startsWith('/ops')) return null
 
-  const lang = 'en' as const
-
   return (
     <ChatErrorBoundary>
       <Suspense fallback={null}>
-        <FloatingChat lang={lang} />
+        <FloatingChat />
       </Suspense>
     </ChatErrorBoundary>
   )
@@ -163,14 +161,13 @@ const app = (
         <Suspense fallback={null}>
           <Routes>
             <Route path="/" element={<App />} />
-            <Route path="/en" element={<App />} />
             <Route path="/ops" element={<OpsDashboard />} />
-            <Route path="/about" element={<AboutPage lang="en" />} />
-            <Route path="/privacy" element={<PrivacyPolicy lang="en" />} />
+            <Route path="/about" element={<AboutPage />} />
+            <Route path="/privacy" element={<PrivacyPolicy />} />
             {articleRegistry.map((article) => {
               const ArticleComponent = articleComponents[article.id]
               return (
-                <Route key={article.id} path={`/${article.slugs.en}`} element={<ArticleComponent lang="en" />} />
+                <Route key={article.id} path={`/${article.slug}`} element={<ArticleComponent />} />
               )
             })}
             <Route path="*" element={<NotFound />} />

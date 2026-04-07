@@ -1,5 +1,3 @@
-export type IRepairLang = 'es' | 'en'
-
 const _en = {
     slug: 'av-career-founder',
     altSlug: 'av-career',
@@ -51,4 +49,4 @@ const _en = {
     },
   }
 
-export const irepairContent = { es: _en, en: _en } as const
+export const irepairContent = _en

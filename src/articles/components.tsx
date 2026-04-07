@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Download, Copy, Check, ExternalLink, Clock } from 'lucide-react'
 import { EditorModeProvider, EditorLabel, H2, StepList, Accordion } from './content-types'
@@ -45,11 +45,7 @@ export { H2 as AnchorHeading } from './content-types'
 // Layout shells
 // ---------------------------------------------------------------------------
 
-export function ArticleLayout({ lang, children }: { lang?: 'es' | 'en'; children: React.ReactNode }) {
-  useEffect(() => {
-    if (lang) document.documentElement.lang = lang
-  }, [lang])
-
+export function ArticleLayout({ children }: { children: React.ReactNode }) {
   return (
     <EditorModeProvider>
       <div className="min-h-screen bg-background text-foreground bg-[length:24px_24px] [background-image:radial-gradient(circle,hsl(var(--dot-grid))_1px,transparent_1px)]">
@@ -148,28 +144,19 @@ export function ArticleHeader({
 // ---------------------------------------------------------------------------
 
 interface ArticleFooterProps {
-  lang: 'es' | 'en'
   utmCampaign: string
   editorId?: string
 }
 
-const FOOTER_I18N = {
-  es: {
-    role: 'AI Developer',
-    bio: 'Built a 16-year AV business. Now applies the same systems thinking to AI development.',
-    fellowAt: 'Teaching Fellow at',
-    copyright: 'All rights reserved.',
-  },
-  en: {
-    role: 'AI Product Manager · Solutions Architect · AI FDE',
-    bio: 'Built and sold a 16-year business in 2025. Now bringing that same systems thinking to enterprise AI.',
-    fellowAt: 'Teaching Fellow at',
-    copyright: 'All rights reserved.',
-  },
+const FOOTER_CONTENT = {
+  role: 'AI Product Manager · Solutions Architect · AI FDE',
+  bio: 'Built and sold a 16-year business in 2025. Now bringing that same systems thinking to enterprise AI.',
+  fellowAt: 'Teaching Fellow at',
+  copyright: 'All rights reserved.',
 } as const
 
-export function ArticleFooter({ lang, utmCampaign }: ArticleFooterProps) {
-  const f = FOOTER_I18N[lang]
+export function ArticleFooter({ utmCampaign }: ArticleFooterProps) {
+  const f = FOOTER_CONTENT
   const fellowUrl = `https://maven.com/marily-nika/ai-pm-bootcamp?utm_source=joblas&utm_medium=casestudy&utm_campaign=${utmCampaign}`
   return (
     <footer className="mt-16 pt-8 border-t border-border">

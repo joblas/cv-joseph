@@ -198,14 +198,9 @@ function validateArticle(config: typeof articleRegistry[0]): { issues: Issue[]; 
     issues.push({ severity: 'error', msg: `publishedTime mismatch: useArticleSeo="${seoPublished}" vs buildArticleJsonLd="${jsonPublished}"` })
   }
 
-  // 2. xDefaultSlug vs registry ES slug
-  if (seoXDefault && seoXDefault !== config.slugs.es) {
-    issues.push({ severity: 'error', msg: `xDefaultSlug mismatch: useArticleSeo="${seoXDefault}" vs registry.slugs.es="${config.slugs.es}"` })
-  }
-
-  // 3. Hreflang paired: both ES and EN slugs defined
-  if (!config.slugs.es || !config.slugs.en) {
-    issues.push({ severity: 'error', msg: `Missing hreflang slug pair: es="${config.slugs.es}", en="${config.slugs.en}"` })
+  // 2. Slug defined
+  if (!config.slug) {
+    issues.push({ severity: 'error', msg: `Missing slug for article "${config.id}"` })
   }
 
   // ===== WARNINGS =====
@@ -277,15 +272,12 @@ function validateArticle(config: typeof articleRegistry[0]): { issues: Issue[]; 
     issues.push({ severity: 'warn', msg: `about entries: ${aboutCount} (minimum: 2)` })
   }
 
-  // 9. SEO title/description length (per language)
-  for (const lang of ['es', 'en'] as const) {
-    const seo = config.seo[lang]
-    if (seo.title.length > 60) {
-      issues.push({ severity: 'warn', msg: `SEO title too long [${lang}]: ${seo.title.length} chars (max: 60)` })
-    }
-    if (seo.description.length > 160) {
-      issues.push({ severity: 'warn', msg: `SEO description too long [${lang}]: ${seo.description.length} chars (max: 160)` })
-    }
+  // 9. SEO title/description length
+  if (config.seo.title.length > 60) {
+    issues.push({ severity: 'warn', msg: `SEO title too long: ${config.seo.title.length} chars (max: 60)` })
+  }
+  if (config.seo.description.length > 160) {
+    issues.push({ severity: 'warn', msg: `SEO description too long: ${config.seo.description.length} chars (max: 160)` })
   }
 
   // 10. OG image missing

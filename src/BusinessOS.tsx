@@ -2,7 +2,6 @@ import {
   ChevronRight, Wrench, Package, Globe, Users, ShieldCheck, Bell, BrainCircuit, Sparkles,
   ClipboardList, Contact, Calculator, Cpu, ShoppingBag, Code, MessageSquareHeart, Star, Search, MapPin, Film, Bot,
 } from 'lucide-react'
-import { type N8nLang as Lang } from './n8n-i18n'
 import { buildArticleJsonLd } from './articles/json-ld'
 import { useArticleSeo } from './articles/use-article-seo'
 
@@ -65,12 +64,10 @@ import {
 import { businessOsContent } from './business-os-i18n'
 import ArchitectureDiagram from './ArchitectureDiagram'
 
-function buildJsonLd(lang: Lang) {
-  const t = businessOsContent[lang]
+function buildJsonLd() {
+  const t = businessOsContent
   return buildArticleJsonLd({
-    lang,
     url: `https://cv-joseph.vercel.app/${t.slug}`,
-    altUrl: `https://cv-joseph.vercel.app/${t.altSlug}`,
     headline: t.header.h1,
     alternativeHeadline: t.seo.title,
     description: t.seo.description,
@@ -92,27 +89,24 @@ function buildJsonLd(lang: Lang) {
   })
 }
 
-export default function BusinessOS({ lang = 'en' }: { lang?: Lang }) {
-  const t = businessOsContent[lang]
+export default function BusinessOS() {
+  const t = businessOsContent
 
   useArticleSeo({
-    lang,
     slug: t.slug,
-    altSlug: t.altSlug,
     title: t.seo.title,
     description: t.seo.description,
     image: 'https://cv-joseph.vercel.app/business-os/og-business-os.webp',
     publishedTime: '2026-02-25',
     modifiedTime: '2026-04-07',
     articleTags: 'Business OS,Airtable,n8n,ERP,CRM,automation,phone repair',
-    jsonLd: buildJsonLd(lang),
-    xDefaultSlug: 'business-os-for-airtable',
+    jsonLd: buildJsonLd(),
   })
 
 
 
   return (
-    <ArticleLayout lang={lang}>
+    <ArticleLayout>
       <FloatingToc />
       <ArticleHeader
         editorId="hero-header"
@@ -667,7 +661,7 @@ export default function BusinessOS({ lang = 'en' }: { lang?: Lang }) {
         <ResourcesList heading={t.resources.heading} items={t.resources.items} />
       </article>
 
-      <ArticleFooter editorId="article-footer" lang={lang} utmCampaign="business-os" />
+      <ArticleFooter editorId="article-footer" utmCampaign="business-os" />
     </ArticleLayout>
   )
 }

@@ -397,4 +397,4 @@ const _en = {
     },
   }
 
-export const businessOsContent = { es: _en, en: _en } as const
+export const businessOsContent = _en

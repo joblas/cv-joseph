@@ -23,18 +23,16 @@ export interface ArticleSeoMeta {
 
 export interface ArticleConfig {
   id: string
-  slugs: { es: string; en: string }
-  titles: { es: string; en: string }
-  seo: { es: ArticleSeo; en: ArticleSeo }
-  sectionLabels: { es: Record<string, string>; en: Record<string, string> }
+  slug: string
+  title: string
+  seo: ArticleSeo
+  sectionLabels: Record<string, string>
   type: 'collab' | 'case-study' | 'bridge'
   /** Absolute OG image URL for prerender (social cards: LinkedIn, Twitter) */
   ogImage?: string
   /** Hero image path for JSON-LD / GEO (what AI search engines see). Falls back to ogImage if not set. */
   heroImage?: string
-  component: () => Promise<{ default: ComponentType<{ lang: 'es' | 'en' }> }>
-  /** x-default hreflang slug (defaults to ES slug) */
-  xDefaultSlug?: string
+  component: () => Promise<{ default: ComponentType }>
   /** Whether this article is ready for RAG indexing (default: false) */
   ragReady?: boolean
   /** Path to i18n content file relative to project root (required when ragReady=true) */
@@ -46,41 +44,22 @@ export interface ArticleConfig {
 export const articleRegistry: ArticleConfig[] = [
   {
     id: 'n8n-for-pms',
-    slugs: { es: 'n8n-for-pms', en: 'n8n-for-pms' },
-    titles: { es: 'n8n for PMs', en: 'n8n for PMs' },
+    slug: 'n8n-for-pms',
+    title: 'n8n for PMs',
     seo: {
-      es: {
-        title: 'n8n for PMs: Cheat Sheet + Free AI Templates | Joseph Blas',
-        description: 'n8n cheat sheet for Product Managers: automate sprint reports and classify feedback with AI. 2 free importable workflow templates. Step-by-step tutorial.',
-      },
-      en: {
-        title: 'n8n for PMs: Cheat Sheet + Free AI Templates | Joseph Blas',
-        description: 'n8n cheat sheet for Product Managers: automate sprint reports and classify feedback with AI. 2 free importable workflow templates. Step-by-step tutorial.',
-      },
+      title: 'n8n for PMs: Cheat Sheet + Free AI Templates | Joseph Blas',
+      description: 'n8n cheat sheet for Product Managers: automate sprint reports and classify feedback with AI. 2 free importable workflow templates. Step-by-step tutorial.',
     },
     sectionLabels: {
-      es: {
-        'time-sinks': 'Time Sinks',
-        'workflow-1': 'Workflow 1',
-        'workflow-2': 'Workflow 2',
-        'the-pattern': 'The Pattern',
-        'get-started': 'Get Started',
-        'lessons': 'Lessons',
-        'faq': 'FAQ',
-        'import': 'Import',
-        'resources': 'Resources',
-      },
-      en: {
-        'time-sinks': 'Time Sinks',
-        'workflow-1': 'Workflow 1',
-        'workflow-2': 'Workflow 2',
-        'the-pattern': 'The Pattern',
-        'get-started': 'Get Started',
-        'lessons': 'Lessons',
-        'faq': 'FAQ',
-        'import': 'Import',
-        'resources': 'Resources',
-      },
+      'time-sinks': 'Time Sinks',
+      'workflow-1': 'Workflow 1',
+      'workflow-2': 'Workflow 2',
+      'the-pattern': 'The Pattern',
+      'get-started': 'Get Started',
+      'lessons': 'Lessons',
+      'faq': 'FAQ',
+      'import': 'Import',
+      'resources': 'Resources',
     },
     type: 'collab',
     ragReady: true,
@@ -118,53 +97,28 @@ export const articleRegistry: ArticleConfig[] = [
   },
   {
     id: 'jacobo',
-    slugs: { es: 'ai-agent-jacobo', en: 'ai-agent-jacobo' },
-    titles: { es: 'AI Agent Jacobo', en: 'AI Agent Jacobo' },
+    slug: 'ai-agent-jacobo',
+    title: 'AI Agent Jacobo',
     seo: {
-      es: {
-        title: 'Jacobo: Multi-Agent AI — 90% Self-Service',
-        description: 'Case study: omnichannel AI agent with sub-agents, tool calling & multi-model orchestration (n8n + ElevenLabs). 90% self-service.',
-      },
-      en: {
-        title: 'Jacobo: Multi-Agent AI — 90% Self-Service',
-        description: 'Case study: omnichannel AI agent with sub-agents, tool calling & multi-model orchestration (n8n + ElevenLabs). 90% self-service.',
-      },
+      title: 'Jacobo: Multi-Agent AI — 90% Self-Service',
+      description: 'Case study: omnichannel AI agent with sub-agents, tool calling & multi-model orchestration (n8n + ElevenLabs). 90% self-service.',
     },
     sectionLabels: {
-      es: {
-        'the-problem': 'The Problem',
-        'architecture': 'Architecture',
-        'e2e-flows': 'E2E Flows',
-        'main-router': 'The Two Brains',
-        'natural-language-booking': 'Deep Dive: Booking',
-        'deep-dive-quotes': 'Deep Dive: Quotes',
-        'deep-dive-others': 'Deep Dive: Tools',
-        'results': 'Results',
-        'decisions': 'ADRs',
-        'platform-evolution': 'Evolution',
-        'what-id-do-differently': 'Lessons',
-        'enterprise-patterns': 'Patterns',
-        'run-it-yourself': 'Workflows',
-        'faq': 'FAQ',
-        'resources': 'Resources',
-      },
-      en: {
-        'the-problem': 'The Problem',
-        'architecture': 'Architecture',
-        'e2e-flows': 'E2E Flows',
-        'main-router': 'The Two Brains',
-        'natural-language-booking': 'Deep Dive: Booking',
-        'deep-dive-quotes': 'Deep Dive: Quotes',
-        'deep-dive-others': 'Deep Dive: Tools',
-        'results': 'Results',
-        'decisions': 'ADRs',
-        'platform-evolution': 'Evolution',
-        'what-id-do-differently': 'Lessons',
-        'enterprise-patterns': 'Patterns',
-        'run-it-yourself': 'Workflows',
-        'faq': 'FAQ',
-        'resources': 'Resources',
-      },
+      'the-problem': 'The Problem',
+      'architecture': 'Architecture',
+      'e2e-flows': 'E2E Flows',
+      'main-router': 'The Two Brains',
+      'natural-language-booking': 'Deep Dive: Booking',
+      'deep-dive-quotes': 'Deep Dive: Quotes',
+      'deep-dive-others': 'Deep Dive: Tools',
+      'results': 'Results',
+      'decisions': 'ADRs',
+      'platform-evolution': 'Evolution',
+      'what-id-do-differently': 'Lessons',
+      'enterprise-patterns': 'Patterns',
+      'run-it-yourself': 'Workflows',
+      'faq': 'FAQ',
+      'resources': 'Resources',
     },
     type: 'case-study',
     ragReady: true,
@@ -203,49 +157,26 @@ export const articleRegistry: ArticleConfig[] = [
   },
   {
     id: 'business-os',
-    slugs: { es: 'business-os-for-airtable', en: 'business-os-for-airtable' },
-    titles: { es: 'Business OS', en: 'Business OS' },
+    slug: 'business-os-for-airtable',
+    title: 'Business OS',
     seo: {
-      es: {
-        title: 'Custom Business OS: Airtable + n8n — 170h/Mo',
-        description: 'Case study: custom Business OS with 12 Airtable bases, 2100 fields, and n8n saving 170h/month at a phone repair business.',
-      },
-      en: {
-        title: 'Custom Business OS: Airtable + n8n — 170h/Mo',
-        description: 'Case study: custom Business OS with 12 Airtable bases, 2100 fields, and n8n saving 170h/month at a phone repair business.',
-      },
+      title: 'Custom Business OS: Airtable + n8n — 170h/Mo',
+      description: 'Case study: custom Business OS with 12 Airtable bases, 2100 fields, and n8n saving 170h/month at a phone repair business.',
     },
     sectionLabels: {
-      es: {
-        'why-custom': 'Why Custom?',
-        'overview': 'Overview',
-        'e2e-flows': 'E2E Flows',
-        'cross-cutting': 'Cross-Cutting',
-        'day-in-life': 'A Day',
-        'before-after': 'Before/After',
-        'impact': 'Impact',
-        'decisions': 'ADRs',
-        'platform-evolution': 'Evolution',
-        'lessons': 'Lessons',
-        'replicability': 'Patterns',
-        'faq': 'FAQ',
-        'resources': 'Resources',
-      },
-      en: {
-        'why-custom': 'Why Custom?',
-        'overview': 'Overview',
-        'e2e-flows': 'E2E Flows',
-        'cross-cutting': 'Cross-Cutting',
-        'day-in-life': 'A Day',
-        'before-after': 'Before/After',
-        'impact': 'Impact',
-        'decisions': 'ADRs',
-        'platform-evolution': 'Evolution',
-        'lessons': 'Lessons',
-        'replicability': 'Patterns',
-        'faq': 'FAQ',
-        'resources': 'Resources',
-      },
+      'why-custom': 'Why Custom?',
+      'overview': 'Overview',
+      'e2e-flows': 'E2E Flows',
+      'cross-cutting': 'Cross-Cutting',
+      'day-in-life': 'A Day',
+      'before-after': 'Before/After',
+      'impact': 'Impact',
+      'decisions': 'ADRs',
+      'platform-evolution': 'Evolution',
+      'lessons': 'Lessons',
+      'replicability': 'Patterns',
+      'faq': 'FAQ',
+      'resources': 'Resources',
     },
     type: 'case-study',
     ragReady: true,
@@ -278,65 +209,34 @@ export const articleRegistry: ArticleConfig[] = [
   },
   {
     id: 'programmatic-seo',
-    slugs: { es: 'programmatic-seo', en: 'programmatic-seo' },
-    titles: { es: 'Programmatic SEO', en: 'Programmatic SEO' },
+    slug: 'programmatic-seo',
+    title: 'Programmatic SEO',
     seo: {
-      es: {
-        title: 'Programmatic SEO: 4,000+ Pages from an ERP | Joseph Blas',
-        description: 'Case study: 4,730 static landing pages from Airtable as headless CMS with DataForSEO crawl budget optimization and Astro SSG. 2M+ impressions, 19K+ clicks.',
-      },
-      en: {
-        title: 'Programmatic SEO: 4,000+ Pages from an ERP | Joseph Blas',
-        description: 'Case study: 4,730 static landing pages from Airtable as headless CMS with DataForSEO crawl budget optimization and Astro SSG. 2M+ impressions, 19K+ clicks.',
-      },
+      title: 'Programmatic SEO: 4,000+ Pages from an ERP | Joseph Blas',
+      description: 'Case study: 4,730 static landing pages from Airtable as headless CMS with DataForSEO crawl budget optimization and Astro SSG. 2M+ impressions, 19K+ clicks.',
     },
     sectionLabels: {
-      es: {
-        'opportunity': 'The Opportunity',
-        'the-numbers': 'The Numbers',
-        'two-strategies': 'Two Strategies',
-        'architecture': 'The Architecture',
-        'url-taxonomy': 'URL Taxonomy',
-        'cms-deep-dive': 'The CMS',
-        'page-anatomy': 'Page Anatomy',
-        'decision-engine': 'Decision Engine',
-        'crawl-budget': 'Crawl Budget',
-        'pipeline': 'Pipeline',
-        'content-automation': 'Automation',
-        'image-pipeline': 'Image Pipeline',
-        'reviews-pipeline': 'Reviews Pipeline',
-        'before-after-pipeline': 'Before/After Pipeline',
-        'growth': 'Growth',
-        'results': 'Results',
-        'starting-point': 'The Starting Point',
-        'stack': 'Stack',
-        'lessons': 'Lessons',
-        'faq': 'FAQ',
-        'resources': 'Resources',
-      },
-      en: {
-        'opportunity': 'The Opportunity',
-        'the-numbers': 'The Numbers',
-        'two-strategies': 'Two Strategies',
-        'architecture': 'The Architecture',
-        'url-taxonomy': 'URL Taxonomy',
-        'cms-deep-dive': 'The CMS',
-        'page-anatomy': 'Page Anatomy',
-        'decision-engine': 'Decision Engine',
-        'crawl-budget': 'Crawl Budget',
-        'pipeline': 'Pipeline',
-        'content-automation': 'Automation',
-        'image-pipeline': 'Image Pipeline',
-        'reviews-pipeline': 'Reviews Pipeline',
-        'before-after-pipeline': 'Before/After Pipeline',
-        'growth': 'Growth',
-        'results': 'Results',
-        'starting-point': 'The Starting Point',
-        'stack': 'Stack',
-        'lessons': 'Lessons',
-        'faq': 'FAQ',
-        'resources': 'Resources',
-      },
+      'opportunity': 'The Opportunity',
+      'the-numbers': 'The Numbers',
+      'two-strategies': 'Two Strategies',
+      'architecture': 'The Architecture',
+      'url-taxonomy': 'URL Taxonomy',
+      'cms-deep-dive': 'The CMS',
+      'page-anatomy': 'Page Anatomy',
+      'decision-engine': 'Decision Engine',
+      'crawl-budget': 'Crawl Budget',
+      'pipeline': 'Pipeline',
+      'content-automation': 'Automation',
+      'image-pipeline': 'Image Pipeline',
+      'reviews-pipeline': 'Reviews Pipeline',
+      'before-after-pipeline': 'Before/After Pipeline',
+      'growth': 'Growth',
+      'results': 'Results',
+      'starting-point': 'The Starting Point',
+      'stack': 'Stack',
+      'lessons': 'Lessons',
+      'faq': 'FAQ',
+      'resources': 'Resources',
     },
     type: 'case-study',
     ragReady: true,
@@ -369,49 +269,26 @@ export const articleRegistry: ArticleConfig[] = [
   },
   {
     id: 'self-healing-chatbot',
-    slugs: { es: 'self-healing-chatbot', en: 'self-healing-chatbot' },
-    titles: { es: 'The Self-Healing Chatbot', en: 'The Self-Healing Chatbot' },
+    slug: 'self-healing-chatbot',
+    title: 'The Self-Healing Chatbot',
     seo: {
-      es: {
-        title: 'The Self-Healing Chatbot: From Widget to Production LLMOps',
-        description: 'Case study: production LLMOps with agentic observability, 6-layer defense, 71 evals, voice mode, and a closed-loop that generates tests from real failures.',
-      },
-      en: {
-        title: 'The Self-Healing Chatbot: From Widget to Production LLMOps',
-        description: 'Case study: production LLMOps with agentic observability, 6-layer defense, 71 evals, voice mode, and a closed-loop that generates tests from real failures.',
-      },
+      title: 'The Self-Healing Chatbot: From Widget to Production LLMOps',
+      description: 'Case study: production LLMOps with agentic observability, 6-layer defense, 71 evals, voice mode, and a closed-loop that generates tests from real failures.',
     },
     sectionLabels: {
-      es: {
-        'genesis': 'The Genesis',
-        'evolution': 'The Evolution',
-        'architecture': 'Architecture',
-        'how-it-was-built': 'How It Was Built',
-        'rag': 'Agentic RAG',
-        'defense': 'Defense',
-        'agentic-observability': 'Agentic Observability',
-        'evals': 'The 71 Tests',
-        'closed-loop': 'The Closed Loop',
-        'cost': 'Real Cost',
-        'voice': 'Voice Mode',
-        'lessons': 'Lessons',
-        'faq': 'FAQ',
-      },
-      en: {
-        'genesis': 'The Genesis',
-        'evolution': 'The Evolution',
-        'architecture': 'Architecture',
-        'how-it-was-built': 'How It Was Built',
-        'rag': 'Agentic RAG',
-        'defense': 'Defense',
-        'agentic-observability': 'Agentic Observability',
-        'evals': 'The 71 Tests',
-        'closed-loop': 'The Closed Loop',
-        'cost': 'Real Cost',
-        'voice': 'Voice Mode',
-        'lessons': 'Lessons',
-        'faq': 'FAQ',
-      },
+      'genesis': 'The Genesis',
+      'evolution': 'The Evolution',
+      'architecture': 'Architecture',
+      'how-it-was-built': 'How It Was Built',
+      'rag': 'Agentic RAG',
+      'defense': 'Defense',
+      'agentic-observability': 'Agentic Observability',
+      'evals': 'The 71 Tests',
+      'closed-loop': 'The Closed Loop',
+      'cost': 'Real Cost',
+      'voice': 'Voice Mode',
+      'lessons': 'Lessons',
+      'faq': 'FAQ',
     },
     type: 'case-study',
     ragReady: true,
@@ -449,43 +326,23 @@ export const articleRegistry: ArticleConfig[] = [
   },
   {
     id: 'career-ops',
-    slugs: { es: 'career-ops-system', en: 'career-ops-system' },
-    titles: { es: 'Career-Ops', en: 'Career-Ops' },
+    slug: 'career-ops-system',
+    title: 'Career-Ops',
     seo: {
-      es: {
-        title: 'Career-Ops: How I Built My Own AI Job Search Tool',
-        description: 'Case study: AI job search tool built as a multi-agent system. AI resume builder, 10D scoring, automated job application with HITL. 631 evaluations.',
-      },
-      en: {
-        title: 'Career-Ops: How I Built My Own AI Job Search Tool',
-        description: 'Case study: AI job search tool built as a multi-agent system. AI resume builder, 10D scoring, automated job application with HITL. 631 evaluations.',
-      },
+      title: 'Career-Ops: How I Built My Own AI Job Search Tool',
+      description: 'Case study: AI job search tool built as a multi-agent system. AI resume builder, 10D scoring, automated job application with HITL. 631 evaluations.',
     },
     sectionLabels: {
-      es: {
-        'the-problem': 'The Problem',
-        'architecture': 'Multi-Agent System',
-        'scoring': '10D Scoring',
-        'pipeline': 'The Pipeline',
-        'pdf': 'AI Resume Builder',
-        'before-after': 'Before/After',
-        'results': 'Results',
-        'lessons': 'Lessons',
-        'faq': 'FAQ',
-        'related': 'Related',
-      },
-      en: {
-        'the-problem': 'The Problem',
-        'architecture': 'Multi-Agent System',
-        'scoring': '10D Scoring',
-        'pipeline': 'The Pipeline',
-        'pdf': 'AI Resume Builder',
-        'before-after': 'Before/After',
-        'results': 'Results',
-        'lessons': 'Lessons',
-        'faq': 'FAQ',
-        'related': 'Related',
-      },
+      'the-problem': 'The Problem',
+      'architecture': 'Multi-Agent System',
+      'scoring': '10D Scoring',
+      'pipeline': 'The Pipeline',
+      'pdf': 'AI Resume Builder',
+      'before-after': 'Before/After',
+      'results': 'Results',
+      'lessons': 'Lessons',
+      'faq': 'FAQ',
+      'related': 'Related',
     },
     type: 'case-study',
     ragReady: true,
@@ -524,39 +381,21 @@ export const articleRegistry: ArticleConfig[] = [
   },
   {
     id: 'openclaw',
-    slugs: { es: 'openclaw', en: 'openclaw' },
-    titles: { es: 'OpenClaw', en: 'OpenClaw' },
+    slug: 'openclaw',
+    title: 'OpenClaw',
     seo: {
-      es: {
-        title: 'I Built a 22-Agent AI Team to Run My Business | Joseph Blas',
-        description: '22 specialized AI agents running real business operations 24/7. Org chart, model tiering, infrastructure, and real workflows. Built on OpenClaw.',
-      },
-      en: {
-        title: 'I Built a 22-Agent AI Team to Run My Business | Joseph Blas',
-        description: '22 specialized AI agents running real business operations 24/7. Org chart, model tiering, infrastructure, and real workflows. Built on OpenClaw.',
-      },
+      title: 'I Built a 22-Agent AI Team to Run My Business | Joseph Blas',
+      description: '22 specialized AI agents running real business operations 24/7. Org chart, model tiering, infrastructure, and real workflows. Built on OpenClaw.',
     },
     sectionLabels: {
-      es: {
-        'org-chart': 'Org Chart',
-        'model-tiers': 'Model Tiers',
-        'infrastructure': 'Infrastructure',
-        'workflows': 'Workflows',
-        'why-it-matters': 'Why It Matters',
-        'lessons': 'Lessons',
-        'faq': 'FAQ',
-        'resources': 'Resources',
-      },
-      en: {
-        'org-chart': 'Org Chart',
-        'model-tiers': 'Model Tiers',
-        'infrastructure': 'Infrastructure',
-        'workflows': 'Workflows',
-        'why-it-matters': 'Why It Matters',
-        'lessons': 'Lessons',
-        'faq': 'FAQ',
-        'resources': 'Resources',
-      },
+      'org-chart': 'Org Chart',
+      'model-tiers': 'Model Tiers',
+      'infrastructure': 'Infrastructure',
+      'workflows': 'Workflows',
+      'why-it-matters': 'Why It Matters',
+      'lessons': 'Lessons',
+      'faq': 'FAQ',
+      'resources': 'Resources',
     },
     type: 'case-study',
     ragReady: true,
@@ -590,22 +429,15 @@ export const articleRegistry: ArticleConfig[] = [
   },
   {
     id: 'av-career',
-    slugs: { es: 'av-career', en: 'av-career' },
-    titles: { es: 'AV Career', en: 'AV Career' },
+    slug: 'av-career',
+    title: 'AV Career',
     seo: {
-      es: {
-        title: 'Joseph Blas | 15+ Years in Autonomous Vehicles',
-        description: "From Google's Self-Driving Car to Pronto.ai. 15+ years building autonomous vehicles: Firefly, Uber ATG, 2,900-mile cross-country demo.",
-      },
-      en: {
-        title: 'Joseph Blas | 15+ Years in Autonomous Vehicles',
-        description: "From Google's Self-Driving Car to Pronto.ai. 15+ years building autonomous vehicles: Firefly, Uber ATG, 2,900-mile cross-country demo.",
-      },
+      title: 'Joseph Blas | 15+ Years in Autonomous Vehicles',
+      description: "From Google's Self-Driving Car to Pronto.ai. 15+ years building autonomous vehicles: Firefly, Uber ATG, 2,900-mile cross-country demo.",
     },
-    sectionLabels: { es: {}, en: {} },
+    sectionLabels: {},
     type: 'bridge',
     component: () => import('../SantiferIRepair.tsx'),
-    xDefaultSlug: 'av-career',
   },
 ]
 
@@ -613,13 +445,11 @@ export const articleRegistry: ArticleConfig[] = [
 export function getAltPaths(): Record<string, string> {
   const map: Record<string, string> = {
     '/': '/',
-    '/en': '/',
     '/about': '/about',
     '/privacy': '/privacy',
   }
   for (const article of articleRegistry) {
-    map[`/${article.slugs.es}`] = `/${article.slugs.en}`
-    map[`/${article.slugs.en}`] = `/${article.slugs.es}`
+    map[`/${article.slug}`] = `/${article.slug}`
   }
   return map
 }
@@ -627,12 +457,10 @@ export function getAltPaths(): Record<string, string> {
 export function getPageTitles(): Record<string, string> {
   const map: Record<string, string> = {
     '/': "Joseph's Portfolio",
-    '/en': "Joseph's Portfolio",
     '/about': 'About',
   }
   for (const article of articleRegistry) {
-    map[`/${article.slugs.es}`] = article.titles.es
-    map[`/${article.slugs.en}`] = article.titles.en
+    map[`/${article.slug}`] = article.title
   }
   return map
 }
@@ -640,14 +468,7 @@ export function getPageTitles(): Record<string, string> {
 export function getSectionLabels(): Record<string, Record<string, string>> {
   const map: Record<string, Record<string, string>> = {}
   for (const article of articleRegistry) {
-    map[`/${article.slugs.es}`] = article.sectionLabels.es
-    map[`/${article.slugs.en}`] = article.sectionLabels.en
+    map[`/${article.slug}`] = article.sectionLabels
   }
   return map
-}
-
-/** All ES slugs (for lang detection: if pathname matches an ES slug → lang is 'es') */
-export function getEsSlugs(): Set<string> {
-  // English-only site — no Spanish slugs
-  return new Set<string>()
 }

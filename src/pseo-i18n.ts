@@ -1021,4 +1021,4 @@ return records.map(r => ({
     },
   }
 
-export const pseoContent = { es: _en, en: _en } as const
+export const pseoContent = _en

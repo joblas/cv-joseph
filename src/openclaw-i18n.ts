@@ -1,5 +1,3 @@
-export type OpenClawLang = 'es' | 'en'
-
 const _en = {
   slug: 'openclaw',
   altSlug: 'openclaw',
@@ -224,6 +222,6 @@ const _en = {
   },
 } as const
 
-export const openclawContent = { es: _en, en: _en } as const
+export const openclawContent = _en
 
-export type OpenClawContent = (typeof openclawContent)['en']
+export type OpenClawContent = typeof openclawContent

@@ -104,8 +104,8 @@ interface PrivacySection {
   email?: string
 }
 
-export default function PrivacyPolicy({ lang = 'es' }: { lang?: 'es' | 'en' }) {
-  const t = content[lang]
+export default function PrivacyPolicy() {
+  const t = content.en
 
   useEffect(() => {
     document.title = `${t.title} | cv-joseph.vercel.app`
@@ -130,10 +130,10 @@ export default function PrivacyPolicy({ lang = 'es' }: { lang?: 'es' | 'en' }) {
     return () => {
       robots.content = 'index, follow'
     }
-  }, [lang, t.title])
+  }, [t.title])
 
   return (
-    <ArticleLayout lang={lang}>
+    <ArticleLayout>
       <header className="mb-10">
         <h1 className="font-display text-3xl md:text-4xl font-bold tracking-tight text-foreground mb-2">
           {t.title}

@@ -1533,4 +1533,4 @@ Presupuesto reparándolo todo junto: \${totalConDescuento.toFixed(2)} €\`;`,
       },
     }
 
-export const jacoboContent = { es: _en, en: _en } as const
+export const jacoboContent = _en

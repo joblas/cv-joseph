@@ -1,4 +1,4 @@
-import { openclawContent, type OpenClawLang } from './openclaw-i18n'
+import { openclawContent } from './openclaw-i18n'
 import { buildArticleJsonLd } from './articles/json-ld'
 import { useArticleSeo } from './articles/use-article-seo'
 import {
@@ -23,12 +23,10 @@ import {
   DiagramZoom,
 } from './articles/content-types'
 
-function buildJsonLd(lang: OpenClawLang) {
-  const t = openclawContent[lang]
+function buildJsonLd() {
+  const t = openclawContent
   return buildArticleJsonLd({
-    lang,
     url: `https://cv-joseph.vercel.app/${t.slug}`,
-    altUrl: `https://cv-joseph.vercel.app/${t.altSlug}`,
     headline: t.header.h1,
     alternativeHeadline: t.seo.title,
     description: t.seo.description,
@@ -57,25 +55,22 @@ function buildJsonLd(lang: OpenClawLang) {
   })
 }
 
-export default function OpenClaw({ lang = 'en' }: { lang?: OpenClawLang }) {
-  const t = openclawContent[lang]
+export default function OpenClaw() {
+  const t = openclawContent
 
   useArticleSeo({
-    lang,
     slug: t.slug,
-    altSlug: t.altSlug,
     title: t.seo.title,
     description: t.seo.description,
     image: 'https://cv-joseph.vercel.app/articles/openclaw-org-chart.webp',
     publishedTime: '2026-04-07',
     modifiedTime: '2026-04-07',
     articleTags: 'AI agents,multi-agent,OpenClaw,architecture,small business,Claude,n8n',
-    jsonLd: buildJsonLd(lang),
-    xDefaultSlug: 'openclaw',
+    jsonLd: buildJsonLd(),
   })
 
   return (
-    <ArticleLayout lang={lang}>
+    <ArticleLayout>
       <FloatingToc />
       <ArticleHeader
         editorId="hero-header"
@@ -271,7 +266,7 @@ export default function OpenClaw({ lang = 'en' }: { lang?: OpenClawLang }) {
         <ResourcesList heading={t.resources.heading} items={t.resources.items} />
       </article>
 
-      <ArticleFooter editorId="article-footer" lang={lang} utmCampaign="openclaw" />
+      <ArticleFooter editorId="article-footer" utmCampaign="openclaw" />
     </ArticleLayout>
   )
 }

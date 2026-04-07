@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import type { ReactNode } from 'react'
-import { type N8nLang as Lang } from './n8n-i18n'
 import { buildArticleJsonLd } from './articles/json-ld'
 import { useArticleSeo } from './articles/use-article-seo'
 import {
@@ -236,12 +235,10 @@ function ReviewCarousel({ alt }: { alt: string }) {
   )
 }
 
-function buildJsonLd(lang: Lang) {
-  const t = pseoContent[lang]
+function buildJsonLd() {
+  const t = pseoContent
   return buildArticleJsonLd({
-    lang,
     url: `https://cv-joseph.vercel.app/${t.slug}`,
-    altUrl: `https://cv-joseph.vercel.app/${t.altSlug}`,
     headline: t.seo.title,
     alternativeHeadline: t.seo.title,
     description: t.seo.description,
@@ -261,25 +258,22 @@ function buildJsonLd(lang: Lang) {
   })
 }
 
-export default function ProgrammaticSeo({ lang = 'en' }: { lang?: Lang }) {
-  const t = pseoContent[lang]
+export default function ProgrammaticSeo() {
+  const t = pseoContent
 
   useArticleSeo({
-    lang,
     slug: t.slug,
-    altSlug: t.altSlug,
     title: t.seo.title,
     description: t.seo.description,
     image: 'https://cv-joseph.vercel.app/pseo/og-programmatic-seo.png',
     publishedTime: '2026-02-25',
     modifiedTime: '2026-04-07',
     articleTags: 'programmatic SEO,Airtable,Astro,DataForSEO,crawl budget,phone repair,ERP,local SEO',
-    jsonLd: buildJsonLd(lang),
-    xDefaultSlug: 'programmatic-seo',
+    jsonLd: buildJsonLd(),
   })
 
   return (
-    <ArticleLayout lang={lang}>
+    <ArticleLayout>
       <FloatingToc />
       <ArticleHeader
         editorId="hero-header"
@@ -686,7 +680,6 @@ export default function ProgrammaticSeo({ lang = 'en' }: { lang?: Lang }) {
         />
         <ScreenshotGrid
           items={t.sections.imagePipeline.onePhotoDemo.variants}
-          lang={lang}
           basePath="/pseo/demo/apple-iphone-14-pro"
         />
         <ScreenshotCaption
@@ -1050,7 +1043,7 @@ export default function ProgrammaticSeo({ lang = 'en' }: { lang?: Lang }) {
         <ResourcesList heading={t.resources.heading} items={t.resources.items} />
       </article>
 
-      <ArticleFooter editorId="article-footer" lang={lang} utmCampaign="pseo" />
+      <ArticleFooter editorId="article-footer" utmCampaign="pseo" />
     </ArticleLayout>
   )
 }

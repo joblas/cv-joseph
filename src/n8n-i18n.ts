@@ -1,5 +1,3 @@
-export type N8nLang = 'es' | 'en'
-
 /**
  * Classification prompt used in Workflow 2.
  * Identical in both languages — it's a prompt for LLMs, always in English.
@@ -241,12 +239,7 @@ const _en = {
     },
   }
 
-export const n8nContent = { es: _en, en: _en } as const
+export const n8nContent = _en
 
-/** Helper to get content for a given language */
-export function getN8nContent(lang: N8nLang) {
-  return n8nContent[lang]
-}
-
-/** Derive the type of a single language's content */
-export type N8nContent = (typeof n8nContent)['en']
+/** Derive the type of the content */
+export type N8nContent = typeof n8nContent

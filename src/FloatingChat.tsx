@@ -39,7 +39,6 @@ interface Message {
 }
 
 interface FloatingChatProps {
-  lang: 'es' | 'en';
 }
 
 const PromptIcon = ({ icon }: { icon: string }) => {
@@ -125,8 +124,8 @@ function saveSession(messages: Message[], sessionId: string) {
   } catch { /* storage full or unavailable */ }
 }
 
-export default function FloatingChat({ lang }: FloatingChatProps) {
-  const t = translations[lang].chat;
+export default function FloatingChat({}: FloatingChatProps) {
+  const t = translations.chat;
   const v = t.voice;
   const [isOpen, setIsOpen] = useState(() => window.location.hash === '#chat');
   const [immersive, setImmersive] = useState(false);
@@ -259,14 +258,14 @@ export default function FloatingChat({ lang }: FloatingChatProps) {
     }
   }, [messages, isLoading, sessionId]);
 
-  // Update greeting when lang changes — only if no conversation has started
+  // Update greeting — only if no conversation has started
   useEffect(() => {
     const hasUserMessages = messages.some((m) => m.role === 'user');
     if (!hasUserMessages) {
       setMessages([{ role: 'assistant', content: t.greeting }]);
       setShowPrompts(true);
     }
-  }, [lang]);
+  }, []);
 
   // Escape key stops voice mode
   useEffect(() => {
@@ -319,7 +318,7 @@ export default function FloatingChat({ lang }: FloatingChatProps) {
   // Voice mode handlers
   const handleStartVoice = () => {
     setMode('voice');
-    voiceMode.start(messages, lang, sessionId, location.pathname);
+    voiceMode.start(messages, 'en', sessionId, location.pathname);
   };
 
   const handleStopVoice = () => {
@@ -397,7 +396,7 @@ export default function FloatingChat({ lang }: FloatingChatProps) {
           messages: [...messages, { role: 'user', content: text }].filter(
             (m) => m.role !== 'assistant' || m.content !== t.greeting,
           ),
-          lang,
+          lang: 'en',
           sessionId,
           currentPage: location.pathname,
         }),
@@ -564,7 +563,7 @@ export default function FloatingChat({ lang }: FloatingChatProps) {
           bottom: 'max(1.5rem, env(safe-area-inset-bottom, 0px) + 0.5rem)',
           right: 'max(1.5rem, env(safe-area-inset-right, 0px) + 0.5rem)',
         }}
-        aria-label={lang === 'en' ? (isOpen ? 'Close chat with Santi' : 'Open chat with Santi') : (isOpen ? 'Cerrar chat con Santi' : 'Abrir chat con Santi')}
+        aria-label={isOpen ? 'Close chat with Santi' : 'Open chat with Santi'}
       >
         <AnimatePresence mode="wait">
           {isOpen ? (
@@ -592,7 +591,7 @@ export default function FloatingChat({ lang }: FloatingChatProps) {
                 <source srcSet="/foto-avatar-sm.webp" type="image/webp" />
                 <img
                   src="/foto-avatar-sm.webp"
-                  alt={lang === 'en' ? 'Chat with Santi' : 'Chat con Santi'}
+                  alt="Chat with Santi"
                   className="w-full h-full rounded-full object-cover"
                   width={56}
                   height={56}
@@ -625,7 +624,7 @@ export default function FloatingChat({ lang }: FloatingChatProps) {
             ref={chatContainerRef}
             role="dialog"
             aria-modal="true"
-            aria-label={lang === 'en' ? 'Chat with Santi' : 'Chat con Santi'}
+            aria-label="Chat with Santi"
             initial={isMobile ? { opacity: 0 } : { opacity: 0, y: 20, scale: 0.95 }}
             animate={isMobile ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1 }}
             exit={isMobile ? { opacity: 0 } : { opacity: 0, y: 20, scale: 0.95 }}
@@ -867,11 +866,11 @@ export default function FloatingChat({ lang }: FloatingChatProps) {
                           {t.contactCtaTitle}
                         </p>
                         <a
-                          href={`mailto:${translations[lang].email}`}
+                          href={`mailto:${translations.email}`}
                           className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-theme-r text-white text-sm font-medium hover:brightness-110 hover:shadow-lg hover:shadow-primary/25 active:brightness-95 transition-all duration-200"
                         >
                           <Mail className="w-4 h-4" aria-hidden="true" />
-                          {translations[lang].email}
+                          {translations.email}
                         </a>
                       </div>
                     </motion.div>
@@ -895,7 +894,7 @@ export default function FloatingChat({ lang }: FloatingChatProps) {
                         <span
                           className={`text-muted-foreground ${isMobile ? 'text-sm' : 'text-xs'}`}
                         >
-                          {translations[lang].ui.typingIndicator}
+                          {translations.ui.typingIndicator}
                         </span>
                       </div>
                     </motion.div>
@@ -1008,7 +1007,7 @@ export default function FloatingChat({ lang }: FloatingChatProps) {
                     whileTap={{ scale: 0.95 }}
                     onClick={() => sendMessage()}
                     disabled={isLoading || !input.trim()}
-                    aria-label={lang === 'en' ? 'Send message' : 'Enviar mensaje'}
+                    aria-label="Send message"
                     className={`rounded-xl bg-gradient-theme flex items-center justify-center text-white disabled:opacity-50 disabled:cursor-not-allowed transition-opacity ${
                       isMobile ? 'w-12 h-12' : 'w-10 h-10'
                     }`}

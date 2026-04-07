@@ -31,9 +31,7 @@ function upsertLink(rel: string, href: string) {
 // ---------------------------------------------------------------------------
 
 export interface ArticleSeoOpts {
-  lang: string
   slug: string
-  altSlug: string
   title: string
   description: string
   image?: string
@@ -41,21 +39,16 @@ export interface ArticleSeoOpts {
   modifiedTime?: string
   articleTags: string
   jsonLd: object
-  /** ES slug used as x-default hreflang (defaults to slug when lang=es) */
-  xDefaultSlug?: string
 }
 
 export function useArticleSeo(opts: ArticleSeoOpts) {
   useEffect(() => {
     const {
-      lang, slug, altSlug, title, description, image,
-      publishedTime, modifiedTime, articleTags, jsonLd, xDefaultSlug,
+      slug, title, description, image,
+      publishedTime, modifiedTime, articleTags, jsonLd,
     } = opts
 
     const url = `https://cv-joseph.vercel.app/${slug}`
-    const altUrl = `https://cv-joseph.vercel.app/${altSlug}`
-    const altLang = 'en'
-    const defaultSlug = xDefaultSlug ?? slug
 
     document.title = title
 
@@ -71,7 +64,6 @@ export function useArticleSeo(opts: ArticleSeoOpts) {
     upsertMeta('property', 'og:description', description)
     upsertMeta('property', 'og:site_name', 'cv-joseph.vercel.app')
     upsertMeta('property', 'og:locale', 'en_US')
-    upsertMeta('property', 'og:locale:alternate', 'en_US')
     upsertMeta('property', 'article:published_time', publishedTime)
     if (modifiedTime) upsertMeta('property', 'article:modified_time', modifiedTime)
     upsertMeta('property', 'article:author', 'https://www.linkedin.com/in/joseph-blas')
@@ -87,21 +79,6 @@ export function useArticleSeo(opts: ArticleSeoOpts) {
     // Canonical
     upsertLink('canonical', url)
 
-    // Hreflang
-    const createdLinks: HTMLLinkElement[] = []
-    for (const { hreflang, href } of [
-      { hreflang: lang, href: url },
-      { hreflang: altLang, href: altUrl },
-      { hreflang: 'x-default', href: `https://cv-joseph.vercel.app/${defaultSlug}` },
-    ]) {
-      const link = document.createElement('link')
-      link.rel = 'alternate'
-      link.hreflang = hreflang
-      link.href = href
-      document.head.appendChild(link)
-      createdLinks.push(link)
-    }
-
     // JSON-LD — remove any pre-existing (from prerender) before adding
     const existing = document.querySelector('script[type="application/ld+json"]')
     if (existing) existing.remove()
@@ -113,16 +90,15 @@ export function useArticleSeo(opts: ArticleSeoOpts) {
 
     return () => {
       script.remove()
-      createdLinks.forEach(l => l.remove())
     }
-  }, [opts.lang, opts.slug, opts.title])
+  }, [opts.slug, opts.title])
 }
 
 // ---------------------------------------------------------------------------
 // useHomeSeo — lightweight, only updates existing tags from index.html
 // ---------------------------------------------------------------------------
 
-export function useHomeSeo({ lang, title, description }: { lang: string; title: string; description: string }) {
+export function useHomeSeo({ title, description }: { title: string; description: string }) {
   useEffect(() => {
     document.title = title
 
@@ -131,12 +107,5 @@ export function useHomeSeo({ lang, title, description }: { lang: string; title: 
 
     document.querySelector('meta[property="og:title"]')?.setAttribute('content', title)
     document.querySelector('meta[property="og:description"]')?.setAttribute('content', description)
-    document.querySelector('meta[property="og:locale"]')?.setAttribute('content', lang === 'en' ? 'en_US' : 'es_ES')
-
-    const canonical = lang === 'en' ? 'https://cv-joseph.vercel.app/en' : 'https://cv-joseph.vercel.app/'
-    document.querySelector('link[rel="canonical"]')?.setAttribute('href', canonical)
-    document.querySelector('meta[property="og:url"]')?.setAttribute('content', canonical)
-
-    document.documentElement.lang = lang
-  }, [lang, title, description])
+  }, [title, description])
 }

@@ -72,12 +72,10 @@ function getAnthropic(): Anthropic | null {
 
 interface ChunkMetadata {
   article_id: string
-  article_slug_en: string
-  article_slug_es: string
+  article_slug: string
   section_id: string
   section_anchor: string
-  page_path_en: string
-  page_path_es: string
+  page_path: string
   source_file: string
   format: 'i18n' | 'markdown' | 'plaintext'
 }
@@ -360,7 +358,7 @@ async function main() {
     console.log(`     → ${splitChunks.length} chunks after splitting`)
 
     // Contextual retrieval summaries
-    const articleTitle = article?.titles.en || articleId
+    const articleTitle = article?.title || articleId
     const enrichedTexts = await addContextualSummaries(splitChunks, articleTitle, anthropic)
 
     // Embed

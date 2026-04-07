@@ -35,7 +35,7 @@ import { careerOpsContent } from '../src/career-ops-i18n.ts';
 import { openclawContent } from '../src/openclaw-i18n.ts';
 
 // Map article id → i18n content for JSON-LD generation
-const i18nMap: Record<string, Record<string, { header: { h1: string }; nav: { breadcrumbHome: string; breadcrumbCurrent: string }; faq: { items: readonly { q: string; a: string }[] } }>> = {
+const i18nMap: Record<string, { header: { h1: string }; nav: { breadcrumbHome: string; breadcrumbCurrent: string }; faq: { items: readonly { q: string; a: string }[] } }> = {
   'n8n-for-pms': n8nContent,
   'jacobo': jacoboContent,
   'business-os': businessOsContent,
@@ -54,17 +54,15 @@ function stripReactSSRTags(html: string): string {
 }
 
 // ---------------------------------------------------------------------------
-// SSR render per language (home page)
+// SSR render (home page)
 // ---------------------------------------------------------------------------
-function renderApp(lang: 'es' | 'en'): string {
-  const path = lang === 'en' ? '/en' : '/';
+function renderApp(): string {
   return stripReactSSRTags(renderToString(
-    <StaticRouter location={path}>
+    <StaticRouter location="/">
       <div>
         <Suspense fallback={null}>
           <Routes>
             <Route path="/" element={<App />} />
-            <Route path="/en" element={<App />} />
           </Routes>
         </Suspense>
       </div>
@@ -72,14 +70,14 @@ function renderApp(lang: 'es' | 'en'): string {
   ));
 }
 
-function renderArticlePage(slug: string, ArticleComponent: ComponentType<{ lang: 'es' | 'en' }>, lang: 'es' | 'en'): string {
+function renderArticlePage(slug: string, ArticleComponent: ComponentType): string {
   return stripReactSSRTags(renderToString(
     <StaticRouter location={`/${slug}`}>
       <GlobalNav />
       <div>
         <Suspense fallback={null}>
           <Routes>
-            <Route path={`/${slug}`} element={<ArticleComponent lang={lang} />} />
+            <Route path={`/${slug}`} element={<ArticleComponent />} />
           </Routes>
         </Suspense>
       </div>
@@ -105,56 +103,27 @@ try {
   process.exit(1);
 }
 
-// --- ES version (inject into existing index.html) ---
-let esHtml: string;
+// --- Home page ---
+let homeHtml: string;
 try {
-  esHtml = renderApp('es');
+  homeHtml = renderApp();
 } catch (err) {
-  console.error('[prerender] SSR failed for ES, falling back to empty root:', err);
-  esHtml = '';
+  console.error('[prerender] SSR failed for home, falling back to empty root:', err);
+  homeHtml = '';
 }
 
-const esSeo = seo.es;
-
-const injectedEs = indexHtml
-  .replace('<div id="root"></div>', `<div id="root">${esHtml}</div>`)
-  .replace(/<title>[^<]*<\/title>/, `<title>${esc(esSeo.title)}</title>`)
-  .replace(/<meta name="title" content="[^"]*" \/>/, `<meta name="title" content="${esc(esSeo.title)}" />`)
-  .replace(/<meta name="description" content="[^"]*" \/>/, `<meta name="description" content="${esc(esSeo.description)}" />`)
-  .replace(/<meta property="og:title" content="[^"]*" \/>/, `<meta property="og:title" content="${esc(esSeo.title)}" />`)
-  .replace(/<meta property="og:description" content="[^"]*" \/>/, `<meta property="og:description" content="${esc(esSeo.description)}" />`)
-  .replace(/<meta name="twitter:title" content="[^"]*" \/>/, `<meta name="twitter:title" content="${esc(esSeo.title)}" />`)
-  .replace(/<meta name="twitter:description" content="[^"]*" \/>/, `<meta name="twitter:description" content="${esc(esSeo.description)}" />`);
-
-// --- EN version ---
-let enHtml: string;
-try {
-  enHtml = renderApp('en');
-} catch (err) {
-  console.error('[prerender] SSR failed for EN, falling back to empty root:', err);
-  enHtml = '';
-}
-
-const enSeo = seo.en;
-
-let enPage = indexHtml
-  .replace('<div id="root"></div>', `<div id="root">${enHtml}</div>`)
-  .replace('<html lang="es" class="dark">', '<html lang="en" class="dark">')
-  .replace(/<title>[^<]*<\/title>/, `<title>${esc(enSeo.title)}</title>`)
-  .replace(/<meta name="title" content="[^"]*" \/>/, `<meta name="title" content="${esc(enSeo.title)}" />`)
-  .replace(/<meta name="description" content="[^"]*" \/>/, `<meta name="description" content="${esc(enSeo.description)}" />`)
-  .replace(/<link rel="canonical" href="[^"]*" \/>/, '<link rel="canonical" href="https://cv-joseph.vercel.app/en" />')
-  .replace(/<meta property="og:url" content="[^"]*" \/>/, '<meta property="og:url" content="https://cv-joseph.vercel.app/en" />')
-  .replace(/<meta property="og:title" content="[^"]*" \/>/, `<meta property="og:title" content="${esc(enSeo.title)}" />`)
-  .replace(/<meta property="og:description" content="[^"]*" \/>/, `<meta property="og:description" content="${esc(enSeo.description)}" />`)
-  .replace(/<meta property="og:locale" content="es_ES" \/>/, '<meta property="og:locale" content="en_US" />')
-  .replace(/<meta property="og:locale:alternate" content="en_US" \/>/, '<meta property="og:locale:alternate" content="es_ES" />')
-  .replace(/<meta name="twitter:url" content="[^"]*" \/>/, '<meta name="twitter:url" content="https://cv-joseph.vercel.app/en" />')
-  .replace(/<meta name="twitter:title" content="[^"]*" \/>/, `<meta name="twitter:title" content="${esc(enSeo.title)}" />`)
-  .replace(/<meta name="twitter:description" content="[^"]*" \/>/, `<meta name="twitter:description" content="${esc(enSeo.description)}" />`);
+const injectedHome = indexHtml
+  .replace('<div id="root"></div>', `<div id="root">${homeHtml}</div>`)
+  .replace(/<title>[^<]*<\/title>/, `<title>${esc(seo.title)}</title>`)
+  .replace(/<meta name="title" content="[^"]*" \/>/, `<meta name="title" content="${esc(seo.title)}" />`)
+  .replace(/<meta name="description" content="[^"]*" \/>/, `<meta name="description" content="${esc(seo.description)}" />`)
+  .replace(/<meta property="og:title" content="[^"]*" \/>/, `<meta property="og:title" content="${esc(seo.title)}" />`)
+  .replace(/<meta property="og:description" content="[^"]*" \/>/, `<meta property="og:description" content="${esc(seo.description)}" />`)
+  .replace(/<meta name="twitter:title" content="[^"]*" \/>/, `<meta name="twitter:title" content="${esc(seo.title)}" />`)
+  .replace(/<meta name="twitter:description" content="[^"]*" \/>/, `<meta name="twitter:description" content="${esc(seo.description)}" />`);
 
 // ---------------------------------------------------------------------------
-// About / Entity Home — ES (/sobre-mi) + EN (/about)
+// About / Entity Home (/about)
 // ---------------------------------------------------------------------------
 
 const aboutJsonLd = {
@@ -232,70 +201,48 @@ const aboutJsonLd = {
 
 const aboutJsonLdScript = `<script type="application/ld+json">\n${JSON.stringify(aboutJsonLd, null, 2)}\n</script>`;
 
-interface AboutPageData {
-  slug: string;
-  html: string;
+const aboutSlug = aboutContent.slug;
+const aboutUrl = `https://cv-joseph.vercel.app/${aboutSlug}`;
+
+let aboutRenderedHtml: string;
+try {
+  aboutRenderedHtml = stripReactSSRTags(renderToString(
+    <StaticRouter location={`/${aboutSlug}`}>
+      <GlobalNav />
+      <div>
+        <Suspense fallback={null}>
+          <Routes>
+            <Route path={`/${aboutSlug}`} element={<AboutPage />} />
+          </Routes>
+        </Suspense>
+      </div>
+    </StaticRouter>
+  ));
+} catch (err) {
+  console.error(`[prerender] SSR failed for ${aboutSlug}, falling back to empty root:`, err);
+  aboutRenderedHtml = '';
 }
 
-const aboutPages: AboutPageData[] = [];
+let aboutPage = indexHtml
+  .replace('<div id="root"></div>', `<div id="root">${aboutRenderedHtml}</div>`)
+  .replace(/<title>[^<]*<\/title>/, `<title>${esc(aboutContent.seo.title)}</title>`)
+  .replace(/<meta name="title" content="[^"]*" \/>/, `<meta name="title" content="${esc(aboutContent.seo.title)}" />`)
+  .replace(/<meta name="description" content="[^"]*" \/>/, `<meta name="description" content="${esc(aboutContent.seo.description)}" />`)
+  .replace(/<link rel="alternate" hreflang="[^"]*" href="[^"]*" \/>\s*/g, '')
+  .replace(/<link rel="canonical" href="[^"]*" \/>/, `<link rel="canonical" href="${aboutUrl}" />`)
+  .replace(/<meta property="og:type" content="[^"]*" \/>/, '<meta property="og:type" content="profile" />')
+  .replace(/<meta property="og:url" content="[^"]*" \/>/, `<meta property="og:url" content="${aboutUrl}" />`)
+  .replace(/<meta property="og:title" content="[^"]*" \/>/, `<meta property="og:title" content="${esc(aboutContent.seo.title)}" />`)
+  .replace(/<meta property="og:description" content="[^"]*" \/>/, `<meta property="og:description" content="${esc(aboutContent.seo.description)}" />`)
+  .replace(/<meta name="twitter:url" content="[^"]*" \/>/, `<meta name="twitter:url" content="${aboutUrl}" />`)
+  .replace(/<meta name="twitter:title" content="[^"]*" \/>/, `<meta name="twitter:title" content="${esc(aboutContent.seo.title)}" />`)
+  .replace(/<meta name="twitter:description" content="[^"]*" \/>/, `<meta name="twitter:description" content="${esc(aboutContent.seo.description)}" />`);
 
-for (const lang of ['es', 'en'] as const) {
-  const t = aboutContent[lang];
-  const slug = t.slug;
-  const altSlug = t.altSlug;
-  const url = `https://cv-joseph.vercel.app/${slug}`;
-  const altUrl = `https://cv-joseph.vercel.app/${altSlug}`;
-  const altLang = lang === 'es' ? 'en' : 'es';
-  const ogLocale = lang === 'es' ? 'es_ES' : 'en_US';
-  const ogLocaleAlt = lang === 'es' ? 'en_US' : 'es_ES';
-
-  let renderedHtml: string;
-  try {
-    renderedHtml = stripReactSSRTags(renderToString(
-      <StaticRouter location={`/${slug}`}>
-        <GlobalNav />
-        <div>
-          <Suspense fallback={null}>
-            <Routes>
-              <Route path={`/${slug}`} element={<AboutPage lang={lang} />} />
-            </Routes>
-          </Suspense>
-        </div>
-      </StaticRouter>
-    ));
-  } catch (err) {
-    console.error(`[prerender] SSR failed for ${slug}, falling back to empty root:`, err);
-    renderedHtml = '';
-  }
-
-  const hreflangLinks = `<link rel="alternate" hreflang="${lang}" href="${url}" /><link rel="alternate" hreflang="${altLang}" href="${altUrl}" /><link rel="alternate" hreflang="x-default" href="https://cv-joseph.vercel.app/sobre-mi" />`;
-
-  let result = indexHtml
-    .replace('<div id="root"></div>', `<div id="root">${renderedHtml}</div>`)
-    .replace('<html lang="es" class="dark">', `<html lang="${lang}" class="dark">`)
-    .replace(/<title>[^<]*<\/title>/, `<title>${esc(t.seo.title)}</title>`)
-    .replace(/<meta name="title" content="[^"]*" \/>/, `<meta name="title" content="${esc(t.seo.title)}" />`)
-    .replace(/<meta name="description" content="[^"]*" \/>/, `<meta name="description" content="${esc(t.seo.description)}" />`)
-    .replace(/<link rel="alternate" hreflang="[^"]*" href="[^"]*" \/>\s*/g, '')
-    .replace(/<link rel="canonical" href="[^"]*" \/>/, `<link rel="canonical" href="${url}" />${hreflangLinks}`)
-    .replace(/<meta property="og:type" content="[^"]*" \/>/, '<meta property="og:type" content="profile" />')
-    .replace(/<meta property="og:url" content="[^"]*" \/>/, `<meta property="og:url" content="${url}" />`)
-    .replace(/<meta property="og:title" content="[^"]*" \/>/, `<meta property="og:title" content="${esc(t.seo.title)}" />`)
-    .replace(/<meta property="og:description" content="[^"]*" \/>/, `<meta property="og:description" content="${esc(t.seo.description)}" />`)
-    .replace(/<meta property="og:locale" content="es_ES" \/>/, `<meta property="og:locale" content="${ogLocale}" />`)
-    .replace(/<meta property="og:locale:alternate" content="en_US" \/>/, `<meta property="og:locale:alternate" content="${ogLocaleAlt}" />`)
-    .replace(/<meta name="twitter:url" content="[^"]*" \/>/, `<meta name="twitter:url" content="${url}" />`)
-    .replace(/<meta name="twitter:title" content="[^"]*" \/>/, `<meta name="twitter:title" content="${esc(t.seo.title)}" />`)
-    .replace(/<meta name="twitter:description" content="[^"]*" \/>/, `<meta name="twitter:description" content="${esc(t.seo.description)}" />`);
-
-  // Replace homepage JSON-LD with ProfilePage JSON-LD
-  result = result.replace(
-    /<script type="application\/ld\+json">[\s\S]*?<\/script>/,
-    aboutJsonLdScript,
-  );
-
-  aboutPages.push({ slug, html: result });
-}
+// Replace homepage JSON-LD with ProfilePage JSON-LD
+aboutPage = aboutPage.replace(
+  /<script type="application\/ld\+json">[\s\S]*?<\/script>/,
+  aboutJsonLdScript,
+);
 
 // ---------------------------------------------------------------------------
 // Article pages — build from registry
@@ -305,47 +252,33 @@ interface ArticlePage {
   html: string;
 }
 
-function buildArticlePage(
+function buildArticlePageHtml(
   config: ArticleConfig,
-  lang: 'es' | 'en',
-  ArticleComponent: ComponentType<{ lang: 'es' | 'en' }>,
+  ArticleComponent: ComponentType,
 ): string {
-  const slug = config.slugs[lang];
-  const altSlug = config.slugs[lang === 'es' ? 'en' : 'es'];
+  const slug = config.slug;
   const url = `https://cv-joseph.vercel.app/${slug}`;
-  const altUrl = `https://cv-joseph.vercel.app/${altSlug}`;
-  const altLang = lang === 'es' ? 'en' : 'es';
-  const htmlLang = lang;
-  const ogLocale = lang === 'es' ? 'es_ES' : 'en_US';
-  const ogLocaleAlt = lang === 'es' ? 'en_US' : 'es_ES';
-  const articleSeo = config.seo[lang];
-  const xDefaultHref = `https://cv-joseph.vercel.app/${config.xDefaultSlug || config.slugs.es}`;
+  const articleSeo = config.seo;
 
   let renderedHtml: string;
   try {
-    renderedHtml = renderArticlePage(slug, ArticleComponent, lang);
+    renderedHtml = renderArticlePage(slug, ArticleComponent);
   } catch (err) {
     console.error(`[prerender] SSR failed for ${slug}, falling back to empty root:`, err);
     renderedHtml = '';
   }
 
-  const hreflangLinks = `<link rel="alternate" hreflang="${lang}" href="${url}" /><link rel="alternate" hreflang="${altLang}" href="${altUrl}" /><link rel="alternate" hreflang="x-default" href="${xDefaultHref}" />`;
-
   let result = indexHtml
     .replace('<div id="root"></div>', `<div id="root">${renderedHtml}</div>`)
-    .replace('<html lang="es" class="dark">', `<html lang="${htmlLang}" class="dark">`)
     .replace(/<title>[^<]*<\/title>/, `<title>${esc(articleSeo.title)}</title>`)
     .replace(/<meta name="title" content="[^"]*" \/>/, `<meta name="title" content="${esc(articleSeo.title)}" />`)
     .replace(/<meta name="description" content="[^"]*" \/>/, `<meta name="description" content="${esc(articleSeo.description)}" />`)
-    // Remove home hreflang tags before injecting article-specific ones
     .replace(/<link rel="alternate" hreflang="[^"]*" href="[^"]*" \/>\s*/g, '')
-    .replace(/<link rel="canonical" href="[^"]*" \/>/, `<link rel="canonical" href="${url}" />${hreflangLinks}`)
+    .replace(/<link rel="canonical" href="[^"]*" \/>/, `<link rel="canonical" href="${url}" />`)
     .replace(/<meta property="og:type" content="[^"]*" \/>/, '<meta property="og:type" content="article" />')
     .replace(/<meta property="og:url" content="[^"]*" \/>/, `<meta property="og:url" content="${url}" />`)
     .replace(/<meta property="og:title" content="[^"]*" \/>/, `<meta property="og:title" content="${esc(articleSeo.title)}" />`)
     .replace(/<meta property="og:description" content="[^"]*" \/>/, `<meta property="og:description" content="${esc(articleSeo.description)}" />`)
-    .replace(/<meta property="og:locale" content="es_ES" \/>/, `<meta property="og:locale" content="${ogLocale}" />`)
-    .replace(/<meta property="og:locale:alternate" content="en_US" \/>/, `<meta property="og:locale:alternate" content="${ogLocaleAlt}" />`)
     .replace(/<meta name="twitter:url" content="[^"]*" \/>/, `<meta name="twitter:url" content="${url}" />`)
     .replace(/<meta name="twitter:title" content="[^"]*" \/>/, `<meta name="twitter:title" content="${esc(articleSeo.title)}" />`)
     .replace(/<meta name="twitter:description" content="[^"]*" \/>/, `<meta name="twitter:description" content="${esc(articleSeo.description)}" />`)
@@ -369,38 +302,32 @@ function buildArticlePage(
   // Inject article JSON-LD (replace homepage Person/WebSite schema)
   const i18n = i18nMap[config.id];
   if (seoMeta && i18n) {
-    const t = i18n[lang];
-    if (t) {
-      const jsonLd = buildArticleJsonLd({
-        lang,
-        url: `https://cv-joseph.vercel.app/${slug}`,
-        altUrl: `https://cv-joseph.vercel.app/${altSlug}`,
-        headline: t.header.h1,
-        alternativeHeadline: articleSeo.title,
-        description: articleSeo.description,
-        datePublished: seoMeta.datePublished,
-        dateModified: seoMeta.dateModified,
-        keywords: seoMeta.keywords,
-        images: config.heroImage ? [config.heroImage] : seoMeta.images,
-        breadcrumbHome: t.nav.breadcrumbHome,
-        breadcrumbCurrent: t.nav.breadcrumbCurrent,
-        faq: t.faq.items,
-        articleType: seoMeta.articleType,
-        about: seoMeta.about,
-        extra: seoMeta.extra,
-        citation: seoMeta.citation,
-        isBasedOn: seoMeta.isBasedOn,
-        mentions: seoMeta.mentions,
-        discussionUrl: seoMeta.discussionUrl,
-        relatedLink: seoMeta.relatedLink,
-      });
-      const jsonLdScript = `<script type="application/ld+json">\n${JSON.stringify(jsonLd, null, 2)}\n</script>`;
-      // Replace the homepage JSON-LD with article-specific one
-      result = result.replace(
-        /<script type="application\/ld\+json">[\s\S]*?<\/script>/,
-        jsonLdScript,
-      );
-    }
+    const jsonLd = buildArticleJsonLd({
+      url,
+      headline: i18n.header.h1,
+      alternativeHeadline: articleSeo.title,
+      description: articleSeo.description,
+      datePublished: seoMeta.datePublished,
+      dateModified: seoMeta.dateModified,
+      keywords: seoMeta.keywords,
+      images: config.heroImage ? [config.heroImage] : seoMeta.images,
+      breadcrumbHome: i18n.nav.breadcrumbHome,
+      breadcrumbCurrent: i18n.nav.breadcrumbCurrent,
+      faq: i18n.faq.items,
+      articleType: seoMeta.articleType,
+      about: seoMeta.about,
+      extra: seoMeta.extra,
+      citation: seoMeta.citation,
+      isBasedOn: seoMeta.isBasedOn,
+      mentions: seoMeta.mentions,
+      discussionUrl: seoMeta.discussionUrl,
+      relatedLink: seoMeta.relatedLink,
+    });
+    const jsonLdScript = `<script type="application/ld+json">\n${JSON.stringify(jsonLd, null, 2)}\n</script>`;
+    result = result.replace(
+      /<script type="application\/ld\+json">[\s\S]*?<\/script>/,
+      jsonLdScript,
+    );
   }
 
   return result;
@@ -410,7 +337,7 @@ function buildArticlePage(
 const articlePages: ArticlePage[] = [];
 
 for (const config of articleRegistry) {
-  let ArticleComponent: ComponentType<{ lang: 'es' | 'en' }>;
+  let ArticleComponent: ComponentType;
   try {
     const mod = await config.component();
     ArticleComponent = mod.default;
@@ -419,14 +346,8 @@ for (const config of articleRegistry) {
     continue;
   }
 
-  const seen = new Set<string>();
-  for (const lang of ['es', 'en'] as const) {
-    const slug = config.slugs[lang];
-    if (seen.has(slug)) continue; // same slug for both languages
-    seen.add(slug);
-    const html = buildArticlePage(config, lang, ArticleComponent);
-    articlePages.push({ slug, html });
-  }
+  const html = buildArticlePageHtml(config, ArticleComponent);
+  articlePages.push({ slug: config.slug, html });
 }
 
 // ---------------------------------------------------------------------------
@@ -459,14 +380,11 @@ async function writePage(html: string, outputPath: string, label: string) {
 }
 
 async function inlineCriticalCSS() {
-  // Home pages
-  await writePage(injectedEs, indexPath, 'ES: dist/index.html updated');
-  await writePage(enPage, resolve(distDir, 'en', 'index.html'), 'EN: dist/en/index.html created');
+  // Home page
+  await writePage(injectedHome, indexPath, 'Home: dist/index.html updated');
 
-  // About pages
-  for (const { slug, html } of aboutPages) {
-    await writePage(html, resolve(distDir, slug, 'index.html'), `${slug}: dist/${slug}/index.html created`);
-  }
+  // About page
+  await writePage(aboutPage, resolve(distDir, aboutSlug, 'index.html'), `${aboutSlug}: dist/${aboutSlug}/index.html created`);
 
   // Article pages
   for (const { slug, html } of articlePages) {
@@ -514,16 +432,9 @@ function validateHydrationStructure(html: string, label: string) {
   }
 }
 
-// Validate home pages
-validateHydrationStructure(injectedEs, 'home-es');
-validateHydrationStructure(enPage, 'home-en');
-
-// Validate about pages
-for (const { slug, html } of aboutPages) {
-  validateHydrationStructure(html, slug);
-}
-
-// Validate article pages
+// Validate pages
+validateHydrationStructure(injectedHome, 'home');
+validateHydrationStructure(aboutPage, aboutSlug);
 for (const { slug, html } of articlePages) {
   validateHydrationStructure(html, slug);
 }

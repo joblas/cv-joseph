@@ -1,4 +1,4 @@
-import { n8nContent, CLASSIFICATION_PROMPT, type N8nLang } from './n8n-i18n'
+import { n8nContent, CLASSIFICATION_PROMPT } from './n8n-i18n'
 import { buildArticleJsonLd } from './articles/json-ld'
 import { useArticleSeo } from './articles/use-article-seo'
 import {
@@ -24,12 +24,10 @@ import {
   FloatingToc,
 } from './articles/content-types'
 
-function buildJsonLd(lang: N8nLang) {
-  const t = n8nContent[lang]
+function buildJsonLd() {
+  const t = n8nContent
   return buildArticleJsonLd({
-    lang,
     url: `https://cv-joseph.vercel.app/${t.slug}`,
-    altUrl: `https://cv-joseph.vercel.app/${t.altSlug}`,
     headline: t.header.h1 + ' — Cheat Sheet',
     alternativeHeadline: t.seo.title,
     description: t.seo.description,
@@ -65,28 +63,25 @@ function buildJsonLd(lang: N8nLang) {
   })
 }
 
-export default function N8nForPMs({ lang = 'en' }: { lang?: N8nLang }) {
-  const t = n8nContent[lang]
+export default function N8nForPMs() {
+  const t = n8nContent
 
   useArticleSeo({
-    lang,
     slug: t.slug,
-    altSlug: t.altSlug,
     title: t.seo.title,
     description: t.seo.description,
     image: 'https://cv-joseph.vercel.app/workflows/n8n-ai-feedback-classification-workflow.webp',
     publishedTime: '2026-02-24',
     modifiedTime: '2026-04-07',
     articleTags: 'n8n,product manager,automation,AI,workflow,no-code',
-    jsonLd: buildJsonLd(lang),
-    xDefaultSlug: 'n8n-for-pms',
+    jsonLd: buildJsonLd(),
   })
 
   const MASTERCLASS_URL = 'https://maven.com/p/52fc7d/masterclass-n8n-for-p-ms'
   const BOOTCAMP_URL = 'https://maven.com/marily-nika/ai-pm-bootcamp?utm_source=joblas&utm_medium=cheatsheet&utm_campaign=n8n-for-pms'
 
   return (
-    <ArticleLayout lang={lang}>
+    <ArticleLayout>
         <FloatingToc />
         <ArticleHeader
           editorId="hero-header"
@@ -355,7 +350,7 @@ export default function N8nForPMs({ lang = 'en' }: { lang?: N8nLang }) {
           <ResourcesList heading={t.resources.heading} items={t.resources.items} />
         </article>
 
-        <ArticleFooter editorId="article-footer" lang={lang} utmCampaign="n8n-for-pms" />
+        <ArticleFooter editorId="article-footer" utmCampaign="n8n-for-pms" />
     </ArticleLayout>
   )
 }

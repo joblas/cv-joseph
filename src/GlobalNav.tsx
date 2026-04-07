@@ -1,20 +1,13 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { Sun, Moon, House, X, ChevronRight } from 'lucide-react'
-import { translations } from './i18n'
+import { Link, useLocation } from 'react-router-dom'
+import { Sun, Moon, House, ChevronRight } from 'lucide-react'
 import { getPageTitles, getSectionLabels } from './articles/registry'
 
 /**
  * GlobalNav — unified navigation across all pages.
  *
- * The translucent bar is a "contextual message container" that appears
- * when there's something to communicate:
- * - Inner pages: permanent "← cv-joseph" back link
- * - Any page: temporary language suggestion when browser lang ≠ page lang
- *
- * Language suggestion is right-aligned, next to the lang pill, reinforcing
- * the connection. Controls always live inside the bar when it's visible;
- * when there's no bar (home, no banner), controls float fixed at top-6 right-6.
+ * Inner pages show a translucent bar with breadcrumb navigation.
+ * Home page shows floating controls at top-right.
  */
 
 const PAGE_TITLE = getPageTitles()
@@ -77,10 +70,9 @@ function useActiveSection(pathname: string, enabled: boolean) {
 
 function useLang() {
   const { pathname } = useLocation()
-  const isHome = pathname === '/' || pathname === '/en'
-  const lang: 'es' | 'en' = 'en'
+  const isHome = pathname === '/'
   const pageTitle = PAGE_TITLE[pathname] ?? null
-  return { pathname, isHome, lang, pageTitle }
+  return { pathname, isHome, pageTitle }
 }
 
 function useTheme() {
@@ -148,17 +140,9 @@ function NavControls({ isDark, toggleTheme }: {
 }
 
 export default function GlobalNav() {
-  const { pathname, isHome, lang, pageTitle } = useLang()
+  const { pathname, isHome, pageTitle } = useLang()
   const { isDark, toggleTheme } = useTheme()
-  const showBanner = false
-  const dismiss = () => {}
-  const animateBanner = false
-  const navigate = useNavigate()
   const activeSection = useActiveSection(pathname, !isHome)
-
-  const altPath = '/'
-
-  const t = translations[lang]
   const hasBar = !isHome
 
   // Breadcrumb: show active section label or fall back to page title
@@ -178,37 +162,11 @@ export default function GlobalNav() {
   const animateBackLink = !isHome && !backLinkShown.current
   if (!isHome) backLinkShown.current = true
 
-  const switchLang = () => {
-    dismiss()
-    navigate(altPath)
-  }
 
   const controls = <NavControls isDark={isDark} toggleTheme={toggleTheme} />
 
   const fade = (duration: string) => ({ animation: `nav-fade-in ${duration} ease-out` })
 
-  // Banner message (right-aligned, near lang pill)
-  const bannerMessage = showBanner ? (
-    <div
-      className="flex items-center gap-2.5 text-sm"
-      style={animateBanner ? fade('0.4s') : undefined}
-    >
-      <span className="text-muted-foreground hidden lg:inline">{t.ui.languageBanner}</span>
-      <button
-        onClick={switchLang}
-        className="inline-flex items-center gap-1 font-medium text-primary hover:text-primary/80 transition-colors"
-      >
-        {t.ui.languageBannerSwitchPrefix} {t.ui.languageBannerSwitchLang}
-      </button>
-      <button
-        onClick={dismiss}
-        className="text-muted-foreground hover:text-foreground transition-colors"
-        aria-label="Dismiss"
-      >
-        <X className="w-3.5 h-3.5" />
-      </button>
-    </div>
-  ) : null
 
   // Bar visible: controls (+ optional banner) inside it
   if (hasBar) {
@@ -256,9 +214,8 @@ export default function GlobalNav() {
               </nav>
             )}
           </div>
-          {/* Right: banner + controls on same line */}
+          {/* Right: controls */}
           <div className="flex items-center gap-3 shrink-0">
-            {bannerMessage}
             {controls}
           </div>
         </div>
@@ -270,19 +227,8 @@ export default function GlobalNav() {
   if (!hydrated) return null
 
   return (
-    <>
-      {/* Translucent bar — appears/disappears without moving controls */}
-      {showBanner && (
-        <div
-          className="fixed top-0 left-0 right-0 z-40 bg-background/80 backdrop-blur-md border-b border-border"
-          style={{ height: 'calc(1rem + 2.5rem + 0.75rem)', ...(animateBanner ? fade('0.35s') : {}) }}
-        />
-      )}
-      {/* Controls + banner — always at same fixed position */}
-      <div className="fixed top-4 right-6 z-50 flex items-center gap-3">
-        {bannerMessage}
-        {controls}
-      </div>
-    </>
+    <div className="fixed top-4 right-6 z-50 flex items-center gap-3">
+      {controls}
+    </div>
   )
 }

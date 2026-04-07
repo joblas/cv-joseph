@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback, useMemo, useReducer, useRef } from 'react'
-import { useLocation, Link } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'motion/react'
 import { Mail, ExternalLink, Briefcase, GraduationCap, Award, Code, Users, Globe, Bot, Zap, Database, Layout, BadgeCheck, FolderGit2, Sparkles, Download, Github, Package, MessageSquare, Receipt, CalendarCheck, Shield, FileText, GitBranch, GitFork, Star, Terminal, Lock, Network, Calendar, Percent, UserCheck, Image, TrendingUp, Timer, SkipForward, ThumbsUp, MessageCircle, Share2, ChevronRight, List, ArrowUp } from 'lucide-react'
-import { translations, seo, type Lang } from './i18n'
+import { translations, seo } from './i18n'
 import { useHomeSeo } from './articles/use-article-seo'
 import { getTechIcon } from './tech-icons'
 
@@ -263,7 +263,7 @@ const HOME_TOC_SECTIONS = [
   { id: 'contact', es: 'Contact', en: 'Contact' },
 ] as const
 
-function HomeToc({ lang }: { lang: Lang }) {
+function HomeToc() {
   const [hasRevealed, setHasRevealed] = useState(false)
   const [visible, setVisible] = useState(false)
   const [activeId, setActiveId] = useState('')
@@ -358,7 +358,7 @@ function HomeToc({ lang }: { lang: Lang }) {
                   : 'text-muted-foreground/60 hover:text-foreground/80'
                 }`}
               >
-                {section[lang]}
+                {section.en}
               </button>
             </li>
           )
@@ -1148,7 +1148,7 @@ function ReflectiveTypewriter({
 }
 
 // Story section with typewriter and animations
-function StorySection({ t }: { t: (typeof translations)[Lang] }) {
+function StorySection({ t }: { t: typeof translations }) {
   const [typewriterComplete, setTypewriterComplete] = useState(false)
   const [textDimmed, setTextDimmed] = useState(false)
   const [finalReveal, setFinalReveal] = useState(false)  // Tipo C se enciende con gradiente
@@ -1412,17 +1412,14 @@ function CertLogo({ logo }: { logo: string }) {
 }
 
 function App() {
-  const location = useLocation()
-  const lang: Lang = location.pathname === '/en' ? 'en' : 'es'
-  const t = translations[lang]
+  const t = translations
   const hydrated = useHydrated()
   useHeroStyles()
   const { displayText: roleText, roleIndex } = useTypewriterRotation(t.greetingRoles)
 
 
-  // SEO: Dynamic meta tags based on language
-  const seoData = seo[lang]
-  useHomeSeo({ lang, title: seoData.title, description: seoData.description })
+  const seoData = seo
+  useHomeSeo({ title: seoData.title, description: seoData.description })
 
   return (
     <main className="min-h-screen bg-background bg-[length:24px_24px] [background-image:radial-gradient(circle,hsl(var(--dot-grid))_1px,transparent_1px)]">
@@ -1431,10 +1428,10 @@ function App() {
         href="#main-content"
         className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:rounded-lg focus:bg-primary focus:text-primary-foreground focus:font-medium focus:shadow-lg"
       >
-        {lang === 'en' ? 'Skip to content' : 'Saltar al contenido'}
+        Skip to content
       </a>
 
-      <HomeToc lang={lang} />
+      <HomeToc />
 
       {/* Hero Section */}
       <header id="main-content" className="relative overflow-hidden">
@@ -2181,7 +2178,7 @@ function App() {
                 clearTimeout(initialTimeout)
                 clearTimeout(resizeTimeout)
               }
-            }, [isVisible, lang])
+            }, [isVisible])
 
             // Componente de tarjeta de proyecto
             const ProjectCard = ({ project, variant = 'default', cardRef }: {

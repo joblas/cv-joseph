@@ -1,5 +1,4 @@
 import { type ReactNode } from 'react'
-import { type N8nLang as Lang } from './n8n-i18n'
 import { buildArticleJsonLd } from './articles/json-ld'
 import { useArticleSeo } from './articles/use-article-seo'
 import { Compass, Mic, CalendarDays, Receipt, Package, Calculator, HandHelping, Smartphone, MessageCircle, PhoneMissed, Download } from 'lucide-react'
@@ -98,12 +97,10 @@ const AGENT_ICONS: Record<string, React.ComponentType<{ className?: string }>> =
 // ---------------------------------------------------------------------------
 // buildJsonLd
 // ---------------------------------------------------------------------------
-function buildJsonLd(lang: Lang) {
-  const t = jacoboContent[lang]
+function buildJsonLd() {
+  const t = jacoboContent
   return buildArticleJsonLd({
-    lang,
     url: `https://cv-joseph.vercel.app/${t.slug}`,
-    altUrl: `https://cv-joseph.vercel.app/${t.altSlug}`,
     headline: t.header.h1,
     alternativeHeadline: t.seo.title,
     description: t.seo.description,
@@ -135,27 +132,24 @@ function buildJsonLd(lang: Lang) {
 // ===========================================================================
 // MAIN COMPONENT
 // ===========================================================================
-export default function JacoboAgent({ lang = 'en' }: { lang?: Lang }) {
-  const t = jacoboContent[lang]
+export default function JacoboAgent() {
+  const t = jacoboContent
   const wfById = Object.fromEntries(t.downloads.workflows.map(w => [w.id, w]))
 
   useArticleSeo({
-    lang,
     slug: t.slug,
-    altSlug: t.altSlug,
     title: t.seo.title,
     description: t.seo.description,
     image: 'https://cv-joseph.vercel.app/jacobo/og-jacobo-agent.webp',
     publishedTime: '2026-02-25',
     modifiedTime: '2026-04-07',
     articleTags: 'AI agent,multi-agent,n8n,ElevenLabs,HITL,tool calling,WhatsApp,voice AI',
-    jsonLd: buildJsonLd(lang),
-    xDefaultSlug: 'ai-agent-jacobo',
+    jsonLd: buildJsonLd(),
   })
 
   // ---- Render ----
   return (
-    <ArticleLayout lang={lang}>
+    <ArticleLayout>
       <FloatingToc />
       <ArticleHeader editorId="hero-header" kicker={t.header.kicker} h1={t.header.h1} subtitle={t.header.subtitle} date={t.header.date} readingTime={t.readingTime} />
 
@@ -284,13 +278,13 @@ export default function JacoboAgent({ lang = 'en' }: { lang?: Lang }) {
         <Callout editorId="memory-punchline">{t.sections.architecture.memory.punchline}</Callout>
 
         {/* Memory screenshots */}
-        <ScreenshotGrid editorId="memory-animals-cities" lang={lang} items={[
+        <ScreenshotGrid editorId="memory-animals-cities" items={[
           { src: 'memory-animals.webp', altEn: 'Memory test: Dog, Cat, Elephant — Jacobo recalls all three', width: 1170, height: 2532 },
           { src: 'memory-cities.webp', altEn: 'Cities test: Seville, Madrid, Barcelona — correct recall', width: 1170, height: 2532 },
           { src: 'memory-cities-correction.webp', altEn: `Self-correction: "You're right, I said Seville, not Valencia" — Jacobo self-corrects`, width: 1170, height: 2532 },
         ]} />
         <ScreenshotCaption editorId="memory-animals-cities-caption" en="Episodic memory tests: animals, cities and self-correction when Jacobo forgets Barcelona" />
-        <ScreenshotGrid editorId="memory-brands-preferences" lang={lang} items={[
+        <ScreenshotGrid editorId="memory-brands-preferences" items={[
           { src: 'memory-brands.webp', altEn: 'Brand test: Apple, Samsung, Huawei — correct recall', width: 1170, height: 2532 },
           { src: 'memory-lost-appointment.webp', altEn: 'Customer lost the conversation — Jacobo recalls the full appointment', width: 1170, height: 2532 },
           { src: 'memory-preference.webp', altEn: 'Re-negotiation: Jacobo recalls time preference → no slot at 12 → suggests alternatives', width: 1170, height: 2532 },
@@ -300,7 +294,7 @@ export default function JacoboAgent({ lang = 'en' }: { lang?: Lang }) {
         {/* Production debug tools */}
         <H4>{t.sections.architecture.debugTools.heading}</H4>
         <Prose editorId="debug-tools-body">{t.sections.architecture.debugTools.body}</Prose>
-        <ScreenshotGrid editorId="debug-tools-screenshots" lang={lang} items={[
+        <ScreenshotGrid editorId="debug-tools-screenshots" items={[
           { src: 'debug-json-dump.webp', altEn: 'HISTORIAL command: raw JSON from memory buffer exposed in chat', width: 1170, height: 2532 },
           { src: 'stress-test-112.webp', altEn: 'BORRAR MEMORIA command: full conversational buffer reset', width: 1170, height: 2532 },
         ]} />
@@ -356,7 +350,7 @@ export default function JacoboAgent({ lang = 'en' }: { lang?: Lang }) {
 
         <DiagramZoom editorId="aircall-dashboard" src="/jacobo/aircall-dashboard.webp" hdSrc="/jacobo/aircall-dashboard-2x.webp" alt={'Aircall dashboard — call distribution tree with Jacobo as a PBX node'} caption={'Actual call distribution tree in Aircall — Jacobo plugged in as another PBX node'} width={1348} height={868} hdWidth={2512} hdHeight={1312} className="mb-4" />
 
-        <ScreenshotGrid editorId="missed-call-flow" lang={lang} items={[
+        <ScreenshotGrid editorId="missed-call-flow" items={[
           { src: 'missed-call-template.webp', altEn: 'WhatsApp template after missed call: buttons Get a quote, Book appointment', width: 1170, height: 2532 },
           { src: 'missed-call-hitl.webp', altEn: 'Customer picks "Call me back" → Jacobo escalates to HITL and confirms notification', width: 1170, height: 2532 },
         ]} />
@@ -367,7 +361,7 @@ export default function JacoboAgent({ lang = 'en' }: { lang?: Lang }) {
         <Prose editorId="unified-voice-ux-body">{t.sections.channels.unifiedVoiceUx.body}</Prose>
         <Callout editorId="unified-voice-punchline">{(t.sections.channels.unifiedVoiceUx as any).punchline}</Callout>
         <Prose editorId="unified-voice-audio-intro">{(t.sections.channels.unifiedVoiceUx as any).audioIntro}</Prose>
-        <AudioPlayer editorId="pbx-audio" items={(t.sections.channels.unifiedVoiceUx as any).audios} lang={lang} />
+        <AudioPlayer editorId="pbx-audio" items={(t.sections.channels.unifiedVoiceUx as any).audios} />
         <DiagramZoom editorId="aircall-dashboard-detail" src="/jacobo/aircall-dashboard-detail.webp" hdSrc="/jacobo/aircall-dashboard-detail-2x.webp" alt={'Aircall detail: welcome and IVR audio generated with ElevenLabs using Jacobo\'s voice'} caption={'The "ElevenLabs" nodes are pre-recorded audio using Jacobo\'s same voice: welcome, IVR and voicemail. When the live agent picks up, the voice is identical'} width={1392} height={912} hdWidth={2512} hdHeight={1312} className="mb-4" />
 
         {/* Event routing / Pre-filtering */}
@@ -421,7 +415,7 @@ export default function JacoboAgent({ lang = 'en' }: { lang?: Lang }) {
         {/* Wait message */}
         <H4>{t.sections.toolCalling.waitMessage.heading}</H4>
         <Prose editorId="wait-message-body">{t.sections.toolCalling.waitMessage.body}</Prose>
-        <ScreenshotGrid editorId="email-formal-flow" lang={lang} items={[
+        <ScreenshotGrid editorId="email-formal-flow" items={[
           { src: 'email-formal-1.webp', altEn: 'Jacobo responds as formal email: subject line, greeting, Huawei P20 Pro quote', width: 1170, height: 2532 },
           { src: 'email-formal-2.webp', altEn: 'Email: battery + charging port = €85.80 → combo discount €70.80', width: 1170, height: 2532 },
           { src: 'email-formal-3.webp', altEn: 'Signature: "Best regards, Jacobo — Santifer iRepair — address + phone + email"', width: 1170, height: 2532 },
@@ -458,7 +452,7 @@ export default function JacoboAgent({ lang = 'en' }: { lang?: Lang }) {
         <CodeBlock editorId="business-hours-code">{t.sections.promptEngineering.businessHours.code}</CodeBlock>
 
         {/* Business hours screenshots */}
-        <ScreenshotGrid editorId="business-hours-screenshots" lang={lang} items={[
+        <ScreenshotGrid editorId="business-hours-screenshots" items={[
           { src: 'hours-closed.webp', altEn: '"Are you open?" at 11:56 → "The shop is closed" with full schedule', width: 1170, height: 2532 },
           { src: 'hours-open.webp', altEn: `"Are you open?" at 13:12 → "Yes! We're open right now"`, width: 1170, height: 2532 },
         ]} />
@@ -482,7 +476,7 @@ export default function JacoboAgent({ lang = 'en' }: { lang?: Lang }) {
         <CardStack editorId="iteration-examples" items={t.sections.promptEngineering.iterationExamples.items.map(item => ({ title: item.rule, detail: item.origin }))} className="mb-6" />
 
         {/* Diagnostic screenshots */}
-        <ScreenshotGrid editorId="diagnostic-iteration" lang={lang} items={[
+        <ScreenshotGrid editorId="diagnostic-iteration" items={[
           { src: 'diagnostic-free-1.webp', altEn: 'Jacobo says "completely free diagnosis" — incorrect simplification', width: 1170, height: 2532 },
           { src: 'diagnostic-correction.webp', altEn: `Self-correction: "€19 only if you don't repair with us" — the real policy`, width: 1170, height: 2532 },
         ]} />
@@ -535,7 +529,7 @@ export default function JacoboAgent({ lang = 'en' }: { lang?: Lang }) {
         <Callout editorId="booking-punchline">{t.sections.deepDiveBooking.punchline}</Callout>
 
         {/* Booking screenshots */}
-        <ScreenshotGrid editorId="booking-flow" lang={lang} items={[
+        <ScreenshotGrid editorId="booking-flow" items={[
           { src: 'booking-nl-1.webp', altEn: 'Booking: email → confirmed appointment + WhatsApp confirmation template', width: 1170, height: 2532 },
           { src: 'booking-nl-2.webp', altEn: 'Booking with refinement: "no, Thursday instead" → new search', width: 1170, height: 2532 },
           { src: 'booking-confirmation.webp', altEn: 'Booking: "Book me an appointment" → tomorrow availability → "At 17"', width: 1170, height: 2532 },
@@ -597,7 +591,7 @@ export default function JacoboAgent({ lang = 'en' }: { lang?: Lang }) {
         <CodeBlock editorId="quotes-prompt-code" segments={t.sections.deepDiveQuotes.presupuestoPrompt.segments} />
 
         {/* Quote screenshots */}
-        <ScreenshotGrid editorId="quotes-real-examples" lang={lang} items={[
+        <ScreenshotGrid editorId="quotes-real-examples" items={[
           { src: 'resolution-camera-lens.webp', altEn: 'iPhone 13 Mini broken lens → diagnosis + price €55.90 + link', width: 1170, height: 2532 },
           { src: 'quote-triple-1.webp', altEn: 'Triple quote: battery + charging port + back glass iPhone 13', width: 1170, height: 2532 },
           { src: 'quote-triple-2.webp', altEn: 'Itemized quote: 3 repairs totaling €255.70 with stock status', width: 1170, height: 2532 },
@@ -639,13 +633,13 @@ export default function JacoboAgent({ lang = 'en' }: { lang?: Lang }) {
         <BulletList editorId="hitl-details" items={t.sections.deepDiveOthers.hitl.details} />
 
         {/* HITL screenshots */}
-        <ScreenshotGrid editorId="hitl-escalation" lang={lang} items={[
+        <ScreenshotGrid editorId="hitl-escalation" items={[
           { src: 'hitl-warranty.webp', altEn: 'HITL: warranty claim → immediate escalation to human team', width: 1170, height: 2532 },
           { src: 'hitl-slack-chat.webp', altEn: '#chat Slack channel: HITL escalation notification with customer context', width: 540, height: 1217 },
         ]} />
         <ScreenshotCaption editorId="hitl-escalation-caption" en="When Jacobo escalates to a human, a message arrives in the #chat Slack channel with the full conversation context" />
 
-        <ScreenshotGrid editorId="hitl-edge-cases" lang={lang} items={[
+        <ScreenshotGrid editorId="hitl-edge-cases" items={[
           { src: 'hitl-moha.webp', altEn: 'Edge case: "Tell an agent to greet Moha" → Jacobo escalates with wave emojis → real agent confirms "Done"', width: 1170, height: 2532 },
           { src: 'stress-test-1.webp', altEn: 'Guardrail: "Order 100 batteries" → rejection + profanity → automatic escalation to human', width: 1170, height: 2532 },
           { src: 'stress-test-112.webp', altEn: '"Borrar memoria" → reset + "3,2,1..." + fake emergency → Jacobo redirects to 112 and keeps composure', width: 1170, height: 2532 },
@@ -747,7 +741,7 @@ export default function JacoboAgent({ lang = 'en' }: { lang?: Lang }) {
         />
 
         {/* Early Jacobo screenshots */}
-        <ScreenshotGrid editorId="evolution-birth-screenshots" lang={lang} items={[
+        <ScreenshotGrid editorId="evolution-birth-screenshots" items={[
           { src: 'birth-first-test.webp', altEn: 'First Jacobo test: basic test message', width: 1170, height: 2532 },
           { src: 'birth-loyalty-iteration.webp', altEn: 'Loyalty iteration: improved agent responses', width: 1170, height: 2532 },
           { src: 'loyalty-diamond-template.webp', altEn: 'Diamond template: automated loyalty program', width: 1170, height: 2532 },
@@ -866,7 +860,7 @@ export default function JacoboAgent({ lang = 'en' }: { lang?: Lang }) {
         <ResourcesList editorId="resources" heading={t.resources.heading} items={t.resources.items} />
       </article>
 
-      <ArticleFooter editorId="article-footer" lang={lang} utmCampaign="jacobo" />
+      <ArticleFooter editorId="article-footer" utmCampaign="jacobo" />
     </ArticleLayout>
   )
 }
