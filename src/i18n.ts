@@ -163,7 +163,7 @@ const _translationsEn = {
       },
       {
         title: 'The Skate Workshop',
-        badge: 'in Beta',
+        badge: 'In Beta',
         badgeBuilding: '',
         desc: 'Full-stack React Native mobile app for Olympic-level skateboarding coach. 40+ Supabase tables, 18+ Edge Functions, Stripe Connect marketplace, multiplayer SKATE game mode, real-time features.',
         tech: ['React Native', 'TypeScript', 'Supabase', 'Stripe Connect', 'Expo'],
@@ -254,8 +254,8 @@ const _translationsEn = {
       period: '2023 - Present · AI / Software',
       caseStudyUrl: '/openclaw',
       caseStudyLabel: 'Case Study: OpenClaw System',
-      exit: '',
-      exitDesc: '',
+      exit: 'Real AI For Real Businesses',
+      exitDesc: 'Specializing in private AI setups and multi-agent workflows for SMBs. Delivering 100% local, self-hosted LLMs that process sensitive data without ever leaving the client\'s servers.',
       highlights: [
         'Built and operate 22-agent AI system handling real business operations',
         'Develop private AI solutions for SMB clients using Ollama, Open WebUI, and n8n',
@@ -369,7 +369,7 @@ const _translationsEn = {
       gpts: {
         title: 'Skate Workshop',
         desc: 'React Native app with 40+ tables, 18+ Edge Functions, Stripe Connect',
-        metric: 'in Beta',
+        metric: 'In Beta',
         caseStudyUrl: '',
       },
       reservas: {
@@ -397,6 +397,12 @@ const _translationsEn = {
       role: 'Program Manager L4 / Fleet Vehicle Technician',
       period: '2009 - 2016 · Autonomous Vehicles',
       desc: "Built Google's Firefly autonomous vehicle from the ground up. Drive-by-wire SME across the first 100 vehicles and 10 hardware iterations. Managed sensor calibration for the entire fleet — final release authority before vehicles went to public roads. Reduced calibration from 9 hours to 60 minutes (promoted to L4). Traveled to Roush (Detroit) to train manufacturing teams.",
+      press: [
+        { title: "World's First Fully Driverless Ride on Public Roads (2015)", publisher: 'YouTube', url: 'https://www.youtube.com/watch?v=cdgQpa1pUUE&t=4s' },
+        { title: "Google's Self-Driving Cars Have Driven Over 1 Million Miles", publisher: 'VentureBeat', url: 'https://venturebeat.com/ai/googles-self-driving-cars-have-driven-over-1-million-miles' },
+        { title: 'Waymo: The Self-Driving Car Project', publisher: 'X (Google X)', url: 'https://x.company/projects/waymo/' },
+        { title: 'Google Self-Driving Car: 300,000 Miles and Counting', publisher: 'CNET', url: 'https://www.cnet.com/science/google-self-driving-car-300000-miles-and-counting/' },
+      ],
       testimonial: {
         quote:
           "Supported the world's first fully driverless ride on public roads (2015) — a blind passenger was the first user.",

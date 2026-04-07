@@ -1937,6 +1937,24 @@ function App() {
               <p className="text-sm text-muted-foreground mb-4">{t.experience.lico.period}</p>
               <p className="text-muted-foreground">{t.experience.lico.desc}</p>
 
+              {/* Press coverage */}
+              {t.experience.lico.press.length > 0 && (
+                <div className="flex flex-wrap gap-3 mt-4">
+                  {t.experience.lico.press.map((article: { title: string; publisher: string; url: string }) => (
+                    <a
+                      key={article.url}
+                      href={article.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-card border border-border text-xs text-muted-foreground hover:text-foreground hover:border-accent/30 transition-all"
+                    >
+                      <Newspaper className="w-3 h-3 text-accent shrink-0" />
+                      <span>{article.publisher}</span>
+                    </a>
+                  ))}
+                </div>
+              )}
+
               {/* Testimonial */}
               <a href="https://www.linkedin.com/in/joseph-blas/" target="_blank" rel="noopener noreferrer" className="block group">
                 <blockquote className="mt-6 p-4 rounded-xl bg-accent/5 border border-accent/10 group-hover:border-[hsl(var(--linkedin)/0.3)] transition-colors">
