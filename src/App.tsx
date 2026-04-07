@@ -1923,24 +1923,24 @@ function App() {
                   <div className="w-10 h-10 rounded-xl overflow-hidden bg-white flex items-center justify-center shrink-0">
                     <picture>
                       <source srcSet="/logo-waymo.webp" type="image/webp" />
-                      <img src="/logo-waymo.png" alt={t.experience.lico.company} className="w-full h-full object-contain p-1" width={40} height={40} loading="lazy" decoding="async" />
+                      <img src="/logo-waymo.png" alt={t.experience.google.company} className="w-full h-full object-contain p-1" width={40} height={40} loading="lazy" decoding="async" />
                     </picture>
                   </div>
-                  <h3 className="font-display text-2xl font-bold">{t.experience.lico.company}</h3>
+                  <h3 className="font-display text-2xl font-bold">{t.experience.google.company}</h3>
                 </div>
                 <a href="https://waymo.com" target="_blank" rel="noopener noreferrer nofollow" className="text-sm text-accent hover:underline flex items-center gap-1">
                   waymo.com <ExternalLink className="w-3 h-3" aria-hidden="true" />
                 </a>
-                <span className="text-sm text-muted-foreground">{t.experience.lico.location}</span>
+                <span className="text-sm text-muted-foreground">{t.experience.google.location}</span>
               </div>
-              <p className="text-accent font-medium mb-1">{t.experience.lico.role}</p>
-              <p className="text-sm text-muted-foreground mb-4">{t.experience.lico.period}</p>
-              <p className="text-muted-foreground">{t.experience.lico.desc}</p>
+              <p className="text-accent font-medium mb-1">{t.experience.google.role}</p>
+              <p className="text-sm text-muted-foreground mb-4">{t.experience.google.period}</p>
+              <p className="text-muted-foreground">{t.experience.google.desc}</p>
 
               {/* Press coverage */}
-              {t.experience.lico.press.length > 0 && (
+              {t.experience.google.press.length > 0 && (
                 <div className="flex flex-wrap gap-3 mt-4">
-                  {t.experience.lico.press.map((article: { title: string; publisher: string; url: string }) => (
+                  {t.experience.google.press.map((article: { title: string; publisher: string; url: string }) => (
                     <a
                       key={article.url}
                       href={article.url}
@@ -1959,15 +1959,15 @@ function App() {
               <a href="https://www.linkedin.com/in/joseph-blas/" target="_blank" rel="noopener noreferrer" className="block group">
                 <blockquote className="mt-6 p-4 rounded-xl bg-accent/5 border border-accent/10 group-hover:border-[hsl(var(--linkedin)/0.3)] transition-colors">
                   <p className="text-sm text-muted-foreground italic mb-4">
-                    "{t.experience.lico.testimonial.quote}"
+                    "{t.experience.google.testimonial.quote}"
                   </p>
                   <footer className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center shrink-0">
                       <Zap className="w-5 h-5 text-accent" />
                     </div>
                     <div className="flex-1">
-                      <span className="text-sm font-medium text-foreground block">{t.experience.lico.testimonial.author}</span>
-                      <span className="text-xs text-muted-foreground">{t.experience.lico.testimonial.role}</span>
+                      <span className="text-sm font-medium text-foreground block">{t.experience.google.testimonial.author}</span>
+                      <span className="text-xs text-muted-foreground">{t.experience.google.testimonial.role}</span>
                     </div>
                     <LinkedInLogo className="w-4 h-4 text-[hsl(var(--linkedin))]" />
                   </footer>

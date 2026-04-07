@@ -391,7 +391,7 @@ const _translationsEn = {
         caseStudyUrl: '',
       },
     },
-    lico: {
+    google: {
       company: 'Google Self-Driving Car Project (Waymo)',
       location: 'Mountain View, CA',
       role: 'Program Manager L4 / Fleet Vehicle Technician',
