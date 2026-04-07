@@ -254,8 +254,8 @@ const _translationsEn = {
       period: '2023 - Present · AI / Software',
       caseStudyUrl: '/openclaw',
       caseStudyLabel: 'Case Study: OpenClaw System',
-      exit: '',
-      exitDesc: '',
+      exit: 'GREEN LIGHTING — 2025',
+      exitDesc: 'Successfully built, scaled, and exited my venture. Sold the systems, team, and brand. Now returning to my roots in complex engineering.',
       highlights: [
         'Built and operate 22-agent AI system handling real business operations',
         'Develop private AI solutions for SMB clients using Ollama, Open WebUI, and n8n',
@@ -368,7 +368,7 @@ const _translationsEn = {
       },
       gpts: {
         title: 'Skate Workshop',
-        desc: 'React Native app with 40+ tables, 18+ Edge Functions, Stripe Connect',
+        desc: 'React Native app with 40+ tables, 18+ Edge Functions, Stripe Connect. **The tech that scales.**',
         metric: 'In prod',
         caseStudyUrl: '',
       },
