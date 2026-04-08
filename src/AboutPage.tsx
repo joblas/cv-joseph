@@ -20,33 +20,34 @@ export default function AboutPage() {
 
     let canonical = document.querySelector('link[rel="canonical"]') as HTMLLinkElement
     if (!canonical) { canonical = document.createElement('link'); canonical.rel = 'canonical'; document.head.appendChild(canonical) }
-    canonical.href = `https://cv-joseph.vercel.app/${t.slug}`
+    canonical.href = `https://cloudyjoe.com/${t.slug}`
 
     let script = document.querySelector('script[data-about-jsonld]') as HTMLScriptElement
     if (!script) { script = document.createElement('script'); script.type = 'application/ld+json'; script.dataset.aboutJsonld = ''; document.head.appendChild(script) }
     script.textContent = JSON.stringify({
       '@context': 'https://schema.org',
       '@type': 'ProfilePage',
-      dateModified: '2026-03-27',
+      dateModified: '2026-04-07',
       mainEntity: {
         '@type': 'Person',
-        '@id': 'https://cv-joseph.vercel.app/#person',
+        '@id': 'https://cloudyjoe.com/#person',
         name: 'Joseph Blas',
         alternateName: ['Joe Blas'],
         url: 'https://joestechsolutions.com',
-        image: 'https://cv-joseph.vercel.app/foto-avatar.png',
+        image: 'https://cloudyjoe.com/foto-avatar.png',
         email: 'blasj408@gmail.com',
         jobTitle: ['AI Developer', 'AV Systems Veteran', 'Multi-Agent Systems'],
         knowsAbout: [
           { '@type': 'Thing', name: 'Artificial Intelligence', url: 'https://en.wikipedia.org/wiki/Artificial_intelligence' },
-          { '@type': 'Thing', name: 'Machine Learning', url: 'https://en.wikipedia.org/wiki/Machine_learning' },
+          { '@type': 'Thing', name: 'Autonomous Vehicle', url: 'https://en.wikipedia.org/wiki/Self-driving_car' },
           { '@type': 'Thing', name: 'Multi-Agent System', url: 'https://en.wikipedia.org/wiki/Multi-agent_system' },
-          { '@type': 'Thing', name: 'Retrieval-Augmented Generation', url: 'https://en.wikipedia.org/wiki/Retrieval-augmented_generation' },
-          { '@type': 'Thing', name: 'No-code development platform', url: 'https://en.wikipedia.org/wiki/No-code_development_platform' },
-          { '@type': 'Thing', name: 'Prompt Engineering' },
-          { '@type': 'SoftwareApplication', name: 'Airtable', url: 'https://airtable.com' },
+          { '@type': 'Thing', name: 'DevOps', url: 'https://en.wikipedia.org/wiki/DevOps' },
+          { '@type': 'Thing', name: 'Sensor Calibration' },
+          { '@type': 'Thing', name: 'Drive-by-Wire Systems' },
           { '@type': 'SoftwareApplication', name: 'n8n', url: 'https://n8n.io' },
           { '@type': 'SoftwareApplication', name: 'Claude API', url: 'https://docs.anthropic.com' },
+          { '@type': 'SoftwareApplication', name: 'Terraform', url: 'https://www.terraform.io' },
+          { '@type': 'SoftwareApplication', name: 'Kubernetes', url: 'https://kubernetes.io' },
         ],
         hasCredential: [],
         alumniOf: [],
