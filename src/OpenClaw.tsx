@@ -10,7 +10,6 @@ import {
   LessonsSection,
   MetricsGrid,
   StatusBadge,
-  CaseStudyCta,
 } from './articles/components'
 import {
   H2,
