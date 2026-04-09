@@ -248,14 +248,6 @@ export default function OpenClaw() {
           }))}
         />
 
-        {/* Cross-link CTA */}
-        <CaseStudyCta
-          heading="Want to see another multi-agent system?"
-          body="Career-Ops uses a similar multi-agent architecture for AI-powered job search: batch processing, 10D scoring, ATS-optimized CVs. Open source."
-          ctaLabel="Read Career-Ops Case Study"
-          ctaHref="/career-ops-system"
-        />
-
         {/* Lessons */}
         <LessonsSection heading={t.lessons.heading} items={t.lessons.items} />
 

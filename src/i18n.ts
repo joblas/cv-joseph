@@ -170,16 +170,6 @@ const _translationsEn = {
         link: 'theskateworkshop.app',
       },
       {
-        title: 'Career Ops',
-        badge: 'Open Source',
-        badgeBuilding: '',
-        desc: 'AI-powered job search pipeline. Evaluates offers with scoring, generates ATS-optimized CVs, pre-fills applications. Built on Claude Code.',
-        tech: ['Claude Code', 'Puppeteer', 'Playwright', 'Node.js', 'HITL Design'],
-        link: 'github.com/joblas/career-ops',
-        caseStudyUrl: '',
-        caseStudyLabel: '',
-      },
-      {
         title: 'cv-joseph',
         badge: 'This Portfolio',
         badgeBuilding: '',
@@ -262,7 +252,7 @@ const _translationsEn = {
         'Ship production web and mobile apps: React, Next.js, React Native, TypeScript, Supabase',
         'Created Whisper Walkie — open source push-to-talk voice typing tool (100% local processing)',
         'Built The Skate Workshop — React Native app for Olympic coach (40+ tables, Stripe Connect)',
-        'Career Ops — AI-powered job search pipeline (open source)',
+        'Cloud Infrastructure — Terraform multicloud (AWS/GCP), Kubernetes, Anthos/GKE',
       ],
       trustedBy: {
         label: 'Key technologies',
@@ -348,10 +338,6 @@ const _translationsEn = {
             text: 'DALL-E Image Generator: web app with OpenAI DALL-E 3.0 API',
           },
           {
-            icon: 'trendingUp',
-            text: 'Career Ops: AI job search pipeline (open source)',
-          },
-          {
             icon: 'gitBranch',
             text: 'Cloud Infrastructure: Terraform multicloud (AWS/GCP), K8s',
           },
@@ -379,10 +365,10 @@ const _translationsEn = {
         caseStudyUrl: '',
       },
       crm: {
-        title: 'Career Ops',
-        desc: 'AI pipeline: offer evaluation, ATS-optimized CVs, automated applications',
+        title: 'Whisper Walkie',
+        desc: 'Push-to-talk voice typing tool — 100% local Whisper processing, zero cloud dependency',
         metric: 'Open src',
-        caseStudyUrl: '',
+        caseStudyUrl: 'https://github.com/joblas/whisper-walkie',
       },
       genAI: {
         title: 'Cloud Infra',
@@ -568,8 +554,6 @@ const _translationsEn = {
   skills: {
     title: 'Skills',
     languages: 'Languages',
-    spanish: 'Spanish',
-    native: 'Conversational',
     english: 'English',
     professional: 'Native',
     technical: 'Technical Skills',

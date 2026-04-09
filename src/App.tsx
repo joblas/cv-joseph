@@ -2088,7 +2088,6 @@ function App() {
             const allProjects = t.projects.items as readonly Project[]
             const openClaw = allProjects.find(p => p.title === 'OpenClaw')!
             const skateWorkshop = allProjects.find(p => p.title === 'The Skate Workshop')!
-            const careerOps = allProjects.find(p => p.title === 'Career Ops')!
             const cvJoseph = allProjects.find(p => p.title === 'cv-joseph')!
             const dalleGenerator = allProjects.find(p => p.title === 'DALL-E Image Generator')!
             const whisperWalkie = allProjects.find(p => p.title === 'Whisper Walkie')!
@@ -2106,7 +2105,6 @@ function App() {
             const cardRefs = {
               openClaw: useRef<HTMLDivElement>(null),
               skateWorkshop: useRef<HTMLDivElement>(null),
-              careerOps: useRef<HTMLDivElement>(null),
               cvJoseph: useRef<HTMLDivElement>(null),
               dalleGenerator: useRef<HTMLDivElement>(null),
               whisperWalkie: useRef<HTMLDivElement>(null),
@@ -2153,8 +2151,7 @@ function App() {
                 const connections: Connection[] = isMobile ? [
                   // Mobile: simple vertical flow
                   { from: cardRefs.openClaw, fromEdge: 'bottom', to: cardRefs.skateWorkshop, toEdge: 'top' },
-                  { from: cardRefs.skateWorkshop, fromEdge: 'bottom', to: cardRefs.careerOps, toEdge: 'top' },
-                  { from: cardRefs.careerOps, fromEdge: 'bottom', to: cardRefs.cvJoseph, toEdge: 'top' },
+                  { from: cardRefs.skateWorkshop, fromEdge: 'bottom', to: cardRefs.cvJoseph, toEdge: 'top' },
                   { from: cardRefs.cvJoseph, fromEdge: 'bottom', to: cardRefs.dalleGenerator, toEdge: 'top' },
                   { from: cardRefs.dalleGenerator, fromEdge: 'bottom', to: cardRefs.whisperWalkie, toEdge: 'top' },
                   { from: cardRefs.whisperWalkie, fromEdge: 'bottom', to: cardRefs.cloudInfra, toEdge: 'top' },
@@ -2162,17 +2159,16 @@ function App() {
                   // Desktop: dependency graph
                   // Row 1: OpenClaw ↔ Skate Workshop (horizontal)
                   { from: cardRefs.openClaw, fromEdge: 'right', to: cardRefs.skateWorkshop, toEdge: 'left' },
-                  // Row 1 → Row 2: down to Career Ops + cv-joseph
-                  { from: cardRefs.openClaw, fromEdge: 'bottom', to: cardRefs.careerOps, toEdge: 'top' },
-                  { from: cardRefs.skateWorkshop, fromEdge: 'bottom', to: cardRefs.cvJoseph, toEdge: 'top' },
-                  // Row 2: Career Ops ↔ cv-joseph (horizontal)
-                  { from: cardRefs.careerOps, fromEdge: 'right', to: cardRefs.cvJoseph, toEdge: 'left' },
+                  // Row 1 → Row 2: down to cv-joseph + DALL-E
+                  { from: cardRefs.openClaw, fromEdge: 'bottom', to: cardRefs.cvJoseph, toEdge: 'top' },
+                  { from: cardRefs.skateWorkshop, fromEdge: 'bottom', to: cardRefs.dalleGenerator, toEdge: 'top' },
+                  // Row 2: cv-joseph ↔ DALL-E (horizontal)
+                  { from: cardRefs.cvJoseph, fromEdge: 'right', to: cardRefs.dalleGenerator, toEdge: 'left' },
                   // Row 2 → Row 3: tools
-                  { from: cardRefs.careerOps, fromEdge: 'bottom', to: cardRefs.dalleGenerator, toEdge: 'top' },
                   { from: cardRefs.cvJoseph, fromEdge: 'bottom', to: cardRefs.whisperWalkie, toEdge: 'top' },
-                  // Row 3 → Row 4: Cloud Infra
-                  { from: cardRefs.dalleGenerator, fromEdge: 'bottom', to: cardRefs.cloudInfra, toEdge: 'top', toRatio: 0.25 },
-                  { from: cardRefs.whisperWalkie, fromEdge: 'bottom', to: cardRefs.cloudInfra, toEdge: 'top', toRatio: 0.75 },
+                  { from: cardRefs.dalleGenerator, fromEdge: 'bottom', to: cardRefs.cloudInfra, toEdge: 'top' },
+                  // Row 3: Whisper Walkie ↔ Cloud Infra (horizontal)
+                  { from: cardRefs.whisperWalkie, fromEdge: 'right', to: cardRefs.cloudInfra, toEdge: 'left' },
                 ]
 
                 const paths = connections.map(conn => {
@@ -2376,28 +2372,21 @@ function App() {
                   </AnimatedSection>
                 </div>
 
-                {/* Row 2: Career Ops + cv-joseph */}
+                {/* Row 2: cv-joseph + DALL-E */}
                 <div className="grid md:grid-cols-2 gap-6 mb-6 relative z-10">
                   <AnimatedSection delay={0.2}>
-                    <ProjectCard project={careerOps} cardRef={cardRefs.careerOps} />
-                  </AnimatedSection>
-                  <AnimatedSection delay={0.25}>
                     <ProjectCard project={cvJoseph} cardRef={cardRefs.cvJoseph} />
                   </AnimatedSection>
-                </div>
-
-                {/* Row 3: DALL-E + Whisper Walkie */}
-                <div className="grid md:grid-cols-2 gap-6 mb-6 relative z-10">
                   <AnimatedSection delay={0.25}>
                     <ProjectCard project={dalleGenerator} cardRef={cardRefs.dalleGenerator} />
                   </AnimatedSection>
+                </div>
+
+                {/* Row 3: Whisper Walkie + Cloud Infrastructure */}
+                <div className="grid md:grid-cols-2 gap-6 relative z-10">
                   <AnimatedSection delay={0.3}>
                     <ProjectCard project={whisperWalkie} cardRef={cardRefs.whisperWalkie} />
                   </AnimatedSection>
-                </div>
-
-                {/* Row 4: Cloud Infrastructure (full width) */}
-                <div className="relative z-10">
                   <AnimatedSection delay={0.35}>
                     <ProjectCard project={cloudInfra} cardRef={cardRefs.cloudInfra} />
                   </AnimatedSection>
@@ -2779,12 +2768,8 @@ function App() {
               </h3>
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
-                  <span>{t.skills.spanish}</span>
-                  <span className="text-sm text-primary font-medium">{t.skills.native}</span>
-                </div>
-                <div className="flex justify-between items-center">
                   <span>{t.skills.english}</span>
-                  <span className="text-sm text-muted-foreground">{t.skills.professional}</span>
+                  <span className="text-sm text-primary font-medium">{t.skills.professional}</span>
                 </div>
               </div>
 

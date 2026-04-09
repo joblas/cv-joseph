@@ -126,7 +126,7 @@ export default function CareerOps() {
       <StatusBadge text={t.header.badge} />
       <MetricsGrid items={t.heroMetrics} columns={5} compact />
 
-      <GitHubRepoBadge repo="joblas/career-ops" stars="0" forks="0" />
+      <GitHubRepoBadge repo="santifer/career-ops" stars="0" forks="0" />
 
       <Callout className="bg-accent/10 border-accent/40">{t.tldr}</Callout>
       <Callout>{t.metaCallout}</Callout>
@@ -336,8 +336,8 @@ export default function CareerOps() {
         {/* ================================================================ */}
         {/*  RELATED SYSTEMS                                                 */}
         {/* ================================================================ */}
-        <H2 id="related">{'Related Systems'}</H2>
-        <Prose>{'Career-Ops demonstrates the same competencies as these systems. Each one is a full case study with architecture, metrics, and lessons.'
+        <H2 id="related">{'Projects I Built'}</H2>
+        <Prose>{'Career-Ops is a tool I adopted and customized. These are systems I built from the ground up — each with its own case study, architecture, and metrics.'
         }</Prose>
         <div className="grid sm:grid-cols-2 gap-3 mb-8">
           {Object.values(t.internalLinks).map(link => (

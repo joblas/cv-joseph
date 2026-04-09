@@ -53,9 +53,9 @@ const _en = {
           text: 'Programmatic SEO — Case Study',
           href: '/programmatic-seo',
         },
-        careerOps: {
-          text: 'Career-Ops: AI Job Search Multi-Agent | Case Study',
-          href: '/career-ops-system',
+        openClaw: {
+          text: 'OpenClaw: 22-Agent AI System | Case Study',
+          href: '/openclaw',
         },
       },
       sections: {

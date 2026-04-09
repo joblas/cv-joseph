@@ -3,18 +3,18 @@ const _en = {
     altSlug: 'career-ops',
     readingTime: '18 min read',
     seo: {
-      title: 'Career-Ops: How I Automated My AI & DevOps Job Search',
-      description: 'Case study: AI job search tool built as a multi-agent system. AI resume builder, 10D scoring, automated job application with HITL. From AV systems veteran to AI Developer.',
+      title: 'Career-Ops: Finding, Forking & Customizing the Right Open-Source Tool',
+      description: 'How I evaluated, forked, and customized Career-Ops — an open-source multi-agent job search tool by santifer — for my AI Developer and DevOps job search. A showcase of OSS adoption, configuration, and optimization.',
     },
     nav: {
       breadcrumbHome: 'Home',
       breadcrumbCurrent: 'Career-Ops',
     },
     header: {
-      kicker: 'Case Study: Production system',
-      h1: 'Career-Ops: How I Automated My AI & DevOps Job Search',
-      subtitle: 'A multi-agent system that scores offers across 10 dimensions, works as an AI resume builder per listing, and automates job applications with HITL. 15 years in autonomous vehicles, now targeting AI Developer and DevOps/SRE roles.',
-      badge: 'Live production system — actively in use',
+      kicker: 'OSS Adoption & Customization',
+      h1: 'Career-Ops: Finding the Right Tool, Making It Mine',
+      subtitle: 'Career-Ops is an open-source multi-agent job search tool created by santifer. I evaluated it against alternatives, forked it, customized the scoring, archetypes, and CV templates for my profile, and now run it daily. This is how I find, adopt, and optimize open-source tools — the same skill I bring to any engineering team.',
+      badge: 'Open-source tool — forked & customized',
       date: 'Mar 17, 2026',
     },
     heroMetrics: [
@@ -23,8 +23,8 @@ const _en = {
       { value: '3', label: 'Target tracks' },
       { value: '15+', label: 'Years experience' },
     ],
-    tldr: 'A multi-agent system built with Claude Code that automates the job search: scores offers across 10 dimensions (A-F), generates ATS-optimized PDFs per offer, fills forms via Playwright, and batch-processes with parallel workers. HITL design: AI analyzes, I decide.',
-    metaCallout: 'The irony: the system demonstrates the exact competencies the target roles require — multi-agent architecture, automation, infrastructure tooling, and HITL design. An AV systems veteran who built a 22-agent AI system (OpenClaw) using an AI-powered pipeline to find AI and DevOps roles. And no, it is not gaming the system: Career-Ops automates analysis, not decisions. I read every report and review every PDF before sending.',
+    tldr: 'Career-Ops is an open-source AI job search tool created by santifer. I forked it, customized scoring weights, target archetypes, CV templates, and portal configurations for my career profile, and run it in production daily. This page showcases my process for evaluating, adopting, and optimizing open-source tooling.',
+    metaCallout: 'Credit where it\'s due: Career-Ops was created by santifer (santifer.io). I did not build this system — I found it, recognized it solved my problem, forked it, and made it mine. The ability to evaluate open-source tools, understand their architecture, and customize them for specific needs is the same skill set behind every DevOps pipeline, every infrastructure stack, and every AI workflow I\'ve ever shipped.',
     internalLinks: {
       openclaw: {
         text: 'OpenClaw | Case Study',
@@ -37,8 +37,8 @@ const _en = {
     },
     sections: {
       intro: {
-        hook: 'I no longer apply to jobs. A multi-agent system evaluates them, generates my personalized resume, and prepares the application. I review and decide. After 15 years building autonomous vehicle systems at Google, Uber, and Pronto.ai, I knew how to ship production systems under pressure. What I did not have was an efficient way to target the right AI Developer and DevOps roles. So I built one.',
-        body: 'Career-Ops is an AI-powered job search tool built as a multi-agent system: reads job descriptions, scores them across 10 dimensions, generates AI resumes per listing, and automates job applications. I review and decide. The AI does the analytical work. The same engineering discipline that kept self-driving cars on the road now keeps my job search on track.',
+        hook: 'The best engineers don\'t build everything from scratch — they find the right tool, understand how it works, and make it fit their needs. After 15 years building autonomous vehicle systems at Google, Uber, and Pronto.ai, I needed an efficient way to target AI Developer and DevOps roles. Instead of building a job search tool from zero, I evaluated what was out there, found Career-Ops (an open-source multi-agent system by santifer), and customized it for my workflow.',
+        body: 'I forked the repo, configured the scoring weights for my target roles, defined custom archetypes (AI Developer, DevOps/SRE, Embedded/Robotics), set up portal scanning for 45+ companies, customized the CV template with my proof points, and tuned the evaluation pipeline. The same approach I\'d take adopting any open-source tool on a team: evaluate, fork, configure, optimize, operate.',
       },
       theProblem: {
         heading: 'The Problem',
@@ -51,7 +51,7 @@ const _en = {
           { label: 'Zero feedback.', detail: 'Apply, wait, and never know if the problem was fit, the CV, or timing.' },
           { label: 'Cross-domain targeting.', detail: 'AI, DevOps, and Embedded roles live on different boards, use different keywords, and attract different recruiters. One search strategy does not cover all three.' },
         ],
-        punchline: 'The work is not hard. It is repetitive. And repetitive work gets automated.',
+        punchline: 'The work is not hard. It is repetitive. The smart move isn\'t building a solution from scratch — it\'s finding the right open-source tool and making it yours.',
       },
       architecture: {
         heading: 'The 12 Modes — Multi-Agent System',
@@ -191,34 +191,34 @@ const _en = {
         heading: 'Lessons',
         items: [
           {
+            title: 'Evaluate before you build',
+            detail: 'My first instinct was to build a job search tool from scratch. Instead, I spent a day evaluating existing solutions. Career-Ops already solved 90% of what I needed. Customizing the last 10% took hours, not weeks. That\'s the same decision I make on any team: build vs. adopt.',
+          },
+          {
+            title: 'Understand the architecture before you customize',
+            detail: 'I read the entire codebase before changing a line. Understanding the mode system, data contract, and scoring pipeline meant my customizations worked with the design — not against it. Same principle as joining any existing codebase.',
+          },
+          {
+            title: 'Configuration is underrated engineering',
+            detail: 'Defining the right archetypes, scoring weights, portal queries, and CV proof points is the real work. The tool is powerful, but it\'s only as good as the configuration driving it. Garbage in, garbage out — same as Terraform, K8s, or any IaC.',
+          },
+          {
             title: 'Automate analysis, not decisions',
             detail: 'Career-Ops evaluates offers. I decide which ones get my time. HITL is not a limitation — it is the design. AI filters noise, humans provide judgment.',
           },
           {
-            title: 'Modes beat a long prompt',
-            detail: '12 modes with precise context outperform a 10,000-token system prompt. Each mode loads only what it needs. Less context means better decisions.',
+            title: 'Open source compounds',
+            detail: 'Every improvement santifer ships, I get for free. Every customization I make feeds back into my workflow immediately. That compound effect is why OSS adoption beats building in-house for most problems.',
           },
           {
-            title: 'Dedup is more valuable than scoring',
-            detail: 'Deduplicated URLs mean evaluations I never had to repeat. Dedup saves more time than any scoring optimization.',
-          },
-          {
-            title: 'A CV is an argument, not a document',
-            detail: 'A generic PDF convinces nobody. A CV that reorganizes proof points by relevance, injects the right keywords, and adapts framing to the archetype — that CV converts.',
-          },
-          {
-            title: 'Batch over sequential, always',
-            detail: 'Batch mode with parallel workers processes URLs while I do something else. The investment in parallel orchestration pays off on the first run.',
-          },
-          {
-            title: 'The system IS the portfolio',
-            detail: 'Building a multi-agent system to search for AI and DevOps roles is direct proof of competence. Same discipline that shipped self-driving car systems — applied to career search.',
+            title: 'The best tool is the one you actually use',
+            detail: 'I run Career-Ops daily. It\'s not a demo or a proof of concept — it\'s my actual job search infrastructure. The test of any tool adoption is whether it becomes part of your real workflow.',
           },
         ],
       },
       cta: {
         heading: 'Ask',
-        body: 'Open the chat and ask how I built Career-Ops. Or check out OpenClaw and my other projects that demonstrate the same competencies.',
+        body: 'Open the chat and ask how I evaluated, customized, and operate Career-Ops. Or check out OpenClaw and The Skate Workshop — those are systems I built from scratch.',
         ctaLabel: 'Open chat',
         ctaHref: '#chat',
       },
@@ -248,7 +248,7 @@ const _en = {
         },
         {
           q: 'Is it replicable?',
-          a: 'Yes. Career-Ops is open source on GitHub. You need Claude Code with Playwright browser access enabled for portal scanning and form filling, plus a structured working directory following the data contract: cv.md as the canonical resume, a profile configuration file with your target roles and salary range, and a portals configuration listing the job boards and company career pages to scan. Each of the 12 operational modes is defined as a Claude Code skill file with its own context window, rules, and tool permissions. Fork the repository and customize the scoring dimensions, archetypes, and evaluation criteria for your own career profile. The onboarding flow walks you through setup step by step.',
+          a: 'Yes. Career-Ops is open source on GitHub, created by santifer. You need Claude Code with Playwright browser access enabled for portal scanning and form filling, plus a structured working directory following the data contract: cv.md as the canonical resume, a profile configuration file with your target roles and salary range, and a portals configuration listing the job boards and company career pages to scan. Each of the 12 operational modes is defined as a Claude Code skill file with its own context window, rules, and tool permissions. Fork the repository and customize the scoring dimensions, archetypes, and evaluation criteria for your own career profile. The onboarding flow walks you through setup step by step. That is exactly what I did — forked it, customized the profile for my AI Developer and DevOps targets, and started using it.',
         },
       ],
     },

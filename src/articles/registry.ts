@@ -27,7 +27,7 @@ export interface ArticleConfig {
   title: string
   seo: ArticleSeo
   sectionLabels: Record<string, string>
-  type: 'collab' | 'case-study' | 'bridge'
+  type: 'collab' | 'case-study' | 'bridge' | 'tool-showcase'
   /** Absolute OG image URL for prerender (social cards: LinkedIn, Twitter) */
   ogImage?: string
   /** Hero image path for JSON-LD / GEO (what AI search engines see). Falls back to ogImage if not set. */
@@ -329,8 +329,8 @@ export const articleRegistry: ArticleConfig[] = [
     slug: 'career-ops-system',
     title: 'Career-Ops',
     seo: {
-      title: 'Career-Ops: How I Built My Own AI Job Search Tool',
-      description: 'Case study: AI job search tool built as a multi-agent system. AI resume builder, 10D scoring, automated job application with HITL. 631 evaluations.',
+      title: 'Career-Ops: Finding, Forking & Customizing the Right Open-Source Tool',
+      description: 'How I evaluated, forked, and customized Career-Ops — an open-source multi-agent job search tool by santifer — for my AI Developer and DevOps job search. A showcase of OSS adoption and optimization.',
     },
     sectionLabels: {
       'the-problem': 'The Problem',
@@ -344,7 +344,7 @@ export const articleRegistry: ArticleConfig[] = [
       'faq': 'FAQ',
       'related': 'Related',
     },
-    type: 'case-study',
+    type: 'tool-showcase',
     ragReady: true,
     i18nFile: 'src/career-ops-i18n.ts',
     ogImage: 'https://cv-joseph.vercel.app/career-ops/og-career-ops.webp',
@@ -376,7 +376,7 @@ export const articleRegistry: ArticleConfig[] = [
         { '@type': 'SoftwareApplication', name: 'Node.js', url: 'https://nodejs.org' },
       ],
       discussionUrl: 'https://www.reddit.com/r/SideProject/comments/1rw1lg4/i_automated_my_job_search_with_ai_agents_516/',
-      relatedLink: 'https://github.com/joblas/career-ops',
+      relatedLink: 'https://github.com/santifer/career-ops',
     },
   },
   {
