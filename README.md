@@ -4,7 +4,7 @@
 
 > Interactive portfolio with AI chatbot (text + voice), agentic RAG, 71 automated evals, LLMOps dashboard, and 6-layer prompt injection defense
 
-[![Live Demo](https://img.shields.io/badge/demo-cv--joseph.vercel.app-blue?style=flat-square)](https://cv-joseph.vercel.app)
+[![Live Demo](https://img.shields.io/badge/demo-cv--joseph.vercel.app-blue?style=flat-square)](https://cv-joseph-60zq8m380-joes-tech-solutions.vercel.app/)
 [![Built with Claude Code](https://img.shields.io/badge/built%20with-Claude%20Code-blueviolet?style=flat-square)](https://claude.ai/code)
 
 ---
