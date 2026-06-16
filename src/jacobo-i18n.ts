@@ -54,7 +54,7 @@ const _en = {
           href: '/programmatic-seo',
         },
         openClaw: {
-          text: 'OpenClaw: 22-Agent AI System | Case Study',
+          text: 'OpenClaw → Hermes Migration | Case Study',
           href: '/openclaw',
         },
       },

@@ -27,7 +27,7 @@ const _en = {
     metaCallout: 'Credit where it\'s due: Career-Ops was created by santifer (santifer.io). I did not build this system — I found it, recognized it solved my problem, forked it, and made it mine. The ability to evaluate open-source tools, understand their architecture, and customize them for specific needs is the same skill set behind every DevOps pipeline, every infrastructure stack, and every AI workflow I\'ve ever shipped.',
     internalLinks: {
       openclaw: {
-        text: 'OpenClaw | Case Study',
+        text: 'OpenClaw → Hermes Migration | Case Study',
         href: '/openclaw',
       },
       skateWorkshop: {
@@ -137,7 +137,7 @@ const _en = {
           { label: 'Detect language.', detail: 'English JD generates English CV.' },
           { label: 'Detect region.', detail: 'US company generates Letter format. Europe generates A4.' },
           { label: 'Detect archetype.', detail: 'Target archetypes map to AI Developer, DevOps/SRE, and Embedded/Robotics. The summary shifts based on the profile.' },
-          { label: 'Select projects.', detail: 'Top 3-4 by relevance. OpenClaw for agent/AI roles. Cloud Infrastructure for DevOps. AV experience for robotics/embedded.' },
+          { label: 'Select projects.', detail: 'Top 3-4 by relevance. Hermes (or the OpenClaw→Hermes migration) for agent/AI roles. Cloud Infrastructure for DevOps. AV experience for robotics/embedded.' },
           { label: 'Reorder bullets.', detail: 'The most relevant experience moves up. The rest moves down — nothing disappears.' },
           { label: 'Render PDF.', detail: 'Puppeteer converts HTML to PDF. Self-hosted fonts, single-column ATS-safe.' },
         ],
@@ -145,11 +145,11 @@ const _en = {
           heading: 'Target Archetypes',
           headers: ['Archetype', 'Primary Proof Point'],
           rows: [
-            ['AI Developer', 'OpenClaw (22-agent AI system, multi-agent orchestration)'],
+            ['AI Developer', 'Hermes (16-agent AI system, composable via delegation)'],
             ['DevOps / SRE', 'Cloud Infrastructure (Docker, CI/CD, monitoring pipelines)'],
             ['Embedded / Robotics', 'Google Self-Driving Car Project + Pronto.ai (7 years AV systems)'],
             ['Full-Stack AI', 'The Skate Workshop (React Native) + DALL-E Image Generator'],
-            ['Automation Engineer', 'OpenClaw + Whisper Walkie (end-to-end AI-powered tooling)'],
+            ['Automation Engineer', 'Hermes (or the OpenClaw→Hermes migration) + Whisper Walkie (end-to-end AI-powered tooling)'],
           ],
         },
         callout: 'Same CV. Multiple framings. All real — keywords get reformulated, never fabricated.',

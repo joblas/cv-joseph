@@ -2026,7 +2026,7 @@ function App() {
 
                   {/* Tech badges */}
                   <div className="flex flex-wrap gap-2 mb-6">
-                    {['Claude Code', 'OpenClaw', 'Shopify', 'Make.com', 'Bash', 'MCP'].map((tech) => (
+                    {['Claude Code', 'Hermes', 'Shopify', 'Make.com', 'Bash', 'MCP'].map((tech) => (
                       <span key={tech} className="px-2 py-1 rounded-md text-xs bg-gold/10 text-gold border border-gold/20">{tech}</span>
                     ))}
                   </div>
@@ -2086,7 +2086,7 @@ function App() {
 
             // Separar proyectos
             const allProjects = t.projects.items as readonly Project[]
-            const openClaw = allProjects.find(p => p.title === 'OpenClaw')!
+            const openClaw = allProjects.find(p => p.title === 'Hermes')!
             const skateWorkshop = allProjects.find(p => p.title === 'The Skate Workshop')!
             const cvJoseph = allProjects.find(p => p.title === 'cv-joseph')!
             const dalleGenerator = allProjects.find(p => p.title === 'DALL-E Image Generator')!
@@ -2157,7 +2157,7 @@ function App() {
                   { from: cardRefs.whisperWalkie, fromEdge: 'bottom', to: cardRefs.cloudInfra, toEdge: 'top' },
                 ] : [
                   // Desktop: dependency graph
-                  // Row 1: OpenClaw ↔ Skate Workshop (horizontal)
+                  // Row 1: Hermes ↔ Skate Workshop (horizontal)
                   { from: cardRefs.openClaw, fromEdge: 'right', to: cardRefs.skateWorkshop, toEdge: 'left' },
                   // Row 1 → Row 2: down to cv-joseph + DALL-E
                   { from: cardRefs.openClaw, fromEdge: 'bottom', to: cardRefs.cvJoseph, toEdge: 'top' },
@@ -2237,7 +2237,7 @@ function App() {
                 >
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-3">
-                      {project.title === 'OpenClaw' && (
+                      {project.title === 'Hermes' && (
                         <div className="w-8 h-8 rounded-lg overflow-hidden bg-black flex items-center justify-center shrink-0 p-1">
                           <img src="/logo-openclaw.svg" alt="OpenClaw" className="w-full h-full object-contain" width={32} height={32} loading="lazy" decoding="async" />
                         </div>
@@ -2362,7 +2362,7 @@ function App() {
                   ))}
                 </svg>
 
-                {/* Row 1: OpenClaw + Skate Workshop (highlights) */}
+                {/* Row 1: Hermes + Skate Workshop (highlights) */}
                 <div className="grid md:grid-cols-2 gap-6 mb-6 relative z-10">
                   <AnimatedSection delay={0.1}>
                     <ProjectCard project={openClaw} variant="highlight" cardRef={cardRefs.openClaw} />

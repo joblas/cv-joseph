@@ -29,9 +29,9 @@ function buildJsonLd() {
     headline: t.header.h1,
     alternativeHeadline: t.seo.title,
     description: t.seo.description,
-    datePublished: '2026-04-07',
-    dateModified: '2026-04-07',
-    keywords: ['AI agents', 'multi-agent system', 'OpenClaw', 'agent architecture', 'small business AI', 'AI automation', 'Claude', 'n8n', 'model tiering', 'AI team'],
+    datePublished: '2026-06-16',
+    dateModified: '2026-06-16',
+    keywords: ['AI agents', 'multi-agent system', 'OpenClaw', 'Hermes', 'agent migration', 'agent architecture', 'small business AI', 'AI automation', 'Claude', 'composability', 'specialization'],
     images: [
       'https://cv-joseph.vercel.app/articles/openclaw-org-chart.webp',
     ],
@@ -40,16 +40,18 @@ function buildJsonLd() {
     faq: t.faq.items,
     articleType: 'TechArticle',
     about: [
-      { '@type': 'SoftwareApplication', name: 'OpenClaw', applicationCategory: 'Agent Runtime' },
-      { '@type': 'SoftwareApplication', name: 'n8n', url: 'https://n8n.io', applicationCategory: 'Workflow Automation' },
+      { '@type': 'SoftwareApplication', name: 'OpenClaw', applicationCategory: 'Agent Runtime (retired)' },
+      { '@type': 'SoftwareApplication', name: 'Hermes', url: 'https://github.com/joestechsolutions/hermes-forge', applicationCategory: 'Agent Runtime' },
       { '@type': 'Thing', name: 'Multi-Agent AI Systems' },
     ],
-    extra: { proficiencyLevel: 'Expert', dependencies: 'OpenClaw, n8n, Claude API, Telegram, Slack, GitHub, Stripe, Tailscale, systemd' },
+    extra: { proficiencyLevel: 'Expert', dependencies: 'Hermes, OpenClaw (retired), n8n, Claude API, Telegram, Slack, GitHub, Stripe, Tailscale, systemd, Ollama, MemPalace' },
     mentions: [
       { '@type': 'SoftwareApplication', name: 'OpenClaw' },
+      { '@type': 'SoftwareApplication', name: 'Hermes', url: 'https://github.com/joestechsolutions/hermes-forge' },
       { '@type': 'SoftwareApplication', name: 'n8n', url: 'https://n8n.io' },
       { '@type': 'SoftwareApplication', name: 'Claude', url: 'https://claude.ai' },
       { '@type': 'SoftwareApplication', name: 'Tailscale', url: 'https://tailscale.com' },
+      { '@type': 'SoftwareApplication', name: 'Ollama', url: 'https://ollama.com' },
     ],
   })
 }
@@ -62,9 +64,9 @@ export default function OpenClaw() {
     title: t.seo.title,
     description: t.seo.description,
     image: 'https://cv-joseph.vercel.app/articles/openclaw-org-chart.webp',
-    publishedTime: '2026-04-07',
-    modifiedTime: '2026-04-07',
-    articleTags: 'AI agents,multi-agent,OpenClaw,architecture,small business,Claude,n8n',
+    publishedTime: '2026-06-16',
+    modifiedTime: '2026-06-16',
+    articleTags: 'AI agents,multi-agent,Hermes,OpenClaw,architecture,migration,composability,specialization,small business,Claude,n8n',
     jsonLd: buildJsonLd(),
   })
 
@@ -74,7 +76,7 @@ export default function OpenClaw() {
       <ArticleHeader
         editorId="hero-header"
         kicker={t.header.kicker}
-        kickerLink="https://www.joestechsolutions.com/blog/22-agent-ai-team-architecture"
+        kickerLink="https://github.com/joestechsolutions/hermes-forge"
         h1={t.header.h1}
         subtitle={t.header.subtitle}
         date={t.header.date}
@@ -82,7 +84,7 @@ export default function OpenClaw() {
         readingTime={t.readingTime}
       />
 
-      <StatusBadge text="Running in production" />
+      <StatusBadge text="Migration complete · Hermes live" />
 
       <article className="prose-custom">
 
@@ -100,10 +102,10 @@ export default function OpenClaw() {
         {/* Key metrics */}
         <MetricsGrid
           items={[
-            { value: '22', label: 'AI Agents', detail: 'Specialized roles' },
-            { value: '4', label: 'Directors', detail: 'Division leads' },
-            { value: '24/7', label: 'Uptime', detail: 'Always running' },
-            { value: '3', label: 'Model Tiers', detail: 'Cost-optimized' },
+            { value: '16', label: 'Hermes Agents', detail: '4 domain specializations' },
+            { value: '6', label: 'Model Backends', detail: 'Cost-optimized per task' },
+            { value: '4', label: 'Domain Specializations', detail: 'Eng, Ops, Product, Personal' },
+            { value: '0', label: 'Downtime', detail: 'Live migration' },
           ]}
           columns={4}
         />
@@ -115,8 +117,8 @@ export default function OpenClaw() {
         <DiagramZoom
           src="/articles/openclaw-org-chart.webp"
           hdSrc="/articles/openclaw-org-chart.webp"
-          alt={t.orgChart.imgAlt}
-          caption={t.orgChart.imgCaption}
+          alt="The OpenClaw org chart — Joe (CEO) → Lurkr (CTO) → 4 directors (Engineering, Ops/Business, Product) → 16 specialized agents. (Updated 2026-06-16: the OpenClaw org chart image; a side-by-side comparison with the new Hermes architecture is queued for a future design pass.)"
+          caption="The OpenClaw org chart as it ran in production. The new Hermes architecture is domain-based, not hierarchical — see the case study text for the comparison."
           width={1400} height={800}
         />
 
@@ -131,7 +133,7 @@ export default function OpenClaw() {
         {/* Division breakdown */}
         {t.orgChart.divisions.map((division) => (
           <div key={division.director} className="mb-6">
-            <H3 id={`division-${division.director.toLowerCase()}`}>
+            <H3 id={`division-${division.director.toLowerCase().replace(/[^a-z0-9]/g, '-')}`}>
               {division.director} — {division.domain}
             </H3>
             <div className="grid sm:grid-cols-2 gap-3">
@@ -192,15 +194,15 @@ export default function OpenClaw() {
         <H2 id="workflows">{t.workflows.heading}</H2>
         <Prose>{t.workflows.description}</Prose>
 
-        {/* Morning Standups */}
-        <H3 id="morning-standups">{t.workflows.morningStandups.heading}</H3>
+        {/* Morning Briefs */}
+        <H3 id="morning-briefs">{t.workflows.morningStandups.heading}</H3>
         <Prose>{t.workflows.morningStandups.description}</Prose>
 
         <DiagramZoom
           src="/articles/openclaw-standup.webp"
           hdSrc="/articles/openclaw-standup.webp"
-          alt={t.workflows.morningStandups.imgAlt}
-          caption={t.workflows.morningStandups.imgCaption}
+          alt="An OpenClaw morning standup in Telegram — the 4 directors reporting to Lurkr (CTO) at 9AM Pacific. (Updated 2026-06-16: this is the OpenClaw-era standup; Hermes produces a similar daily brief via a different mechanism, described in the case study text.)"
+          caption="An OpenClaw morning standup in Telegram — what the team looked like in production"
           width={1400} height={800}
         />
 

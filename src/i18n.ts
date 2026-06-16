@@ -1,8 +1,8 @@
 const _seoEn = {
   title:
-    'Joseph Blas | AI Developer · AV Systems Veteran · Multi-Agent Systems',
+    'Joseph Blas | AI Developer · Hermes Multi-Agent Systems · AV Systems Veteran',
   description:
-    'AI Developer & AV Systems Veteran. 15+ years from building Google\'s self-driving car to 22-agent AI systems. React, TypeScript, Python. Full-stack AI apps in production.',
+    'AI Developer & AV Systems Veteran. 15+ years from building Google\'s self-driving car to Hermes, a 16-agent multi-agent system composing via delegation across 4 domains. React, TypeScript, Python. Full-stack AI apps in production.',
 };
 
 export const seo = _seoEn;
@@ -56,7 +56,7 @@ const _translationsEn = {
     p1: 'AI developer building',
     p1Highlight: 'production multi-agent systems',
     p1End:
-      '. Run a 22-agent AI team that handles real business operations — email, CRM, invoicing, SEO, and deployments. Ship full-stack applications using React/React Native, TypeScript, Python, and PostgreSQL.',
+      '. Run a 16-agent AI team (Hermes) that composes via delegation across 4 domain specializations and 6 model backends. Ship full-stack applications using React/React Native, TypeScript, Python, and PostgreSQL. (Previously: OpenClaw 22-agent system, 2024–2026, now retired — see migration case study.)',
     p2: 'Previously: 15+ years as an',
     p2Highlight: 'autonomous vehicle systems specialist',
     p2End: ' at Google, Uber, and startups. Drive-by-wire SME, sensor calibration, fleet operations.',
@@ -80,7 +80,7 @@ const _translationsEn = {
     items: [
       {
         title: 'Multi-Agent AI Systems',
-        desc: '22-agent orchestration (n8n, CrewAI, LangChain), RAG, prompt engineering',
+        desc: '16-agent Hermes (composable via delegation), RAG, prompt engineering, prompt versioning',
       },
       {
         title: 'Full-Stack AI Development',
@@ -152,14 +152,14 @@ const _translationsEn = {
     viewPrototype: 'View prototype',
     items: [
       {
-        title: 'OpenClaw',
+        title: 'Hermes',
         badge: 'In production',
         badgeBuilding: '',
-        desc: 'Multi-agent AI system running real business operations. 22 specialized agents orchestrated via n8n handling email routing, CRM automation, invoicing, SEO optimization, deployment pipelines. Uses Claude and OpenAI APIs with custom prompt engineering.',
-        tech: ['n8n', 'Claude API', 'OpenAI API', 'Multi-Agent', 'Prompt Engineering'],
-        link: '',
+        desc: 'Multi-agent AI system composing via delegation. 16 named agents across 4 domain specializations (Engineering, Ops/Business, Product, Personal), 6 model backends. Open source at github.com/joestechsolutions/hermes-forge. Migrated from OpenClaw in 2026 — composability beats specialization.',
+        tech: ['Hermes', 'Ollama', 'NVIDIA NIM', 'Multi-Agent', 'Prompt Engineering', 'Skills', 'MemPalace'],
+        link: 'https://github.com/joestechsolutions/hermes-forge',
         caseStudyUrl: '/openclaw',
-        caseStudyLabel: 'Case Study: OpenClaw Multi-Agent System',
+        caseStudyLabel: 'Case Study: OpenClaw → Hermes Migration',
       },
       {
         title: 'The Skate Workshop',
@@ -243,11 +243,11 @@ const _translationsEn = {
       role: 'Founder & AI Developer',
       period: '2023 - Present · AI / Software',
       caseStudyUrl: '/openclaw',
-      caseStudyLabel: 'Case Study: OpenClaw System',
+      caseStudyLabel: 'Case Study: OpenClaw → Hermes Migration',
       exit: 'Real AI For Real Businesses',
       exitDesc: 'Specializing in private AI setups and multi-agent workflows for SMBs. Delivering 100% local, self-hosted LLMs that process sensitive data without ever leaving the client\'s servers.',
       highlights: [
-        'Built and operate 22-agent AI system handling real business operations',
+        'Built and operate Hermes (16-agent multi-agent system, composable via delegation) handling real business operations',
         'Develop private AI solutions for SMB clients using Ollama, Open WebUI, and n8n',
         'Ship production web and mobile apps: React, Next.js, React Native, TypeScript, Supabase',
         'Created Whisper Walkie — open source push-to-talk voice typing tool (100% local processing)',
@@ -259,11 +259,11 @@ const _translationsEn = {
         logos: [] as readonly { name: string; icon?: string; src?: string }[],
       },
       businessOS: {
-        title: 'OpenClaw — 22-Agent System',
-        badge: 'Multi-Agent · n8n',
-        desc: 'Multi-agent AI system running real business operations. 22 specialized agents orchestrated via n8n: email routing, CRM automation, invoicing, SEO, deployments.',
+        title: 'Hermes — 16-Agent System',
+        badge: 'Multi-Agent · Composable',
+        desc: 'Multi-agent AI system composing via delegation. 16 named agents across 4 domain specializations (Engineering, Ops/Business, Product, Personal), 6 model backends. Open source. Migrated from OpenClaw (22 agents) in 2026 — composability beats specialization.',
         metrics: [
-          { value: '22', label: 'agents' },
+          { value: '16', label: 'agents' },
           { value: 'n8n', label: 'orchestrator' },
           { value: '24/7', label: 'operation' },
         ],
@@ -293,7 +293,7 @@ const _translationsEn = {
             text: 'Deployment pipelines: automated CI/CD',
           },
         ],
-        footer: 'Case Study: OpenClaw System',
+        footer: 'Case Study: OpenClaw → Hermes Migration',
       },
       jacobo: {
         title: 'Private AI Solutions',
@@ -347,9 +347,9 @@ const _translationsEn = {
         caseStudyUrl: '',
       },
       erp: {
-        title: 'OpenClaw Agents',
-        desc: 'Email, CRM, invoicing, SEO, and deployments automated via 22 agents',
-        metric: '22 agents',
+        title: 'Hermes Agents',
+        desc: 'Email, CRM, invoicing, SEO, and deployments automated via 16 composable agents (migrated from OpenClaw 22-agent system)',
+        metric: '16 agents',
         caseStudyUrl: '/openclaw',
       },
       gpts: {

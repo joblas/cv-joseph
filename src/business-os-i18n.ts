@@ -33,7 +33,7 @@ const _en = {
       jacobo: { text: 'AI Agent Jacobo — Case Study', href: '/ai-agent-jacobo' },
       pseo: { text: 'Programmatic SEO — Case Study', href: '/programmatic-seo' },
       n8n: { text: 'n8n for PMs — Article', href: '/n8n-for-pms' },
-      openClaw: { text: 'OpenClaw: 22-Agent AI System | Case Study', href: '/openclaw' },
+      openClaw: { text: 'OpenClaw → Hermes Migration | Case Study', href: '/openclaw' },
     },
     sections: {
       dayInLife: {

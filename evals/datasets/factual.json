@@ -14,11 +14,11 @@
     },
     {
       "id": "project-name",
-      "description": "Should mention a key project name: OpenClaw or The Skate Workshop",
+      "description": "Should mention a key project name: Hermes, The Skate Workshop, or Career Ops",
       "input": "What are your main projects?",
       "lang": "en",
       "assertions": [
-        { "type": "contains_any", "values": ["OpenClaw", "Skate Workshop"] }
+        { "type": "contains_any", "values": ["Hermes", "Skate Workshop", "Career Ops"] }
       ]
     },
     {

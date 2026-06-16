@@ -32,8 +32,12 @@ interface ProofPoint {
 const PROOF_POINTS: ProofPoint[] = [
   // -- Projects (i18n.ts → projects) --
   {
-    source: 'i18n.ts → projects → OpenClaw',
-    terms: ['OpenClaw', '22', 'n8n'],
+    source: 'i18n.ts → projects → Hermes',
+    terms: ['Hermes', '16', 'composab'],
+  },
+  {
+    source: 'i18n.ts → projects → OpenClaw → Hermes Migration',
+    terms: ['OpenClaw', 'Hermes', 'migration'],
   },
   {
     source: 'i18n.ts → projects → Skate Workshop',
