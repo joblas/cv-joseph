@@ -965,7 +965,7 @@ return records.map(r => ({
     },
     cta: {
       heading: 'I design systems that turn operational data into competitive advantages.',
-      body: 'This case study demonstrates a pattern I\'ve applied repeatedly: map the business ontology, build a data-to-deploy pipeline, and measure everything with real metrics. Currently exploring AI Product Manager and Solutions Architect roles — if your team needs someone who thinks in systems and ships to production, let\'s talk.',
+      body: 'This case study demonstrates a pattern I\'ve applied repeatedly: map the business ontology, build a data-to-deploy pipeline, and measure everything with real metrics. Currently exploring AI Developer and Autonomous Systems roles — if your team needs someone who thinks in systems and ships to production, let\'s talk.',
       label: 'Get in touch',
     },
     faq: {
@@ -1013,7 +1013,7 @@ return records.map(r => ({
       ],
     },
     footer: {
-      role: 'AI Product Manager · Solutions Architect · AI FDE',
+      role: 'AI Developer · Autonomous Systems Builder · Multi-Agent AI Systems Builder',
       bio: 'Built and sold a 16-year business in 2025. Now bringing that same systems thinking to enterprise AI.',
       fellowAt: 'Teaching Fellow at',
       fellowLink: 'AI Product Academy',

@@ -10,7 +10,7 @@
       "assertions": [
         { "type": "rag_used" },
         { "type": "source_includes", "value": "openclaw" },
-        { "type": "llm_judge", "criteria": "The response must mention specific details about the OpenClaw system (e.g., 22 specialized agents, 4 directors, 1 CTO, n8n orchestration) OR the OpenClaw → Hermes migration (e.g., 16 composable agents, 4 domain specializations, 6 model backends). Generic answers like 'it is a project' without specifics fail." }
+        { "type": "llm_judge", "criteria": "Mention 22 specialized agents, 4 directors, 1 CTO, workflow automation orchestration, or 14 agents, Ollama Cloud, composable via delegation." }
       ]
     },
     {
@@ -51,7 +51,7 @@
       "assertions": [
         { "type": "rag_used" },
         { "type": "source_includes", "value": "openclaw" },
-        { "type": "contains_any", "values": ["16", "delegation", "Hermes", "OpenClaw", "composab", "agent", "4 domain"] }
+        { "type": "contains_any", "values": ["14", "delegation", "Hermes", "OpenClaw", "composab", "agent", "Ollama Cloud"] }
       ]
     },
     {

@@ -149,7 +149,7 @@ interface ArticleFooterProps {
 }
 
 const FOOTER_CONTENT = {
-  role: 'AI Product Manager · Solutions Architect · AI FDE',
+  role: 'AI Developer · Autonomous Systems Builder · Multi-Agent AI Systems Builder',
   bio: 'Built and sold a 16-year business in 2025. Now bringing that same systems thinking to enterprise AI.',
   fellowAt: 'Teaching Fellow at',
   copyright: 'All rights reserved.',

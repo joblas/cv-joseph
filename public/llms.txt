@@ -1,11 +1,11 @@
 # Joseph Blas
 
-> AI Developer · AV Systems Veteran · Multi-Agent Systems Engineer
+> AI Developer · Autonomous Systems Builder · Multi-Agent AI Systems Builder
 
 ## Contact & Availability
 
 - **Location:** Escondido / San Diego, CA
-- **Open to:** AI Development, DevOps/SRE, Embedded/Robotics roles (San Diego or remote)
+- **Open to:** AI Development, Autonomous Systems, Embedded/Robotics roles (San Diego or remote)
 - **Email:** blasj408@gmail.com
 - **Website:** https://cv-joseph.vercel.app
 - **Entity Home / About**: https://cv-joseph.vercel.app/about
@@ -15,28 +15,28 @@
 
 ## Professional Summary
 
-AI developer building production multi-agent systems. Run a 16-agent AI team (Hermes) that composes via delegation across 4 domain specializations (Engineering, Ops/Business, Product, Personal) and 6 model backends. Ship full-stack applications using React/React Native, TypeScript, Python, and PostgreSQL. Use AI coding assistants daily as core development tools.
+AI developer building production multi-agent systems. Run Hermes as a multi-agent AI team: Lurkr (me) as CTO, with executive skills (Chief of Staff, CFO, COO, CMO), VPs for Engineering, Infrastructure, and Product, and 14 agents routed through Ollama Cloud model selection. Ship full-stack applications using React/React Native, TypeScript, Python, and PostgreSQL. Use AI coding assistants daily as core development tools.
 
 Previously: built and operated OpenClaw (22 specialized agents, 2024–2026) — migrated to Hermes after learning composability beats specialization. The migration postmortem is the OpenClaw → Hermes case study on this site.
 
-Previously: 15+ years as an autonomous vehicle systems specialist. Built Google's Firefly autonomous vehicle from the ground up. Supported the world's first fully driverless ride on public roads (2015). Subject Matter Expert for drive-by-wire systems across the first 100 Google self-driving cars and 10 hardware iterations. Managed sensor calibration operations for the entire Google AV fleet — final release authority. Led fleet operations at Uber ATG and Pronto.ai. ITAR-controlled hardware experience. U.S. Citizen, DOD clearance eligible.
+Previously: 10 years as an autonomous vehicle systems specialist. Built Google's Firefly autonomous vehicle from the ground up. Supported the world's first fully driverless ride on public roads (2015). Subject Matter Expert for drive-by-wire systems across the first 100 Google self-driving cars and 10 hardware iterations. Managed sensor calibration operations for the entire Google AV fleet — final release authority. Led fleet operations at Uber ATG and Pronto.ai. ITAR-controlled hardware experience. Then 5+ years learning AI tools, code, and building personal and client projects.
 
 ## Target Roles
 
 1. **AI Developer** — Multi-agent systems, full-stack AI apps, RAG, prompt engineering
-2. **DevOps / SRE Engineer** — AWS, GCP, Docker, Kubernetes, Terraform, CI/CD
-3. **Embedded / Robotics Engineer** — Sensor integration, drive-by-wire, CAN/LIN, HIL testing
+2. **Autonomous Systems Builder** — 10 years in AV programs, sensor integration, drive-by-wire, CAN/LIN, HIL testing
+3. **Embedded / Robotics Builder** — Sensor integration, drive-by-wire, CAN/LIN, HIL testing
 
-## Key Achievement: Hermes (16-Agent Multi-Agent System)
+## Key Achievement: Hermes (Multi-Agent AI Team)
 
-Multi-agent AI system composing via delegation. Open source at github.com/joestechsolutions/hermes-forge.
+Multi-agent AI system I operate as CTO through Ollama Cloud model selection. Open source at github.com/joestechsolutions/hermes-forge.
 
-- **Architecture:** 16 named agents, 4 domain specializations (Engineering, Ops/Business, Product, Personal), agents compose via delegation
-- **Model Backends:** 6 — kimi-k2.6, qwen3-coder-next, qwen3.5, minimax-m3, gpt-oss:20b, devstral-small-2 (cost-optimized per task)
+- **Architecture:** Lurkr (me) as CTO, executive skills (Chief of Staff, CFO, COO, CMO), VPs for Engineering, Infrastructure, and Product, 14 named agents
+- **Model Routing:** Ollama Cloud model selection by task
 - **Capabilities:** Email routing, CRM automation, invoicing, SEO optimization, deployment pipelines, content drafting, security sweeps, daily morning briefs, evening plans
-- **Memory:** MemPalace (40,000+ drawers, semantic search, knowledge graph) — persistent across sessions
-- **Skills:** Reusable patterns (joe-content-lane, joe-cto-posture, joe-ai-engineering-roadmap, etc.)
-- **Cron Jobs:** 6 daily/weekly jobs (morning brief, evening plan, content draft, security sweep, weekly model bakeoff, Quadient check-in)
+- **Memory:** MemPalace (semantic search, knowledge graph) — persistent across sessions
+- **Skills:** Reusable patterns for recurring workflows
+- **Cron Jobs:** Daily/weekly jobs (morning brief, evening plan, content draft, security sweep, weekly model bakeoff)
 - **Migration:** Retired 22-agent OpenClaw system in 2026 — case study covers the migration
 
 ## Key Achievement: Google Self-Driving Car (Firefly)
@@ -50,11 +50,11 @@ Multi-agent AI system composing via delegation. Open source at github.com/joeste
 
 ## Core Competencies
 
-- **Multi-Agent AI Systems:** 16-agent Hermes (composable via delegation), RAG, prompt engineering, prompt versioning
+- **Multi-Agent AI Systems:** Hermes (Lurkr as CTO, executive skills, VPs, 14 agents via Ollama Cloud model selection), RAG, prompt engineering, prompt versioning
 - **Full-Stack AI Development:** React 19, TypeScript, Python, Next.js, Supabase, AI APIs (Claude + OpenAI Realtime)
 - **AV Systems Integration:** Sensor calibration, drive-by-wire SME, ADAS validation, CAN/LIN
 - **Client-Facing Delivery:** 10+ executive/investor demos, client consulting, private AI deployment
-- **Cloud & DevOps:** AWS, GCP, Docker, K8s, Terraform, CI/CD
+- **Cloud & Platform:** AWS, GCP, Docker, K8s, Terraform, CI/CD
 - **Hardware-Software Bridge:** HIL test rigs, bench testing, embedded validation, wiring harness fabrication
 
 ## Tech Stack
@@ -63,7 +63,7 @@ Multi-agent AI system composing via delegation. Open source at github.com/joeste
 - Claude & OpenAI APIs — multi-agent orchestration, RAG, prompt engineering
 - LangChain / CrewAI — agent frameworks
 - Ollama / Open WebUI — private AI deployment
-- n8n — workflow automation and agent orchestration
+- Hermes — multi-agent AI team (14 agents, Ollama Cloud model selection)
 
 ### Frontend
 - React, React Native, Next.js, Tailwind CSS, Expo
@@ -71,7 +71,7 @@ Multi-agent AI system composing via delegation. Open source at github.com/joeste
 ### Backend
 - Node.js, Python / Flask, PostgreSQL, Supabase, REST APIs, Edge Functions
 
-### DevOps
+### Platform / Infrastructure
 - Docker, Kubernetes, Terraform, AWS, GCP, CI/CD, Git, Vercel
 
 ### AV / Hardware
@@ -82,10 +82,10 @@ Multi-agent AI system composing via delegation. Open source at github.com/joeste
 
 ## Work Experience
 
-### Joe's Tech Solutions LLC (2023-Present) — Founder & AI Developer
-- Built and operate Hermes (16-agent multi-agent system, composable via delegation) handling real business operations
+### Joe's Tech Solutions LLC (2023-Present) — Founder & Builder
+- Built and operate Hermes (multi-agent AI team: Lurkr as CTO, C-suite skills, VPs, 14 agents via Ollama Cloud model selection) handling real business operations
 - Previously: OpenClaw (22-agent specialized system, 2024–2026) — migrated to Hermes
-- Develop private AI solutions for SMB clients (Ollama, Open WebUI, n8n)
+- Develop private AI solutions for SMB clients (Ollama, Open WebUI, local automation stacks)
 - Ship production web and mobile apps: React, Next.js, React Native, TypeScript, Supabase
 - Created Whisper Walkie — open source push-to-talk voice typing (100% local)
 - Built The Skate Workshop — React Native app for Olympic coach (40+ tables, Stripe Connect)
@@ -115,11 +115,11 @@ Multi-agent AI system composing via delegation. Open source at github.com/joeste
 
 ## Projects
 
-### Hermes — 16-Agent Multi-Agent System (Current)
-Multi-agent system composing via delegation. 16 named agents across 4 domain specializations, 6 model backends, persistent memory (MemPalace), skills system, 6 daily/weekly cron jobs. Open source at github.com/joestechsolutions/hermes-forge. Handles real business operations: email, CRM, invoicing, SEO, deployments, content drafting.
+### Hermes — Multi-Agent AI Team (Current)
+Multi-agent AI system I operate as CTO through Ollama Cloud model selection. Lurkr (me) as CTO, executive skills, C-suite, VPs for Engineering/Infrastructure/Product, 14 agents. Persistent memory (MemPalace), skills system, cron jobs. Open source at github.com/joestechsolutions/hermes-forge. Handles real business operations: email, CRM, invoicing, SEO, deployments, content drafting.
 
 ### OpenClaw → Hermes — Migration Case Study
-Why I retired a 22-agent specialized system for a 16-agent composable one. Design for composability, not specialization. The lesson generalizes. Open source.
+Why I retired a 22-agent specialized system for a composable executive-led team. Design for composability, not specialization. The lesson generalizes. Open source.
 
 ### The Skate Workshop — React Native Mobile App
 Full-stack app for Olympic skateboarding coach. 40+ Supabase tables, 18+ Edge Functions, Stripe Connect.
@@ -188,7 +188,7 @@ AI voice agent case study — automated phone bookings and inquiries.
 
 ## How to Hire Joseph
 
-For AI Developer, DevOps/SRE, or Embedded/Robotics roles:
+For AI Developer, Autonomous Systems, or Embedded/Robotics roles:
 - Email: blasj408@gmail.com
 - LinkedIn: linkedin.com/in/joseph-blas
 - Website: cv-joseph.vercel.app (chat with AI avatar for quick questions)

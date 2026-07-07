@@ -1,6 +1,6 @@
 /* TEAM */
 Builder: Joseph Blas
-Role: AI Developer · AV Systems Veteran · Multi-Agent Systems
+Role: AI Developer · Autonomous Systems Builder · Multi-Agent AI Systems Builder
 Contact: blasj408@gmail.com
 Site: https://cv-joseph.vercel.app
 Location: Escondido / San Diego, CA

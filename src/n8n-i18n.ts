@@ -232,7 +232,7 @@ const _en = {
       ],
     },
     footer: {
-      role: 'AI Product Manager · Solutions Architect',
+      role: 'AI Developer · Autonomous Systems Builder',
       fellowAt: 'Teaching Fellow at',
       fellowLink: 'AI Product Academy',
       copyright: 'All rights reserved.',

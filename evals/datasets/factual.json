@@ -54,7 +54,7 @@
       "input": "What roles are you interested in?",
       "lang": "en",
       "assertions": [
-        { "type": "contains_any", "values": ["AI Developer", "DevOps", "SRE", "Embedded", "Robotics"] }
+        { "type": "contains_any", "values": ["AI Developer", "Autonomous Systems", "Embedded", "Robotics"] }
       ]
     },
     {

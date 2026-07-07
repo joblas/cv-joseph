@@ -188,8 +188,8 @@ export default function CareerOps() {
         <DiagramZoom
           src="/career-ops/datadog.webp"
           hdSrc="/career-ops/datadog.webp"
-          alt={'Real evaluation: Datadog Staff AI Engineer, MCP Services — Score 4.55/5, archetype AI Platform + Agentic Workflows, role summary with 7 dimensions'}
-          caption={'Real evaluation: Datadog Staff AI Engineer — score 4.55/5, detected archetype, structured role summary'}
+          alt={'Real evaluation: Datadog Staff AI Builder, MCP Services — Score 4.55/5, archetype AI Platform + Agentic Workflows, role summary with 7 dimensions'}
+          caption={'Real evaluation: Datadog Staff AI Builder — score 4.55/5, detected archetype, structured role summary'}
           width={1400} height={800}
         />
         <DiagramZoom
@@ -244,7 +244,7 @@ export default function CareerOps() {
                 )}
               </div>
               <figcaption className="px-4 py-2 text-sm text-muted-foreground text-center bg-card">
-                {'Demo: auto-pipeline evaluating the Datadog Staff AI Engineer offer in real time'}
+                {'Demo: auto-pipeline evaluating the Datadog Staff AI Builder offer in real time'}
               </figcaption>
             </figure>
           )

@@ -629,7 +629,7 @@ export default function FloatingChat({}: FloatingChatProps) {
             animate={isMobile ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1 }}
             exit={isMobile ? { opacity: 0 } : { opacity: 0, y: 20, scale: 0.95 }}
             transition={isMobile ? { duration: 0.2, ease: 'easeOut' } : { type: 'spring', stiffness: 300, damping: 30 }}
-            className={`fixed z-50 flex flex-col bg-card border-border shadow-2xl ${
+            className={`fixed z-[100] flex flex-col bg-card border-border shadow-2xl ${
               isMobile
                 ? 'inset-0 h-dvh rounded-none border-0 overscroll-contain'
                 : 'bottom-24 right-6 w-[360px] max-w-[calc(100vw-3rem)] h-[500px] max-h-[calc(100vh-8rem)] rounded-2xl border overflow-hidden'
@@ -962,7 +962,7 @@ export default function FloatingChat({}: FloatingChatProps) {
                 isMobile
                   ? {
                       paddingBottom:
-                        'max(1rem, env(safe-area-inset-bottom, 0px))',
+                        'max(2.5rem, calc(env(safe-area-inset-bottom, 0px) + 1rem))',
                     }
                   : undefined
               }

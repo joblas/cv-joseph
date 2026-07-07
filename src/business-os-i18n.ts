@@ -33,7 +33,7 @@ const _en = {
       jacobo: { text: 'AI Agent Jacobo — Case Study', href: '/ai-agent-jacobo' },
       pseo: { text: 'Programmatic SEO — Case Study', href: '/programmatic-seo' },
       n8n: { text: 'n8n for PMs — Article', href: '/n8n-for-pms' },
-      openClaw: { text: 'OpenClaw → Hermes Migration | Case Study', href: '/openclaw' },
+      openClaw: { text: 'OpenClaw → Hermes Migration | Case Study', href: '/hermes' },
     },
     sections: {
       dayInLife: {
@@ -389,8 +389,8 @@ const _en = {
       ],
     },
     footer: {
-      role: 'AI Product Manager · Solutions Architect',
-      bio: 'Built and sold a 16-year business in 2025. Now applying the same systems thinking to enterprise AI — as an FDE, Solutions Architect, or AI Production Manager.',
+      role: 'AI Developer · Autonomous Systems Builder',
+      bio: 'Built and sold a 16-year business in 2025. Now applying the same systems thinking to enterprise AI.',
       fellowAt: 'Teaching Fellow at',
       fellowLink: 'AI Product Academy',
       copyright: 'All rights reserved.',

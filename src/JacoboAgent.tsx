@@ -159,7 +159,7 @@ export default function JacoboAgent() {
 
       <MetricsGrid editorId="hero-metrics" items={t.heroMetrics} columns={5} compact />
 
-      <GitHubRepoBadge repo="joblas/cv-joseph" stars="0" forks="0" />
+      <GitHubRepoBadge repo="joblas/cv-joseph" stars="0" forks="1" />
 
       {/* TL;DR */}
       <Callout editorId="tldr-callout" className="-mx-2 sm:mx-0">{t.tldr}</Callout>

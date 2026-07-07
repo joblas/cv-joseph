@@ -24,6 +24,7 @@ export interface ArticleSeoMeta {
 export interface ArticleConfig {
   id: string
   slug: string
+  altSlug?: string
   title: string
   seo: ArticleSeo
   sectionLabels: Record<string, string>
@@ -330,7 +331,7 @@ export const articleRegistry: ArticleConfig[] = [
     title: 'Career-Ops',
     seo: {
       title: 'Career-Ops: Finding, Forking & Customizing the Right Open-Source Tool',
-      description: 'How I evaluated, forked, and customized Career-Ops — an open-source multi-agent job search tool by santifer — for my AI Developer and DevOps job search. A showcase of OSS adoption and optimization.',
+      description: 'How I evaluated, forked, and customized Career-Ops — an open-source multi-agent job search tool by santifer — for my AI Developer and Autonomous Systems job search. A showcase of OSS adoption and optimization.',
     },
     sectionLabels: {
       'the-problem': 'The Problem',
@@ -380,12 +381,13 @@ export const articleRegistry: ArticleConfig[] = [
     },
   },
   {
-    id: 'openclaw',
-    slug: 'openclaw',
+    id: 'hermes',
+    slug: 'hermes',
+    altSlug: 'openclaw',
     title: 'OpenClaw → Hermes Migration',
     seo: {
       title: 'I Retired a 22-Agent AI System. Here\'s Why. | Joseph Blas',
-      description: 'Case study: how I migrated OpenClaw (22 specialized agents, 4 directors, 1 CTO) to Hermes (16 general-purpose agents composing via delegation). The lesson: design for composability, not specialization. Open source.',
+      description: 'Case study: how I migrated OpenClaw (22 specialized agents, 4 directors, 1 CTO) to Hermes (14 agents composing via delegation behind C-suite + VPs). The lesson: design for composability, not specialization. Open source.',
     },
     sectionLabels: {
       'org-chart': 'Org Chart',
@@ -406,7 +408,7 @@ export const articleRegistry: ArticleConfig[] = [
     seoMeta: {
       datePublished: '2026-06-16',
       dateModified: '2026-06-16',
-      keywords: ['AI agents', 'multi-agent system', 'OpenClaw', 'Hermes', 'agent migration', 'agent architecture', 'composability', 'small business AI', 'AI automation', 'Claude', 'n8n', 'model tiering', 'AI team', '16 agents', 'agent runtime', 'AI orchestration', 'business automation', 'AI consultancy'],
+      keywords: ['AI agents', 'multi-agent system', 'OpenClaw', 'Hermes', 'agent migration', 'agent architecture', 'composability', 'small business AI', 'AI automation', 'Claude', 'n8n', 'Ollama Cloud', 'model selection', 'AI team', '14 agents', 'agent runtime', 'AI orchestration', 'business automation', 'AI consultancy'],
       articleType: 'TechArticle',
       articleTags: 'AI agents,multi-agent,Hermes,OpenClaw,architecture,migration,composability,specialization,small business,Claude,n8n,automation',
       images: ['https://cv-joseph.vercel.app/articles/openclaw-org-chart.webp'],
@@ -435,8 +437,8 @@ export const articleRegistry: ArticleConfig[] = [
     slug: 'av-career',
     title: 'AV Career',
     seo: {
-      title: 'Joseph Blas | 15+ Years in Autonomous Vehicles',
-      description: "From Google's Self-Driving Car to Pronto.ai. 15+ years building autonomous vehicles: Firefly, Uber ATG, 2,900-mile cross-country demo.",
+      title: 'Joseph Blas | 10 Years in Autonomous Vehicles + 5+ Years AI/Code',
+      description: "From Google's Self-Driving Car to Pronto.ai. 10 years building autonomous vehicles: Firefly, Uber ATG, 2,900-mile cross-country demo — followed by 5+ years learning AI tools, code, and building personal and client projects.",
     },
     sectionLabels: {},
     type: 'bridge',

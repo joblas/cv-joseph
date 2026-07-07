@@ -113,7 +113,8 @@ console.log('%c From Google\'s self-driving car to AI agent systems → blasj408
 Object.defineProperty(window, '__joseph', {
   value: Object.freeze({
     stack: 'React 19 + TypeScript + Vite + Tailwind v4 + Motion',
-    llm: 'claude-sonnet-4-5 (streaming SSE)',
+    llm: 'Hermes via Ollama Cloud model selection (streaming SSE)',
+    agentStack: 'Lurkr (CTO) + C-suite skills + VPs + 14 agents routed through Ollama Cloud',
     security: '6-layer defense (keywords, canary, fingerprint, anti-extraction, online scoring, adversarial)',
     evals: '55+ automated (factual, persona, safety, RAG, multilingual)',
     observability: 'Langfuse (traces, LLM-as-Judge, intent tags)',

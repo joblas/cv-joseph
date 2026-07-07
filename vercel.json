@@ -71,6 +71,8 @@
     { "source": "/business-os-para-airtable", "destination": "/business-os-for-airtable", "permanent": true },
     { "source": "/seo-programatico", "destination": "/programmatic-seo", "permanent": true },
     { "source": "/chatbot-que-se-cura-solo", "destination": "/self-healing-chatbot", "permanent": true },
+    { "source": "/openclaw", "destination": "/hermes", "permanent": true },
+    { "source": "/openclaw/", "destination": "/hermes", "permanent": true },
     { "source": "/:path+/", "destination": "/:path+", "permanent": true }
   ],
   "rewrites": [
@@ -83,7 +85,8 @@
     { "source": "/self-healing-chatbot", "destination": "/self-healing-chatbot/index.html" },
     { "source": "/career-ops", "destination": "/career-ops/index.html" },
     { "source": "/career-ops-system", "destination": "/career-ops-system/index.html" },
-    { "source": "/openclaw", "destination": "/openclaw/index.html" },
+    { "source": "/hermes", "destination": "/hermes/index.html" },
+    { "source": "/openclaw", "destination": "/hermes/index.html" },
     { "source": "/av-career", "destination": "/av-career/index.html" },
     { "source": "/about", "destination": "/about/index.html" },
     { "source": "/privacy", "destination": "/privacy/index.html" }

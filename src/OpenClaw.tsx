@@ -102,9 +102,9 @@ export default function OpenClaw() {
         {/* Key metrics */}
         <MetricsGrid
           items={[
-            { value: '16', label: 'Hermes Agents', detail: '4 domain specializations' },
-            { value: '6', label: 'Model Backends', detail: 'Cost-optimized per task' },
-            { value: '4', label: 'Domain Specializations', detail: 'Eng, Ops, Product, Personal' },
+            { value: '14', label: 'Hermes Agents', detail: 'Engineering, Infra, Product, Marketing, Personal' },
+            { value: '∞', label: 'Model Options', detail: 'Ollama Cloud by task' },
+            { value: '5', label: 'Executive Functions', detail: 'CTO + C-suite + 3 VPs' },
             { value: '0', label: 'Downtime', detail: 'Live migration' },
           ]}
           columns={4}

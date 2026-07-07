@@ -42,7 +42,7 @@ const i18nMap: Record<string, { header: { h1: string }; nav: { breadcrumbHome: s
   'programmatic-seo': pseoContent,
   'self-healing-chatbot': chatbotContent,
   'career-ops': careerOpsContent,
-  'openclaw': openclawContent,
+  'hermes': openclawContent,
 };
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -138,7 +138,7 @@ const aboutJsonLd = {
     url: 'https://cv-joseph.vercel.app',
     image: 'https://cv-joseph.vercel.app/foto-avatar.png',
     email: 'blasj408@gmail.com',
-    jobTitle: ['AI Product Manager', 'Solutions Architect (No/Low-Code & AI)', 'AI Forward Deployed Engineer'],
+    jobTitle: ['AI Developer', 'Autonomous Systems Builder', 'Multi-Agent AI Systems Builder'],
     knowsAbout: [
       { '@type': 'Thing', name: 'Artificial Intelligence', url: 'https://en.wikipedia.org/wiki/Artificial_intelligence' },
       { '@type': 'Thing', name: 'Machine Learning', url: 'https://en.wikipedia.org/wiki/Machine_learning' },

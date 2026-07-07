@@ -1,10 +1,10 @@
 const _en = {
-  slug: 'openclaw',
+  slug: 'hermes',
   altSlug: 'openclaw',
   readingTime: '9 min read',
   seo: {
     title: 'I Retired a 22-Agent AI System. Here\'s Why. | Joseph Blas',
-    description: 'Case study: how I migrated OpenClaw (22 specialized agents, 4 directors, 1 CTO) to Hermes (16 general-purpose agents composing via delegation). The lesson: design for composability, not specialization. Open source.',
+    description: 'Case study: how I migrated OpenClaw (22 specialized agents, 4 directors, 1 CTO) to Hermes (composable agents behind a C-suite + VP structure, now 14 agents, Ollama Cloud model selection). The lesson: design for composability, not specialization. Open source.',
   },
   nav: {
     back: 'cv-joseph.vercel.app',
@@ -14,25 +14,25 @@ const _en = {
   header: {
     kicker: 'Case Study — <a>OpenClaw → Hermes Migration</a>',
     h1: 'I Retired a 22-Agent AI System. Here\'s Why.',
-    subtitle: 'How I migrated from OpenClaw (22 specialized agents, 4 directors, 1 CTO) to Hermes (16 general-purpose agents composing via delegation across 4 domains). The lesson: design for composability, not specialization.',
+    subtitle: 'How I migrated from OpenClaw (22 specialized agents, 4 directors, 1 CTO) to Hermes (composable agents behind a C-suite + VP structure, now 14 agents, Ollama Cloud model selection). The lesson: design for composability, not specialization.',
     date: 'Jun 16, 2026',
     dateISO: '2026-06-16',
   },
   intro: {
-    hook: 'I built a 22-agent AI team to run my business. Then I tore it down and built a 16-agent system in its place.',
-    body: 'OpenClaw worked. It was 22 specialized agents orchestrated by 4 directors and 1 CTO (Lurkr), 3 model tiers, n8n-orchestrated, ran my real business for ~18 months: lead gen, proposals, invoicing, code review, deployments, content pipeline. Every morning at 9AM Pacific I got standup messages from the 4 directors in Telegram. I read them over coffee. It felt like having a team.',
-    punchline: 'Then I learned that the team I thought I wanted was the team I actually didn\'t need. The lesson: more agents isn\'t better. Each new agent is a new maintenance burden, a new failure mode, a new coordination cost. I consolidated to Hermes — 16 general-purpose agents across 4 domain specializations, composing via delegation. The OpenClaw era is over. The lessons stuck.',
+    hook: 'I built a 22-agent AI team to run my business. Then I tore it down and built a smaller composable system in its place.',
+    body: 'OpenClaw worked. It was 22 specialized agents orchestrated by 4 directors and 1 CTO (Lurkr), 3 model tiers, workflow-automation orchestrated, ran my real business for ~18 months: lead gen, proposals, invoicing, code review, deployments, content pipeline. Every morning at 9AM Pacific I got standup messages from the 4 directors in Telegram. I read them over coffee. It felt like having a team.',
+    punchline: 'Then I learned that the team I thought I wanted was the team I actually didn\'t need. The lesson: more agents isn\'t better. Each new agent is a new maintenance burden, a new failure mode, a new coordination cost. I consolidated to Hermes — composable agents behind a C-suite + VP structure, routed through Ollama Cloud model selection. The OpenClaw era is over. The lessons stuck.',
   },
   orgChart: {
     heading: 'The Two Architectures',
-    description: 'OpenClaw was hierarchical — a CEO (me), a CTO (Lurkr), four directors, and specialized agents under each. Hermes is domain-based — four specializations (Engineering, Ops/Business, Product, Personal), agents that compose via delegation. The shape changed; the work didn\'t.',
-    imgAlt: 'Side-by-side architecture comparison: OpenClaw hierarchical (Joe → Lurkr CTO → 4 directors → 16 specialized agents) vs Hermes domain-based (Joe → 16 agents across 4 domains, composing via delegation)',
+    description: 'OpenClaw was hierarchical — a CEO (me), a CTO (Lurkr), four directors, and specialized agents under each. Hermes is executive-led — a CTO, C-suite skills, VPs for Engineering, Infrastructure, and Product, and agents that compose via delegation. The shape changed; the work didn\'t.',
+    imgAlt: 'Side-by-side architecture comparison: OpenClaw hierarchical (Joe → Lurkr CTO → 4 directors → 22 specialized agents) vs Hermes executive-led (Joe → Lurkr CTO → C-suite + VPs → 14 agents composing via delegation)',
     imgCaption: 'OpenClaw (left) vs Hermes (right) — same work, different shapes',
     cto: {
       name: 'Lurkr',
-      role: 'CTO (OpenClaw era) → now a domain agent in Hermes',
-      model: 'Was Claude Opus 4.6, now composes via delegation',
-      description: 'In OpenClaw, Lurkr was a dedicated CTO agent. In Hermes, the Lurkr concept is a domain (Engineering) where it composes with other agents. Same name, different role.',
+      role: 'CTO (OpenClaw era) → now the CTO layer in Hermes',
+      model: 'Was Claude Opus 4.6, now routed through Ollama Cloud model selection',
+      description: 'In OpenClaw, Lurkr was a dedicated CTO agent. In Hermes, Lurkr (me) is the CTO layer, delegating through C-suite skills and VPs to the agents that do the work.',
     },
     divisions: [
       {
@@ -78,55 +78,55 @@ const _en = {
     ],
   },
   modelTiers: {
-    heading: 'Model Tiering — Then vs Now',
-    description: 'OpenClaw had 3 tiers. Hermes has 6 backends. The count went up; the cost per agent went down. Specialization lost; cost-optimization won.',
+    heading: 'Model Selection — Then vs Now',
+    description: 'OpenClaw had 3 fixed tiers. Hermes uses Ollama Cloud model selection: the main agent and each sub-agent are routed to the model that fits the task. Specialization lost; fit won.',
     tiers: [
       {
         model: 'minimax-m3:cloud (Ollama)',
-        role: 'Main agent (Hermes)',
-        usage: 'Default model for all general tasks. 70%+ of work.',
+        role: 'Main agent / default',
+        usage: 'General orchestration and high-stakes reasoning.',
       },
       {
-        model: 'kimi-k2.6 (NVIDIA)',
-        role: 'Code architect + debugger',
-        usage: 'Code design, failure analysis. Strong at multi-step reasoning.',
+        model: 'glm-5.2:cloud (Ollama)',
+        role: 'Architecture, strategy, security',
+        usage: 'Design decisions, root-cause analysis, security audits.',
       },
       {
-        model: 'qwen3-coder-next',
-        role: 'Code implementer + reviewer',
-        usage: 'Code writing and review. Fast, code-specialized.',
+        model: 'kimi-k2.7-code:cloud (Ollama)',
+        role: 'Code implementation',
+        usage: 'Writing production code against existing patterns.',
       },
       {
-        model: 'qwen3.5',
-        role: 'UX + creative',
-        usage: 'User research, creative writing, exploration tasks.',
+        model: 'qwen3-coder-next:cloud (Ollama)',
+        role: 'Code review',
+        usage: 'Fast, code-specialized PR review.',
       },
       {
-        model: 'gpt-oss:20b-cloud',
-        role: 'Monitoring + ops',
+        model: 'deepseek-v4-pro:cloud (Ollama)',
+        role: 'Infrastructure / Platform',
+        usage: 'Ops decisions, deploy planning, capacity reasoning.',
+      },
+      {
+        model: 'gpt-oss:20b-cloud (Ollama)',
+        role: 'Monitoring + structured ops',
         usage: 'System health, security sweeps, structured log analysis.',
       },
-      {
-        model: 'devstral-small-2:24b',
-        role: 'Test runner',
-        usage: 'Test execution, result parsing, deterministic tasks.',
-      },
     ],
-    quote: 'In OpenClaw: 3 tiers, all Claude. In Hermes: 6 backends across 3 providers, each picked for the task. The result is cheaper and better-tuned per role.',
+    quote: 'In OpenClaw: 3 tiers, all Claude. In Hermes: Ollama Cloud model selection — pick the model that fits the task, not the brand. The result is cheaper and better-tuned per role.',
   },
   infrastructure: {
     heading: 'The Infrastructure (mostly unchanged)',
     description: 'The infrastructure carried over almost intact. The runtime changed (OpenClaw → Hermes), but the boring stuff stayed the same. This is what made the migration possible — boring infrastructure is reliable infrastructure, and reliable infrastructure is portable.',
     tools: [
-      { name: 'Hermes (hermes-forge)', role: 'Agent runtime — composes 16 agents via delegation, with skills, cron jobs, and a memory system' },
-      { name: 'Ollama Cloud', role: 'Main model provider (minimax-m3:cloud default)' },
-      { name: 'NVIDIA NIM', role: 'Secondary provider (kimi-k2.6, deepseek-v4-flash)' },
+      { name: 'Hermes (hermes-forge)', role: 'Agent runtime — composes agents via delegation behind a C-suite + VP structure, with skills, cron jobs, and a memory system' },
+      { name: 'Ollama Cloud', role: 'Primary model provider; main agent and sub-agents routed by task' },
+      { name: 'NVIDIA NIM', role: 'Fallback provider (deepseek-v4-flash)' },
       { name: 'MemPalace', role: 'Persistent memory — 40,000+ drawers across wings, semantic search, knowledge graph' },
       { name: 'Telegram', role: 'Cron job delivery (morning brief, evening plan, content draft)' },
       { name: 'GitHub', role: 'Code, PRs, CI/CD — both orgs (joestechsolutions for work, joblas for personal)' },
       { name: 'Gmail + Google Calendar', role: 'Client communications and scheduling' },
       { name: 'Stripe', role: 'Invoicing and payments' },
-      { name: 'n8n', role: 'Webhook orchestration (still used for client work, less for internal ops)' },
+      { name: 'Hermes', role: 'Current multi-agent orchestration' },
       { name: 'Tailscale VPN', role: 'Mesh network connecting all services' },
       { name: 'systemd', role: 'Service management — hermes-gateway, open-design, free-claude-code as user services' },
     ],
@@ -165,11 +165,11 @@ const _en = {
     },
     content: {
       heading: 'Content Pipeline (joe-content-lane)',
-      description: 'content-creator composes blog posts, case studies, social drafts from MemPalace context. tech-writer handles documentation. joe-content-lane skill provides the style guide. The 6 cron jobs (morning brief, evening plan, content draft, security sweep, weekly model bakeoff, Quadient check-in) keep the system running 24/7.',
+      description: 'content-creator composes blog posts, case studies, social drafts from MemPalace context. tech-writer handles documentation. joe-content-lane skill provides the style guide. The cron cadence (morning brief, evening plan, content draft, security sweep, model bakeoff, weekly reviews) keeps the system running 24/7.',
     },
   },
   whyItMatters: {
-    heading: 'Why This Matters (for AI Engineers)',
+    heading: 'Why This Matters (for AI Builders)',
     description: 'The migration story is the strongest signal in this whole portfolio. It demonstrates three things hiring managers look for: systems thinking (specialization vs composability), production engineering (migrated a live system without downtime), and self-awareness (the lesson generalizes). I\'m sharing it because I think more agentic systems will hit the same wall.',
     points: [
       { label: 'More agents isn\'t better.', detail: 'Each new agent is a new maintenance burden, a new failure mode, a new coordination cost. The director layer in OpenClaw solved one problem and created another.' },
@@ -191,7 +191,7 @@ const _en = {
       },
       {
         title: 'Model selection per task beats tiering.',
-        detail: 'OpenClaw had 3 tiers (Opus/Sonnet/Haiku). Hermes picks the right model per task across 6 backends. Cheaper AND better-tuned per role.',
+        detail: 'OpenClaw had 3 tiers (Opus/Sonnet/Haiku). Hermes uses Ollama Cloud model selection — pick the right model per task. Cheaper AND better-tuned per role.',
       },
       {
         title: 'Boring infrastructure wins.',
@@ -208,15 +208,15 @@ const _en = {
     items: [
       {
         q: 'What was OpenClaw?',
-        a: 'OpenClaw was a 22-agent multi-agent AI system I built and operated from 2024 to early 2026. 22 specialized agents orchestrated by 4 directors and 1 CTO (Lurkr), 3 model tiers (Opus/Sonnet/Haiku), n8n-orchestrated. It ran real business operations: email routing, CRM automation, invoicing, SEO optimization, deployment pipelines. It was retired in 2026 when I consolidated to Hermes. The full postmortem is this case study.',
+        a: 'OpenClaw was a 22-agent multi-agent AI system I built and operated from 2024 to early 2026. 22 specialized agents orchestrated by 4 directors and 1 CTO (Lurkr), 3 model tiers (Opus/Sonnet/Haiku), workflow-automation orchestrated. It ran real business operations: email routing, CRM automation, invoicing, SEO optimization, deployment pipelines. It was retired in 2026 when I consolidated to Hermes. The full postmortem is this case study.',
       },
       {
         q: 'What is Hermes?',
-        a: 'Hermes is my current multi-agent AI system, replacing OpenClaw. 16 named agents across 4 domain specializations (Engineering, Ops/Business, Product, Personal), 6 model backends (kimi-k2.6, qwen3-coder-next, qwen3.5, minimax-m3, gpt-oss:20b, devstral-small-2). Agents compose via delegation rather than hard-wired specialization. Skills system for reusable patterns. MemPalace for persistent memory across sessions. Open source at github.com/joestechsolutions/hermes-forge.',
+        a: 'Hermes is my current multi-agent AI system, replacing OpenClaw. Lurkr (me) acts as CTO, with executive skills (Chief of Staff, CFO, COO, CMO), VPs for Engineering, Infrastructure, and Product, and 14 named agents. Main agent and sub-agents are routed through Ollama Cloud model selection by task. Agents compose via delegation rather than hard-wired specialization. Skills system for reusable patterns. MemPalace for persistent memory across sessions. Open source at github.com/joestechsolutions/hermes-forge.',
       },
       {
         q: 'Why did you retire OpenClaw?',
-        a: 'The OpenClaw architecture solved one problem (manage 22 specialized agents) and created another (you\'re now managing 22 specialized agents). The director layer added overhead. Most tasks needed cross-divisional context that the hierarchy made expensive. Hermes consolidates to 16 general-purpose agents that compose via delegation. Same work, different shape, less overhead.',
+        a: 'The OpenClaw architecture solved one problem (manage 22 specialized agents) and created another (you\'re now managing 22 specialized agents). The director layer added overhead. Most tasks needed cross-divisional context that the hierarchy made expensive. Hermes consolidates to general-purpose agents that compose via delegation behind a C-suite + VP structure. Same work, different shape, less overhead.',
       },
       {
         q: 'Did the migration cause downtime?',

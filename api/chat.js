@@ -49,7 +49,24 @@ export default async function handler(req) {
   let trace = null
 
   try {
-    const { messages, lang, sessionId, currentPage } = await req.json()
+    let body
+    try {
+      body = await req.json()
+    } catch {
+      return new Response(JSON.stringify({ error: 'Invalid JSON body' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    }
+
+    const { messages, lang, sessionId, currentPage } = body || {}
+
+    if (!Array.isArray(messages) || messages.length === 0) {
+      return new Response(JSON.stringify({ error: 'Missing or invalid messages array' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    }
 
     // Input length validation
     const bodySize = JSON.stringify({ messages, lang, sessionId, currentPage }).length

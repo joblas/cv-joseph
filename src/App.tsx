@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo, useReducer, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'motion/react'
-import { Mail, ExternalLink, Briefcase, GraduationCap, Award, Code, Users, Globe, Bot, Zap, Database, Layout, BadgeCheck, FolderGit2, Sparkles, Download, Github, Package, MessageSquare, Receipt, CalendarCheck, Shield, FileText, GitBranch, GitFork, Star, Terminal, Lock, Network, Calendar, Percent, UserCheck, Image, TrendingUp, Timer, SkipForward, ThumbsUp, MessageCircle, Share2, ChevronRight, List, ArrowUp, Newspaper } from 'lucide-react'
+import { Mail, ExternalLink, Briefcase, GraduationCap, Award, Code, Users, Globe, Bot, Zap, Database, Layout, BadgeCheck, FolderGit2, Sparkles, Download, Github, Package, MessageSquare, Receipt, CalendarCheck, Shield, FileText, GitBranch, GitFork, Star, Terminal, Lock, Network, Calendar, Percent, UserCheck, Image, TrendingUp, Timer, SkipForward, ThumbsUp, MessageCircle, Share2, ChevronRight, List, ArrowUp, Newspaper, Flag, Cpu, Route, Trophy } from 'lucide-react'
 import { translations, seo } from './i18n'
 import { useHomeSeo } from './articles/use-article-seo'
 import { getTechIcon } from './tech-icons'
@@ -1506,6 +1506,55 @@ function App() {
       {/* Summary - Con storytelling integrado */}
       <StorySection t={t} />
 
+      {/* Career Highlights Band — scannable credibility for the 5-second skim */}
+      <section id="career-highlights" className="py-16 md:py-20">
+        <div className="max-w-5xl mx-auto px-6">
+          <AnimatedSection>
+            <h2 className="font-display text-2xl md:text-3xl font-semibold mb-2 text-center">
+              {t.careerHighlights.title}
+            </h2>
+            <p className="text-center text-muted-foreground mb-10 text-sm">
+              Two industry-defining milestones — the start and the frontier of the self-driving era.
+            </p>
+          </AnimatedSection>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
+            {t.careerHighlights.items.map((item, i) => {
+              const iconMap: Record<string, typeof Flag> = {
+                flag: Flag,
+                award: Award,
+                cpu: Cpu,
+                route: Route,
+              }
+              const Icon = iconMap[item.icon] || Trophy
+              return (
+                <AnimatedSection key={item.title} delay={i * 0.1}>
+                  <div className="h-full p-5 md:p-6 rounded-2xl bg-card border border-border hover:border-primary/30 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/5 transition-all duration-200">
+                    <div className="flex items-start gap-4">
+                      <div className="shrink-0 w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center">
+                        <Icon className="w-5 h-5 text-primary" />
+                      </div>
+                      <div>
+                        <h3 className="font-display font-bold text-base md:text-lg mb-1 leading-tight">
+                          {item.title}
+                        </h3>
+                        <p className="text-sm text-muted-foreground leading-relaxed">
+                          {item.desc}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </AnimatedSection>
+              )
+            })}
+          </div>
+          <AnimatedSection delay={0.5}>
+            <p className="text-center text-sm text-muted-foreground mt-8 italic">
+              Worked alongside people who now lead Aurora, Waymo, Nuro, Kodiak, and Wayve.
+            </p>
+          </AnimatedSection>
+        </div>
+      </section>
+
       {/* Experience - With competencies preamble */}
       <section id="experience" className="py-16 md:py-24 bg-muted/30" style={{ contentVisibility: 'auto', containIntrinsicSize: 'auto 2000px' }}>
         <div className="max-w-5xl mx-auto px-6">
@@ -1598,9 +1647,9 @@ function App() {
                 <div className="flex-1 flex flex-col">
                   <div className="flex items-start justify-between mb-4">
                     <div className="w-12 h-12 rounded-xl overflow-hidden bg-black flex items-center justify-center shrink-0 p-1.5">
-                      <img src="/logo-openclaw.svg" alt="OpenClaw" className="w-full h-full object-contain" width={48} height={48} loading="lazy" decoding="async" />
+                        <img src="/logo-hermes.png" alt="Hermes" className="w-full h-full object-contain" width={48} height={48} loading="lazy" decoding="async" />
                     </div>
-                    <span className="badge px-3 py-1 bg-gold/20 text-gold">Multi-Agent · n8n</span>
+                    <span className="badge px-3 py-1 bg-gold/20 text-gold">{t.experience.santifer.businessOS.badge}</span>
                   </div>
                   <h4 className="font-display text-2xl font-bold mb-4">{t.experience.santifer.businessOS.title}</h4>
                   <p className="text-muted-foreground mb-6">{t.experience.santifer.businessOS.desc}</p>
@@ -2239,7 +2288,7 @@ function App() {
                     <div className="flex items-center gap-3">
                       {project.title === 'Hermes' && (
                         <div className="w-8 h-8 rounded-lg overflow-hidden bg-black flex items-center justify-center shrink-0 p-1">
-                          <img src="/logo-openclaw.svg" alt="OpenClaw" className="w-full h-full object-contain" width={32} height={32} loading="lazy" decoding="async" />
+                          <img src="/logo-hermes.png" alt="Hermes" className="w-full h-full object-contain" width={32} height={32} loading="lazy" decoding="async" />
                         </div>
                       )}
                       <h3 className={`font-display text-xl font-bold transition-colors ${
@@ -2440,6 +2489,59 @@ function App() {
           </AnimatedSection>
         </div>
       </section>
+
+      {/* Hermes Command Center — Model breakdown + Org Chart */}
+      {t.hermesCommand && (
+      <section id="hermes" className="py-16 md:py-24 bg-muted/30" style={{ contentVisibility: 'auto', containIntrinsicSize: 'auto 1200px' }}>
+        <div className="max-w-5xl mx-auto px-6">
+          <AnimatedSection>
+            <h2 className="font-display text-2xl font-semibold mb-2 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                <Network className="w-5 h-5 text-primary" />
+              </div>
+              {t.hermesCommand.title}
+            </h2>
+            <p className="text-primary font-medium mb-2">{t.hermesCommand.subtitle}</p>
+            <p className="text-muted-foreground mb-8 max-w-3xl">{t.hermesCommand.description}</p>
+          </AnimatedSection>
+
+          <div className="grid lg:grid-cols-2 gap-8">
+            {/* Org Chart */}
+            <AnimatedSection delay={0.1}>
+              <div className="rounded-2xl bg-card border border-border p-4 md:p-6">
+                <img
+                  src={t.hermesCommand.orgChart.src}
+                  alt={t.hermesCommand.orgChart.alt}
+                  className="w-full h-auto rounded-xl"
+                  loading="lazy"
+                  decoding="async"
+                />
+                <p className="text-xs text-muted-foreground mt-3 text-center">{t.hermesCommand.orgChart.caption}</p>
+              </div>
+            </AnimatedSection>
+
+            {/* Model Breakdown */}
+            <AnimatedSection delay={0.2}>
+              <div className="rounded-2xl bg-card border border-border p-6">
+                <h3 className="font-display text-lg font-bold mb-1">{t.hermesCommand.modelBreakdown.title}</h3>
+                <p className="text-sm text-muted-foreground mb-5">{t.hermesCommand.modelBreakdown.description}</p>
+                <div className="space-y-3">
+                  {t.hermesCommand.modelBreakdown.models.map((m, i) => (
+                    <div key={i} className="p-3 rounded-xl bg-background/50 border border-border hover:border-accent/30 transition-colors">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="font-mono text-xs font-semibold text-accent">{m.model}</span>
+                        <span className="text-xs text-primary font-medium">{m.role}</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">{m.usage}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </AnimatedSection>
+          </div>
+        </div>
+      </section>
+      )}
 
       {/* Sharing — Teaching + LinkedIn (hidden when no content) */}
       {(t.speaking.items.length > 0 || t.redditPosts.length > 0 || t.linkedinPosts.items.length > 0 || t.speaking.aiFluency.title) && (

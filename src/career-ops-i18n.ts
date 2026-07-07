@@ -4,7 +4,7 @@ const _en = {
     readingTime: '18 min read',
     seo: {
       title: 'Career-Ops: Finding, Forking & Customizing the Right Open-Source Tool',
-      description: 'How I evaluated, forked, and customized Career-Ops — an open-source multi-agent job search tool by santifer — for my AI Developer and DevOps job search. A showcase of OSS adoption, configuration, and optimization.',
+      description: 'How I evaluated, forked, and customized Career-Ops — an open-source multi-agent job search tool by santifer — for my AI Developer and Autonomous Systems job search. A showcase of OSS adoption, configuration, and optimization.',
     },
     nav: {
       breadcrumbHome: 'Home',
@@ -21,14 +21,15 @@ const _en = {
       { value: '12', label: 'Modes' },
       { value: '10', label: 'Dimensions' },
       { value: '3', label: 'Target tracks' },
-      { value: '15+', label: 'Years experience' },
+      { value: '10', label: 'Years AV' },
+      { value: '5+', label: 'Years AI/Code' },
     ],
     tldr: 'Career-Ops is an open-source AI job search tool created by santifer. I forked it, customized scoring weights, target archetypes, CV templates, and portal configurations for my career profile, and run it in production daily. This page showcases my process for evaluating, adopting, and optimizing open-source tooling.',
-    metaCallout: 'Credit where it\'s due: Career-Ops was created by santifer (santifer.io). I did not build this system — I found it, recognized it solved my problem, forked it, and made it mine. The ability to evaluate open-source tools, understand their architecture, and customize them for specific needs is the same skill set behind every DevOps pipeline, every infrastructure stack, and every AI workflow I\'ve ever shipped.',
+    metaCallout: 'Credit where it\'s due: Career-Ops was created by santifer (santifer.io). I did not build this system — I found it, recognized it solved my problem, forked it, and made it mine. The ability to evaluate open-source tools, understand their architecture, and customize them for specific needs is the same skill set behind every CI/CD pipeline, every infrastructure stack, and every AI workflow I\'ve ever shipped.',
     internalLinks: {
       openclaw: {
         text: 'OpenClaw → Hermes Migration | Case Study',
-        href: '/openclaw',
+        href: '/hermes',
       },
       skateWorkshop: {
         text: 'The Skate Workshop | Case Study',
@@ -37,19 +38,19 @@ const _en = {
     },
     sections: {
       intro: {
-        hook: 'The best engineers don\'t build everything from scratch — they find the right tool, understand how it works, and make it fit their needs. After 15 years building autonomous vehicle systems at Google, Uber, and Pronto.ai, I needed an efficient way to target AI Developer and DevOps roles. Instead of building a job search tool from zero, I evaluated what was out there, found Career-Ops (an open-source multi-agent system by santifer), and customized it for my workflow.',
-        body: 'I forked the repo, configured the scoring weights for my target roles, defined custom archetypes (AI Developer, DevOps/SRE, Embedded/Robotics), set up portal scanning for 45+ companies, customized the CV template with my proof points, and tuned the evaluation pipeline. The same approach I\'d take adopting any open-source tool on a team: evaluate, fork, configure, optimize, operate.',
+        hook: 'The best engineers don\'t build everything from scratch — they find the right tool, understand how it works, and make it fit their needs. After 10 years building autonomous vehicle systems at Google, Uber, and Pronto.ai, followed by 5+ years learning AI tools, code, and building personal and client projects, I needed an efficient way to target AI Developer and Autonomous Systems roles. Instead of building a job search tool from zero, I evaluated what was out there, found Career-Ops (an open-source multi-agent system by santifer), and customized it for my workflow.',
+        body: 'I forked the repo, configured the scoring weights for my target roles, defined custom archetypes (AI Developer, Autonomous Systems, Embedded/Robotics), set up portal scanning for 45+ companies, customized the CV template with my proof points, and tuned the evaluation pipeline. The same approach I\'d take adopting any open-source tool on a team: evaluate, fork, configure, optimize, operate.',
       },
       theProblem: {
         heading: 'The Problem',
-        body: 'Searching for AI Developer, DevOps/SRE, and Embedded/Robotics roles means navigating a fragmented market. Each offer requires reading the JD, mapping your skills against requirements, adapting the CV, writing personalized responses, and filling 15-field forms. Multiply that by 10 offers per day.',
+        body: 'Searching for AI Developer, Autonomous Systems, and Embedded/Robotics roles means navigating a fragmented market. Each offer requires reading the JD, mapping your skills against requirements, adapting the CV, writing personalized responses, and filling 15-field forms. Multiply that by 10 offers per day.',
         painPoints: [
           { label: 'Repetitive reading.', detail: '70% of offers are a poor fit. You find out after reading 800 words of JD.' },
           { label: 'Generic CVs.', detail: 'A static PDF cannot highlight the proof points relevant to each specific offer.' },
           { label: 'Manual forms.', detail: 'Every platform asks the same questions in different formats. Copy-paste 15 times per application.' },
           { label: 'No tracking.', detail: 'Without a system, you forget where you applied. Duplicate effort or lose follow-up entirely.' },
           { label: 'Zero feedback.', detail: 'Apply, wait, and never know if the problem was fit, the CV, or timing.' },
-          { label: 'Cross-domain targeting.', detail: 'AI, DevOps, and Embedded roles live on different boards, use different keywords, and attract different recruiters. One search strategy does not cover all three.' },
+          { label: 'Cross-domain targeting.', detail: 'AI, Autonomous Systems, and Embedded roles live on different boards, use different keywords, and attract different recruiters. One search strategy does not cover all three.' },
         ],
         punchline: 'The work is not hard. It is repetitive. The smart move isn\'t building a solution from scratch — it\'s finding the right open-source tool and making it yours.',
       },
@@ -136,8 +137,8 @@ const _en = {
           { label: 'Extract 15-20 keywords from the JD.', detail: 'Keywords land in the summary, first bullet of each role, and skills section.' },
           { label: 'Detect language.', detail: 'English JD generates English CV.' },
           { label: 'Detect region.', detail: 'US company generates Letter format. Europe generates A4.' },
-          { label: 'Detect archetype.', detail: 'Target archetypes map to AI Developer, DevOps/SRE, and Embedded/Robotics. The summary shifts based on the profile.' },
-          { label: 'Select projects.', detail: 'Top 3-4 by relevance. Hermes (or the OpenClaw→Hermes migration) for agent/AI roles. Cloud Infrastructure for DevOps. AV experience for robotics/embedded.' },
+          { label: 'Detect archetype.', detail: 'Target archetypes map to AI Developer, Autonomous Systems, and Embedded/Robotics. The summary shifts based on the profile.' },
+          { label: 'Select projects.', detail: 'Top 3-4 by relevance. Hermes (or the OpenClaw→Hermes migration) for agent/AI roles. Cloud Infrastructure for platform/infra roles. AV experience for robotics/embedded.' },
           { label: 'Reorder bullets.', detail: 'The most relevant experience moves up. The rest moves down — nothing disappears.' },
           { label: 'Render PDF.', detail: 'Puppeteer converts HTML to PDF. Self-hosted fonts, single-column ATS-safe.' },
         ],
@@ -145,11 +146,11 @@ const _en = {
           heading: 'Target Archetypes',
           headers: ['Archetype', 'Primary Proof Point'],
           rows: [
-            ['AI Developer', 'Hermes (16-agent AI system, composable via delegation)'],
-            ['DevOps / SRE', 'Cloud Infrastructure (Docker, CI/CD, monitoring pipelines)'],
-            ['Embedded / Robotics', 'Google Self-Driving Car Project + Pronto.ai (7 years AV systems)'],
+            ['AI Developer', 'Hermes (multi-agent AI team, Ollama Cloud model selection)'],
+            ['Autonomous Systems', 'Cloud Infrastructure (Docker, CI/CD, monitoring pipelines) + AV background'],
+            ['Embedded / Robotics', 'Google Self-Driving Car Project + Pronto.ai (10 years AV systems)'],
             ['Full-Stack AI', 'The Skate Workshop (React Native) + DALL-E Image Generator'],
-            ['Automation Engineer', 'Hermes (or the OpenClaw→Hermes migration) + Whisper Walkie (end-to-end AI-powered tooling)'],
+            ['Automation Builder', 'Hermes (or the OpenClaw→Hermes migration) + Whisper Walkie (end-to-end AI-powered tooling)'],
           ],
         },
         callout: 'Same CV. Multiple framings. All real — keywords get reformulated, never fabricated.',
@@ -248,7 +249,7 @@ const _en = {
         },
         {
           q: 'Is it replicable?',
-          a: 'Yes. Career-Ops is open source on GitHub, created by santifer. You need Claude Code with Playwright browser access enabled for portal scanning and form filling, plus a structured working directory following the data contract: cv.md as the canonical resume, a profile configuration file with your target roles and salary range, and a portals configuration listing the job boards and company career pages to scan. Each of the 12 operational modes is defined as a Claude Code skill file with its own context window, rules, and tool permissions. Fork the repository and customize the scoring dimensions, archetypes, and evaluation criteria for your own career profile. The onboarding flow walks you through setup step by step. That is exactly what I did — forked it, customized the profile for my AI Developer and DevOps targets, and started using it.',
+          a: 'Yes. Career-Ops is open source on GitHub, created by santifer. You need Claude Code with Playwright browser access enabled for portal scanning and form filling, plus a structured working directory following the data contract: cv.md as the canonical resume, a profile configuration file with your target roles and salary range, and a portals configuration listing the job boards and company career pages to scan. Each of the 12 operational modes is defined as a Claude Code skill file with its own context window, rules, and tool permissions. Fork the repository and customize the scoring dimensions, archetypes, and evaluation criteria for your own career profile. The onboarding flow walks you through setup step by step. That is exactly what I did — forked it, customized the profile for my AI Developer and Autonomous Systems targets, and started using it.',
         },
       ],
     },

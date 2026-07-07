@@ -1,0 +1,156 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 560" role="img" aria-labelledby="hermes-org-title hermes-org-desc">
+  <title id="hermes-org-title">JTS Hermes Org Chart v5.1</title>
+  <desc id="hermes-org-desc">Org chart showing Joe Blas as CEO, Lurkr as CTO, four C-suite skills, three VPs, and fourteen agents.</desc>
+  <defs>
+    <linearGradient id="ceoGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f59e0b"/>
+      <stop offset="100%" stop-color="#d97706"/>
+    </linearGradient>
+    <linearGradient id="execGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#6366f1"/>
+      <stop offset="100%" stop-color="#4f46e5"/>
+    </linearGradient>
+    <linearGradient id="vpGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0ea5e9"/>
+      <stop offset="100%" stop-color="#0284c7"/>
+    </linearGradient>
+    <linearGradient id="agentGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#22c55e"/>
+      <stop offset="100%" stop-color="#16a34a"/>
+    </linearGradient>
+  </defs>
+  <rect width="880" height="560" fill="#0a0a0a"/>
+  <text x="440" y="34" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="20" font-weight="700" fill="#f5f5f5">Hermes Command Center — JTS Org Chart v5.1</text>
+  <text x="440" y="58" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="12" fill="#a3a3a3">14 agents routed through Ollama Cloud model selection</text>
+
+  <!-- CEO -->
+  <rect x="380" y="80" width="120" height="44" rx="8" fill="url(#ceoGrad)"/>
+  <text x="440" y="100" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="700" fill="#0a0a0a">Joe Blas</text>
+  <text x="440" y="115" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="9" fill="#0a0a0a">CEO</text>
+
+  <!-- Line CEO -> CTO -->
+  <line x1="440" y1="124" x2="440" y2="150" stroke="#525252" stroke-width="2"/>
+
+  <!-- CTO -->
+  <rect x="360" y="150" width="160" height="48" rx="8" fill="#1f2937" stroke="#f59e0b" stroke-width="2"/>
+  <text x="440" y="172" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="700" fill="#f5f5f5">Lurkr</text>
+  <text x="440" y="188" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="10" fill="#a3a3a3">CTO · Main agent</text>
+
+  <!-- Line CTO -> C-suite -->
+  <line x1="440" y1="198" x2="440" y2="224" stroke="#525252" stroke-width="2"/>
+  <line x1="120" y1="224" x2="760" y2="224" stroke="#525252" stroke-width="2"/>
+
+  <!-- C-suite skills -->
+  <g transform="translate(40, 230)">
+    <rect width="160" height="40" rx="8" fill="url(#execGrad)"/>
+    <text x="80" y="248" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="10" font-weight="700" fill="#f5f5f5">Chief of Staff</text>
+    <text x="80" y="262" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="9" fill="#e5e5e5">Personal lane</text>
+  </g>
+  <g transform="translate(240, 230)">
+    <rect width="160" height="40" rx="8" fill="url(#execGrad)"/>
+    <text x="80" y="248" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="10" font-weight="700" fill="#f5f5f5">CFO</text>
+    <text x="80" y="262" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="9" fill="#e5e5e5">Finance</text>
+  </g>
+  <g transform="translate(440, 230)">
+    <rect width="160" height="40" rx="8" fill="url(#execGrad)"/>
+    <text x="80" y="248" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="10" font-weight="700" fill="#f5f5f5">COO</text>
+    <text x="80" y="262" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="9" fill="#e5e5e5">Operations</text>
+  </g>
+  <g transform="translate(640, 230)">
+    <rect width="160" height="40" rx="8" fill="url(#execGrad)"/>
+    <text x="80" y="248" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="10" font-weight="700" fill="#f5f5f5">CMO</text>
+    <text x="80" y="262" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="9" fill="#e5e5e5">Marketing</text>
+  </g>
+
+  <!-- Lines C-suite -> VPs -->
+  <line x1="120" y1="270" x2="120" y2="296" stroke="#525252" stroke-width="2"/>
+  <line x1="760" y1="270" x2="760" y2="296" stroke="#525252" stroke-width="2"/>
+  <line x1="120" y1="296" x2="760" y2="296" stroke="#525252" stroke-width="2"/>
+  <line x1="320" y1="296" x2="320" y2="310" stroke="#525252" stroke-width="2"/>
+  <line x1="560" y1="296" x2="560" y2="310" stroke="#525252" stroke-width="2"/>
+
+  <!-- VPs -->
+  <g transform="translate(160, 310)">
+    <rect width="200" height="42" rx="8" fill="url(#vpGrad)"/>
+    <text x="100" y="332" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="700" fill="#f5f5f5">VP Engineering</text>
+    <text x="100" y="346" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="9" fill="#e5e5e5">code · review · architecture</text>
+  </g>
+  <g transform="translate(380, 310)">
+    <rect width="200" height="42" rx="8" fill="url(#vpGrad)"/>
+    <text x="100" y="332" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="700" fill="#f5f5f5">VP Infrastructure</text>
+    <text x="100" y="346" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="9" fill="#e5e5e5">security · sre · deployments</text>
+  </g>
+  <g transform="translate(600, 310)">
+    <rect width="200" height="42" rx="8" fill="url(#vpGrad)"/>
+    <text x="100" y="332" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="700" fill="#f5f5f5">VP Product</text>
+    <text x="100" y="346" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="9" fill="#e5e5e5">product · clients · kanban</text>
+  </g>
+
+  <!-- Lines VPs -> Agents -->
+  <line x1="260" y1="352" x2="260" y2="372" stroke="#525252" stroke-width="2"/>
+  <line x1="480" y1="352" x2="480" y2="372" stroke="#525252" stroke-width="2"/>
+  <line x1="700" y1="352" x2="700" y2="372" stroke="#525252" stroke-width="2"/>
+  <line x1="100" y1="372" x2="820" y2="372" stroke="#525252" stroke-width="2"/>
+
+  <!-- Agents -->
+  <g font-family="system-ui, -apple-system, sans-serif" font-size="8" fill="#f5f5f5" text-anchor="middle">
+    <rect x="60" y="378" width="90" height="30" rx="6" fill="url(#agentGrad)"/>
+    <text x="105" y="392">code-implementer</text>
+    <text x="105" y="403" font-size="7" fill="#e5e5e5">kimi-k2.7-code</text>
+
+    <rect x="165" y="378" width="90" height="30" rx="6" fill="url(#agentGrad)"/>
+    <text x="210" y="392">code-reviewer</text>
+    <text x="210" y="403" font-size="7" fill="#e5e5e5">qwen3-coder-next</text>
+
+    <rect x="270" y="378" width="90" height="30" rx="6" fill="url(#agentGrad)"/>
+    <text x="315" y="392">code-architect</text>
+    <text x="315" y="403" font-size="7" fill="#e5e5e5">glm-5.2</text>
+
+    <rect x="375" y="378" width="90" height="30" rx="6" fill="url(#agentGrad)"/>
+    <text x="420" y="392">security-auditor</text>
+    <text x="420" y="403" font-size="7" fill="#e5e5e5">glm-5.2</text>
+
+    <rect x="480" y="378" width="90" height="30" rx="6" fill="url(#agentGrad)"/>
+    <text x="525" y="392">sre</text>
+    <text x="525" y="403" font-size="7" fill="#e5e5e5">deepseek-v4-pro</text>
+
+    <rect x="585" y="378" width="90" height="30" rx="6" fill="url(#agentGrad)"/>
+    <text x="630" y="392">test-runner</text>
+    <text x="630" y="403" font-size="7" fill="#e5e5e5">gpt-oss:20b</text>
+
+    <rect x="690" y="378" width="90" height="30" rx="6" fill="url(#agentGrad)"/>
+    <text x="735" y="392">hermes-stack-deploy</text>
+    <text x="735" y="403" font-size="7" fill="#e5e5e5">deepseek-v4-pro</text>
+
+    <rect x="40" y="418" width="90" height="30" rx="6" fill="url(#agentGrad)"/>
+    <text x="85" y="432">product-manager</text>
+    <text x="85" y="443" font-size="7" fill="#e5e5e5">minimax-m3</text>
+
+    <rect x="145" y="418" width="90" height="30" rx="6" fill="url(#agentGrad)"/>
+    <text x="190" y="432">skate-workshop-app</text>
+    <text x="190" y="443" font-size="7" fill="#e5e5e5">kimi-k2.7-code</text>
+
+    <rect x="250" y="418" width="90" height="30" rx="6" fill="url(#agentGrad)"/>
+    <text x="295" y="432">kanban</text>
+    <text x="295" y="443" font-size="7" fill="#e5e5e5">minimax-m3</text>
+
+    <rect x="355" y="418" width="90" height="30" rx="6" fill="url(#agentGrad)"/>
+    <text x="400" y="432">content-creator</text>
+    <text x="400" y="443" font-size="7" fill="#e5e5e5">minimax-m3</text>
+
+    <rect x="460" y="418" width="90" height="30" rx="6" fill="url(#agentGrad)"/>
+    <text x="505" y="432">client-research</text>
+    <text x="505" y="443" font-size="7" fill="#e5e5e5">minimax-m3</text>
+
+    <rect x="565" y="418" width="90" height="30" rx="6" fill="url(#agentGrad)"/>
+    <text x="610" y="432">resume-cv</text>
+    <text x="610" y="443" font-size="7" fill="#e5e5e5">minimax-m3</text>
+
+    <rect x="670" y="418" width="90" height="30" rx="6" fill="url(#agentGrad)"/>
+    <text x="715" y="432">job-search-agent</text>
+    <text x="715" y="443" font-size="7" fill="#e5e5e5">minimax-m3</text>
+  </g>
+
+  <text x="440" y="478" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="10" fill="#a3a3a3">Models are picked per task via Ollama Cloud · NVIDIA NIM fallback</text>
+  <text x="440" y="498" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="10" fill="#a3a3a3">Skills: MemPalace memory · Superpowers · Cron jobs · GitNexus code graph</text>
+</svg>
