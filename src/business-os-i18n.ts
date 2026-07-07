@@ -30,7 +30,6 @@ const _en = {
       body: 'A multi-service repair business doesn\'t fit in a generic ERP. In 2019, I evaluated RepairDesk ($99/mo), Orderry and RepairShopr: all existed, but none covered the multi-service model (repairs + accessories), nor offered CRM with gamification, complex automations or programmatic SEO. I needed a system that was the single source of truth for everything: orders, inventory, customers, bookings, billing and automations. So I built it.',
     },
     internalLinks: {
-      jacobo: { text: 'AI Agent Jacobo — Case Study', href: '/ai-agent-jacobo' },
       pseo: { text: 'Programmatic SEO — Case Study', href: '/programmatic-seo' },
       n8n: { text: 'n8n for PMs — Article', href: '/n8n-for-pms' },
       openClaw: { text: 'OpenClaw → Hermes Migration | Case Study', href: '/hermes' },

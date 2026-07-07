@@ -61,8 +61,8 @@
     }
   ],
   "redirects": [
-    { "source": "/jacobo", "destination": "/ai-agent-jacobo", "permanent": true },
-    { "source": "/agente-ia-jacobo", "destination": "/ai-agent-jacobo", "permanent": true },
+    { "source": "/jacobo", "destination": "/hermes", "permanent": true },
+    { "source": "/agente-ia-jacobo", "destination": "/hermes", "permanent": true },
     { "source": "/en", "destination": "/", "permanent": true },
     { "source": "/en/", "destination": "/", "permanent": true },
     { "source": "/sobre-mi", "destination": "/about", "permanent": true },
@@ -77,17 +77,17 @@
   ],
   "rewrites": [
     { "source": "/n8n-for-pms", "destination": "/n8n-for-pms/index.html" },
-    { "source": "/ai-agent-jacobo", "destination": "/ai-agent-jacobo/index.html" },
+    { "source": "/ai-agent-jacobo", "destination": "/hermes/index.html" },
     { "source": "/business-os-for-airtable", "destination": "/business-os-for-airtable/index.html" },
     { "source": "/programmatic-seo", "destination": "/programmatic-seo/index.html" },
     { "source": "/joblas-portfolio", "destination": "/joblas-portfolio/index.html" },
     { "source": "/joblas-portfolio-founder", "destination": "/joblas-portfolio-founder/index.html" },
     { "source": "/self-healing-chatbot", "destination": "/self-healing-chatbot/index.html" },
-    { "source": "/career-ops", "destination": "/career-ops/index.html" },
+    { "source": "/career-ops", "destination": "/career-ops-system/index.html" },
     { "source": "/career-ops-system", "destination": "/career-ops-system/index.html" },
     { "source": "/hermes", "destination": "/hermes/index.html" },
     { "source": "/openclaw", "destination": "/hermes/index.html" },
-    { "source": "/av-career", "destination": "/av-career/index.html" },
+    { "source": "/av-career", "destination": "/about/index.html" },
     { "source": "/about", "destination": "/about/index.html" },
     { "source": "/privacy", "destination": "/privacy/index.html" }
   ],
