@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo, useReducer, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'motion/react'
-import { Mail, ExternalLink, Briefcase, GraduationCap, Award, Code, Users, Globe, Bot, Zap, Database, Layout, BadgeCheck, FolderGit2, Sparkles, Download, Github, Package, MessageSquare, Receipt, CalendarCheck, Shield, FileText, GitBranch, GitFork, Star, Terminal, Lock, Network, Calendar, Percent, UserCheck, Image, TrendingUp, Timer, SkipForward, ThumbsUp, MessageCircle, Share2, ChevronRight, List, ArrowUp, Newspaper, Flag, Cpu, Route, Trophy } from 'lucide-react'
+import { Mail, ExternalLink, Briefcase, GraduationCap, Award, Wrench, Users, Globe, Bot, Zap, Cloud, Layers, Layout, BadgeCheck, FolderGit2, Sparkles, Download, Github, Cog, FileSearch, Plug, Shield, FileText, GitBranch, GitFork, Star, Terminal, Lock, Network, Image, Timer, SkipForward, ThumbsUp, MessageCircle, Share2, ChevronRight, List, ArrowUp, Newspaper, Flag, Cpu, Trophy, Rocket, Car, MapPin, Smartphone, Server, Mic, Search, DollarSign, Workflow, GraduationCap as GradCap } from 'lucide-react'
 import { translations, seo } from './i18n'
 import { useHomeSeo } from './articles/use-article-seo'
 import { getTechIcon } from './tech-icons'
@@ -1340,9 +1340,10 @@ function StorySection({ t }: { t: typeof translations }) {
           {t.story.nav.map((item) => {
             const icons: Record<string, React.ReactNode> = {
               briefcase: <Briefcase className="w-4 h-4" />,
+              workflow: <GitBranch className="w-4 h-4" />,
               folder: <FolderGit2 className="w-4 h-4" />,
               mail: <Mail className="w-4 h-4" />,
-              bot: <Bot className="w-4 h-4" />
+              messageCircle: <MessageCircle className="w-4 h-4" />
             }
             const isHighlight = 'highlight' in item && item.highlight
             const handleClick = (e: React.MouseEvent) => {
@@ -1431,8 +1432,8 @@ function App() {
       <header id="main-content" className="relative overflow-hidden">
         <GridSnakes />
         <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-accent/5 to-transparent" />
-        <div className="absolute top-0 right-[max(0px,calc(50%-40rem))] w-[600px] h-[600px] rounded-full blur-3xl -translate-y-1/3 translate-x-1/3 hidden sm:block animate-[hero-glow_8s_ease-in-out_infinite]" style={{ backgroundColor: 'hsl(var(--hero-orb-primary))' }} />
-        <div className="absolute bottom-0 left-[max(0px,calc(50%-40rem))] w-[550px] h-[550px] rounded-full blur-3xl translate-y-1/3 -translate-x-1/3 hidden sm:block animate-[hero-glow_11s_ease-in-out_infinite_reverse]" style={{ backgroundColor: 'hsl(var(--hero-orb-accent))' }} />
+        <div className="absolute top-0 right-[max(0px,calc(50%-40rem))] w-[300px] h-[300px] sm:w-[600px] sm:h-[600px] rounded-full blur-3xl -translate-y-1/3 translate-x-1/3 block animate-[hero-glow_8s_ease-in-out_infinite]" style={{ backgroundColor: 'hsl(var(--hero-orb-primary))' }} />
+        <div className="absolute bottom-0 left-[max(0px,calc(50%-40rem))] w-[275px] h-[275px] sm:w-[550px] sm:h-[550px] rounded-full blur-3xl translate-y-1/3 -translate-x-1/3 block animate-[hero-glow_11s_ease-in-out_infinite_reverse]" style={{ backgroundColor: 'hsl(var(--hero-orb-accent))' }} />
 
         <div className="relative max-w-5xl mx-auto px-6 py-20 md:py-32">
           <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12">
@@ -1520,10 +1521,10 @@ function App() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
             {t.careerHighlights.items.map((item, i) => {
               const iconMap: Record<string, typeof Flag> = {
-                flag: Flag,
-                award: Award,
-                cpu: Cpu,
-                route: Route,
+                rocket: Rocket,
+                trophy: Trophy,
+                car: Car,
+                mapPin: MapPin,
               }
               const Icon = iconMap[item.icon] || Trophy
               return (
@@ -1580,7 +1581,17 @@ function App() {
                     className="p-3 sm:p-4 rounded-xl bg-background/50 border border-border hover:border-accent/30 transition-colors group"
                   >
                     <div className="flex items-center sm:items-start gap-2 sm:mb-1 sm:min-h-[2.5rem]">
-                      <Zap className="w-4 h-4 text-accent shrink-0" />
+                      {(() => {
+                        const icons: Record<string, React.ReactNode> = {
+                          network: <Network className="w-4 h-4 text-accent shrink-0" />,
+                          layers: <Layers className="w-4 h-4 text-accent shrink-0" />,
+                          cpu: <Cpu className="w-4 h-4 text-accent shrink-0" />,
+                          users: <Users className="w-4 h-4 text-accent shrink-0" />,
+                          cloud: <Cloud className="w-4 h-4 text-accent shrink-0" />,
+                          wrench: <Wrench className="w-4 h-4 text-accent shrink-0" />,
+                        }
+                        return icons[(item as typeof item & { icon?: string }).icon ?? ''] || <Zap className="w-4 h-4 text-accent shrink-0" />
+                      })()}
                       <span className="text-sm font-semibold group-hover:text-accent transition-colors leading-tight">{item.title}</span>
                     </div>
                     <p className="text-sm text-muted-foreground pl-6 hidden sm:block">{item.desc}</p>
@@ -1656,13 +1667,12 @@ function App() {
                   <ul className="text-sm text-muted-foreground space-y-2">
                     {t.experience.santifer.businessOS.modules.map((item, i) => {
                       const icons: Record<string, React.ReactNode> = {
-                        database: <Database className="w-4 h-4" />,
+                        split: <GitBranch className="w-4 h-4" />,
+                        mail: <Mail className="w-4 h-4" />,
                         users: <Users className="w-4 h-4" />,
-                        layout: <Layout className="w-4 h-4" />,
-                        package: <Package className="w-4 h-4" />,
-                        messageSquare: <MessageSquare className="w-4 h-4" />,
-                        receipt: <Receipt className="w-4 h-4" />,
-                        calendarCheck: <CalendarCheck className="w-4 h-4" />
+                        dollarSign: <DollarSign className="w-4 h-4" />,
+                        search: <Search className="w-4 h-4" />,
+                        gitBranch: <GitBranch className="w-4 h-4" />,
                       }
                       return (
                         <li key={i} className="flex items-start gap-3">
@@ -1705,11 +1715,11 @@ function App() {
                 <ul className="text-sm text-muted-foreground space-y-2">
                   {t.experience.santifer.jacobo.items.map((item, i) => {
                     const icons: Record<string, React.ReactNode> = {
-                      network: <Network className="w-4 h-4" />,
-                      calendar: <Calendar className="w-4 h-4" />,
-                      percent: <Percent className="w-4 h-4" />,
-                      package: <Package className="w-4 h-4" />,
-                      userCheck: <UserCheck className="w-4 h-4" />
+                      shield: <Shield className="w-4 h-4" />,
+                      cog: <Cog className="w-4 h-4" />,
+                      fileSearch: <FileSearch className="w-4 h-4" />,
+                      plug: <Plug className="w-4 h-4" />,
+                      graduationCap: <GradCap className="w-4 h-4" />
                     }
                     return (
                       <li key={i} className="flex items-start gap-2">
@@ -1740,11 +1750,10 @@ function App() {
                 <ul className="text-sm text-muted-foreground space-y-2">
                   {t.experience.santifer.webSeo.items.map((item, i) => {
                     const icons: Record<string, React.ReactNode> = {
-                      fileText: <FileText className="w-4 h-4" />,
+                      smartphone: <Smartphone className="w-4 h-4" />,
                       image: <Image className="w-4 h-4" />,
-                      trendingUp: <TrendingUp className="w-4 h-4" />,
-                      gitBranch: <GitBranch className="w-4 h-4" />,
-                      bot: <Bot className="w-4 h-4" />
+                      server: <Server className="w-4 h-4" />,
+                      mic: <Mic className="w-4 h-4" />,
                     }
                     return (
                       <li key={i} className="flex items-start gap-2">
@@ -1775,7 +1784,7 @@ function App() {
             {/* ERP card */}
             <AnimatedSection delay={0.3}>
               <Link to={t.experience.santifer.erp.caseStudyUrl || '/'} className="block h-full p-5 rounded-2xl bg-card border border-border hover:border-primary/30 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/5 transition-all duration-200 flex flex-col group/card">
-                <Database className="w-5 h-5 text-primary mb-3" />
+                <GitBranch className="w-5 h-5 text-primary mb-3" />
                 <p className="font-medium text-sm mb-1">{t.experience.santifer.erp.title}</p>
                 <p className="text-sm text-muted-foreground">{t.experience.santifer.erp.desc}</p>
                 <div className="flex items-center justify-between mt-auto pt-3">
@@ -2497,7 +2506,7 @@ function App() {
           <AnimatedSection>
             <h2 className="font-display text-2xl font-semibold mb-2 flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                <Network className="w-5 h-5 text-primary" />
+                <Workflow className="w-5 h-5 text-primary" />
               </div>
               {t.hermesCommand.title}
             </h2>
@@ -2856,7 +2865,7 @@ function App() {
           <AnimatedSection>
             <h2 className="font-display text-2xl font-semibold mb-12 flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                <Code className="w-5 h-5 text-primary" />
+                <Wrench className="w-5 h-5 text-primary" />
               </div>
               {t.skills.title}
             </h2>

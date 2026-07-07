@@ -30,10 +30,10 @@ const _translationsEn = {
     ],
     nav: [
       { icon: 'briefcase', label: 'My path', href: '#experience' },
-      { icon: 'network', label: 'Hermes', href: '#hermes' },
+      { icon: 'workflow', label: 'Hermes', href: '#hermes' },
       { icon: 'folder', label: 'What I build', href: '#projects' },
       { icon: 'mail', label: "Let's talk", href: '#contact' },
-      { icon: 'bot', label: 'Ask me', href: '#chat', highlight: true },
+      { icon: 'messageCircle', label: 'Ask me', href: '#chat', highlight: true },
     ],
     skills: [
       'Multi-Agent AI',
@@ -56,22 +56,22 @@ const _translationsEn = {
     title: 'Career Highlights',
     items: [
       {
-        icon: 'flag',
+        icon: 'rocket',
         title: 'Present at the founding.',
         desc: "Part of the original Google team that hit Larry Page's 100,000-mile no-incident milestone — the result that green-lit the self-driving car project.",
       },
       {
-        icon: 'award',
+        icon: 'trophy',
         title: 'Guinness World Record.',
         desc: "Helped execute the world's first commercial delivery by a self-driving truck (Otto → Uber ATG, 2016) — a driverless Budweiser haul across Colorado.",
       },
       {
-        icon: 'cpu',
+        icon: 'car',
         title: 'Built the future from scratch.',
         desc: "Part of the team that built Google's Firefly — a ground-up, fully-electric autonomous vehicle with no steering wheel or pedals.",
       },
       {
-        icon: 'route',
+        icon: 'mapPin',
         title: 'Coast to coast, no hands.',
         desc: "Original sub-10-person Pronto.ai team behind the self-driving Prius that drove San Francisco → New York with no hands on the wheel and no pedal input.",
       },
@@ -82,7 +82,7 @@ const _translationsEn = {
     p1: 'AI developer building',
     p1Highlight: 'production multi-agent systems',
     p1End:
-      '. Run Hermes as a multi-agent AI team: Lurkr (me) as CTO, executive skills (Chief of Staff, CFO, COO, CMO), and VPs for Engineering, Infrastructure, and Product routing work to 14 specialized agents. Main agent and sub-agents are dynamically assigned to Ollama Cloud models by task — I pick the model that fits the job, not the brand. Ship full-stack applications using React/React Native, TypeScript, Python, and PostgreSQL. (Previously: OpenClaw 22-agent system, 2024–2026, now retired — see migration case study.)',
+      '. Run Hermes as a multi-agent AI team — Lurkr as CTO, executive skills, VPs, 14 agents. Ollama Cloud model selection per task. Ship full-stack apps: React, React Native, TypeScript, Python.',
     p2: 'Previously: 10 years as an',
     p2Highlight: 'autonomous vehicle systems specialist',
     p2End: ' at Google, Uber, and startups — followed by 5+ years learning AI tools, code, and building personal and client projects.',
@@ -106,26 +106,32 @@ const _translationsEn = {
     items: [
       {
         title: 'Multi-Agent AI Systems',
+        icon: 'network',
         desc: 'Hermes: Lurkr as CTO, C-suite skills, VPs for Engineering/Infra/Product, and 14 agents routed through Ollama Cloud model selection',
       },
       {
         title: 'Full-Stack AI Development',
+        icon: 'layers',
         desc: 'React, TypeScript, Python, Next.js, Supabase, AI APIs',
       },
       {
         title: 'AV Systems Integration',
+        icon: 'cpu',
         desc: 'Sensor calibration, drive-by-wire SME, ADAS validation, CAN/LIN',
       },
       {
         title: 'Client-Facing Delivery',
+        icon: 'users',
         desc: '30+ executive/investor demos, client consulting, private AI deployment',
       },
       {
         title: 'Cloud & Platform',
+        icon: 'cloud',
         desc: 'AWS, GCP, Docker, K8s, Terraform, CI/CD',
       },
       {
         title: 'Hardware-Software Bridge',
+        icon: 'wrench',
         desc: 'HIL test rigs, bench testing, embedded validation, wiring harness fabrication',
       },
     ],
@@ -183,7 +189,7 @@ const _translationsEn = {
         title: 'Hermes',
         badge: 'In production',
         badgeBuilding: '',
-        desc: 'Multi-agent AI system I operate as CTO through Ollama Cloud. Lurkr (me) as CTO, executive skills (Chief of Staff, CFO, COO, CMO), VPs for Engineering, Infrastructure, and Product, plus 14 agents. Main agent and sub-agents are routed to Ollama Cloud models by task — I pick the model that fits the job. Open source at github.com/joestechsolutions/hermes-forge. Migrated from OpenClaw in 2026 — composability beats specialization.',
+        desc: 'Multi-agent AI system I operate as CTO. 14 agents, executive skills, VPs, Ollama Cloud model routing. Open source. Migrated from OpenClaw in 2026.',
         tech: ['Hermes', 'Ollama Cloud', 'Multi-Agent', 'Model Routing', 'Skills', 'MemPalace'],
         link: 'https://github.com/joestechsolutions/hermes-forge',
         caseStudyUrl: '/hermes',
@@ -230,22 +236,17 @@ const _translationsEn = {
         link: 'github.com/joblas',
       },
     ],
-    saPlaybook: {
+      saPlaybook: {
       title: 'Private AI Solutions',
       badge: 'Consulting · For Clients',
       tagline: '',
       desc: 'Private AI solutions for SMBs using Ollama, Open WebUI, and local automation tools. Client data never leaves their servers.',
       features: [
-        { icon: 'zap', text: '100% local deployment — no cloud data leakage' },
-        {
-          icon: 'shield',
-          text: 'Self-hosted open source LLMs (Llama, Mistral)',
-        },
-        {
-          icon: 'fileText',
-          text: 'Local automation workflows',
-        },
-        { icon: 'git', text: 'Integration with existing client systems' },
+        { icon: 'shield', text: '100% local deployment — no cloud data leakage' },
+        { icon: 'cog', text: 'Local automation workflows' },
+        { icon: 'fileSearch', text: 'Local RAG: embeddings over client documents' },
+        { icon: 'plug', text: 'Integration with existing client systems' },
+        { icon: 'graduationCap', text: 'Client team training for adoption' },
       ],
       footer: 'Available for private AI consulting',
       cta: 'Get in touch',
@@ -254,7 +255,7 @@ const _translationsEn = {
   claudeCode: {
     title: 'AI Coding Power User',
     badge: 'High-Agency · AI-Native',
-    desc: 'I use AI coding assistants daily as core development tools. From multi-agent orchestration to full-stack apps, AI amplifies every phase of my workflow.',
+    desc: 'AI coding assistants are my core development tools. Multi-agent orchestration to full-stack apps — AI amplifies every phase.',
     highlights: [
       'Multi-agent orchestration: 14 specialized agents routed through Ollama Cloud model selection for real business operations',
       'RAG systems: embeddings, similarity search, context-augmented generation',
@@ -289,7 +290,7 @@ const _translationsEn = {
       businessOS: {
         title: 'Hermes — Agent System',
         badge: 'Multi-Agent · Ollama Cloud',
-        desc: 'I operate Hermes as CTO through Ollama Cloud model selection. Executive skills (Chief of Staff, CFO, COO, CMO), VPs for Engineering, Infrastructure, and Product, plus 14 agents. Main agent and sub-agents are routed to the Ollama Cloud model that fits the task. Open source. Migrated from OpenClaw in 2026 — composability beats specialization.',
+        desc: 'I operate Hermes as CTO through Ollama Cloud model selection. 14 agents, executive skills, three VPs. Open source. Migrated from OpenClaw in 2026.',
         metrics: [
           { value: '14', label: 'agents' },
           { value: 'Ollama Cloud', label: 'model routing' },
@@ -297,11 +298,11 @@ const _translationsEn = {
         ],
         modules: [
           {
-            icon: 'network',
+            icon: 'split',
             text: 'Main router classifies intents and delegates to specialized agents',
           },
           {
-            icon: 'messageSquare',
+            icon: 'mail',
             text: 'Email routing with automatic classification and contextual response',
           },
           {
@@ -309,15 +310,15 @@ const _translationsEn = {
             text: 'CRM automation: client tracking, scoring, nurturing',
           },
           {
-            icon: 'receipt',
+            icon: 'dollarSign',
             text: 'Automated invoicing and report generation',
           },
           {
-            icon: 'trendingUp',
+            icon: 'search',
             text: 'SEO optimization: content analysis, meta tag generation',
           },
           {
-            icon: 'package',
+            icon: 'gitBranch',
             text: 'Deployment pipelines: automated CI/CD',
           },
         ],
@@ -333,19 +334,19 @@ const _translationsEn = {
             text: 'Ollama + Open WebUI: full chat interface with local models',
           },
           {
-            icon: 'network',
+            icon: 'cog',
             text: 'Local automation workflows: AI-powered business process automation',
           },
           {
-            icon: 'database',
+            icon: 'fileSearch',
             text: 'Local RAG: embeddings over client documents',
           },
           {
-            icon: 'zap',
+            icon: 'plug',
             text: 'Integration with existing systems (CRM, email, etc.)',
           },
           {
-            icon: 'userCheck',
+            icon: 'graduationCap',
             text: 'Client team training for adoption',
           },
         ],
@@ -358,7 +359,7 @@ const _translationsEn = {
         desc: 'Complete applications in production serving real users. React/React Native frontend, Supabase/PostgreSQL backend, Stripe and external API integrations.',
         items: [
           {
-            icon: 'layout',
+            icon: 'smartphone',
             text: 'The Skate Workshop: React Native app with 40+ Supabase tables',
           },
           {
@@ -366,10 +367,10 @@ const _translationsEn = {
             text: 'DALL-E Image Generator: web app with OpenAI DALL-E 3.0 API',
           },
           {
-            icon: 'gitBranch',
+            icon: 'server',
             text: 'Cloud Infrastructure: Terraform multicloud (AWS/GCP), K8s',
           },
-          { icon: 'bot', text: 'Whisper Walkie: voice-to-text 100% local (open source)' },
+          { icon: 'mic', text: 'Whisper Walkie: voice-to-text 100% local (open source)' },
         ],
         codeAvailable: '',
         caseStudyUrl: '',
@@ -410,7 +411,13 @@ const _translationsEn = {
       location: 'Mountain View, CA',
       role: 'Program Manager L4 / Operations & Sensor Readiness Lead',
       period: '2009 - 2016 · Autonomous Vehicles',
-      desc: "Owned full sensor-suite readiness as the final gate before any vehicle went on public/private roads: intrinsic & extrinsic calibration of cameras, internally-built IMUs, three proprietary LiDAR variants (long-range, 360°, short-range), and proprietary radar — including helping build the anechoic chamber used to calibrate radar. Owned all calibration equipment and tooling: acquired new equipment and built the calibration infrastructure from scratch — fabricated targets/rigs from 80/20 extrusion to calibrate LiDARs, radars, and cameras; bench-calibrated drive-by-wire components. Promoted to Program Manager L4 for authoring a formal training program (trained the full operations team plus ~100 drivers) and a calibration process redesign that cut full vehicle calibration from 9 hours to 60 minutes (adopted fleet-wide across 100+ vehicles). Led operations standup for new facilities in Phoenix and Austin. Ran shop operations as a three-person core team — first point of contact for drivers, PMs, and leads. Co-built the drive-by-wire system (one of two lead builders); designed, fabricated, and installed onboard compute down to component level across cars and vans — including testing new NVIDIA chips for the self-driving stack.",
+      desc: [
+        'Owned full sensor-suite readiness — cameras, IMUs, three LiDAR variants, radar — as final gate before vehicles hit public or private roads.',
+        'Built calibration infrastructure from scratch: targets/rigs from 80/20 extrusion, bench tools, and an anechoic chamber for radar.',
+        'Cut full vehicle calibration from 9 hours to 60 minutes fleet-wide across 100+ vehicles; trained the operations team and ~100 drivers.',
+        'Co-built the drive-by-wire system and installed onboard compute, including testing new NVIDIA chips for the self-driving stack.',
+      ],
+      descLong: "Owned full sensor-suite readiness as the final gate before any vehicle went on public/private roads: intrinsic & extrinsic calibration of cameras, internally-built IMUs, three proprietary LiDAR variants (long-range, 360°, short-range), and proprietary radar — including helping build the anechoic chamber used to calibrate radar. Owned all calibration equipment and tooling: acquired new equipment and built the calibration infrastructure from scratch — fabricated targets/rigs from 80/20 extrusion to calibrate LiDARs, radars, and cameras; bench-calibrated drive-by-wire components. Promoted to Program Manager L4 for authoring a formal training program (trained the full operations team plus ~100 drivers) and a calibration process redesign that cut full vehicle calibration from 9 hours to 60 minutes (adopted fleet-wide across 100+ vehicles). Led operations standup for new facilities in Phoenix and Austin. Ran shop operations as a three-person core team — first point of contact for drivers, PMs, and leads. Co-built the drive-by-wire system (one of two lead builders); designed, fabricated, and installed onboard compute down to component level across cars and vans — including testing new NVIDIA chips for the self-driving stack.",
       press: [
         { title: "World's First Fully Driverless Ride on Public Roads (2015)", publisher: 'YouTube', url: 'https://www.youtube.com/watch?v=cdgQpa1pUUE&t=4s' },
         { title: "Google's Self-Driving Cars Have Driven Over 1 Million Miles", publisher: 'VentureBeat', url: 'https://venturebeat.com/ai/googles-self-driving-cars-have-driven-over-1-million-miles' },
@@ -429,7 +436,12 @@ const _translationsEn = {
       location: 'San Francisco, CA',
       role: 'Autonomous Truck Technician / Operations Lead',
       period: '2016 - 2018 · Autonomous Vehicles',
-      desc: 'Helped execute the world\'s first commercial delivery by a self-driving truck — a driverless Budweiser haul across Colorado that set a Guinness World Record (Oct 2016). Led the technician team installing wiring harnesses and mounting all compute + sensors onto a 10-truck autonomous fleet (~90% uptime). Installed newly-developed drive-by-wire systems on the trucks (second drive-by-wire build, heavier vehicle class); set up infrastructure to lift trucks and install wheel encoders for rotation measurement. Evaluated a manufacturing vendor (traveled to Juárez, Mexico with engineering + procurement) to scale production of truck wiring harnesses. Primary field-to-engineering operations liaison: daily failure triage, root cause analysis, and resolution. Went through the Otto → Uber acquisition first-hand (SF ↔ Pittsburgh integration meetings).',
+      desc: [
+        "Helped execute the world's first commercial delivery by a self-driving truck — a Guinness World Record driverless Budweiser haul across Colorado (Oct 2016).",
+        'Led technician team installing wiring harnesses and mounting compute + sensors onto a 10-truck autonomous fleet, maintaining ~90% uptime.',
+        'Installed newly-developed drive-by-wire systems and wheel-encoder infrastructure; vetted a manufacturing vendor in Juárez for scaled harness production.',
+        'Primary field-to-engineering liaison: daily failure triage, root cause analysis, and resolution through the Otto → Uber acquisition.',
+      ],
       press: [
         { title: 'Uber Acquires Self-Driving Truck Startup Otto', publisher: 'Transport Topics', url: 'https://www.ttnews.com/articles/uber-acquires-self-driving-truck-startup-otto' },
         { title: 'Otto + Uber: Self-Driving Trucks', publisher: 'Mashable', url: 'https://mashable.com/article/otto-uber-self-driving-truck' },
@@ -446,7 +458,11 @@ const _translationsEn = {
       location: 'San Francisco, CA',
       role: 'Autonomous Vehicle Technician / Operations',
       period: '2018 - 2019 · Autonomous Vehicles',
-      desc: 'Part of the original sub-10-person team. Sole technician — owned end-to-end fleet integration, validation, and test campaign execution under rapid iteration cycles. Served as the primary liaison between field operations and engineering. 2,900-mile cross-country autonomous demo with zero critical failures. Conducted 30+ executive and investor demonstrations.',
+      desc: [
+        'Original sub-10-person team. Sole technician — owned end-to-end fleet integration, validation, and test campaign execution under rapid iteration.',
+        'Drove the 2,900-mile San Francisco → New York autonomous demo with zero critical failures and zero hands on the wheel.',
+        'Conducted 30+ executive and investor demonstrations as primary field-to-engineering liaison.',
+      ],
       tesauro: {
         title: '2,900-Mile Cross-Country Demo',
         desc: 'Supported a 2,900-mile cross-country autonomous demonstration with zero critical failures. Conducted 30+ executive and investor demonstrations.',
@@ -464,7 +480,7 @@ const _translationsEn = {
   hermesCommand: {
     title: 'Hermes Command Center',
     subtitle: 'How I run the business with AI agents',
-    description: 'Hermes is the multi-agent system I operate as CTO. Lurkr is the main agent, with executive skills, three VPs, and 14 specialized agents underneath. Every agent is routed through Ollama Cloud model selection — I pick the model that fits the task, not the brand.',
+    description: 'Hermes is my multi-agent system. Lurkr is the main agent, with executive skills, three VPs, and 14 specialized agents. Each agent gets the Ollama Cloud model that fits its task.',
     orgChart: {
       src: '/hermes-org-chart.svg',
       alt: 'JTS Hermes org chart v5.1 — Joe Blas CEO, Lurkr CTO, C-suite skills, three VPs, 14 agents',
