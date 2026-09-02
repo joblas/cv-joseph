@@ -31,13 +31,13 @@ const _en = {
     cto: {
       name: 'Lurkr',
       role: 'CTO (OpenClaw era) → now the CTO layer in Hermes',
-      model: 'Was Claude Opus 4.6, now routed through Ollama Cloud model selection',
-      description: 'In OpenClaw, Lurkr was a dedicated CTO agent. In Hermes, Lurkr (me) is the CTO layer, delegating through C-suite skills and VPs to the agents that do the work.',
+      model: 'Was Claude Opus 4.6, now glm-5.3-flash on Ollama Cloud',
+      description: 'In OpenClaw, Lurkr was a dedicated CTO agent. In Hermes, Lurkr (me) is the CTO layer, delegating through C-suite skills and VPs to on-demand worker agents.',
     },
     divisions: [
       {
         director: 'Engineering (Nexus)',
-        domain: 'Both eras',
+        domain: 'OpenClaw agents → now Hermes role profiles, spawned on demand',
         agents: [
           { name: 'code-architect', role: 'System design' },
           { name: 'code-implementer', role: 'Code writing' },
@@ -49,18 +49,18 @@ const _en = {
       },
       {
         director: 'Ops / Business (Chief + Summit)',
-        domain: 'Both eras',
+        domain: 'OpenClaw agents → now Hermes role profiles, spawned on demand',
         agents: [
           { name: 'monitoring-specialist', role: 'System health' },
           { name: 'sre', role: 'Reliability + on-call' },
-          { name: 'finance-tracker', role: 'Invoicing + Stripe' },
+          { name: 'finance-tracker', role: 'Finance + expense tracking' },
           { name: 'sales-outreach', role: 'Lead gen + proposals' },
           { name: 'content-creator', role: 'Blog + social drafts' },
         ],
       },
       {
         director: 'Product (Halfpipe)',
-        domain: 'Both eras',
+        domain: 'OpenClaw agents → now Hermes role profiles, spawned on demand',
         agents: [
           { name: 'product-manager', role: 'Specs + roadmaps' },
           { name: 'tech-writer', role: 'Documentation' },
@@ -69,7 +69,7 @@ const _en = {
       },
       {
         director: 'Personal',
-        domain: 'Hermes-only',
+        domain: 'Hermes-only role profiles',
         agents: [
           { name: 'life-admin', role: 'Calendar, reminders' },
           { name: 'creative-buddy', role: 'Music, art, exploration' },
@@ -126,36 +126,34 @@ const _en = {
     heading: 'How It Actually Works — Real Workflows',
     description: 'Theory is cheap. Here\'s what happens in practice. These are real workflows running in production today on Hermes. The OpenClaw workflows were similar but used a different runtime; the work was the same.',
     morningStandups: {
-      heading: 'Morning Briefs (was Morning Standups)',
-      description: 'Every morning at 7:30AM Pacific, the morning_brief cron job fires. It composes via delegation: queries MemPalace for the last 24h of activity, asks the content-creator agent to draft a summary, and delivers it to Telegram. I read it over coffee.',
-      imgAlt: 'Telegram morning brief at 7:30AM Pacific — composed by Hermes from overnight activity',
-      imgCaption: 'Real morning brief — composed via delegation, not orchestrated by a director',
+      heading: 'Daily Standup (was Morning Standups)',
+      description: 'Every morning at 9AM Pacific, the daily-standup cron fires: one scheduled agent run reads the overnight cron outputs, the per-project steward status files, and MemPalace, then compiles systems status, priorities, and blockers into a Telegram brief. I read it over coffee. An evening plan follows at 5:30PM.',
+      imgAlt: 'Telegram daily standup at 9AM Pacific — compiled by Hermes from overnight activity',
+      imgCaption: 'Real daily standup — one scheduled agent run, no director layer',
     },
     leadToInvoice: {
-      heading: 'Lead to Invoice Pipeline (was OpenClaw\'s signature workflow)',
-      description: 'End-to-end: a lead comes in, gets qualified, turns into a proposal, gets reviewed by me, goes to the client, meeting gets scheduled, work gets done, invoice goes out. The pipeline runs on Hermes now via delegation — sales-outreach → content-creator → product-manager → finance-tracker. The same pipeline that took 22 agents in OpenClaw takes 5 in Hermes.',
+      heading: 'Lead to Invoice Pipeline (built lean, deliberately staged)',
+      description: 'The pipeline exists as one script and a CRM instead of OpenClaw\'s 22-agent chain: a weekday outreach job capped at 5 sends/day, a reply watcher that files responses into a Notion CRM, and me in the middle for every commitment. Honest status: the outbound lane is built and scheduled but I haven\'t loaded the queue yet — client work fills the calendar, and money always moves by hand.',
       pipeline: [
-        { name: 'sales-outreach', detail: 'finds and qualifies the lead' },
-        { name: 'content-creator', detail: 'drafts the proposal' },
-        { name: 'Joe', detail: 'reviews and approves' },
-        { name: 'life-admin', detail: 'schedules the meeting' },
-        { name: 'finance-tracker', detail: 'sends the invoice' },
+        { name: 'outreach job', detail: 'weekday cron, capped at 5 sends/day (queue currently empty by choice)' },
+        { name: 'reply watcher', detail: 'files responses into the Notion CRM' },
+        { name: 'Joe', detail: 'reviews, approves, takes the call' },
+        { name: 'Joe', detail: 'sends the invoice — money moves by hand, by design' },
       ],
     },
     engineering: {
-      heading: 'Engineering Flow (post-coding pipeline)',
-      description: 'Feature requests flow from strategy through development to deployment. code-implementer writes code following the project\'s existing patterns. code-reviewer reviews for bugs and security. The post-coding hook runs security-auditor + test-runner automatically. The jts-pipeline-detect.sh hook auto-spawns the 8-stage JTS pipeline for client work.',
+      heading: 'Engineering Flow (agents propose, CI disposes)',
+      description: 'Feature work runs through AI coding sessions against each repo\'s written guardrails: gated paths for auth, schema, and release config; CI running the full test suite on every push (175 tests on the flagship app) with dependency-drift warnings; and a deploy lane that only fires when CI is green. No agent merges a PR unless I name it.',
       pipeline: [
-        { name: 'product-manager', detail: 'defines the task' },
-        { name: 'code-implementer', detail: 'writes the code' },
-        { name: 'code-reviewer', detail: 'reviews the PR' },
-        { name: 'security-auditor + test-runner', detail: 'automatic post-coding gate' },
-        { name: 'sre', detail: 'deploys with monitoring' },
+        { name: 'coding agent', detail: 'writes code against the repo\'s doctrine and gated paths' },
+        { name: 'CI', detail: 'full test suite + drift gates on every push' },
+        { name: 'Joe', detail: 'merges — agents never merge unnamed PRs' },
+        { name: 'CD', detail: 'deploys only on green CI' },
       ],
     },
     content: {
       heading: 'Content Pipeline (joe-content-lane)',
-      description: 'content-creator composes blog posts, case studies, social drafts from MemPalace context. tech-writer handles documentation. joe-content-lane skill provides the style guide. The cron cadence (morning brief, evening plan, content draft, security sweep, model bakeoff, weekly reviews) keeps the system running 24/7.',
+      description: 'Scheduled content lanes draft daily — Instagram carousels and post drafts via the joe-content-lane skill — and deliver to Telegram for my approval before anything publishes. The cron cadence (daily standup, evening plan, content drafts, security sweep, weekly executive reviews) keeps the system running 24/7.',
     },
   },
   whyItMatters: {
@@ -163,7 +161,7 @@ const _en = {
     description: 'The migration story is the strongest signal in this whole portfolio. It demonstrates three things hiring managers look for: systems thinking (specialization vs composability), production engineering (migrated a live system without downtime), and self-awareness (the lesson generalizes). I\'m sharing it because I think more agentic systems will hit the same wall.',
     points: [
       { label: 'More agents isn\'t better.', detail: 'Each new agent is a new maintenance burden, a new failure mode, a new coordination cost. The director layer in OpenClaw solved one problem and created another.' },
-      { label: 'Composability beats specialization.', detail: 'Hermes composes the same work with 6 fewer agents. The shape changed; the work didn\'t. That\'s the win.' },
+      { label: 'Composability beats specialization.', detail: 'Hermes composes the same work with a far smaller standing system. The shape changed; the work didn\'t. That\'s the win.' },
       { label: 'Boring infrastructure is portable.', detail: 'systemd, Tailscale, Telegram. Same stack before and after the migration. Boring let me move fast when I needed to.' },
       { label: 'Migration is a skill, not a crisis.', detail: 'I migrated live production from one architecture to another. Zero downtime. The boring infrastructure made it possible. The lesson generalizes to any system rewrite.' },
     ],
