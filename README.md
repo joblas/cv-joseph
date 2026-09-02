@@ -24,7 +24,7 @@ A production-grade interactive portfolio that **demonstrates the skills it descr
 - **LLMOps Dashboard** — Private `/ops` with 8 tabs: Overview, Conversations, Costs, RAG, Security, Evals, Voice, System. Real data from Langfuse + Supabase
 - **Closed Loop** — Trace → online scoring → quality < 0.7 → auto-generate test → CI gate blocks deploy
 - **Voice Mode** — OpenAI Realtime API, audio-to-audio, shared RAG pipeline, ~$0.25/session
-- **6 Published Articles** — case studies with JSON-LD, prerendered HTML, cross-linked RAG, and interactive architecture diagrams
+- **4 Published Articles** — case studies with JSON-LD, prerendered HTML, cross-linked RAG, and interactive architecture diagrams
 - **Interactive Architecture Diagram** — GSAP-animated SVG with narrated audio, pan/zoom, dark mode sync. [Explore it →](https://cv-joseph.vercel.app/self-healing-chatbot#architecture)
 - **GEO-ready** — `llms.txt`, structured data (JSON-LD), AI crawler-friendly robots.txt
 
@@ -270,8 +270,6 @@ chatbot-prompt.txt           # System prompt (fallback, prod uses Langfuse)
 | OpenClaw → Hermes Migration | `/hermes` | case-study |
 | Self-Healing Chatbot | `/self-healing-chatbot` | case-study |
 | Career-Ops | `/career-ops-system` | case-study |
-| Business OS | `/business-os-for-airtable` | case-study |
-| Programmatic SEO | `/programmatic-seo` | case-study |
 | n8n for PMs | `/n8n-for-pms` | collab |
 
 (Legacy template articles — the "Jacobo AI Agent" case study and Spanish-language slugs — were inherited from the forked CV template and have been removed; old URLs redirect to `/hermes`.)

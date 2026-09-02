@@ -24,7 +24,6 @@ interface BadgeConfig {
 // Repos with GitHubRepoBadge in article components
 const BADGE_REPOS: BadgeConfig[] = [
   { owner: 'joblas', repo: 'career-ops', file: 'src/CareerOps.tsx', label: 'career-ops (badge)' },
-  { owner: 'joblas', repo: 'cv-joseph', file: 'src/JacoboAgent.tsx', label: 'jacobo-workflows (badge)' },
 ]
 
 // Repos with stars/forks in i18n.ts project cards

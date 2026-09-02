@@ -23,7 +23,7 @@
       "headers": [
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; media-src 'self' data:; script-src 'self' 'unsafe-inline' https://vercel.live; style-src 'self' 'unsafe-inline' https://vercel.live; font-src 'self' https://vercel.live; img-src 'self' data: https:; connect-src 'self' https://vercel.live https://*.pusher.com wss://*.pusher.com https://va.vercel-scripts.com https://vitals.vercel-insights.com wss://api.openai.com https://api.openai.com; frame-src 'self' https://vercel.live https://player.mux.com https://www.youtube.com; frame-ancestors 'self'; form-action 'self'; base-uri 'self'; object-src 'none'"
+          "value": "default-src 'self'; media-src 'self' data: https://*.hf.space https://huggingface.co; script-src 'self' 'unsafe-inline' https://vercel.live; style-src 'self' 'unsafe-inline' https://vercel.live; font-src 'self' https://vercel.live; img-src 'self' data: https:; connect-src 'self' https://vercel.live https://*.pusher.com wss://*.pusher.com https://va.vercel-scripts.com https://vitals.vercel-insights.com wss://api.openai.com https://api.openai.com https://*.hf.space https://huggingface.co; frame-src 'self' https://vercel.live https://player.mux.com https://www.youtube.com; frame-ancestors 'self'; form-action 'self'; base-uri 'self'; object-src 'none'"
         },
         {
           "key": "Strict-Transport-Security",
@@ -68,8 +68,8 @@
     { "source": "/sobre-mi", "destination": "/about", "permanent": true },
     { "source": "/privacidad", "destination": "/privacy", "permanent": true },
     { "source": "/n8n-para-pms", "destination": "/n8n-for-pms", "permanent": true },
-    { "source": "/business-os-para-airtable", "destination": "/business-os-for-airtable", "permanent": true },
-    { "source": "/seo-programatico", "destination": "/programmatic-seo", "permanent": true },
+    { "source": "/business-os-para-airtable", "destination": "/hermes", "permanent": true },
+    { "source": "/seo-programatico", "destination": "/hermes", "permanent": true },
     { "source": "/chatbot-que-se-cura-solo", "destination": "/self-healing-chatbot", "permanent": true },
     { "source": "/openclaw", "destination": "/hermes", "permanent": true },
     { "source": "/openclaw/", "destination": "/hermes", "permanent": true },
@@ -78,8 +78,8 @@
   "rewrites": [
     { "source": "/n8n-for-pms", "destination": "/n8n-for-pms/index.html" },
     { "source": "/ai-agent-jacobo", "destination": "/hermes/index.html" },
-    { "source": "/business-os-for-airtable", "destination": "/business-os-for-airtable/index.html" },
-    { "source": "/programmatic-seo", "destination": "/programmatic-seo/index.html" },
+    { "source": "/business-os-for-airtable", "destination": "/hermes/index.html" },
+    { "source": "/programmatic-seo", "destination": "/hermes/index.html" },
     { "source": "/joblas-portfolio", "destination": "/joblas-portfolio/index.html" },
     { "source": "/joblas-portfolio-founder", "destination": "/joblas-portfolio-founder/index.html" },
     { "source": "/self-healing-chatbot", "destination": "/self-healing-chatbot/index.html" },

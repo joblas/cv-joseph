@@ -142,7 +142,7 @@ export default async function handler(req, res) {
           heading: 'Agentic RAG',
           whyAgentic: {
             heading: 'Why Agentic',
-            body: 'In classic RAG, every message goes through the search pipeline. In agentic RAG, Claude decides when to search using tool_use (documented in Anthropic\'s API as tool_use). "What\'s your name?" doesn\'t need to search 56 chunks. "What stack did you use for <a href="/programmatic-seo" class="text-primary underline underline-offset-2 hover:text-primary/80">programmatic SEO</a>?" does. Result: ~60% of conversations don\'t trigger RAG (measured in Langfuse), saving latency and cost.',
+            body: 'In classic RAG, every message goes through the search pipeline. In agentic RAG, Claude decides when to search using tool_use (documented in Anthropic\'s API as tool_use). "What\'s your name?" doesn\'t need to search 56 chunks. "How did you customize <a href="/career-ops-system" class="text-primary underline underline-offset-2 hover:text-primary/80">Career-Ops</a>?" does. Result: ~60% of conversations don\'t trigger RAG (measured in Langfuse), saving latency and cost.',
           },
           hybridSearch: {
             heading: 'Hybrid Search',
@@ -162,7 +162,7 @@ export default async function handler(req, res) {
           },
           callout: 'Every failure mode was discovered in production, traced in Langfuse, and converted into an eval.',
           recursivityCallout: 'Meta: this very article is indexed in the chatbot\'s RAG. Ask it "how does your RAG work?" — it will answer using RAG to explain RAG.',
-          indexedArticles: 'The chatbot can answer about <a href="/ai-agent-jacobo" class="text-primary underline underline-offset-2 hover:text-primary/80">Jacobo</a>, <a href="/business-os-for-airtable" class="text-primary underline underline-offset-2 hover:text-primary/80">Business OS</a>, <a href="/programmatic-seo" class="text-primary underline underline-offset-2 hover:text-primary/80">Programmatic SEO</a>, and <a href="/n8n-for-pms" class="text-primary underline underline-offset-2 hover:text-primary/80">n8n for PMs</a> — just ask.',
+          indexedArticles: 'The chatbot can answer about the <a href="/hermes" class="text-primary underline underline-offset-2 hover:text-primary/80">OpenClaw → Hermes migration</a>, <a href="/career-ops-system" class="text-primary underline underline-offset-2 hover:text-primary/80">Career-Ops</a>, and <a href="/n8n-for-pms" class="text-primary underline underline-offset-2 hover:text-primary/80">n8n for PMs</a> — just ask.',
         },
         defense: {
           heading: '6-Layer Defense',
