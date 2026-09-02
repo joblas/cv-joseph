@@ -2,7 +2,7 @@ const _seoEn = {
   title:
     'Joseph Blas | AI Developer · Autonomous Systems Builder · Multi-Agent AI Systems Builder',
   description:
-    'AI Developer & Autonomous Systems Builder. Helped build the self-driving car industry — from Google\'s founding 100,000-mile milestone to a Guinness World Record for the first commercial self-driving truck delivery. Now builds production multi-agent AI systems (Hermes, 14 agents, Ollama Cloud). 10 years in AV (Google/Waymo, Uber ATG, Pronto.ai) + 5+ years building with AI. React, TypeScript, Python. Full-stack AI apps in production.',
+    'AI Developer & Autonomous Systems Builder. Helped build the self-driving car industry — from Google\'s founding 100,000-mile milestone to a Guinness World Record for the first commercial self-driving truck delivery. Now builds production multi-agent AI systems (Hermes orchestrator, 40+ scheduled automations, Ollama Cloud). 10 years in AV (Google/Waymo, Uber ATG, Pronto.ai) + 5+ years building with AI. React, TypeScript, Python. Full-stack AI apps in production.',
 };
 
 export const seo = _seoEn;
@@ -82,7 +82,7 @@ const _translationsEn = {
     p1: 'AI developer building',
     p1Highlight: 'production multi-agent systems',
     p1End:
-      '. Run Hermes as a multi-agent AI team — Lurkr as CTO, executive skills, VPs, 14 agents. Ollama Cloud model selection per task. Ship full-stack apps: React, React Native, TypeScript, Python.',
+      '. Run Hermes as an AI operations team — Lurkr as CTO, executive skills, VPs, 40+ scheduled automations. Ollama Cloud models pinned per job. Ship full-stack apps: React, React Native, TypeScript, Python.',
     p2: 'Previously: 10 years as an',
     p2Highlight: 'autonomous vehicle systems specialist',
     p2End: ' at Google, Uber, and startups — followed by 5+ years learning AI tools, code, and building personal and client projects.',
@@ -107,7 +107,7 @@ const _translationsEn = {
       {
         title: 'Multi-Agent AI Systems',
         icon: 'network',
-        desc: 'Hermes: Lurkr as CTO, C-suite skills, VPs for Engineering/Infra/Product, and 14 agents routed through Ollama Cloud model selection',
+        desc: 'Hermes: Lurkr as CTO, C-suite skills, VPs for Engineering/Infra/Product, and 40+ scheduled automations on Ollama Cloud',
       },
       {
         title: 'Full-Stack AI Development',
@@ -189,9 +189,9 @@ const _translationsEn = {
         title: 'Hermes',
         badge: 'In production',
         badgeBuilding: '',
-        desc: 'Multi-agent AI system I operate as CTO. 14 agents, executive skills, VPs, Ollama Cloud model routing. Open source. Migrated from OpenClaw in 2026.',
+        desc: 'AI operations system I run as CTO. Executive skills, VPs, 40+ scheduled automations, Ollama Cloud models pinned per job. Built on Nous Research\'s open-source Hermes agent. Migrated from OpenClaw in 2026.',
         tech: ['Hermes', 'Ollama Cloud', 'Multi-Agent', 'Model Routing', 'Skills', 'MemPalace'],
-        link: 'https://github.com/joestechsolutions/hermes-forge',
+        link: 'https://github.com/NousResearch/hermes-agent',
         caseStudyUrl: '/hermes',
         caseStudyLabel: 'Case Study: OpenClaw → Hermes Migration',
       },
@@ -199,8 +199,8 @@ const _translationsEn = {
         title: 'The Skate Workshop',
         badge: 'In Beta',
         badgeBuilding: '',
-        desc: 'Full-stack React Native mobile app for Olympic-level skateboarding coach. 40+ Supabase tables, 18+ Edge Functions, Stripe Connect marketplace, multiplayer SKATE game mode, real-time features.',
-        tech: ['React Native', 'TypeScript', 'Supabase', 'Stripe Connect', 'Expo'],
+        desc: 'Full-stack React Native mobile app for Olympic-level skateboarding coach Willy Santos. 19-table Supabase backend, live push notifications, 4,900+ trick-obstacle training combinations, 175 automated tests. In TestFlight beta.',
+        tech: ['React Native', 'TypeScript', 'Supabase', 'Expo'],
         link: 'theskateworkshop.app',
       },
       {
@@ -213,9 +213,9 @@ const _translationsEn = {
       },
       {
         title: 'DALL-E Image Generator',
-        badge: 'In production',
+        badge: 'Demo',
         badgeBuilding: '',
-        desc: 'Production AI image generation web application using OpenAI DALL-E 3.0 API. Live application serving real users.',
+        desc: 'AI image-generation web app using the OpenAI DALL-E 3.0 API — a demo build.',
         tech: ['OpenAI DALL-E 3.0', 'React', 'Node.js', 'REST API'],
         link: 'jblas-dall-e.com',
       },
@@ -257,7 +257,7 @@ const _translationsEn = {
     badge: 'High-Agency · AI-Native',
     desc: 'AI coding assistants are my core development tools. Multi-agent orchestration to full-stack apps — AI amplifies every phase.',
     highlights: [
-      'Multi-agent orchestration: 14 specialized agents routed through Ollama Cloud model selection for real business operations',
+      'Agent operations: one orchestrator + 40+ scheduled automations running real business operations on Ollama Cloud',
       'RAG systems: embeddings, similarity search, context-augmented generation',
       'Prompt engineering: system prompt design, evaluations, quality/cost optimization',
       'Full-stack AI apps: prototype to production using Claude, OpenAI, Ollama Cloud, and open source models',
@@ -276,11 +276,11 @@ const _translationsEn = {
       exit: 'Real AI For Real Businesses',
       exitDesc: 'Specializing in private AI setups and multi-agent workflows for SMBs. Delivering 100% local, self-hosted LLMs that process sensitive data without ever leaving the client\'s servers.',
       highlights: [
-        'Built and operate Hermes (multi-agent AI team: Lurkr as CTO, C-suite skills, VPs, 14 agents routed through Ollama Cloud model selection) handling real business operations',
+        'Operate Hermes (Nous Research\'s open-source agent runtime) as an AI operations team — Lurkr as CTO, C-suite skills, VPs, 40+ scheduled automations handling real business operations',
         'Develop private AI solutions for SMB clients using Ollama, Open WebUI, and local automation tools',
         'Ship production web and mobile apps: React, Next.js, React Native, TypeScript, Supabase',
         'Created Whisper Walkie — open source push-to-talk voice typing tool (100% local processing)',
-        'Built The Skate Workshop — React Native app for Olympic coach (40+ tables, Stripe Connect)',
+        'Built The Skate Workshop — React Native app for Olympic coach Willy Santos (19-table Supabase backend, push notifications, TestFlight beta)',
         'Cloud Infrastructure — Terraform multicloud (AWS/GCP), Kubernetes, Anthos/GKE',
       ],
       trustedBy: {
@@ -290,32 +290,32 @@ const _translationsEn = {
       businessOS: {
         title: 'Hermes — Agent System',
         badge: 'Multi-Agent · Ollama Cloud',
-        desc: 'I operate Hermes as CTO through Ollama Cloud model selection. 14 agents, executive skills, three VPs. Open source. Migrated from OpenClaw in 2026.',
+        desc: 'I operate Hermes as CTO. Executive skills, three VPs, 40+ scheduled automations, Ollama Cloud models pinned per job. Built on Nous Research\'s open-source agent. Migrated from OpenClaw in 2026.',
         metrics: [
-          { value: '14', label: 'agents' },
+          { value: '40+', label: 'scheduled automations' },
           { value: 'Ollama Cloud', label: 'model routing' },
           { value: '24/7', label: 'operation' },
         ],
         modules: [
           {
             icon: 'split',
-            text: 'Main router classifies intents and delegates to specialized agents',
+            text: 'Daily standup and evening-plan briefings compiled from every subsystem',
           },
           {
             icon: 'mail',
-            text: 'Email routing with automatic classification and contextual response',
+            text: 'Inbox and email watch with digest-first triage (draft, never auto-send)',
           },
           {
             icon: 'users',
-            text: 'CRM automation: client tracking, scoring, nurturing',
+            text: 'A steward agent per project — daily status, blockers, and escalation',
           },
           {
             icon: 'dollarSign',
-            text: 'Automated invoicing and report generation',
+            text: 'Weekly executive reviews, scorecards, and report generation',
           },
           {
             icon: 'search',
-            text: 'SEO optimization: content analysis, meta tag generation',
+            text: 'Watchdogs monitoring the crons, uptime, and model health — alerts only when wrong',
           },
           {
             icon: 'gitBranch',
@@ -356,11 +356,11 @@ const _translationsEn = {
       webSeo: {
         title: 'Production Applications',
         badge: 'Full-Stack · In Production',
-        desc: 'Complete applications in production serving real users. React/React Native frontend, Supabase/PostgreSQL backend, Stripe and external API integrations.',
+        desc: 'Complete applications built and shipped. React/React Native frontend, Supabase/PostgreSQL backend, external API integrations.',
         items: [
           {
             icon: 'smartphone',
-            text: 'The Skate Workshop: React Native app with 40+ Supabase tables',
+            text: 'The Skate Workshop: React Native app on a 19-table Supabase backend (TestFlight beta)',
           },
           {
             icon: 'image',
@@ -377,20 +377,20 @@ const _translationsEn = {
       },
       erp: {
         title: 'Hermes Agents',
-        desc: 'Email, CRM, invoicing, SEO, and deployments automated via 14 composable agents routed through Ollama Cloud model selection',
-        metric: '14 agents',
+        desc: 'Briefings, project stewards, watchdogs, weekly executive reviews, and deployments — 40+ scheduled automations on Ollama Cloud',
+        metric: '40+ automations',
         caseStudyUrl: '/hermes',
       },
       gpts: {
         title: 'Skate Workshop',
-        desc: 'React Native app with 40+ tables, 18+ Edge Functions, Stripe Connect',
+        desc: 'React Native app — 19-table backend, push notifications, 4,900+ trick combos',
         metric: 'In Beta',
         caseStudyUrl: '',
       },
       reservas: {
         title: 'DALL-E Generator',
         desc: 'AI image generation web app with OpenAI DALL-E 3.0',
-        metric: 'In prod',
+        metric: 'Demo',
         caseStudyUrl: '',
       },
       crm: {
@@ -480,22 +480,20 @@ const _translationsEn = {
   hermesCommand: {
     title: 'Hermes Command Center',
     subtitle: 'How I run the business with AI agents',
-    description: 'Hermes is my multi-agent system. Lurkr is the main agent, with executive skills, three VPs, and 14 specialized agents. Each agent gets the Ollama Cloud model that fits its task.',
+    description: 'Hermes is my agent operations system. Lurkr is the main agent, with executive skills, three VPs, and 40+ scheduled automations. Each job is pinned to the Ollama Cloud model that fits it.',
     orgChart: {
       src: '/hermes-org-chart.svg',
-      alt: 'JTS Hermes org chart v5.1 — Joe Blas CEO, Lurkr CTO, C-suite skills, three VPs, 14 agents',
-      caption: 'JTS Org Chart v5.1 — 14 agents across Engineering, Infrastructure, Product, Marketing, and Personal',
+      alt: 'JTS Hermes org chart v5.1 — Joe Blas CEO, Lurkr CTO, C-suite skills, three VPs, and the agent roles they route work to',
+      caption: 'JTS Org Chart v5.1 — role structure across Engineering, Infrastructure, Product, Marketing, and Personal',
     },
     modelBreakdown: {
       title: 'Ollama Cloud Model Selection',
-      description: 'Main agent and sub-agents are dynamically routed to the model that fits the task. NVIDIA NIM is the fallback provider.',
+      description: 'Every scheduled job and the main agent are pinned to a model that fits; a deep fallback chain covers outages.',
       models: [
-        { model: 'minimax-m3:cloud', role: 'Main agent / default', usage: 'General orchestration and high-stakes reasoning' },
-        { model: 'glm-5.2:cloud', role: 'Architecture, strategy, security', usage: 'Design decisions, root-cause analysis, security audits' },
-        { model: 'kimi-k2.7-code:cloud', role: 'Code implementation', usage: 'Writing production code against existing patterns' },
-        { model: 'qwen3-coder-next:cloud', role: 'Code review', usage: 'Fast, code-specialized PR review' },
-        { model: 'deepseek-v4-pro:cloud', role: 'Infrastructure / Platform', usage: 'Ops decisions, deploy planning, capacity reasoning' },
-        { model: 'gpt-oss:20b-cloud', role: 'Monitoring + structured ops', usage: 'System health, security sweeps, structured log analysis' },
+        { model: 'glm-5.3-flash:cloud', role: 'Main agent / default', usage: 'Gateway sessions and most scheduled jobs' },
+        { model: 'kimi-k2.7-code:cloud', role: 'Delegated sub-agents', usage: 'Spawned worker sessions and coding tasks' },
+        { model: 'glm-5.3:cloud', role: 'Primary fallback / heavy reasoning', usage: 'First in the fallback chain' },
+        { model: 'minimax-m3 · deepseek-v4-pro · gemma4 · qwen3.5 · gpt-oss:20b', role: 'Fallback chain', usage: 'Resilience when the primary provider degrades' },
       ],
     },
   },

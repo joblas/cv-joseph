@@ -44,7 +44,7 @@ export default function AboutPage() {
           { '@type': 'Thing', name: 'Platform', url: 'https://en.wikipedia.org/wiki/Platform_engineering' },
           { '@type': 'Thing', name: 'Sensor Calibration' },
           { '@type': 'Thing', name: 'Drive-by-Wire Systems' },
-          { '@type': 'SoftwareApplication', name: 'Hermes', url: 'https://github.com/joestechsolutions/hermes-forge' },
+          { '@type': 'SoftwareApplication', name: 'Hermes', url: 'https://github.com/NousResearch/hermes-agent' },
           { '@type': 'SoftwareApplication', name: 'Claude API', url: 'https://docs.anthropic.com' },
           { '@type': 'SoftwareApplication', name: 'Terraform', url: 'https://www.terraform.io' },
           { '@type': 'SoftwareApplication', name: 'Kubernetes', url: 'https://kubernetes.io' },

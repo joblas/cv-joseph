@@ -327,7 +327,7 @@ export const articleRegistry: ArticleConfig[] = [
     title: 'OpenClaw → Hermes Migration',
     seo: {
       title: 'I Retired a 22-Agent AI System. Here\'s Why. | Joseph Blas',
-      description: 'Case study: how I migrated OpenClaw (22 specialized agents, 4 directors, 1 CTO) to Hermes (14 agents composing via delegation behind C-suite + VPs). The lesson: design for composability, not specialization. Open source.',
+      description: 'Case study: how I migrated OpenClaw (22 specialized agents, 4 directors, 1 CTO) to Hermes (composable workers behind C-suite + VPs, 40+ scheduled automations). The lesson: design for composability, not specialization.',
     },
     sectionLabels: {
       'org-chart': 'Org Chart',
@@ -348,23 +348,23 @@ export const articleRegistry: ArticleConfig[] = [
     seoMeta: {
       datePublished: '2026-06-16',
       dateModified: '2026-06-16',
-      keywords: ['AI agents', 'multi-agent system', 'OpenClaw', 'Hermes', 'agent migration', 'agent architecture', 'composability', 'small business AI', 'AI automation', 'Claude', 'n8n', 'Ollama Cloud', 'model selection', 'AI team', '14 agents', 'agent runtime', 'AI orchestration', 'business automation', 'AI consultancy'],
+      keywords: ['AI agents', 'multi-agent system', 'OpenClaw', 'Hermes', 'agent migration', 'agent architecture', 'composability', 'small business AI', 'AI automation', 'Claude', 'n8n', 'Ollama Cloud', 'model selection', 'AI team', 'agent runtime', 'AI orchestration', 'business automation', 'AI consultancy'],
       articleType: 'TechArticle',
       articleTags: 'AI agents,multi-agent,Hermes,OpenClaw,architecture,migration,composability,specialization,small business,Claude,n8n,automation',
       images: ['https://cv-joseph.vercel.app/articles/openclaw-org-chart.webp'],
       about: [
         { '@type': 'SoftwareApplication', name: 'OpenClaw', applicationCategory: 'Agent Runtime (retired)' },
-        { '@type': 'SoftwareApplication', name: 'Hermes', url: 'https://github.com/joestechsolutions/hermes-forge', applicationCategory: 'Agent Runtime' },
+        { '@type': 'SoftwareApplication', name: 'Hermes', url: 'https://github.com/NousResearch/hermes-agent', applicationCategory: 'Agent Runtime' },
         { '@type': 'Thing', name: 'Multi-Agent AI Systems' },
       ],
       extra: { proficiencyLevel: 'Expert', dependencies: 'Hermes, OpenClaw (retired), n8n, Claude API, Telegram, Slack, GitHub, Stripe, Tailscale, systemd, Ollama, MemPalace' },
       citation: [
-        { '@type': 'WebPage', name: 'Hermes-forge on GitHub', url: 'https://github.com/joestechsolutions/hermes-forge' },
+        { '@type': 'WebPage', name: 'Hermes agent runtime on GitHub', url: 'https://github.com/NousResearch/hermes-agent' },
         { '@type': 'WebPage', name: 'Original blog post: 22-Agent AI Team Architecture (superseded by this case study)', url: 'https://www.joestechsolutions.com/blog/22-agent-ai-team-architecture' },
       ],
       mentions: [
         { '@type': 'SoftwareApplication', name: 'OpenClaw' },
-        { '@type': 'SoftwareApplication', name: 'Hermes', url: 'https://github.com/joestechsolutions/hermes-forge' },
+        { '@type': 'SoftwareApplication', name: 'Hermes', url: 'https://github.com/NousResearch/hermes-agent' },
         { '@type': 'SoftwareApplication', name: 'n8n', url: 'https://n8n.io' },
         { '@type': 'SoftwareApplication', name: 'Claude', url: 'https://claude.ai' },
         { '@type': 'SoftwareApplication', name: 'Tailscale', url: 'https://tailscale.com' },

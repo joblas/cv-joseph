@@ -15,7 +15,7 @@
 
 ## Professional Summary
 
-AI developer building production multi-agent systems. Run Hermes as a multi-agent AI team: Lurkr (me) as CTO, with executive skills (Chief of Staff, CFO, COO, CMO), VPs for Engineering, Infrastructure, and Product, and 14 agents routed through Ollama Cloud model selection. Ship full-stack applications using React/React Native, TypeScript, Python, and PostgreSQL. Use AI coding assistants daily as core development tools.
+AI developer building production multi-agent systems. Run Hermes as a multi-agent AI team: Lurkr (me) as CTO, with executive skills (Chief of Staff, CFO, COO, CMO), VPs for Engineering, Infrastructure, and Product, and 40+ scheduled automations with models pinned per job on Ollama Cloud. Ship full-stack applications using React/React Native, TypeScript, Python, and PostgreSQL. Use AI coding assistants daily as core development tools.
 
 Previously: built and operated OpenClaw (22 specialized agents, 2024–2026) — migrated to Hermes after learning composability beats specialization. The migration postmortem is the OpenClaw → Hermes case study on this site.
 
@@ -29,9 +29,9 @@ Previously: 10 years as an autonomous vehicle systems specialist. Built Google's
 
 ## Key Achievement: Hermes (Multi-Agent AI Team)
 
-Multi-agent AI system I operate as CTO through Ollama Cloud model selection. Open source at github.com/joestechsolutions/hermes-forge.
+AI operations system I operate as CTO — models pinned per job on Ollama Cloud. Built on Nous Research's open-source hermes-agent (github.com/NousResearch/hermes-agent).
 
-- **Architecture:** Lurkr (me) as CTO, executive skills (Chief of Staff, CFO, COO, CMO), VPs for Engineering, Infrastructure, and Product, 14 named agents
+- **Architecture:** Lurkr (me) as CTO, executive skills (Chief of Staff, CFO, COO, CMO), VPs for Engineering, Infrastructure, and Product, and 40+ scheduled automations
 - **Model Routing:** Ollama Cloud model selection by task
 - **Capabilities:** Email routing, CRM automation, invoicing, SEO optimization, deployment pipelines, content drafting, security sweeps, daily morning briefs, evening plans
 - **Memory:** MemPalace (semantic search, knowledge graph) — persistent across sessions
@@ -50,7 +50,7 @@ Multi-agent AI system I operate as CTO through Ollama Cloud model selection. Ope
 
 ## Core Competencies
 
-- **Multi-Agent AI Systems:** Hermes (Lurkr as CTO, executive skills, VPs, 14 agents via Ollama Cloud model selection), RAG, prompt engineering, prompt versioning
+- **Multi-Agent AI Systems:** Hermes (Lurkr as CTO, executive skills, VPs, 40+ scheduled automations on Ollama Cloud), RAG, prompt engineering, prompt versioning
 - **Full-Stack AI Development:** React 19, TypeScript, Python, Next.js, Supabase, AI APIs (Claude + OpenAI Realtime)
 - **AV Systems Integration:** Sensor calibration, drive-by-wire SME, ADAS validation, CAN/LIN
 - **Client-Facing Delivery:** 10+ executive/investor demos, client consulting, private AI deployment
@@ -63,7 +63,7 @@ Multi-agent AI system I operate as CTO through Ollama Cloud model selection. Ope
 - Claude & OpenAI APIs — multi-agent orchestration, RAG, prompt engineering
 - LangChain / CrewAI — agent frameworks
 - Ollama / Open WebUI — private AI deployment
-- Hermes — multi-agent AI team (14 agents, Ollama Cloud model selection)
+- Hermes — AI operations system (40+ scheduled automations, Ollama Cloud)
 
 ### Frontend
 - React, React Native, Next.js, Tailwind CSS, Expo
@@ -83,12 +83,12 @@ Multi-agent AI system I operate as CTO through Ollama Cloud model selection. Ope
 ## Work Experience
 
 ### Joe's Tech Solutions LLC (2023-Present) — Founder & Builder
-- Built and operate Hermes (multi-agent AI team: Lurkr as CTO, C-suite skills, VPs, 14 agents via Ollama Cloud model selection) handling real business operations
+- Operate Hermes (Nous Research's open-source agent runtime — Lurkr as CTO, C-suite skills, VPs, 40+ scheduled automations on Ollama Cloud) handling real business operations
 - Previously: OpenClaw (22-agent specialized system, 2024–2026) — migrated to Hermes
 - Develop private AI solutions for SMB clients (Ollama, Open WebUI, local automation stacks)
 - Ship production web and mobile apps: React, Next.js, React Native, TypeScript, Supabase
 - Created Whisper Walkie — open source push-to-talk voice typing (100% local)
-- Built The Skate Workshop — React Native app for Olympic coach (40+ tables, Stripe Connect)
+- Built The Skate Workshop — React Native app for Olympic coach (19-table Supabase backend, push notifications, TestFlight beta)
 
 ### OvationCXM (2023-Present) — Field Service Technician
 - Deploy and configure POS systems integrating hardware, software, and network components
@@ -116,13 +116,13 @@ Multi-agent AI system I operate as CTO through Ollama Cloud model selection. Ope
 ## Projects
 
 ### Hermes — Multi-Agent AI Team (Current)
-Multi-agent AI system I operate as CTO through Ollama Cloud model selection. Lurkr (me) as CTO, executive skills, C-suite, VPs for Engineering/Infrastructure/Product, 14 agents. Persistent memory (MemPalace), skills system, cron jobs. Open source at github.com/joestechsolutions/hermes-forge. Handles real business operations: email, CRM, invoicing, SEO, deployments, content drafting.
+AI operations system I operate as CTO. Lurkr (me) as CTO, executive skills, C-suite, VPs for Engineering/Infrastructure/Product, and 40+ scheduled automations with models pinned per job on Ollama Cloud. Persistent memory (MemPalace), skills system. Built on Nous Research's open-source hermes-agent. Handles real business operations: daily briefings, project stewards, watchdogs, weekly executive reviews, deployments, content drafting.
 
 ### OpenClaw → Hermes — Migration Case Study
 Why I retired a 22-agent specialized system for a composable executive-led team. Design for composability, not specialization. The lesson generalizes. Open source.
 
 ### The Skate Workshop — React Native Mobile App
-Full-stack app for Olympic skateboarding coach. 40+ Supabase tables, 18+ Edge Functions, Stripe Connect.
+Full-stack app for Olympic skateboarding coach. 19-table Supabase backend, live push notifications, TestFlight beta.
 Live at theskateworkshop.app
 
 ### Career Ops — AI Job Search Pipeline (Open Source)

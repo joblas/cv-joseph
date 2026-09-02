@@ -41,13 +41,13 @@ function buildJsonLd() {
     articleType: 'TechArticle',
     about: [
       { '@type': 'SoftwareApplication', name: 'OpenClaw', applicationCategory: 'Agent Runtime (retired)' },
-      { '@type': 'SoftwareApplication', name: 'Hermes', url: 'https://github.com/joestechsolutions/hermes-forge', applicationCategory: 'Agent Runtime' },
+      { '@type': 'SoftwareApplication', name: 'Hermes', url: 'https://github.com/NousResearch/hermes-agent', applicationCategory: 'Agent Runtime' },
       { '@type': 'Thing', name: 'Multi-Agent AI Systems' },
     ],
     extra: { proficiencyLevel: 'Expert', dependencies: 'Hermes, OpenClaw (retired), n8n, Claude API, Telegram, Slack, GitHub, Stripe, Tailscale, systemd, Ollama, MemPalace' },
     mentions: [
       { '@type': 'SoftwareApplication', name: 'OpenClaw' },
-      { '@type': 'SoftwareApplication', name: 'Hermes', url: 'https://github.com/joestechsolutions/hermes-forge' },
+      { '@type': 'SoftwareApplication', name: 'Hermes', url: 'https://github.com/NousResearch/hermes-agent' },
       { '@type': 'SoftwareApplication', name: 'n8n', url: 'https://n8n.io' },
       { '@type': 'SoftwareApplication', name: 'Claude', url: 'https://claude.ai' },
       { '@type': 'SoftwareApplication', name: 'Tailscale', url: 'https://tailscale.com' },
@@ -76,7 +76,7 @@ export default function OpenClaw() {
       <ArticleHeader
         editorId="hero-header"
         kicker={t.header.kicker}
-        kickerLink="https://github.com/joestechsolutions/hermes-forge"
+        kickerLink="https://github.com/NousResearch/hermes-agent"
         h1={t.header.h1}
         subtitle={t.header.subtitle}
         date={t.header.date}
@@ -102,10 +102,10 @@ export default function OpenClaw() {
         {/* Key metrics */}
         <MetricsGrid
           items={[
-            { value: '14', label: 'Hermes Agents', detail: 'Engineering, Infra, Product, Marketing, Personal' },
+            { value: '40+', label: 'Scheduled Automations', detail: 'Engineering, Infra, Product, Marketing, Personal' },
             { value: '∞', label: 'Model Options', detail: 'Ollama Cloud by task' },
             { value: '5', label: 'Executive Functions', detail: 'CTO + C-suite + 3 VPs' },
-            { value: '0', label: 'Downtime', detail: 'Live migration' },
+            { value: '0', label: 'Migration Downtime', detail: 'Parallel cutover' },
           ]}
           columns={4}
         />
