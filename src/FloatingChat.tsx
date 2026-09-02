@@ -13,7 +13,6 @@ import {
   Mic,
   MessageSquare,
   PhoneOff,
-  Video,
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -37,9 +36,6 @@ interface Message {
   content: string;
   ragSources?: RagSource[];
   ragDegraded?: boolean;
-  videoUrl?: string;
-  avatarLoading?: boolean;
-  avatarError?: boolean;
 }
 
 interface FloatingChatProps {
@@ -155,7 +151,7 @@ export default function FloatingChat({}: FloatingChatProps) {
   const [isStreaming, setIsStreaming] = useState(false);
   const [showPrompts, setShowPrompts] = useState(session.showPrompts);
   const [sessionId] = useState(session.sessionId);
-  const [mode, setMode] = useState<'text' | 'voice' | 'avatar'>('text');
+  const [mode, setMode] = useState<'text' | 'voice'>('text');
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -360,54 +356,6 @@ export default function FloatingChat({}: FloatingChatProps) {
   // Can toggle to voice?
   const canStartVoice = !isLoading && !isStreaming && voiceMode.isSupported;
 
-  // Avatar video generation — called after text response completes in avatar mode
-  const generateAvatarVideo = async (text: string) => {
-    // Mark the last assistant message as avatar-loading
-    setMessages((prev) => {
-      const next = [...prev];
-      const last = next[next.length - 1];
-      if (last?.role === 'assistant') {
-        next[next.length - 1] = { ...last, avatarLoading: true };
-      }
-      return next;
-    });
-
-    try {
-      const res = await fetch('/api/avatar-generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text, sessionId, currentPage: location.pathname }),
-      });
-
-      if (!res.ok) throw new Error('avatar request failed');
-
-      const data = await res.json();
-
-      if (data.videoUrl) {
-        setMessages((prev) => {
-          const next = [...prev];
-          const last = next[next.length - 1];
-          if (last?.role === 'assistant') {
-            next[next.length - 1] = { ...last, videoUrl: data.videoUrl, avatarLoading: false };
-          }
-          return next;
-        });
-      } else {
-        throw new Error(data.error || 'no video url');
-      }
-    } catch {
-      // Graceful fallback — keep text, mark avatar as failed
-      setMessages((prev) => {
-        const next = [...prev];
-        const last = next[next.length - 1];
-        if (last?.role === 'assistant') {
-          next[next.length - 1] = { ...last, avatarLoading: false, avatarError: true };
-        }
-        return next;
-      });
-    }
-  };
-
   const sendMessage = async (messageText?: string) => {
     const text = messageText || input.trim();
     if (!text || isLoading) return;
@@ -541,11 +489,6 @@ export default function FloatingChat({}: FloatingChatProps) {
 
       // Stream ended — signal drain to flush remaining words
       isStreamingRef.current = false;
-
-      // Avatar mode: generate video from the completed text response
-      if (mode === 'avatar' && fullText) {
-        generateAvatarVideo(fullText);
-      }
 
       // Fallback: if stream ended but no text was received, show error
       if (!fullText) {
@@ -752,7 +695,7 @@ export default function FloatingChat({}: FloatingChatProps) {
 
             {/* Content area — text messages or voice orb */}
             <AnimatePresence mode="wait">
-              {mode !== 'voice' ? (
+              {mode === 'text' ? (
                 <motion.div
                   key="text-mode"
                   initial={{ opacity: 0 }}
@@ -794,24 +737,8 @@ export default function FloatingChat({}: FloatingChatProps) {
                             }`}
                             aria-busy={isStreaming && i === messages.length - 1 && message.role === 'assistant' ? true : undefined}
                           >
-                            {/* Avatar video — replaces text when video is ready */}
-                            {message.role === 'assistant' && message.videoUrl ? (
-                              <video
-                                src={message.videoUrl}
-                                controls
-                                autoPlay
-                                muted
-                                playsInline
-                                className="rounded-xl max-w-full -mx-1 -my-1"
-                              />
-                            ) : message.role === 'assistant' && message.avatarLoading ? (
-                              <div className="flex items-center gap-2 py-2">
-                                <Loader2 className="text-primary animate-spin w-4 h-4" />
-                                <span className="text-xs text-muted-foreground">Generating video...</span>
-                              </div>
-                            ) : message.role === 'assistant' && message.avatarError ? (
-                              <>
-                                <ReactMarkdown
+                            {message.role === 'assistant' ? (
+                              <ReactMarkdown
                                 components={{
                                   strong: ({ children }) => (
                                     <strong className="font-semibold text-primary">
@@ -838,46 +765,6 @@ export default function FloatingChat({}: FloatingChatProps) {
                                     return `mailto:${url}`;
                                   }
                                   // Add https:// if missing
-                                  if (!url.startsWith('http') && !url.startsWith('mailto:')) {
-                                    return `https://${url}`;
-                                  }
-                                  return url;
-                                }}
-                              >
-                                {linkifyUrls(
-                                  isStreaming && i === messages.length - 1
-                                    ? autoCloseMarkdown(message.content)
-                                    : message.content
-                                )}
-                              </ReactMarkdown>
-                                <p className="text-[10px] text-muted-foreground/60 mt-2">Video unavailable — showing text response</p>
-                              </>
-                            ) : message.role === 'assistant' ? (
-                              <ReactMarkdown
-                                components={{
-                                  strong: ({ children }) => (
-                                    <strong className="font-semibold text-primary">
-                                      {children}
-                                    </strong>
-                                  ),
-                                  p: ({ children }) => (
-                                    <p className="mb-3 last:mb-0">{children}</p>
-                                  ),
-                                  a: ({ href, children }) => (
-                                    <a
-                                      href={href}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="text-primary underline hover:text-primary/80 transition-colors"
-                                    >
-                                      {children}
-                                    </a>
-                                  ),
-                                }}
-                                urlTransform={(url) => {
-                                  if (url.includes('@') && !url.startsWith('mailto:')) {
-                                    return `mailto:${url}`;
-                                  }
                                   if (!url.startsWith('http') && !url.startsWith('mailto:')) {
                                     return `https://${url}`;
                                   }
@@ -1080,7 +967,7 @@ export default function FloatingChat({}: FloatingChatProps) {
                   : undefined
               }
             >
-              {mode === 'text' || mode === 'avatar' ? (
+              {mode === 'text' ? (
                 <div className="flex gap-2">
                   <input
                     ref={inputRef}
@@ -1114,22 +1001,6 @@ export default function FloatingChat({}: FloatingChatProps) {
                       <Mic className={isMobile ? 'w-5 h-5' : 'w-4 h-4'} aria-hidden="true" />
                     </motion.button>
                   )}
-                  {/* Avatar video mode toggle */}
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => setMode(mode === 'avatar' ? 'text' : 'avatar')}
-                    disabled={isLoading || isStreaming}
-                    aria-label="Avatar video mode"
-                    title="Avatar video mode"
-                    className={`rounded-xl border flex items-center justify-center transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
-                      mode === 'avatar'
-                        ? 'bg-primary/20 border-primary/50 text-primary'
-                        : 'bg-muted border-border text-muted-foreground hover:text-primary hover:border-primary/30'
-                    } ${isMobile ? 'w-12 h-12' : 'w-10 h-10'}`}
-                  >
-                    <Video className={isMobile ? 'w-5 h-5' : 'w-4 h-4'} aria-hidden="true" />
-                  </motion.button>
                   {/* Send button */}
                   <motion.button
                     whileHover={{ scale: 1.05 }}
