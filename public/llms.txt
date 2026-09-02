@@ -180,12 +180,6 @@ Production LLMOps system powering this portfolio's AI chat. Features 6-layer def
 ### n8n for Product Managers
 Guide to workflow automation with n8n for non-technical product managers.
 
-### AI Agent Jacobo
-AI voice agent case study — automated phone bookings and inquiries.
-
-### Programmatic SEO
-4,700+ landing pages generated from Airtable ERP data.
-
 ## How to Hire Joseph
 
 For AI Developer, Autonomous Systems, or Embedded/Robotics roles:

@@ -27,7 +27,6 @@ import AboutPage from '../src/AboutPage.tsx';
 import { aboutContent } from '../src/about-i18n.ts';
 import { seo } from '../src/i18n.ts';
 import { n8nContent } from '../src/n8n-i18n.ts';
-import { jacoboContent } from '../src/jacobo-i18n.ts';
 import { chatbotContent } from '../src/chatbot-i18n.ts';
 import { careerOpsContent } from '../src/career-ops-i18n.ts';
 import { openclawContent } from '../src/openclaw-i18n.ts';
@@ -35,7 +34,6 @@ import { openclawContent } from '../src/openclaw-i18n.ts';
 // Map article id → i18n content for JSON-LD generation
 const i18nMap: Record<string, { header: { h1: string }; nav: { breadcrumbHome: string; breadcrumbCurrent: string }; faq: { items: readonly { q: string; a: string }[] } }> = {
   'n8n-for-pms': n8nContent,
-  'jacobo': jacoboContent,
   'self-healing-chatbot': chatbotContent,
   'career-ops': careerOpsContent,
   'hermes': openclawContent,

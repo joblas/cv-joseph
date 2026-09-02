@@ -87,7 +87,7 @@ const PROOF_POINTS: ProofPoint[] = [
   // -- Articles published (registry.ts) --
   {
     source: 'articles/registry.ts',
-    terms: ['n8n for Product Managers', 'Jacobo', 'Programmatic'],
+    terms: ['n8n for Product Managers', 'Hermes', 'Career Ops'],
   },
 
   // -- Key experience points --
