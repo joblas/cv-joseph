@@ -24,7 +24,7 @@ A production-grade interactive portfolio that **demonstrates the skills it descr
 - **LLMOps Dashboard** — Private `/ops` with 8 tabs: Overview, Conversations, Costs, RAG, Security, Evals, Voice, System. Real data from Langfuse + Supabase
 - **Closed Loop** — Trace → online scoring → quality < 0.7 → auto-generate test → CI gate blocks deploy
 - **Voice Mode** — OpenAI Realtime API, audio-to-audio, shared RAG pipeline, ~$0.25/session
-- **6 Published Case Studies** — Bilingual (ES/EN) with JSON-LD, prerendered HTML, cross-linked RAG, and interactive architecture diagrams
+- **6 Published Articles** — case studies with JSON-LD, prerendered HTML, cross-linked RAG, and interactive architecture diagrams
 - **Interactive Architecture Diagram** — GSAP-animated SVG with narrated audio, pan/zoom, dark mode sync. [Explore it →](https://cv-joseph.vercel.app/self-healing-chatbot#architecture)
 - **GEO-ready** — `llms.txt`, structured data (JSON-LD), AI crawler-friendly robots.txt
 
@@ -214,7 +214,7 @@ src/
 ├── VoiceOrb.tsx             # Voice UI (orb + transcript)
 ├── GlobalNav.tsx            # Navigation with breadcrumbs
 ├── main.tsx                 # React Router + lazy loading
-├── i18n.ts                  # Bilingual translations
+├── i18n.ts                  # English content (i18n structure retained from template)
 ├── articles/
 │   ├── registry.ts          # Centralized article config
 │   ├── components.tsx       # Shared article components
@@ -227,7 +227,7 @@ src/
 │   ├── components/          # KpiCard, MetricChart, FilterBar, etc.
 │   └── tabs/                # Conversations, Costs, Security, Evals, etc.
 ├── [Article].tsx             # Case study components (5 articles)
-└── [article]-i18n.ts         # Bilingual content per article
+└── [article]-i18n.ts         # English content per article
 
 api/
 ├── chat.js                  # Main chatbot edge function
@@ -265,15 +265,16 @@ chatbot-prompt.txt           # System prompt (fallback, prod uses Langfuse)
 
 ## Case Studies
 
-| Article | Slugs | Type |
-|---------|-------|------|
-| Self-Healing Chatbot | `/chatbot-que-se-cura-solo` `/self-healing-chatbot` | case-study |
-| Career-Ops | `/career-ops` `/career-ops-system` | case-study |
-| Jacobo AI Agent | `/agente-ia-jacobo` `/ai-agent-jacobo` | case-study |
-| Business OS | `/business-os-para-airtable` `/business-os-for-airtable` | case-study |
-| Programmatic SEO | `/seo-programatico` `/programmatic-seo` | case-study |
-| n8n for PMs | `/n8n-para-pms` `/n8n-for-pms` | collab |
-| Joe's Tech Solutions | `/joes-tech-solutions` `/joes-tech-solutions-founder` | bridge |
+| Article | Slug | Type |
+|---------|------|------|
+| OpenClaw → Hermes Migration | `/hermes` | case-study |
+| Self-Healing Chatbot | `/self-healing-chatbot` | case-study |
+| Career-Ops | `/career-ops-system` | case-study |
+| Business OS | `/business-os-for-airtable` | case-study |
+| Programmatic SEO | `/programmatic-seo` | case-study |
+| n8n for PMs | `/n8n-for-pms` | collab |
+
+(Legacy template articles — the "Jacobo AI Agent" case study and Spanish-language slugs — were inherited from the forked CV template and have been removed; old URLs redirect to `/hermes`.)
 
 ---
 
