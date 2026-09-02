@@ -30,6 +30,10 @@ import { n8nContent } from '../src/n8n-i18n.ts';
 import { chatbotContent } from '../src/chatbot-i18n.ts';
 import { careerOpsContent } from '../src/career-ops-i18n.ts';
 import { openclawContent } from '../src/openclaw-i18n.ts';
+import { turnoverAgentContent } from '../src/turnover-agent-i18n.ts';
+import { archiveBetaLoopContent } from '../src/archive-beta-loop-i18n.ts';
+import { cbarrgsAgentContent } from '../src/cbarrgs-agent-i18n.ts';
+import { skateWorkshopLoopContent } from '../src/skate-workshop-loop-i18n.ts';
 
 // Map article id → i18n content for JSON-LD generation
 const i18nMap: Record<string, { header: { h1: string }; nav: { breadcrumbHome: string; breadcrumbCurrent: string }; faq: { items: readonly { q: string; a: string }[] } }> = {
@@ -37,6 +41,10 @@ const i18nMap: Record<string, { header: { h1: string }; nav: { breadcrumbHome: s
   'self-healing-chatbot': chatbotContent,
   'career-ops': careerOpsContent,
   'hermes': openclawContent,
+  'turnover-agent': turnoverAgentContent,
+  'archive-beta-loop': archiveBetaLoopContent,
+  'cbarrgs-agent': cbarrgsAgentContent,
+  'skate-workshop-loop': skateWorkshopLoopContent,
 };
 
 const __dirname = dirname(fileURLToPath(import.meta.url));

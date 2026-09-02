@@ -180,6 +180,18 @@ Production LLMOps system powering this portfolio's AI chat. Features 6-layer def
 ### n8n for Product Managers
 Guide to workflow automation with n8n for non-technical product managers.
 
+### The Turnover Agent
+Case study: a Telegram-first LLM ops agent for a short-term-rental manager — 32 tools, iCal turnover detection, escalation ladders, triple watchdogs.
+
+### The Archive Beta Loop
+Case study: my client's Telegram messages become shipped app features through an always-on Claude Code loop — with written guardrails on exactly what ships without me. 20 issues, 13 merged PRs, 10 OTA updates, a 13.8-minute median fix.
+
+### The Cbarrgs Agent
+Case study: my musician client's website is maintained by a Claude Code agent that lives inside the site's repo and answers his Telegram messages. Written charter, pairing-gated access, a 5-minute watchdog, and honest launch-week numbers.
+
+### The Skate Workshop Loop
+Case study: rebuilding a Slack-native agent dev loop after v1 died in public. A two-pass audit with receipts, three hardened edge-function redeploys, and a live test that stopped one stale credential short of end to end.
+
 ## How to Hire Joseph
 
 For AI Developer, Autonomous Systems, or Embedded/Robotics roles:
