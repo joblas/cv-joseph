@@ -1,15 +1,15 @@
 const _seoEn = {
   title:
-    'Joseph Blas | AI Developer · Autonomous Systems Builder · Multi-Agent AI Systems Builder',
+    'Joseph Blas | Forward Deployed Engineer · Founder, Joe\'s Tech Solutions · Autonomous Systems Veteran',
   description:
-    'AI Developer & Autonomous Systems Builder. Helped build the self-driving car industry — from Google\'s founding 100,000-mile milestone to a Guinness World Record for the first commercial self-driving truck delivery. Now builds production multi-agent AI systems (Hermes orchestrator, 40+ scheduled automations, Ollama Cloud). 10 years in AV (Google/Waymo, Uber ATG, Pronto.ai) + 5+ years building with AI. React, TypeScript, Python. Full-stack AI apps in production.',
+    'Forward Deployed Engineer and founder of Joe\'s Tech Solutions — custom software, AI agents, automation, and private AI for small businesses, built on the same stack he runs his own company on. Helped build the self-driving car industry, from Google\'s founding 100,000-mile milestone to a Guinness World Record for the first commercial self-driving truck delivery. Now runs Hermes: one orchestrator, 40+ scheduled automations, Ollama Cloud models pinned per job.',
 };
 
 export const seo = _seoEn;
 
 const _translationsEn = {
   greeting: 'who builds',
-  greetingRoles: ['AI Developer', 'Autonomous Systems Builder', 'Multi-Agent AI Systems Builder'],
+  greetingRoles: ['Forward Deployed Engineer', 'AI Systems Builder', 'Autonomous Systems Veteran'],
   email: 'blasj408@gmail.com',
   role: 'autonomous & AI systems.',
   story: {
@@ -22,11 +22,11 @@ const _translationsEn = {
         '*Complex systems* +that work in production+.',
       ],
     ],
-    why: "From Google's founding self-driving milestone to a Guinness World Record to production multi-agent AI — my career is a bridge between hardware and software. I helped build the AV industry, now I build the AI systems that run businesses.",
+    why: "From Google's founding self-driving milestone to a Guinness World Record to production multi-agent AI — my career is a bridge between hardware and software. I helped build the AV industry. Now I run Joe's Tech Solutions as a forward deployed engineer — building the AI systems that run small businesses, on the same stack that runs my own.",
     seeking: [
       'This still feels like day one.',
-      'Bigger teams. Harder problems. End-to-end.',
-      "Ready for what's next.",
+      'Same stack for my business and my clients.',
+      "If it doesn't survive me, it doesn't ship.",
     ],
     nav: [
       { icon: 'briefcase', label: 'My path', href: '#experience' },
@@ -48,9 +48,9 @@ const _translationsEn = {
   taglines: [] as readonly string[],
   location: 'Escondido, CA · San Diego',
   roles: [
-    'AI Developer',
-    'Autonomous Systems Builder',
-    'Multi-Agent AI Systems Builder',
+    'Forward Deployed Engineer',
+    'AI Systems Builder',
+    'Autonomous Systems Veteran',
   ],
   careerHighlights: {
     title: 'Career Highlights',
@@ -79,10 +79,10 @@ const _translationsEn = {
   },
   summary: {
     title: 'Professional Summary',
-    p1: 'AI developer building',
-    p1Highlight: 'production multi-agent systems',
+    p1: 'Forward deployed engineer building',
+    p1Highlight: 'the AI systems that run small businesses',
     p1End:
-      '. Run Hermes as an AI operations team — Lurkr as CTO, executive skills, VPs, 40+ scheduled automations. Ollama Cloud models pinned per job. Ship full-stack apps: React, React Native, TypeScript, Python.',
+      ". Founder of Joe's Tech Solutions — custom software, AI agents, automation, and private AI, built on the same stack I run my own company on. That stack is Hermes: one orchestrator (Lurkr as CTO), executive skills, VPs, 40+ scheduled automations, Ollama Cloud models pinned per job. Ship full-stack apps: React, React Native, Next.js, TypeScript, Python.",
     p2: 'Previously: 10 years as an',
     p2Highlight: 'autonomous vehicle systems specialist',
     p2End: ' at Google, Uber, and startups — followed by 5+ years learning AI tools, code, and building personal and client projects.',
@@ -274,10 +274,11 @@ const _translationsEn = {
       caseStudyUrl: '/hermes',
       caseStudyLabel: 'Case Study: OpenClaw → Hermes Migration',
       exit: 'Real AI For Real Businesses',
-      exitDesc: 'Specializing in private AI setups and multi-agent workflows for SMBs. Delivering 100% local, self-hosted LLMs that process sensitive data without ever leaving the client\'s servers.',
+      exitDesc: 'Forward deployed engineering for small businesses: Private AI Setup (a one-time 75-minute session — the client owns it, no subscription), AI Operations (monthly), Custom Builds (apps and agent systems), and Google Maps Growth. Private AI runs on the client\'s own hardware — data never leaves their setup.',
       highlights: [
         'Operate Hermes (Nous Research\'s open-source agent runtime) as an AI operations team — Lurkr as CTO, C-suite skills, VPs, 40+ scheduled automations handling real business operations',
-        'Develop private AI solutions for SMB clients using Ollama, Open WebUI, and local automation tools',
+        'Three live client deployments built and left running, watched around the clock by my own monitoring',
+        'Private AI on the client\'s own hardware — Ollama, Open WebUI, local automation; no data leaves their setup',
         'Ship production web and mobile apps: React, Next.js, React Native, TypeScript, Supabase',
         'Created Whisper Walkie — open source push-to-talk voice typing tool (100% local processing)',
         'Built The Skate Workshop — React Native app for Olympic coach Willy Santos (19-table Supabase backend, push notifications, live on iOS via TestFlight, Android builds rolling)',
@@ -634,7 +635,7 @@ const _translationsEn = {
   },
   cta: {
     title: "Let's talk",
-    desc: 'Looking for roles in AI Development, Autonomous Systems, or Embedded/Robotics in the San Diego area or remote. 10 years in AV + 5+ years building with AI/code.',
+    desc: 'Have something that needs building? Custom software, AI agents, automation, and private AI for small businesses — on the same stack I run my own company on. No decks, no discovery sprint. Business inquiries: joestechsolutions.com. 10 years in AV + 5+ years building with AI/code.',
     contact: 'Contact',
   },
   ui: {

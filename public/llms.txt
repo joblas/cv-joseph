@@ -1,11 +1,11 @@
 # Joseph Blas
 
-> AI Developer · Autonomous Systems Builder · Multi-Agent AI Systems Builder
+> Forward Deployed Engineer · Founder, Joe's Tech Solutions · Autonomous Systems Veteran
 
 ## Contact & Availability
 
 - **Location:** Escondido / San Diego, CA
-- **Open to:** AI Development, Autonomous Systems, Embedded/Robotics roles (San Diego or remote)
+- **Now:** Founder of Joe's Tech Solutions — forward deployed engineer building custom software, AI agents, automation, and private AI for small businesses (business inquiries: joe@joestechsolutions.com)
 - **Email:** blasj408@gmail.com
 - **Website:** https://cv-joseph.vercel.app
 - **Entity Home / About**: https://cv-joseph.vercel.app/about
@@ -15,17 +15,17 @@
 
 ## Professional Summary
 
-AI developer building production multi-agent systems. Run Hermes as a multi-agent AI team: Lurkr (me) as CTO, with executive skills (Chief of Staff, CFO, COO, CMO), VPs for Engineering, Infrastructure, and Product, and 40+ scheduled automations with models pinned per job on Ollama Cloud. Ship full-stack applications using React/React Native, TypeScript, Python, and PostgreSQL. Use AI coding assistants daily as core development tools.
+Forward deployed engineer and founder of Joe's Tech Solutions: custom software, AI agents, automation, and private AI for small businesses, built on the same stack he runs his own company on — three live client deployments. Runs Hermes as a multi-agent AI team: Lurkr (me) as CTO, with executive skills (Chief of Staff, CFO, COO, CMO), VPs for Engineering, Infrastructure, and Product, and 40+ scheduled automations with models pinned per job on Ollama Cloud. Ship full-stack applications using React/React Native, TypeScript, Python, and PostgreSQL. Use AI coding assistants daily as core development tools.
 
 Previously: built and operated OpenClaw (22 specialized agents, 2024–2026) — migrated to Hermes after learning composability beats specialization. The migration postmortem is the OpenClaw → Hermes case study on this site.
 
 Previously: 10 years as an autonomous vehicle systems specialist. Built Google's Firefly autonomous vehicle from the ground up. Supported the world's first fully driverless ride on public roads (2015). Subject Matter Expert for drive-by-wire systems across the first 100 Google self-driving cars and 10 hardware iterations. Managed sensor calibration operations for the entire Google AV fleet — final release authority. Led fleet operations at Uber ATG and Pronto.ai. ITAR-controlled hardware experience. Then 5+ years learning AI tools, code, and building personal and client projects.
 
-## Target Roles
+## What Joe Does
 
-1. **AI Developer** — Multi-agent systems, full-stack AI apps, RAG, prompt engineering
-2. **Autonomous Systems Builder** — 10 years in AV programs, sensor integration, drive-by-wire, CAN/LIN, HIL testing
-3. **Embedded / Robotics Builder** — Sensor integration, drive-by-wire, CAN/LIN, HIL testing
+1. **Forward Deployed Engineering** — Custom software, AI agents, automation, and private AI for small businesses; Private AI Setup, AI Operations, Custom Builds, Google Maps Growth (joestechsolutions.com)
+2. **AI Systems** — Multi-agent operations (Hermes), full-stack AI apps, RAG, prompt engineering
+3. **Autonomous Systems background** — 10 years in AV programs, sensor integration, drive-by-wire, CAN/LIN, HIL testing
 
 ## Key Achievement: Hermes (Multi-Agent AI Team)
 
