@@ -89,6 +89,7 @@ AI operations system I operate as CTO — models pinned per job on Ollama Cloud.
 - Private AI runs on the client's own hardware (Ollama, Open WebUI, local automation stacks)
 - Ship production web and mobile apps: React, Next.js, React Native, TypeScript, Supabase
 - Created Whisper Walkie — open source push-to-talk voice typing (100% local)
+- Published the JTS Prompt Library — 33 prompts across ops, sales, content, coding, and research (free PDF at joestechsolutions.com/prompt-library)
 - Built The Skate Workshop — React Native app for Olympic coach (19-table Supabase backend, push notifications, live on iOS via TestFlight, Android builds rolling)
 
 ### OvationCXM (2023-Present) — Field Service Technician
