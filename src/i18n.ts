@@ -197,9 +197,9 @@ const _translationsEn = {
       },
       {
         title: 'The Skate Workshop',
-        badge: 'In Beta',
+        badge: 'Live · TestFlight',
         badgeBuilding: '',
-        desc: 'Full-stack React Native mobile app for Olympic-level skateboarding coach Willy Santos. 19-table Supabase backend, live push notifications, 4,900+ trick-obstacle training combinations, 175 automated tests. In TestFlight beta.',
+        desc: 'Full-stack React Native mobile app for Olympic-level skateboarding coach Willy Santos. 19-table Supabase backend, live push notifications, 4,900+ trick-obstacle training combinations, 175 automated tests. Live on iOS via TestFlight; Android builds rolling.',
         tech: ['React Native', 'TypeScript', 'Supabase', 'Expo'],
         link: 'theskateworkshop.app',
       },
@@ -280,7 +280,7 @@ const _translationsEn = {
         'Develop private AI solutions for SMB clients using Ollama, Open WebUI, and local automation tools',
         'Ship production web and mobile apps: React, Next.js, React Native, TypeScript, Supabase',
         'Created Whisper Walkie — open source push-to-talk voice typing tool (100% local processing)',
-        'Built The Skate Workshop — React Native app for Olympic coach Willy Santos (19-table Supabase backend, push notifications, TestFlight beta)',
+        'Built The Skate Workshop — React Native app for Olympic coach Willy Santos (19-table Supabase backend, push notifications, live on iOS via TestFlight, Android builds rolling)',
         'Cloud Infrastructure — Terraform multicloud (AWS/GCP), Kubernetes, Anthos/GKE',
       ],
       trustedBy: {
@@ -360,7 +360,7 @@ const _translationsEn = {
         items: [
           {
             icon: 'smartphone',
-            text: 'The Skate Workshop: React Native app on a 19-table Supabase backend (TestFlight beta)',
+            text: 'The Skate Workshop: React Native app on a 19-table Supabase backend (live on iOS via TestFlight, Android rolling)',
           },
           {
             icon: 'image',
@@ -384,7 +384,7 @@ const _translationsEn = {
       gpts: {
         title: 'Skate Workshop',
         desc: 'React Native app — 19-table backend, push notifications, 4,900+ trick combos',
-        metric: 'In Beta',
+        metric: 'Live · TestFlight',
         caseStudyUrl: '',
       },
       reservas: {

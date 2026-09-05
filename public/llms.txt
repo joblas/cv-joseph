@@ -85,10 +85,11 @@ AI operations system I operate as CTO — models pinned per job on Ollama Cloud.
 ### Joe's Tech Solutions LLC (2023-Present) — Founder & Builder
 - Operate Hermes (Nous Research's open-source agent runtime — Lurkr as CTO, C-suite skills, VPs, 40+ scheduled automations on Ollama Cloud) handling real business operations
 - Previously: OpenClaw (22-agent specialized system, 2024–2026) — migrated to Hermes
-- Develop private AI solutions for SMB clients (Ollama, Open WebUI, local automation stacks)
+- Client offerings at joestechsolutions.com: Private AI Setup (one-time 75-minute session, no subscription), AI Operations, Custom Builds, Google Maps Growth
+- Private AI runs on the client's own hardware (Ollama, Open WebUI, local automation stacks)
 - Ship production web and mobile apps: React, Next.js, React Native, TypeScript, Supabase
 - Created Whisper Walkie — open source push-to-talk voice typing (100% local)
-- Built The Skate Workshop — React Native app for Olympic coach (19-table Supabase backend, push notifications, TestFlight beta)
+- Built The Skate Workshop — React Native app for Olympic coach (19-table Supabase backend, push notifications, live on iOS via TestFlight, Android builds rolling)
 
 ### OvationCXM (2023-Present) — Field Service Technician
 - Deploy and configure POS systems integrating hardware, software, and network components
@@ -122,7 +123,7 @@ AI operations system I operate as CTO. Lurkr (me) as CTO, executive skills, C-su
 Why I retired a 22-agent specialized system for a composable executive-led team. Design for composability, not specialization. The lesson generalizes. Open source.
 
 ### The Skate Workshop — React Native Mobile App
-Full-stack app for Olympic skateboarding coach. 19-table Supabase backend, live push notifications, TestFlight beta.
+Full-stack app for Olympic skateboarding coach. 19-table Supabase backend, live push notifications. Live on iOS via TestFlight; Android builds rolling.
 Live at theskateworkshop.app
 
 ### Career Ops — AI Job Search Pipeline (Open Source)
