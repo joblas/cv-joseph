@@ -113,13 +113,45 @@ async function notifyOwner({ email, kind, message, page, sessionId, lang }) {
   }
 }
 
+// One conversation should not produce a stack of near-identical emails. Every
+// matching message is still recorded, but the email is suppressed if this
+// session already triggered one and this message adds nothing new (an email
+// address arriving after a "wants to talk" turn IS new, so that one sends).
+async function alreadyNotified(sessionId, hasEmail) {
+  if (!sessionId || !supabaseConfigured()) return false
+  try {
+    const since = new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString()
+    const q = new URLSearchParams({
+      select: 'email',
+      session_id: `eq.${sessionId}`,
+      notified: 'is.true',
+      created_at: `gte.${since}`,
+      limit: '5',
+    })
+    const res = await fetch(`${process.env.SUPABASE_URL}/rest/v1/chat_leads?${q}`, {
+      headers: {
+        apikey: process.env.SUPABASE_SERVICE_ROLE_KEY,
+        Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+      },
+    })
+    if (!res.ok) return false
+    const prior = await res.json()
+    if (!Array.isArray(prior) || prior.length === 0) return false
+    // Suppress unless this message carries an address we have not sent before.
+    return !hasEmail || prior.some((r) => r.email)
+  } catch {
+    return false
+  }
+}
+
 // Record first, notify second: the row is the durable copy, so a Resend outage
 // costs a notification, not the lead. Never throws.
 export async function captureLead({ message, page, sessionId, lang, reply }) {
   const hit = detectLead(message)
   if (!hit) return null
   try {
-    const notified = await notifyOwner({ ...hit, message, page, sessionId, lang })
+    const suppress = await alreadyNotified(sessionId, Boolean(hit.email))
+    const notified = suppress ? false : await notifyOwner({ ...hit, message, page, sessionId, lang })
     if (supabaseConfigured()) {
       await fetch(`${process.env.SUPABASE_URL}/rest/v1/chat_leads`, {
         method: 'POST',
