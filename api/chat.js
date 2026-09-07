@@ -9,6 +9,7 @@ import {
   containsFingerprint, LEAK_RESPONSE,
 } from './_shared/rag.js'
 import { getSystemPrompt } from './_shared/prompt.js'
+import { captureLead, checkRateLimit } from './_shared/leads.js'
 
 const client = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -88,6 +89,31 @@ export default async function handler(req) {
 
     if (intentTags.includes('jailbreak-attempt') && !traceSource) {
       waitUntil(sendJailbreakAlert(lastUserMessage))
+    }
+
+    // Per-IP rate limit. The voice endpoint had one; the text chat did not, so
+    // a script could run the Anthropic bill up unbounded. Checked before any
+    // model call so a blocked request costs nothing, and it fails open.
+    if (!traceSource && !(await checkRateLimit(req))) {
+      return new Response(
+        JSON.stringify({
+          error: 'rate_limited',
+          message: "That's a lot of messages in one hour. Email Joe directly at blasj408@gmail.com and he'll pick it up.",
+        }),
+        { status: 429, headers: { 'Content-Type': 'application/json' } },
+      )
+    }
+
+    // Lead capture. Until now a visitor who wanted to hire Joe got a polite
+    // answer and nothing else — no record, no notification. Fire-and-forget so
+    // it never delays the reply, and it swallows its own errors.
+    if (!traceSource) {
+      waitUntil(captureLead({
+        message: lastUserMessage,
+        page: currentPage,
+        sessionId,
+        lang,
+      }))
     }
 
     // Prompt versioning: Langfuse with file fallback (Block 4)
