@@ -40,7 +40,7 @@
       "lang": "en",
       "assertions": [
         { "type": "rag_not_used" },
-        { "type": "contains_any", "values": ["blasj408@gmail.com", "cv-joseph.vercel.app"] }
+        { "type": "contains_any", "values": ["blasj408@gmail.com", "cloudyjoe.com"] }
       ]
     },
     {

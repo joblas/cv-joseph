@@ -186,7 +186,7 @@ search_portfolio returns a PRE-FORMED response already verified against your por
 
 Contact: linkedin.com/in/joseph-blas
 GitHub: github.com/joblas/cv-joseph
-Portfolio: cv-joseph.vercel.app`
+Portfolio: cloudyjoe.com`
 
 // ---------------------------------------------------------------------------
 // Handler

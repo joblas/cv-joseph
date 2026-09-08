@@ -93,7 +93,7 @@ const stackIcons: Record<string, React.ReactNode> = {
 function buildJsonLd() {
   const t = chatbotContent
   return buildArticleJsonLd({
-    url: `https://cv-joseph.vercel.app/${t.slug}`,
+    url: `https://cloudyjoe.com/${t.slug}`,
     headline: t.header.h1,
     alternativeHeadline: t.seo.title,
     description: t.seo.description,
@@ -106,7 +106,7 @@ function buildJsonLd() {
       'voice mode chatbot', 'OpenAI Realtime API', 'speech-to-speech AI',
       'agentic observability', 'developer feedback loop', 'AI maintaining AI',
     ],
-    images: ['https://cv-joseph.vercel.app/chatbot/og-self-healing-chatbot.webp'],
+    images: ['https://cloudyjoe.com/chatbot/og-self-healing-chatbot.webp'],
     breadcrumbHome: t.nav.breadcrumbHome,
     breadcrumbCurrent: t.nav.breadcrumbCurrent,
     faq: t.faq.items,
@@ -131,7 +131,7 @@ export default function SelfHealingChatbot() {
     slug: t.slug,
     title: t.seo.title,
     description: t.seo.description,
-    image: 'https://cv-joseph.vercel.app/chatbot/og-self-healing-chatbot.webp',
+    image: 'https://cloudyjoe.com/chatbot/og-self-healing-chatbot.webp',
     publishedTime: '2026-03-11',
     modifiedTime: '2026-04-07',
     articleTags: 'LLMOps,self-healing chatbot,agentic RAG,jailbreak defense,Langfuse,evals,closed-loop,prompt injection',
@@ -523,7 +523,7 @@ export default function SelfHealingChatbot() {
           ctaHref="https://linkedin.com/in/joseph-blas"
           external
           secondaryLabel={t.cta.labelSecondary}
-          secondaryHref="mailto:hola@cv-joseph.vercel.app"
+          secondaryHref="mailto:hola@cloudyjoe.com"
         />
       </article>
 

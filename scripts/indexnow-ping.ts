@@ -66,7 +66,7 @@ console.log(`[indexnow] Pinging ${urls.length} URLs...`)
 // POST to IndexNow API
 // ---------------------------------------------------------------------------
 
-const host = 'cv-joseph.vercel.app'
+const host = 'cloudyjoe.com'
 const keyLocation = `https://${host}/indexnow-key.txt`
 
 const body = {

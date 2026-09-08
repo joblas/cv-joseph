@@ -6,7 +6,7 @@ const content = {
   es: {
     title: 'Politica de Privacidad',
     lastUpdated: 'Ultima actualizacion: 15 de marzo de 2026',
-    intro: 'Esta politica describe como se recopilan y utilizan los datos cuando visitas cv-joseph.vercel.app.',
+    intro: 'Esta politica describe como se recopilan y utilizan los datos cuando visitas cloudyjoe.com.',
     sections: [
       {
         heading: 'Que datos se recopilan',
@@ -44,7 +44,7 @@ const content = {
       {
         heading: 'Contacto',
         body: 'Para cualquier consulta sobre privacidad, puedes escribir a:',
-        email: 'hola@cv-joseph.vercel.app',
+        email: 'hola@cloudyjoe.com',
       },
     ],
     backHome: 'Volver al inicio',
@@ -52,7 +52,7 @@ const content = {
   en: {
     title: 'Privacy Policy',
     lastUpdated: 'Last updated: March 15, 2026',
-    intro: 'This policy describes how data is collected and used when you visit cv-joseph.vercel.app.',
+    intro: 'This policy describes how data is collected and used when you visit cloudyjoe.com.',
     sections: [
       {
         heading: 'What data is collected',
@@ -90,7 +90,7 @@ const content = {
       {
         heading: 'Contact',
         body: 'For any privacy-related inquiries, you can write to:',
-        email: 'hola@cv-joseph.vercel.app',
+        email: 'hola@cloudyjoe.com',
       },
     ],
     backHome: 'Back to home',
@@ -108,7 +108,7 @@ export default function PrivacyPolicy() {
   const t = content.en
 
   useEffect(() => {
-    document.title = `${t.title} | cv-joseph.vercel.app`
+    document.title = `${t.title} | cloudyjoe.com`
 
     // noindex
     let robots = document.querySelector('meta[name="robots"]') as HTMLMetaElement
@@ -121,11 +121,11 @@ export default function PrivacyPolicy() {
 
     // Fix canonical (SPA fallback serves homepage canonical — override it)
     let canonical = document.querySelector('link[rel="canonical"]') as HTMLLinkElement
-    if (canonical) canonical.href = `https://cv-joseph.vercel.app/${'privacy'}`
+    if (canonical) canonical.href = `https://cloudyjoe.com/${'privacy'}`
 
     // Fix meta description
     let desc = document.querySelector('meta[name="description"]') as HTMLMetaElement
-    if (desc) desc.content = 'Privacy policy for cv-joseph.vercel.app. How chatbot and website data is collected and used.'
+    if (desc) desc.content = 'Privacy policy for cloudyjoe.com. How chatbot and website data is collected and used.'
 
     return () => {
       robots.content = 'index, follow'

@@ -83,18 +83,25 @@ export default async function handler(req) {
     const lastUserMessage = rawLastMessage.slice(0, 2000)
     const intentTags = classifyIntent(lastUserMessage)
 
-    // Tag synthetic traffic (evals, adversarial, regression tests)
+    // Tag synthetic traffic (evals, adversarial, regression tests). The header
+    // is public, so it may LABEL a trace but must never buy an exemption on its
+    // own: anyone could send x-trace-source and thereby skip the rate limiter,
+    // lead capture and jailbreak alerting. Exemptions require the same shared
+    // secret the prompt-version override already uses.
     const traceSource = req.headers.get('x-trace-source')
     if (traceSource) intentTags.push(`source:${traceSource}`)
+    const secret = process.env.PROMPT_REGRESSION_SECRET
+    const isTrustedEval = Boolean(traceSource) && Boolean(secret) &&
+      req.headers.get('x-prompt-auth') === secret
 
-    if (intentTags.includes('jailbreak-attempt') && !traceSource) {
+    if (intentTags.includes('jailbreak-attempt') && !isTrustedEval) {
       waitUntil(sendJailbreakAlert(lastUserMessage))
     }
 
     // Per-IP rate limit. The voice endpoint had one; the text chat did not, so
     // a script could run the Anthropic bill up unbounded. Checked before any
     // model call so a blocked request costs nothing, and it fails open.
-    if (!traceSource && !(await checkRateLimit(req))) {
+    if (!isTrustedEval && !(await checkRateLimit(req))) {
       return new Response(
         JSON.stringify({
           error: 'rate_limited',
@@ -107,7 +114,7 @@ export default async function handler(req) {
     // Lead capture. Until now a visitor who wanted to hire Joe got a polite
     // answer and nothing else — no record, no notification. Fire-and-forget so
     // it never delays the reply, and it swallows its own errors.
-    if (!traceSource) {
+    if (!isTrustedEval) {
       waitUntil(captureLead({
         message: lastUserMessage,
         page: currentPage,

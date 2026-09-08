@@ -18,7 +18,7 @@ const dist = resolve(__dirname, '..', 'dist')
 
 const today = new Date().toISOString().slice(0, 10)
 
-const base = 'https://cv-joseph.vercel.app'
+const base = 'https://cloudyjoe.com'
 
 interface SitemapUrl {
   loc: string

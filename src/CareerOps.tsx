@@ -55,7 +55,7 @@ const stackIcons: Record<string, React.ReactNode> = {
 function buildJsonLd() {
   const t = careerOpsContent
   return buildArticleJsonLd({
-    url: `https://cv-joseph.vercel.app/${t.slug}`,
+    url: `https://cloudyjoe.com/${t.slug}`,
     headline: t.header.h1,
     alternativeHeadline: t.seo.title,
     description: t.seo.description,
@@ -66,7 +66,7 @@ function buildJsonLd() {
       'ai resume builder', 'ai resume', 'ai powered job search', 'multi agent system',
       'multi agent orchestration', 'automated job application', 'ai auto apply', 'career-ops',
     ],
-    images: ['https://cv-joseph.vercel.app/career-ops/og-career-ops.webp'],
+    images: ['https://cloudyjoe.com/career-ops/og-career-ops.webp'],
     breadcrumbHome: t.nav.breadcrumbHome,
     breadcrumbCurrent: t.nav.breadcrumbCurrent,
     faq: t.faq.items,
@@ -91,7 +91,7 @@ export default function CareerOps() {
     slug: t.slug,
     title: t.seo.title,
     description: t.seo.description,
-    image: 'https://cv-joseph.vercel.app/career-ops/og-career-ops.webp',
+    image: 'https://cloudyjoe.com/career-ops/og-career-ops.webp',
     publishedTime: '2026-04-07',
     modifiedTime: '2026-04-07',
     articleTags: 'multi-agent,job search,Claude Code,ATS,batch processing,HITL,automation',

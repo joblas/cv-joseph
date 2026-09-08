@@ -27,4 +27,4 @@ Allow: /
 User-agent: Google-Extended
 Allow: /
 
-Sitemap: https://cv-joseph.vercel.app/sitemap.xml
+Sitemap: https://cloudyjoe.com/sitemap.xml

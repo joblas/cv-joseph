@@ -25,7 +25,7 @@ import {
 function buildJsonLd() {
   const t = openclawContent
   return buildArticleJsonLd({
-    url: `https://cv-joseph.vercel.app/${t.slug}`,
+    url: `https://cloudyjoe.com/${t.slug}`,
     headline: t.header.h1,
     alternativeHeadline: t.seo.title,
     description: t.seo.description,
@@ -33,7 +33,7 @@ function buildJsonLd() {
     dateModified: '2026-06-16',
     keywords: ['AI agents', 'multi-agent system', 'OpenClaw', 'Hermes', 'agent migration', 'agent architecture', 'small business AI', 'AI automation', 'Claude', 'composability', 'specialization'],
     images: [
-      'https://cv-joseph.vercel.app/articles/openclaw-org-chart.webp',
+      'https://cloudyjoe.com/articles/openclaw-org-chart.webp',
     ],
     breadcrumbHome: t.nav.breadcrumbHome,
     breadcrumbCurrent: t.nav.breadcrumbCurrent,
@@ -63,7 +63,7 @@ export default function OpenClaw() {
     slug: t.slug,
     title: t.seo.title,
     description: t.seo.description,
-    image: 'https://cv-joseph.vercel.app/articles/openclaw-org-chart.webp',
+    image: 'https://cloudyjoe.com/articles/openclaw-org-chart.webp',
     publishedTime: '2026-06-16',
     modifiedTime: '2026-06-16',
     articleTags: 'AI agents,multi-agent,Hermes,OpenClaw,architecture,migration,composability,specialization,small business,Claude,n8n',

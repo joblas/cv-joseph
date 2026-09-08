@@ -48,7 +48,7 @@ const stackIcons: Record<string, React.ReactNode> = {
 function buildJsonLd() {
   const t = archiveBetaLoopContent
   return buildArticleJsonLd({
-    url: `https://cv-joseph.vercel.app/${t.slug}`,
+    url: `https://cloudyjoe.com/${t.slug}`,
     headline: t.header.h1,
     alternativeHeadline: t.seo.title,
     description: t.seo.description,
@@ -60,7 +60,7 @@ function buildJsonLd() {
       'human in the loop', 'AI guardrails', 'prompt injection defense', 'self-healing infrastructure',
       'beta feedback automation', 'agent pre-authorization',
     ],
-    images: ['https://cv-joseph.vercel.app/articles/archive-beta-loop/og-archive-beta-loop.webp'],
+    images: ['https://cloudyjoe.com/articles/archive-beta-loop/og-archive-beta-loop.webp'],
     breadcrumbHome: t.nav.breadcrumbHome,
     breadcrumbCurrent: t.nav.breadcrumbCurrent,
     faq: t.faq.items,
@@ -85,7 +85,7 @@ export default function ArchiveBetaLoop() {
     slug: t.slug,
     title: t.seo.title,
     description: t.seo.description,
-    image: 'https://cv-joseph.vercel.app/articles/archive-beta-loop/og-archive-beta-loop.webp',
+    image: 'https://cloudyjoe.com/articles/archive-beta-loop/og-archive-beta-loop.webp',
     publishedTime: '2026-09-01',
     modifiedTime: '2026-09-01',
     articleTags: 'autonomous agents,Claude Code,OTA updates,TDD,guardrails,human-in-the-loop,beta feedback',

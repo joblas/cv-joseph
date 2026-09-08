@@ -435,7 +435,7 @@ export async function sendJailbreakAlert(userMessage) {
     body: JSON.stringify({
       from: 'Joseph Bot <onboarding@resend.dev>',
       to: process.env.ALERT_EMAIL,
-      subject: '🚨 JAILBREAK ATTEMPT - cv-joseph.vercel.app',
+      subject: '🚨 JAILBREAK ATTEMPT - cloudyjoe.com',
       html: `
         <h2>🚨 Jailbreak Attempt Detected</h2>
         <p><strong>Time:</strong> ${new Date().toISOString()}</p>

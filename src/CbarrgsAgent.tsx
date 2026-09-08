@@ -45,7 +45,7 @@ const stackIcons: Record<string, React.ReactNode> = {
 function buildJsonLd() {
   const t = cbarrgsAgentContent
   return buildArticleJsonLd({
-    url: `https://cv-joseph.vercel.app/${t.slug}`,
+    url: `https://cloudyjoe.com/${t.slug}`,
     headline: t.header.h1,
     alternativeHeadline: t.seo.title,
     description: t.seo.description,
@@ -56,7 +56,7 @@ function buildJsonLd() {
       'coding agent', 'agent operations', 'agent charter', 'artist website',
       'systemd watchdog', 'tmux agent session', 'Cloudflare Pages', 'agent guardrails',
     ],
-    images: ['https://cv-joseph.vercel.app/articles/cbarrgs-agent/og-cbarrgs-agent.webp'],
+    images: ['https://cloudyjoe.com/articles/cbarrgs-agent/og-cbarrgs-agent.webp'],
     breadcrumbHome: t.nav.breadcrumbHome,
     breadcrumbCurrent: t.nav.breadcrumbCurrent,
     faq: t.faq.items,
@@ -80,7 +80,7 @@ export default function CbarrgsAgent() {
     slug: t.slug,
     title: t.seo.title,
     description: t.seo.description,
-    image: 'https://cv-joseph.vercel.app/articles/cbarrgs-agent/og-cbarrgs-agent.webp',
+    image: 'https://cloudyjoe.com/articles/cbarrgs-agent/og-cbarrgs-agent.webp',
     publishedTime: '2026-09-01',
     modifiedTime: '2026-09-01',
     articleTags: 'AI agents,client work,Claude Code,Telegram,tmux,systemd,Cloudflare Pages,guardrails',

@@ -33,7 +33,7 @@ import { skateWorkshopLoopContent } from './skate-workshop-loop-i18n'
 function buildJsonLd() {
   const t = skateWorkshopLoopContent
   return buildArticleJsonLd({
-    url: `https://cv-joseph.vercel.app/${t.slug}`,
+    url: `https://cloudyjoe.com/${t.slug}`,
     headline: t.header.h1,
     alternativeHeadline: t.seo.title,
     description: t.seo.description,
@@ -45,7 +45,7 @@ function buildJsonLd() {
       'webhook security', 'HMAC signature verification', 'human in the loop',
       'React Native', 'TestFlight beta', 'agent ops', 'dead loop postmortem',
     ],
-    images: ['https://cv-joseph.vercel.app/articles/skate-workshop-loop/og-skate-workshop-loop.webp'],
+    images: ['https://cloudyjoe.com/articles/skate-workshop-loop/og-skate-workshop-loop.webp'],
     breadcrumbHome: t.nav.breadcrumbHome,
     breadcrumbCurrent: t.nav.breadcrumbCurrent,
     faq: t.faq.items,
@@ -78,7 +78,7 @@ export default function SkateWorkshopLoop() {
     slug: t.slug,
     title: t.seo.title,
     description: t.seo.description,
-    image: 'https://cv-joseph.vercel.app/articles/skate-workshop-loop/og-skate-workshop-loop.webp',
+    image: 'https://cloudyjoe.com/articles/skate-workshop-loop/og-skate-workshop-loop.webp',
     publishedTime: '2026-09-02',
     modifiedTime: '2026-09-02',
     articleTags: 'agent loop,Claude Code,Slack,Supabase,edge functions,OTA,CI/CD,HITL',

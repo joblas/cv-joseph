@@ -7,7 +7,7 @@ const _en = {
     description: 'Case study: how I migrated OpenClaw (22 specialized agents, 4 directors, 1 CTO) to Hermes (composable agents behind a C-suite + VP structure on Ollama Cloud). The lesson: design for composability, not specialization.',
   },
   nav: {
-    back: 'cv-joseph.vercel.app',
+    back: 'cloudyjoe.com',
     breadcrumbHome: 'Home',
     breadcrumbCurrent: 'OpenClaw → Hermes',
   },

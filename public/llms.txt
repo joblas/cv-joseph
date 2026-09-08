@@ -7,8 +7,8 @@
 - **Location:** Escondido / San Diego, CA
 - **Now:** Founder of Joe's Tech Solutions — forward deployed engineer building custom software, AI agents, automation, and private AI for small businesses (business inquiries: joe@joestechsolutions.com)
 - **Email:** blasj408@gmail.com
-- **Website:** https://cv-joseph.vercel.app
-- **Entity Home / About**: https://cv-joseph.vercel.app/about
+- **Website:** https://cloudyjoe.com
+- **Entity Home / About**: https://cloudyjoe.com/about
 - **LinkedIn:** https://linkedin.com/in/joseph-blas
 - **GitHub:** https://github.com/joblas
 - **Company:** https://joestechsolutions.com
@@ -199,4 +199,4 @@ Case study: rebuilding a Slack-native agent dev loop after v1 died in public. A 
 For AI Developer, Autonomous Systems, or Embedded/Robotics roles:
 - Email: blasj408@gmail.com
 - LinkedIn: linkedin.com/in/joseph-blas
-- Website: cv-joseph.vercel.app (chat with AI avatar for quick questions)
+- Website: cloudyjoe.com (chat with AI avatar for quick questions)
