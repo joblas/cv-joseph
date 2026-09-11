@@ -9,6 +9,10 @@ concurrency:
   group: cf-pages-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+  pull-requests: write
+
 jobs:
   build-deploy:
     runs-on: ubuntu-latest
@@ -34,7 +38,7 @@ jobs:
       - name: Deploy to Cloudflare Pages
         id: deploy
         run: |
-          npx wrangler@3 pages deploy dist --project-name cloudyjoe --branch "${{ steps.tgt.outputs.branch }}" --commit-dirty=true 2>&1 | tee /tmp/deploy.log
+          set -o pipefail; npx wrangler@3 pages deploy dist --project-name cloudyjoe --branch "${{ steps.tgt.outputs.branch }}" --commit-dirty=true 2>&1 | tee /tmp/deploy.log; PIPESTATUS=( "${PIPESTATUS[@]}" ); set -o pipefail
           URL=$(grep -oE 'https://[a-z0-9]+\.(cf|pages)\.dev[^ ]*' /tmp/deploy.log | tail -1 || true)
           [[ -n "$URL" ]] && echo "url=$URL" >> "$GITHUB_OUTPUT" || true
         env:
