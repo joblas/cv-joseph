@@ -40,8 +40,8 @@ jobs:
       - name: Deploy to Cloudflare Pages
         id: deploy
         run: |
-          set -o pipefail; npx wrangler@3 pages deploy dist --project-name cloudyjoe --branch "${{ steps.tgt.outputs.branch }}" --commit-dirty=true 2>&1 | tee /tmp/deploy.log; PIPESTATUS=( "${PIPESTATUS[@]}" ); set -o pipefail
-          URL=$(grep -oE 'https://[a-z0-9]+\.(cf|pages)\.dev[^ ]*' /tmp/deploy.log | tail -1 || true)
+          set -o pipefail; npx wrangler pages deploy dist --project-name cloudyjoe --branch "${{ steps.tgt.outputs.branch }}" --commit-dirty=true 2>&1 | tee /tmp/deploy.log; PIPESTATUS=( "${PIPESTATUS[@]}" ); set -o pipefail
+          URL=$(grep -oE 'https://[a-z0-9.-]+\.pages\.dev' /tmp/deploy.log | tail -1 || true)
           [[ -n "$URL" ]] && echo "url=$URL" >> "$GITHUB_OUTPUT" || true
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}

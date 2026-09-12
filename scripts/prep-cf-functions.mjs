@@ -19,16 +19,9 @@ rmSync(dstApi, { recursive: true, force: true })
 mkdirSync(dstApi, { recursive: true })
 cpSync(srcApi, dstApi, { recursive: true })
 
-// leads.js may be missing on older snapshots — grab from upstream work copy if so
 if (!existsSync(join(dstApi, '_shared', 'leads.js'))) {
-  const upstream = '/home/lurkr/cv-joseph-upstream/api/_shared/leads.js'
-  if (existsSync(upstream)) {
-    cpSync(upstream, join(dstApi, '_shared', 'leads.js'))
-    console.log('prep-cf: copied missing leads.js from upstream worktree')
-  } else {
-    console.error('FATAL: leads.js missing in both src and upstream')
-    process.exit(1)
-  }
+  console.error('FATAL: api/_shared/leads.js missing — chat.js imports it; rebase onto main')
+  process.exit(1)
 }
 
 // Generated prompt module (scripts/gen-prompt-module.mjs) lives at
@@ -50,22 +43,18 @@ function walk(dir, cb) {
   }
 }
 
-const waitUntilShim = `
-// --- CF migration shim (auto-patched) ---
-function __waitUntilShim(req) {
-  return (req && req.__waitUntil) || ((p) => { try { globalThis.__cfWaitUntilTasks.push(Promise.resolve(p).catch(() => {})) } catch {} })
-}
-`
+// Replacement for `import { waitUntil } from '@vercel/functions'`: resolve the
+// current request's Pages ctx (set by functions/api/[[path]].js) so tasks fired
+// inside a streaming Response body still attach to THIS request's waitUntil.
+const waitUntilShim = `function waitUntil(p) { const c = globalThis.__cfCtxStore && globalThis.__cfCtxStore.getStore(); if (c) c.waitUntil(Promise.resolve(p).catch(() => {})); else console.error('[cf] waitUntil called outside a request context — task dropped') }`
 
+let patchedWaitUntil = 0
 walk(dstApi, (p) => {
   let raw = readFileSync(p, 'utf8')
   let out = raw
 
   // Replace @vercel/functions import with local shim
-  out = out.replace(
-    /import \{ waitUntil \} from ['"]@vercel\/functions['"]/,
-    `function waitUntil(p) { try { (globalThis.__cfWaitUntilTasks = globalThis.__cfWaitUntilTasks || []).push(Promise.resolve(p).catch(() => {})) } catch {} }`,
-  )
+  out = out.replace(/import \{\s*waitUntil\s*\} from ['"]@vercel\/functions['"]/, () => { patchedWaitUntil++; return waitUntilShim })
 
   // Replace txt import with generated module, relative to this file's depth
   // under api-src/ (chat.js → './', _shared/prompt.js → '../').
@@ -81,6 +70,16 @@ walk(dstApi, (p) => {
     console.log('patched:', p.replace(dstApi, 'api'))
   }
 })
+
+// 2b. Nothing may still reference @vercel/functions: its waitUntil is
+// `getContext().waitUntil?.()` — a silent no-op outside Vercel.
+let leftovers = []
+walk(dstApi, (p) => { if (readFileSync(p, 'utf8').includes('@vercel/functions')) leftovers.push(p.replace(dstApi, 'api')) })
+if (leftovers.length) {
+  console.error('FATAL: unpatched @vercel/functions import in:', leftovers.join(', '))
+  process.exit(1)
+}
+console.log(`prep-cf: patched waitUntil in ${patchedWaitUntil} file(s)`)
 
 // 3. _headers + _redirects from vercel.json → cf-headers.txt / cf-redirects.txt
 //    (npm run cf:post copies them into dist/ after vite build wipes it)
@@ -124,6 +123,9 @@ function addRule(src, dest, status) {
   if (seen.has(src)) return // first rule per source wins (matches Vercel order)
   seen.add(src)
   redirects += `${src}  ${dest}  ${status}\n`
+  // Vercel normalised '/x/' → '/x' before matching; Pages matches exact
+  // paths, so emit the slash variant for every exact-path rule.
+  if (!src.includes('*') && !src.endsWith('/')) addRule(src + '/', dest, status)
 }
 for (const r of vercel.redirects || []) {
   if (r.source === '/:path+/') continue
@@ -135,7 +137,7 @@ for (const r of vercel.redirects || []) {
 for (const r of vercel.rewrites || []) {
   const dest = r.destination.replace(/\/index\.html$/, '')
   if (dest === r.source) continue
-  addRule(convertSource(r.source), convertDest(dest), 200)
+  addRule(convertSource(r.source), convertDest(dest) + '/', 200)
 }
 writeFileSync(join(root, 'cf-redirects.txt'), redirects)
 
