@@ -27,7 +27,7 @@ import {
 function buildJsonLd() {
   const t = n8nContent
   return buildArticleJsonLd({
-    url: `https://cv-joseph.vercel.app/${t.slug}`,
+    url: `https://cloudyjoe.com/${t.slug}`,
     headline: t.header.h1 + ' — Cheat Sheet',
     alternativeHeadline: t.seo.title,
     description: t.seo.description,
@@ -35,8 +35,8 @@ function buildJsonLd() {
     dateModified: '2026-04-07',
     keywords: ['n8n', 'product manager', 'automation', 'AI', 'workflow', 'sprint report', 'feedback classification', 'no-code', 'n8n tutorial', 'AI workflow automation'],
     images: [
-      'https://cv-joseph.vercel.app/workflows/n8n-sprint-report-automation-workflow.webp',
-      'https://cv-joseph.vercel.app/workflows/n8n-ai-feedback-classification-workflow.webp',
+      'https://cloudyjoe.com/workflows/n8n-sprint-report-automation-workflow.webp',
+      'https://cloudyjoe.com/workflows/n8n-ai-feedback-classification-workflow.webp',
     ],
     breadcrumbHome: t.nav.breadcrumbHome,
     breadcrumbCurrent: t.nav.breadcrumbCurrent,
@@ -70,7 +70,7 @@ export default function N8nForPMs() {
     slug: t.slug,
     title: t.seo.title,
     description: t.seo.description,
-    image: 'https://cv-joseph.vercel.app/workflows/n8n-ai-feedback-classification-workflow.webp',
+    image: 'https://cloudyjoe.com/workflows/n8n-ai-feedback-classification-workflow.webp',
     publishedTime: '2026-02-24',
     modifiedTime: '2026-04-07',
     articleTags: 'n8n,product manager,automation,AI,workflow,no-code',

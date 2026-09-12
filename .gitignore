@@ -50,3 +50,13 @@ chatbot/.playwright-mcp/
 # RAG
 .rag-hashes.json
 scripts/chunks/
+
+# Cloudflare local secrets
+.dev.vars
+.wrangler/
+
+# CF Pages Functions build outputs (scripts/prep-cf-functions.mjs)
+functions/api-src/
+functions/api/_prompt-fallback.js
+cf-headers.txt
+cf-redirects.txt

@@ -6,7 +6,7 @@
 
 ## The System
 
-Jacobo is an omnichannel AI agent (WhatsApp + phone) built with n8n, orchestrating specialized sub-agents via tool calling. These workflows ran in production for 2 years at [Joe's Tech Solutions](https://cv-joseph.vercel.app/ai-agent-jacobo).
+Jacobo is an omnichannel AI agent (WhatsApp + phone) built with n8n, orchestrating specialized sub-agents via tool calling. These workflows ran in production for 2 years at [Joe's Tech Solutions](https://cloudyjoe.com/ai-agent-jacobo).
 
 ## Workflows
 
@@ -40,12 +40,12 @@ Jacobo is an omnichannel AI agent (WhatsApp + phone) built with n8n, orchestrati
 
 Read the complete architecture breakdown, prompt engineering techniques, and production learnings:
 
-- [Jacobo AI Agent — Case Study](https://cv-joseph.vercel.app/ai-agent-jacobo)
+- [Jacobo AI Agent — Case Study](https://cloudyjoe.com/ai-agent-jacobo)
 
 ---
 
 ## Let's Connect
 
-[![Website](https://img.shields.io/badge/cv-joseph.vercel.app-000?style=for-the-badge&logo=safari&logoColor=white)](https://cv-joseph.vercel.app)
+[![Website](https://img.shields.io/badge/cloudyjoe.com-000?style=for-the-badge&logo=safari&logoColor=white)](https://cloudyjoe.com)
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](https://linkedin.com/in/joseph-blas)
 [![Email](https://img.shields.io/badge/Email-EA4335?style=for-the-badge&logo=gmail&logoColor=white)](mailto:blasj408@gmail.com)

@@ -1,9 +1,9 @@
-# Security Policy for cv-joseph.vercel.app
+# Security Policy for cloudyjoe.com
 # https://securitytxt.org/ — RFC 9116
 
 Contact: mailto:blasj408@gmail.com
 Preferred-Languages: en, es
-Canonical: https://cv-joseph.vercel.app/.well-known/security.txt
+Canonical: https://cloudyjoe.com/.well-known/security.txt
 Expires: 2027-04-06T00:00:00.000Z
 
 # Security measures implemented:

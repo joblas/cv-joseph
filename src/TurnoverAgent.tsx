@@ -35,7 +35,7 @@ import { turnoverAgentContent } from './turnover-agent-i18n'
 function buildJsonLd() {
   const t = turnoverAgentContent
   return buildArticleJsonLd({
-    url: `https://cv-joseph.vercel.app/${t.slug}`,
+    url: `https://cloudyjoe.com/${t.slug}`,
     headline: t.header.h1,
     alternativeHeadline: t.seo.title,
     description: t.seo.description,
@@ -47,7 +47,7 @@ function buildJsonLd() {
       'escalation automation', 'FastAPI', 'Supabase', 'self-healing infrastructure', 'watchdog',
       'LLM fallback chain', 'client case study', 'property management AI',
     ],
-    images: ['https://cv-joseph.vercel.app/articles/turnover-agent/og-turnover-agent.webp'],
+    images: ['https://cloudyjoe.com/articles/turnover-agent/og-turnover-agent.webp'],
     breadcrumbHome: t.nav.breadcrumbHome,
     breadcrumbCurrent: t.nav.breadcrumbCurrent,
     faq: t.faq.items,
@@ -73,7 +73,7 @@ export default function TurnoverAgent() {
     slug: t.slug,
     title: t.seo.title,
     description: t.seo.description,
-    image: 'https://cv-joseph.vercel.app/articles/turnover-agent/og-turnover-agent.webp',
+    image: 'https://cloudyjoe.com/articles/turnover-agent/og-turnover-agent.webp',
     publishedTime: '2026-09-01',
     modifiedTime: '2026-09-01',
     articleTags: 'LLM agent,Telegram,operations,short-term rentals,FastAPI,Supabase,watchdogs,client work',

@@ -35,7 +35,7 @@ export default function OpsDashboard() {
       document.head.appendChild(robots)
     }
     robots.content = 'noindex, nofollow'
-    document.title = 'LLMOps Dashboard | cv-joseph.vercel.app'
+    document.title = 'LLMOps Dashboard | cloudyjoe.com'
     // Force dark mode via CSS variables (works regardless of OS preference)
     const style = document.createElement('style')
     style.id = 'ops-dark-theme'
@@ -96,7 +96,7 @@ export default function OpsDashboard() {
           <div className="flex items-center justify-between sm:block">
             <div>
               <h1 className="text-lg sm:text-xl font-display font-bold text-foreground">LLMOps Dashboard</h1>
-              <p className="text-xs sm:text-sm text-muted-foreground">cv-joseph.vercel.app</p>
+              <p className="text-xs sm:text-sm text-muted-foreground">cloudyjoe.com</p>
             </div>
             <button
               onClick={logout}

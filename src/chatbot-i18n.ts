@@ -3,7 +3,7 @@ const _en = {
       altSlug: 'chatbot-que-se-cura-solo',
       readingTime: '22 min read',
       seo: {
-        title: 'The Self-Healing Chatbot: From Widget to Production LLMOps | cv-joseph.vercel.app',
+        title: 'The Self-Healing Chatbot: From Widget to Production LLMOps | cloudyjoe.com',
         description: 'Case study: production LLMOps with agentic observability, 6-layer defense, 71 evals, voice mode, and a closed-loop that generates tests from real failures.',
       },
       nav: {
@@ -11,7 +11,7 @@ const _en = {
         breadcrumbCurrent: 'The Self-Healing Chatbot',
       },
       header: {
-        kicker: 'Case Study — cv-joseph.vercel.app (you\'re using it right now)',
+        kicker: 'Case Study — cloudyjoe.com (you\'re using it right now)',
         h1: 'The Self-Healing Chatbot: From Widget to Production LLMOps',
         subtitle: 'How a 50-line chat widget evolved into a production LLMOps system with agentic RAG, agentic observability, 6-layer defense, 71 evals, voice mode, and a closed-loop that generates tests from real failures.',
         badge: 'In production. Open the chat to try it',

@@ -134,11 +134,11 @@ const aboutJsonLd = {
   dateModified: '2026-03-27',
   mainEntity: {
     '@type': 'Person',
-    '@id': 'https://cv-joseph.vercel.app/#person',
+    '@id': 'https://cloudyjoe.com/#person',
     name: 'Joseph Blas',
     alternateName: ['Joseph Blas', 'joblas'],
-    url: 'https://cv-joseph.vercel.app',
-    image: 'https://cv-joseph.vercel.app/foto-avatar.png',
+    url: 'https://cloudyjoe.com',
+    image: 'https://cloudyjoe.com/foto-avatar.png',
     email: 'blasj408@gmail.com',
     jobTitle: ['AI Developer', 'Autonomous Systems Builder', 'Multi-Agent AI Systems Builder'],
     knowsAbout: [
@@ -172,7 +172,7 @@ const aboutJsonLd = {
     founder: {
       '@type': 'Organization',
       name: 'Joseph Blas',
-      url: 'https://cv-joseph.vercel.app',
+      url: 'https://cloudyjoe.com',
       foundingDate: '2024',
     },
     sameAs: [
@@ -181,7 +181,7 @@ const aboutJsonLd = {
       'https://x.com/joblas',
       'https://dev.to/joblas',
       'https://joblas.substack.com',
-      'https://contentdigest.cv-joseph.vercel.app',
+      'https://contentdigest.cloudyjoe.com',
       'https://www.youtube.com/@joblas',
       'https://stackoverflow.com/users/32541743',
       'https://orcid.org/0009-0006-2192-7210',
@@ -204,7 +204,7 @@ const aboutJsonLd = {
 const aboutJsonLdScript = `<script type="application/ld+json">\n${JSON.stringify(aboutJsonLd, null, 2)}\n</script>`;
 
 const aboutSlug = aboutContent.slug;
-const aboutUrl = `https://cv-joseph.vercel.app/${aboutSlug}`;
+const aboutUrl = `https://cloudyjoe.com/${aboutSlug}`;
 
 let aboutRenderedHtml: string;
 try {
@@ -259,7 +259,7 @@ function buildArticlePageHtml(
   ArticleComponent: ComponentType,
 ): string {
   const slug = config.slug;
-  const url = `https://cv-joseph.vercel.app/${slug}`;
+  const url = `https://cloudyjoe.com/${slug}`;
   const articleSeo = config.seo;
 
   let renderedHtml: string;
@@ -285,7 +285,7 @@ function buildArticlePageHtml(
     .replace(/<meta name="twitter:title" content="[^"]*" \/>/, `<meta name="twitter:title" content="${esc(articleSeo.title)}" />`)
     .replace(/<meta name="twitter:description" content="[^"]*" \/>/, `<meta name="twitter:description" content="${esc(articleSeo.description)}" />`)
     // OG image — replace with article-specific image if configured
-    .replace(/<meta property="og:image" content="[^"]*" \/>/, `<meta property="og:image" content="${esc(config.ogImage || 'https://cv-joseph.vercel.app/og-image.webp')}" />`)
+    .replace(/<meta property="og:image" content="[^"]*" \/>/, `<meta property="og:image" content="${esc(config.ogImage || 'https://cloudyjoe.com/og-image.webp')}" />`)
     .replace(/<meta property="og:image:alt" content="[^"]*" \/>/, `<meta property="og:image:alt" content="${esc(articleSeo.title)}" />`)
     .replace(/<meta name="twitter:image" content="[^"]*" \/>/, config.ogImage ? `<meta name="twitter:image" content="${esc(config.ogImage)}" />` : '');
 
@@ -402,7 +402,7 @@ await inlineCriticalCSS();
 const notFoundHtml = indexHtml
   .replace('<div id="root"></div>', `<div id="root"><div style="min-height:80vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 1.5rem"><p style="font-size:6rem;font-weight:bold;color:var(--primary);margin-bottom:1rem;font-family:var(--font-display)">404</p><h1 style="font-size:1.5rem;font-weight:600;color:var(--foreground);margin-bottom:0.5rem">Page not found</h1><p style="color:var(--muted-foreground);margin-bottom:2rem;max-width:28rem">The page you're looking for doesn't exist or has been moved.</p><a href="/" style="display:inline-flex;align-items:center;gap:0.5rem;padding:0.75rem 1.5rem;border-radius:0.75rem;background:var(--primary);color:var(--primary-foreground);font-weight:500;text-decoration:none">← Back to home</a></div></div>`)
   .replace(/<meta name="robots" content="[^"]*" \/>/, '<meta name="robots" content="noindex, nofollow" />')
-  .replace(/<title>[^<]*<\/title>/, '<title>404 — Page not found | cv-joseph.vercel.app</title>');
+  .replace(/<title>[^<]*<\/title>/, '<title>404 — Page not found | cloudyjoe.com</title>');
 
 // Add noindex if no robots meta exists
 if (!notFoundHtml.includes('name="robots"')) {

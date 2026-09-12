@@ -1,4 +1,4 @@
-# cv-joseph.vercel.app
+# cloudyjoe.com
 
 **[:gb: English](#the-problem)**
 
@@ -25,7 +25,7 @@ A production-grade interactive portfolio that **demonstrates the skills it descr
 - **Closed Loop** — Trace → online scoring → quality < 0.7 → auto-generate test → CI gate blocks deploy
 - **Voice Mode** — OpenAI Realtime API, audio-to-audio, shared RAG pipeline, ~$0.25/session
 - **8 Published Articles** — case studies with JSON-LD, prerendered HTML, cross-linked RAG, and interactive architecture diagrams
-- **Interactive Architecture Diagram** — GSAP-animated SVG with narrated audio, pan/zoom, dark mode sync. [Explore it →](https://cv-joseph.vercel.app/self-healing-chatbot#architecture)
+- **Interactive Architecture Diagram** — GSAP-animated SVG with narrated audio, pan/zoom, dark mode sync. [Explore it →](https://cloudyjoe.com/self-healing-chatbot#architecture)
 - **GEO-ready** — `llms.txt`, structured data (JSON-LD), AI crawler-friendly robots.txt
 
 ---
@@ -47,8 +47,8 @@ A production-grade interactive portfolio that **demonstrates the skills it descr
 
 ## Chatbot Architecture
 
-[![Interactive Architecture Diagram](public/chatbot/diagram-thumbnail.webp)](https://cv-joseph.vercel.app/self-healing-chatbot#architecture)
-> **[Explore the interactive diagram →](https://cv-joseph.vercel.app/self-healing-chatbot#architecture)** 10 phases · narrated audio · zoom + pan
+[![Interactive Architecture Diagram](public/chatbot/diagram-thumbnail.webp)](https://cloudyjoe.com/self-healing-chatbot#architecture)
+> **[Explore the interactive diagram →](https://cloudyjoe.com/self-healing-chatbot#architecture)** 10 phases · narrated audio · zoom + pan
 
 ```
 User message → FloatingChat.tsx → api/chat.js (Vercel Edge)
@@ -298,6 +298,6 @@ MIT
 
 ## Let's Connect
 
-[![Website](https://img.shields.io/badge/cv--joseph.vercel.app-000?style=for-the-badge&logo=safari&logoColor=white)](https://cv-joseph.vercel.app)
+[![Website](https://img.shields.io/badge/cv--joseph.vercel.app-000?style=for-the-badge&logo=safari&logoColor=white)](https://cloudyjoe.com)
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](https://linkedin.com/in/joseph-blas)
 [![Email](https://img.shields.io/badge/Email-EA4335?style=for-the-badge&logo=gmail&logoColor=white)](mailto:blasj408@gmail.com)

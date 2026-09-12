@@ -9,6 +9,7 @@ import {
   containsFingerprint, LEAK_RESPONSE,
 } from './_shared/rag.js'
 import { getSystemPrompt } from './_shared/prompt.js'
+import { captureLead, checkRateLimit } from './_shared/leads.js'
 
 const client = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -82,12 +83,44 @@ export default async function handler(req) {
     const lastUserMessage = rawLastMessage.slice(0, 2000)
     const intentTags = classifyIntent(lastUserMessage)
 
-    // Tag synthetic traffic (evals, adversarial, regression tests)
+    // Tag synthetic traffic (evals, adversarial, regression tests). The header
+    // is public, so it may LABEL a trace but must never buy an exemption on its
+    // own: anyone could send x-trace-source and thereby skip the rate limiter,
+    // lead capture and jailbreak alerting. Exemptions require the same shared
+    // secret the prompt-version override already uses.
     const traceSource = req.headers.get('x-trace-source')
     if (traceSource) intentTags.push(`source:${traceSource}`)
+    const secret = process.env.PROMPT_REGRESSION_SECRET
+    const isTrustedEval = Boolean(traceSource) && Boolean(secret) &&
+      req.headers.get('x-prompt-auth') === secret
 
-    if (intentTags.includes('jailbreak-attempt') && !traceSource) {
+    if (intentTags.includes('jailbreak-attempt') && !isTrustedEval) {
       waitUntil(sendJailbreakAlert(lastUserMessage))
+    }
+
+    // Per-IP rate limit. The voice endpoint had one; the text chat did not, so
+    // a script could run the Anthropic bill up unbounded. Checked before any
+    // model call so a blocked request costs nothing, and it fails open.
+    if (!isTrustedEval && !(await checkRateLimit(req))) {
+      return new Response(
+        JSON.stringify({
+          error: 'rate_limited',
+          message: "That's a lot of messages in one hour. Email Joe directly at blasj408@gmail.com and he'll pick it up.",
+        }),
+        { status: 429, headers: { 'Content-Type': 'application/json' } },
+      )
+    }
+
+    // Lead capture. Until now a visitor who wanted to hire Joe got a polite
+    // answer and nothing else — no record, no notification. Fire-and-forget so
+    // it never delays the reply, and it swallows its own errors.
+    if (!isTrustedEval) {
+      waitUntil(captureLead({
+        message: lastUserMessage,
+        page: currentPage,
+        sessionId,
+        lang,
+      }))
     }
 
     // Prompt versioning: Langfuse with file fallback (Block 4)

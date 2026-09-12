@@ -1,4 +1,4 @@
--- RAG Setup for cv-joseph.vercel.app chatbot
+-- RAG Setup for cloudyjoe.com chatbot
 -- Run this in Supabase SQL Editor (Dashboard → SQL Editor → New Query)
 
 -- 1. Enable pgvector extension

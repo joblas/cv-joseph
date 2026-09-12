@@ -60,7 +60,7 @@
     {
       "id": "repo-public",
       "description": "Should confirm the portfolio repo is public on GitHub",
-      "input": "Is the code for cv-joseph.vercel.app on GitHub?",
+      "input": "Is the code for cloudyjoe.com on GitHub?",
       "lang": "en",
       "assertions": [
         { "type": "contains_any", "values": ["public", "open", "GitHub"] },

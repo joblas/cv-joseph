@@ -65,8 +65,8 @@ export const articleRegistry: ArticleConfig[] = [
     type: 'collab',
     ragReady: true,
     i18nFile: 'src/n8n-i18n.ts',
-    ogImage: 'https://cv-joseph.vercel.app/workflows/n8n-ai-feedback-classification-workflow.webp',
-    heroImage: 'https://cv-joseph.vercel.app/workflows/n8n-sprint-report-automation-workflow.webp',
+    ogImage: 'https://cloudyjoe.com/workflows/n8n-ai-feedback-classification-workflow.webp',
+    heroImage: 'https://cloudyjoe.com/workflows/n8n-sprint-report-automation-workflow.webp',
     component: () => import('../N8nForPMs.tsx'),
     seoMeta: {
       datePublished: '2026-02-24',
@@ -74,7 +74,7 @@ export const articleRegistry: ArticleConfig[] = [
       keywords: ['n8n', 'n8n tutorial', 'n8n templates', 'n8n AI', 'n8n workflow', 'n8n automation', 'n8n cheat sheet', 'product manager', 'AI workflow automation', 'sprint report automation', 'feedback classification AI', 'no-code automation', 'n8n for product managers', 'workflow templates free'],
       articleType: 'TechArticle',
       articleTags: 'n8n,product manager,automation,AI,workflow,no-code',
-      images: ['https://cv-joseph.vercel.app/workflows/n8n-sprint-report-automation-workflow.webp', 'https://cv-joseph.vercel.app/workflows/n8n-ai-feedback-classification-workflow.webp'],
+      images: ['https://cloudyjoe.com/workflows/n8n-sprint-report-automation-workflow.webp', 'https://cloudyjoe.com/workflows/n8n-ai-feedback-classification-workflow.webp'],
       about: [
         { '@type': 'SoftwareApplication', name: 'n8n', url: 'https://n8n.io', applicationCategory: 'Workflow Automation' },
         { '@type': 'Thing', name: 'Product Management Automation' },
@@ -122,8 +122,8 @@ export const articleRegistry: ArticleConfig[] = [
     type: 'case-study',
     ragReady: true,
     i18nFile: 'src/chatbot-i18n.ts',
-    ogImage: 'https://cv-joseph.vercel.app/chatbot/og-self-healing-chatbot.webp',
-    heroImage: 'https://cv-joseph.vercel.app/chatbot/hero-self-healing-chatbot.webp',
+    ogImage: 'https://cloudyjoe.com/chatbot/og-self-healing-chatbot.webp',
+    heroImage: 'https://cloudyjoe.com/chatbot/hero-self-healing-chatbot.webp',
     component: () => import('../SelfHealingChatbot.tsx'),
     seoMeta: {
       datePublished: '2026-03-11',
@@ -131,7 +131,7 @@ export const articleRegistry: ArticleConfig[] = [
       keywords: ['LLMOps', 'self-healing chatbot', 'agentic RAG', 'jailbreak defense', 'prompt injection', 'LLM evaluation', 'closed loop LLM', 'Langfuse', 'prompt versioning', 'adversarial testing', 'trace-to-eval', 'hybrid search pgvector', 'AI portfolio', 'chatbot evals', 'CI gate LLM', 'voice mode chatbot', 'OpenAI Realtime API', 'speech-to-speech AI', 'agentic observability', 'developer feedback loop', 'AI maintaining AI'],
       articleType: 'TechArticle',
       articleTags: 'LLMOps,self-healing chatbot,agentic RAG,jailbreak defense,Langfuse,evals,closed-loop,prompt injection',
-      images: ['https://cv-joseph.vercel.app/chatbot/og-self-healing-chatbot.webp'],
+      images: ['https://cloudyjoe.com/chatbot/og-self-healing-chatbot.webp'],
       about: [
         { '@type': 'SoftwareApplication', name: 'Langfuse', url: 'https://langfuse.com', applicationCategory: 'LLM Observability' },
         { '@type': 'SoftwareApplication', name: 'Supabase', url: 'https://supabase.com', applicationCategory: 'Database' },
@@ -176,8 +176,8 @@ export const articleRegistry: ArticleConfig[] = [
     type: 'tool-showcase',
     ragReady: true,
     i18nFile: 'src/career-ops-i18n.ts',
-    ogImage: 'https://cv-joseph.vercel.app/career-ops/og-career-ops.webp',
-    heroImage: 'https://cv-joseph.vercel.app/career-ops/hero-career-ops.webp',
+    ogImage: 'https://cloudyjoe.com/career-ops/og-career-ops.webp',
+    heroImage: 'https://cloudyjoe.com/career-ops/hero-career-ops.webp',
     component: () => import('../CareerOps.tsx'),
     seoMeta: {
       datePublished: '2026-03-17',
@@ -185,7 +185,7 @@ export const articleRegistry: ArticleConfig[] = [
       keywords: ['ai job search', 'ai job search tool', 'ai powered job search', 'ai resume builder', 'ai resume', 'multi agent system', 'multi agent orchestration', 'automated job application', 'ATS-optimized resume', 'Claude Code', 'batch processing', 'HITL', 'job search automation', 'career-ops', 'ai auto apply', 'agente ia', 'crear cv con ia', 'automatizacion con ia', 'sistema multiagente', 'busqueda de empleo ia'],
       articleType: 'TechArticle',
       articleTags: 'multi-agent,job search,Claude Code,ATS,batch processing,HITL,automation,Playwright',
-      images: ['https://cv-joseph.vercel.app/career-ops/og-career-ops.webp'],
+      images: ['https://cloudyjoe.com/career-ops/og-career-ops.webp'],
       about: [
         { '@type': 'SoftwareApplication', name: 'Claude Code', url: 'https://claude.ai', applicationCategory: 'AI Agent' },
         { '@type': 'SoftwareApplication', name: 'Playwright', url: 'https://playwright.dev', applicationCategory: 'Browser Automation' },
@@ -230,8 +230,8 @@ export const articleRegistry: ArticleConfig[] = [
     type: 'case-study',
     ragReady: true,
     i18nFile: 'src/openclaw-i18n.ts',
-    ogImage: 'https://cv-joseph.vercel.app/articles/openclaw-org-chart.webp',
-    heroImage: 'https://cv-joseph.vercel.app/articles/openclaw-org-chart.webp',
+    ogImage: 'https://cloudyjoe.com/articles/openclaw-org-chart.webp',
+    heroImage: 'https://cloudyjoe.com/articles/openclaw-org-chart.webp',
     component: () => import('../OpenClaw.tsx'),
     seoMeta: {
       datePublished: '2026-06-16',
@@ -239,7 +239,7 @@ export const articleRegistry: ArticleConfig[] = [
       keywords: ['AI agents', 'multi-agent system', 'OpenClaw', 'Hermes', 'agent migration', 'agent architecture', 'composability', 'small business AI', 'AI automation', 'Claude', 'n8n', 'Ollama Cloud', 'model selection', 'AI team', 'agent runtime', 'AI orchestration', 'business automation', 'AI consultancy'],
       articleType: 'TechArticle',
       articleTags: 'AI agents,multi-agent,Hermes,OpenClaw,architecture,migration,composability,specialization,small business,Claude,n8n,automation',
-      images: ['https://cv-joseph.vercel.app/articles/openclaw-org-chart.webp'],
+      images: ['https://cloudyjoe.com/articles/openclaw-org-chart.webp'],
       about: [
         { '@type': 'SoftwareApplication', name: 'OpenClaw', applicationCategory: 'Agent Runtime (retired)' },
         { '@type': 'SoftwareApplication', name: 'Hermes', url: 'https://github.com/NousResearch/hermes-agent', applicationCategory: 'Agent Runtime' },
@@ -285,8 +285,8 @@ export const articleRegistry: ArticleConfig[] = [
     type: 'case-study',
     ragReady: true,
     i18nFile: 'src/turnover-agent-i18n.ts',
-    ogImage: 'https://cv-joseph.vercel.app/articles/turnover-agent/og-turnover-agent.webp',
-    heroImage: 'https://cv-joseph.vercel.app/articles/turnover-agent/hero-turnover-agent.webp',
+    ogImage: 'https://cloudyjoe.com/articles/turnover-agent/og-turnover-agent.webp',
+    heroImage: 'https://cloudyjoe.com/articles/turnover-agent/hero-turnover-agent.webp',
     component: () => import('../TurnoverAgent.tsx'),
     seoMeta: {
       datePublished: '2026-09-01',
@@ -294,7 +294,7 @@ export const articleRegistry: ArticleConfig[] = [
       keywords: ['LLM agent', 'tool calling agent', 'Telegram bot', 'operations agent', 'short-term rental automation', 'turnover management', 'iCal automation', 'Airbnb calendar sync', 'escalation automation', 'FastAPI', 'Supabase', 'self-healing infrastructure', 'LLM fallback chain', 'property management AI', 'client case study', 'AI agent for small business'],
       articleType: 'TechArticle',
       articleTags: 'LLM agent,Telegram,operations,short-term rentals,FastAPI,Supabase,watchdogs,client work',
-      images: ['https://cv-joseph.vercel.app/articles/turnover-agent/og-turnover-agent.webp'],
+      images: ['https://cloudyjoe.com/articles/turnover-agent/og-turnover-agent.webp'],
       about: [
         { '@type': 'SoftwareApplication', name: 'FastAPI', url: 'https://fastapi.tiangolo.com', applicationCategory: 'Web Framework' },
         { '@type': 'SoftwareApplication', name: 'Supabase', url: 'https://supabase.com', applicationCategory: 'Database' },
@@ -341,8 +341,8 @@ export const articleRegistry: ArticleConfig[] = [
     type: 'case-study',
     ragReady: true,
     i18nFile: 'src/archive-beta-loop-i18n.ts',
-    ogImage: 'https://cv-joseph.vercel.app/articles/archive-beta-loop/og-archive-beta-loop.webp',
-    heroImage: 'https://cv-joseph.vercel.app/articles/archive-beta-loop/hero-archive-beta-loop.webp',
+    ogImage: 'https://cloudyjoe.com/articles/archive-beta-loop/og-archive-beta-loop.webp',
+    heroImage: 'https://cloudyjoe.com/articles/archive-beta-loop/hero-archive-beta-loop.webp',
     component: () => import('../ArchiveBetaLoop.tsx'),
     seoMeta: {
       datePublished: '2026-09-01',
@@ -350,7 +350,7 @@ export const articleRegistry: ArticleConfig[] = [
       keywords: ['autonomous agent', 'agentic development loop', 'Claude Code', 'AI feedback loop', 'over-the-air updates', 'expo-updates', 'EAS', 'test-driven development', 'human in the loop', 'AI guardrails', 'prompt injection defense', 'self-healing infrastructure', 'beta feedback automation', 'agent pre-authorization', 'Telegram bot feedback', 'solo founder AI'],
       articleType: 'TechArticle',
       articleTags: 'autonomous agents,Claude Code,OTA updates,TDD,guardrails,human-in-the-loop,beta feedback',
-      images: ['https://cv-joseph.vercel.app/articles/archive-beta-loop/og-archive-beta-loop.webp'],
+      images: ['https://cloudyjoe.com/articles/archive-beta-loop/og-archive-beta-loop.webp'],
       about: [
         { '@type': 'SoftwareApplication', name: 'Claude Code', url: 'https://claude.ai', applicationCategory: 'AI Agent' },
         { '@type': 'SoftwareApplication', name: 'Expo Application Services', url: 'https://expo.dev', applicationCategory: 'Mobile CI/CD' },
@@ -390,8 +390,8 @@ export const articleRegistry: ArticleConfig[] = [
     type: 'case-study',
     ragReady: true,
     i18nFile: 'src/cbarrgs-agent-i18n.ts',
-    ogImage: 'https://cv-joseph.vercel.app/articles/cbarrgs-agent/og-cbarrgs-agent.webp',
-    heroImage: 'https://cv-joseph.vercel.app/articles/cbarrgs-agent/hero-cbarrgs-agent.webp',
+    ogImage: 'https://cloudyjoe.com/articles/cbarrgs-agent/og-cbarrgs-agent.webp',
+    heroImage: 'https://cloudyjoe.com/articles/cbarrgs-agent/hero-cbarrgs-agent.webp',
     component: () => import('../CbarrgsAgent.tsx'),
     seoMeta: {
       datePublished: '2026-09-01',
@@ -399,7 +399,7 @@ export const articleRegistry: ArticleConfig[] = [
       keywords: ['AI agent for clients', 'Claude Code agent', 'Telegram bot agent', 'website maintenance automation', 'coding agent', 'AI agent operations', 'agent charter', 'artist website', 'musician website', 'systemd watchdog', 'tmux', 'Cloudflare Pages', 'agent guardrails', 'llms.txt', 'AI for small business'],
       articleType: 'TechArticle',
       articleTags: 'AI agents,client work,Claude Code,Telegram,tmux,systemd,Cloudflare Pages,guardrails',
-      images: ['https://cv-joseph.vercel.app/articles/cbarrgs-agent/og-cbarrgs-agent.webp'],
+      images: ['https://cloudyjoe.com/articles/cbarrgs-agent/og-cbarrgs-agent.webp'],
       about: [
         { '@type': 'SoftwareApplication', name: 'Claude Code', url: 'https://claude.ai', applicationCategory: 'AI Agent' },
         { '@type': 'Thing', name: 'AI Agent Operations' },
@@ -442,8 +442,8 @@ export const articleRegistry: ArticleConfig[] = [
     type: 'case-study',
     ragReady: true,
     i18nFile: 'src/skate-workshop-loop-i18n.ts',
-    ogImage: 'https://cv-joseph.vercel.app/articles/skate-workshop-loop/og-skate-workshop-loop.webp',
-    heroImage: 'https://cv-joseph.vercel.app/articles/skate-workshop-loop/hero-loop-diagram.webp',
+    ogImage: 'https://cloudyjoe.com/articles/skate-workshop-loop/og-skate-workshop-loop.webp',
+    heroImage: 'https://cloudyjoe.com/articles/skate-workshop-loop/hero-loop-diagram.webp',
     component: () => import('../SkateWorkshopLoop.tsx'),
     seoMeta: {
       datePublished: '2026-09-02',
@@ -451,7 +451,7 @@ export const articleRegistry: ArticleConfig[] = [
       keywords: ['agentic development loop', 'Claude Code', 'Slack bot', 'Supabase edge functions', 'GitHub Actions', 'OTA updates', 'Expo EAS Update', 'bug triage automation', 'webhook security', 'HMAC signature verification', 'human in the loop', 'React Native', 'TestFlight beta', 'agent ops', 'dead loop postmortem'],
       articleType: 'TechArticle',
       articleTags: 'agent loop,Claude Code,Slack,Supabase,edge functions,OTA,CI/CD,HITL',
-      images: ['https://cv-joseph.vercel.app/articles/skate-workshop-loop/og-skate-workshop-loop.webp'],
+      images: ['https://cloudyjoe.com/articles/skate-workshop-loop/og-skate-workshop-loop.webp'],
       about: [
         { '@type': 'SoftwareApplication', name: 'Claude Code', url: 'https://claude.ai', applicationCategory: 'AI Agent' },
         { '@type': 'SoftwareApplication', name: 'Supabase', url: 'https://supabase.com', applicationCategory: 'Backend Platform' },

@@ -33,9 +33,9 @@ interface JsonLdOptions {
 
 const PERSON = {
   '@type': 'Person',
-  '@id': 'https://cv-joseph.vercel.app/#person',
+  '@id': 'https://cloudyjoe.com/#person',
   name: 'Joseph Blas',
-  url: 'https://cv-joseph.vercel.app',
+  url: 'https://cloudyjoe.com',
   jobTitle: 'AI Developer',
   sameAs: [
     'https://www.linkedin.com/in/joseph-blas',
@@ -46,9 +46,9 @@ const PERSON = {
 
 const WEBSITE = {
   '@type': 'WebSite',
-  '@id': 'https://cv-joseph.vercel.app/#website',
+  '@id': 'https://cloudyjoe.com/#website',
   name: 'Joseph Blas | AI Developer',
-  url: 'https://cv-joseph.vercel.app',
+  url: 'https://cloudyjoe.com',
 }
 
 export function buildArticleJsonLd(opts: JsonLdOptions) {
@@ -61,7 +61,7 @@ export function buildArticleJsonLd(opts: JsonLdOptions) {
       headline: opts.headline,
       alternativeHeadline: opts.alternativeHeadline,
       description: opts.description,
-      author: { '@id': 'https://cv-joseph.vercel.app/#person' },
+      author: { '@id': 'https://cloudyjoe.com/#person' },
       ...(opts.publisher ? {
         publisher: {
           '@type': 'Organization',
@@ -76,7 +76,7 @@ export function buildArticleJsonLd(opts: JsonLdOptions) {
       mainEntityOfPage: opts.url,
       image: opts.images,
       inLanguage,
-      isPartOf: { '@id': 'https://cv-joseph.vercel.app/#website' },
+      isPartOf: { '@id': 'https://cloudyjoe.com/#website' },
       ...(opts.about ? { about: opts.about } : {}),
       ...(opts.extra || {}),
       ...(opts.citation ? { citation: opts.citation } : {}),
@@ -90,7 +90,7 @@ export function buildArticleJsonLd(opts: JsonLdOptions) {
     {
       '@type': 'BreadcrumbList',
       itemListElement: [
-        { '@type': 'ListItem', position: 1, name: opts.breadcrumbHome, item: 'https://cv-joseph.vercel.app' },
+        { '@type': 'ListItem', position: 1, name: opts.breadcrumbHome, item: 'https://cloudyjoe.com' },
         { '@type': 'ListItem', position: 2, name: opts.breadcrumbCurrent, item: opts.url },
       ],
     },
