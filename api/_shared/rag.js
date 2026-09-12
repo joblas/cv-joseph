@@ -2,6 +2,8 @@
 // Shared RAG pipeline — used by api/chat.js (text) and api/rag-search.js (voice)
 // ---------------------------------------------------------------------------
 
+import { FAST_MODEL, scaleTokens } from './models.js'
+
 // ---------------------------------------------------------------------------
 // Cost tracking per span
 // ---------------------------------------------------------------------------
@@ -136,7 +138,7 @@ export async function rerankChunks(query, chunks, anthropicClient) {
 
     const response = await anthropicClient.messages.create({
       model: FAST_MODEL,
-      max_tokens: 50,
+      max_tokens: scaleTokens(50),
       messages: [{
         role: 'user',
         content: `Query: "${query}"\nRank these chunks by relevance. Return ONLY the top 5 IDs as comma-separated numbers (most relevant first):\n${numbered}`,

@@ -1,5 +1,4 @@
-import Anthropic from '@anthropic-ai/sdk'
-import { CHAT_MODEL, createAnthropicClient } from './_shared/models.js'
+import { CHAT_MODEL, scaleTokens, createAnthropicClient } from './_shared/models.js'
 import { Langfuse } from 'langfuse'
 import {
   searchPortfolio, formatChunksForContext, extractSources, calcCost,
@@ -41,7 +40,7 @@ async function reasonWithClaude(query, formattedChunks, span, langfuse) {
     const response = await Promise.race([
       client.messages.create({
         model: CHAT_MODEL,
-        max_tokens: 300,
+        max_tokens: scaleTokens(300),
         system: `${systemPromptText}\n\n${VOICE_OVERRIDE}`,
         messages: [
           { role: 'user', content: query },

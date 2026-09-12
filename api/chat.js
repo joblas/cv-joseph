@@ -1,4 +1,3 @@
-import Anthropic from '@anthropic-ai/sdk'
 import { Langfuse } from 'langfuse'
 import { waitUntil } from '@vercel/functions'
 import SYSTEM_PROMPT_FALLBACK from '../chatbot-prompt.txt'
@@ -10,7 +9,7 @@ import {
 } from './_shared/rag.js'
 import { getSystemPrompt } from './_shared/prompt.js'
 import { captureLead, checkRateLimit } from './_shared/leads.js'
-import { CHAT_MODEL, FAST_MODEL, CHAT_MAX_TOKENS, createAnthropicClient } from './_shared/models.js'
+import { CHAT_MODEL, FAST_MODEL, CHAT_MAX_TOKENS, scaleTokens, createAnthropicClient } from './_shared/models.js'
 
 const client = createAnthropicClient()
 
@@ -204,7 +203,7 @@ export default async function handler(req) {
 
       const firstResponse = await client.messages.create({
         model: CHAT_MODEL,
-        max_tokens: 300,
+        max_tokens: scaleTokens(300),
         system: systemBlocks,
         messages: cleanMessages,
         tools: [PORTFOLIO_TOOL],
@@ -385,6 +384,9 @@ function streamResponse({
           // Drip precomputed text through the stream
           const textBlocks = precomputedResponse.content.filter(b => b.type === 'text')
           const precomputedText = textBlocks.map(b => b.text).join('')
+          if (!precomputedText) {
+            throw new Error(`empty precomputed output (stop_reason=${precomputedResponse.stop_reason})`)
+          }
 
           // Check for leaks
           if (containsFingerprint(precomputedText) || precomputedText.includes(canary)) {
@@ -479,6 +481,12 @@ function streamResponse({
                 const genIn = finalMessage.usage?.input_tokens || 0
                 const genOut = finalMessage.usage?.output_tokens || 0
                 generationCost = calcCost(CHAT_MODEL, genIn, genOut)
+                // A thinking model can spend the whole budget before any text;
+                // treat that as a failure so the retry/fallback/error path runs
+                // instead of sending the user an empty bubble.
+                if (!fullOutput) {
+                  throw new Error(`empty output (stop_reason=${finalMessage.stop_reason})`)
+                }
                 generationSpan?.end({
                   metadata: {
                     outputTokens: genOut,
@@ -672,7 +680,7 @@ async function scoreTrace(traceId, userMessage, response, ragUsed, langfuse) {
 
     const scoringResponse = await client.messages.create({
       model: FAST_MODEL,
-      max_tokens: 200,
+      max_tokens: scaleTokens(200),
       messages: [{
         role: 'user',
         content: `Rate this chatbot response (Joseph's CV chatbot). Respond ONLY with JSON.
