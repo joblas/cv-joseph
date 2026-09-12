@@ -641,7 +641,10 @@ function streamResponse({
             controller.close()
             if (langfuse) waitUntil(langfuse.flushAsync())
             return
-          } catch { /* fallback also failed, fall through to error message */ }
+          } catch (fallbackErr) {
+            // fall through to the last-resort error message
+            trace?.update({ metadata: { fallbackError: fallbackErr?.message } })
+          }
         }
 
         // Last resort: send error message through SSE

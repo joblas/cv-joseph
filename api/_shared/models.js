@@ -14,7 +14,10 @@ import Anthropic from '@anthropic-ai/sdk'
 export const CHAT_MODEL = process.env.CHAT_MODEL || 'claude-sonnet-4-6'
 // Small/fast model (reranking, intent classification, scoring)
 // On a foreign endpoint there is no Haiku; fall back to the main model there.
-const onAnthropic = !process.env.ANTHROPIC_BASE_URL || /(^|\.)anthropic\.com$/.test(new URL(process.env.ANTHROPIC_BASE_URL).hostname)
+function baseUrlHost() {
+  try { return new URL(process.env.ANTHROPIC_BASE_URL).hostname } catch { return '' }
+}
+const onAnthropic = !process.env.ANTHROPIC_BASE_URL || /(^|\.)anthropic\.com$/.test(baseUrlHost())
 export const FAST_MODEL =
   process.env.CHAT_MODEL_FAST || (onAnthropic ? 'claude-haiku-4-5-20251001' : CHAT_MODEL)
 // Output budget for the streamed answer. Thinking models spend part of it on

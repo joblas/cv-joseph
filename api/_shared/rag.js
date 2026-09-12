@@ -23,8 +23,14 @@ export function calcCost(model, inputTokens, outputTokens = 0) {
 // RAG: tool definition for Agentic RAG
 // ---------------------------------------------------------------------------
 
+// Retrieval needs Supabase. With VOYAGE_API_KEY it is hybrid (vector +
+// keyword); without it, keyword-only over the same corpus (keyword_search RPC).
 export function isRagEnabled() {
-  return !!(process.env.VOYAGE_API_KEY && process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY)
+  return !!(process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY)
+}
+
+export function hasEmbeddings() {
+  return !!process.env.VOYAGE_API_KEY
 }
 
 export const PORTFOLIO_TOOL = {
@@ -123,6 +129,40 @@ export async function searchDocuments(queryText, queryEmbedding) {
   }
 }
 
+// Keyword-only retrieval (no embedding provider configured)
+export async function searchDocumentsByKeyword(queryText) {
+  const t0 = Date.now()
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 2000)
+  try {
+    const response = await fetch(
+      `${process.env.SUPABASE_URL}/rest/v1/rpc/keyword_search`,
+      {
+        method: 'POST',
+        headers: {
+          'apikey': process.env.SUPABASE_SERVICE_ROLE_KEY,
+          'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ query_text: queryText, match_count: 10 }),
+        signal: controller.signal,
+      },
+    )
+    clearTimeout(timeout)
+    if (!response.ok) {
+      throw new Error(`Supabase keyword search failed: ${response.status}`)
+    }
+    const chunks = await response.json()
+    return { chunks, latencyMs: Date.now() - t0 }
+  } catch (err) {
+    clearTimeout(timeout)
+    if (err.name === 'AbortError') {
+      throw new Error('Supabase search timeout (>2s)')
+    }
+    throw err
+  }
+}
+
 // ---------------------------------------------------------------------------
 // RAG: re-rank top-10 → top-3 with Haiku
 // ---------------------------------------------------------------------------
@@ -138,7 +178,7 @@ export async function rerankChunks(query, chunks, anthropicClient) {
 
     const response = await anthropicClient.messages.create({
       model: FAST_MODEL,
-      max_tokens: scaleTokens(50),
+      max_tokens: scaleTokens(150),
       messages: [{
         role: 'user',
         content: `Query: "${query}"\nRank these chunks by relevance. Return ONLY the top 5 IDs as comma-separated numbers (most relevant first):\n${numbered}`,
@@ -307,31 +347,36 @@ export async function searchPortfolio(query, trace, anthropicClient) {
     degradedReason: null,
     metrics: { embeddingMs: 0, retrievalMs: 0, rerankMs: 0 },
     usage: { embeddingTokens: 0, rerankInputTokens: 0, rerankOutputTokens: 0 },
+    mode: hasEmbeddings() ? 'hybrid' : 'keyword',
   }
 
-  // 1. Embed
+  // 1. Embed (hybrid mode only)
   let embedding
-  const embeddingGen = trace?.generation({ name: 'embedding', model: 'text-embedding-3-small', metadata: { query } })
-  try {
-    const embResult = await embedQuery(query)
-    embedding = embResult.embedding
-    result.metrics.embeddingMs = embResult.latencyMs
-    result.usage.embeddingTokens = embResult.totalTokens
-    embeddingGen?.end({
-      usage: { input: embResult.totalTokens, output: 0 },
-      metadata: { latencyMs: embResult.latencyMs },
-    })
-  } catch (err) {
-    embeddingGen?.end({ metadata: { error: err.message } })
-    result.degraded = true
-    result.degradedReason = 'embedding_fail'
-    return result
+  if (result.mode === 'hybrid') {
+    const embeddingGen = trace?.generation({ name: 'embedding', model: 'voyage-3-lite', metadata: { query } })
+    try {
+      const embResult = await embedQuery(query)
+      embedding = embResult.embedding
+      result.metrics.embeddingMs = embResult.latencyMs
+      result.usage.embeddingTokens = embResult.totalTokens
+      embeddingGen?.end({
+        usage: { input: embResult.totalTokens, output: 0 },
+        metadata: { latencyMs: embResult.latencyMs },
+      })
+    } catch (err) {
+      embeddingGen?.end({ metadata: { error: err.message } })
+      result.degraded = true
+      result.degradedReason = 'embedding_fail'
+      return result
+    }
   }
 
   // 2. Retrieve
-  const retrievalSpan = trace?.span({ name: 'retrieval', metadata: { query } })
+  const retrievalSpan = trace?.span({ name: 'retrieval', metadata: { query, mode: result.mode } })
   try {
-    const searchResult = await searchDocuments(query, embedding)
+    const searchResult = result.mode === 'hybrid'
+      ? await searchDocuments(query, embedding)
+      : await searchDocumentsByKeyword(query)
     result.metrics.retrievalMs = searchResult.latencyMs
     retrievalSpan?.end({
       metadata: {
@@ -346,8 +391,11 @@ export async function searchPortfolio(query, trace, anthropicClient) {
       return result
     }
 
-    // Filter out low-similarity chunks before reranking
-    const filteredChunks = searchResult.chunks.filter(c => (c.similarity || 0) >= 0.3)
+    // Filter out low-similarity chunks before reranking. Keyword mode already
+    // returns only matching rows and ts_rank is not on the cosine scale.
+    const filteredChunks = result.mode === 'hybrid'
+      ? searchResult.chunks.filter(c => (c.similarity || 0) >= 0.3)
+      : searchResult.chunks.filter(c => (c.similarity || 0) > 0)
     if (!filteredChunks.length) {
       result.degradedReason = 'no_match'
       return result
@@ -436,7 +484,7 @@ export async function sendJailbreakAlert(userMessage) {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      from: 'Joseph Bot <onboarding@resend.dev>',
+      from: 'Cloudy-Joe Agent <alerts@subscribe.joestechsolutions.com>',
       to: process.env.ALERT_EMAIL,
       subject: '🚨 JAILBREAK ATTEMPT - cloudyjoe.com',
       html: `
