@@ -260,10 +260,12 @@ export function extractSources(chunks) {
       article_id: meta.article_id,
       section_id: meta.section_id,
       section_anchor: meta.section_anchor || '',
-      page_path_en: meta.page_path_en || '',
-      page_path_es: meta.page_path_es || '',
-      article_slug_en: meta.article_slug_en || '',
-      article_slug_es: meta.article_slug_es || '',
+      // The corpus (scripts/export-chunks.ts) writes page_path / article_slug;
+      // older chunks may carry the *_en / *_es variants.
+      page_path_en: meta.page_path_en || meta.page_path || '',
+      page_path_es: meta.page_path_es || meta.page_path || '',
+      article_slug_en: meta.article_slug_en || meta.article_slug || '',
+      article_slug_es: meta.article_slug_es || meta.article_slug || '',
     })
   }
   return sources
@@ -364,10 +366,11 @@ export async function searchPortfolio(query, trace, anthropicClient) {
         metadata: { latencyMs: embResult.latencyMs },
       })
     } catch (err) {
-      embeddingGen?.end({ metadata: { error: err.message } })
-      result.degraded = true
-      result.degradedReason = 'embedding_fail'
-      return result
+      // Embedding provider down or key revoked: fall back to keyword retrieval
+      // instead of taking RAG dark.
+      embeddingGen?.end({ metadata: { error: err.message, fallback: 'keyword' } })
+      result.mode = 'keyword'
+      result.embeddingError = err.message
     }
   }
 

@@ -300,6 +300,9 @@ export default async function handler(req) {
         tdInputTokens,
         tdOutputTokens,
         precomputedResponse: firstResponse,
+        // If the precomputed reply is empty (thinking model exhausted the tool
+        // decision budget), retry as a plain stream instead of failing outright.
+        fallbackMessages: cleanMessages,
         lang,
         promptVersion,
       })

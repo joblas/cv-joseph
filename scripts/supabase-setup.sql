@@ -48,3 +48,41 @@ create index if not exists documents_embedding_idx on documents
   using ivfflat (embedding vector_cosine_ops) with (lists = 10);
 create index if not exists documents_fts_idx on documents using gin (fts);
 create index if not exists documents_metadata_idx on documents using gin (metadata);
+
+-- 6. Keyword-only retrieval (used when no embedding provider is configured;
+--    hybrid_search needs a query vector). websearch (AND) semantics first,
+--    then OR-of-lexemes so multi-word questions still hit.
+create or replace function keyword_search(
+  query_text text,
+  match_count integer default 10
+)
+returns table(id bigint, content text, metadata jsonb, similarity double precision)
+language plpgsql
+set search_path to 'public', 'extensions'
+as $$
+declare
+  q tsquery := websearch_to_tsquery('english', query_text);
+  q_or text;
+begin
+  return query
+  select d.id, d.content, d.metadata,
+    ts_rank_cd(d.fts, q, 32)::double precision as similarity
+  from public.documents d
+  where d.fts @@ q
+  order by similarity desc
+  limit match_count;
+  if found then return; end if;
+
+  select string_agg(lexeme, ' | ') into q_or
+  from unnest(tsvector_to_array(to_tsvector('english', query_text))) as lexeme;
+  if q_or is null or q_or = '' then return; end if;
+
+  return query
+  select d.id, d.content, d.metadata,
+    ts_rank_cd(d.fts, to_tsquery('english', q_or), 32)::double precision as similarity
+  from public.documents d
+  where d.fts @@ to_tsquery('english', q_or)
+  order by similarity desc
+  limit match_count;
+end;
+$$;
