@@ -1473,7 +1473,7 @@ function App() {
               className="text-center md:text-left"
             >
               <p className="text-lg text-muted-foreground mb-2">
-                {"Hi, I'm"} <Link to={'/about'} className="text-gradient-theme font-semibold hover:opacity-80 transition-opacity">@joseph</Link>,
+                {"Hi, I'm"} <Link to={'/about'} className="text-gradient-theme font-semibold hover:opacity-80 transition-opacity">@joe</Link>,
               </p>
               <h1 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mb-4 leading-tight">
                 <span className="text-gradient-theme">{hydrated ? roleText : t.greetingRoles[0]}</span>
