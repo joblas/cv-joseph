@@ -31,10 +31,12 @@ jobs:
             echo "branch=main" >> "$GITHUB_OUTPUT"
             echo "kind=production" >> "$GITHUB_OUTPUT"
           fi
-      - name: Install + build (vite static)
+      - name: Install + build (static site + Pages Functions)
         run: |
           npm ci
+          npm run cf:prep   # api/ → functions/api-src/ (Workers shims), prompt module
           npm run build
+          npm run cf:post   # _headers/_redirects from vercel.json into dist/
       - name: Deploy to Cloudflare Pages
         id: deploy
         run: |

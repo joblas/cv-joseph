@@ -1,0 +1,7 @@
+# Cloudflare Pages project config — applied by `wrangler pages deploy`.
+# nodejs_compat is required by the Pages Functions under functions/ (the
+# ported Vercel edge handlers use process.env and Node built-ins).
+name = "cloudyjoe"
+pages_build_output_dir = "dist"
+compatibility_date = "2026-09-10"
+compatibility_flags = ["nodejs_compat"]
