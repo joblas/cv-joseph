@@ -1,4 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk'
+import { CHAT_MODEL, createAnthropicClient } from './_shared/models.js'
 import { Langfuse } from 'langfuse'
 import {
   searchPortfolio, formatChunksForContext, extractSources, calcCost,
@@ -10,9 +11,7 @@ export const config = {
   runtime: 'edge',
 }
 
-const client = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-})
+const client = createAnthropicClient()
 
 let langfuseClient = null
 function getLangfuse() {
@@ -41,7 +40,7 @@ async function reasonWithClaude(query, formattedChunks, span, langfuse) {
 
     const response = await Promise.race([
       client.messages.create({
-        model: 'claude-sonnet-4-6',
+        model: CHAT_MODEL,
         max_tokens: 300,
         system: `${systemPromptText}\n\n${VOICE_OVERRIDE}`,
         messages: [
@@ -82,7 +81,7 @@ async function reasonWithClaude(query, formattedChunks, span, langfuse) {
         inputTokens,
         outputTokens,
         latencyMs,
-        cost: calcCost('claude-sonnet-4-6', inputTokens, outputTokens),
+        cost: calcCost(CHAT_MODEL, inputTokens, outputTokens),
       },
     })
 

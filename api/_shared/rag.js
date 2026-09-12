@@ -135,7 +135,7 @@ export async function rerankChunks(query, chunks, anthropicClient) {
     ).join('\n')
 
     const response = await anthropicClient.messages.create({
-      model: 'claude-haiku-4-5-20251001',
+      model: FAST_MODEL,
       max_tokens: 50,
       messages: [{
         role: 'user',
@@ -351,7 +351,7 @@ export async function searchPortfolio(query, trace, anthropicClient) {
     }
 
     // 3. Re-rank
-    const rerankGen = trace?.generation({ name: 'reranking', model: 'claude-haiku-4-5-20251001', metadata: { query } })
+    const rerankGen = trace?.generation({ name: 'reranking', model: FAST_MODEL, metadata: { query } })
     const rerankResult = await rerankChunks(query, filteredChunks, anthropicClient)
     result.metrics.rerankMs = rerankResult.latencyMs
     if (rerankResult.usage) {
