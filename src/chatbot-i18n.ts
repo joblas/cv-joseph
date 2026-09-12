@@ -297,7 +297,7 @@ Production
           pipeline: [
             { label: 'User speaks', detail: 'Microphone captures PCM16 audio.' },
             { label: 'WebSocket to OpenAI Realtime', detail: 'Audio-to-audio with GPT-4o. Transcription and synthesis in one connection.' },
-            { label: 'Claude reasons', detail: 'Searches the RAG and adapts the response for speech: no markdown, max 2-3 sentences, first person.' },
+            { label: 'Claude reasons', detail: 'Searches the RAG and adapts the response for speech: no markdown, max 2-3 sentences, third person about Joe (it speaks as his agent).' },
             { label: 'VoiceOrb visualizes', detail: 'Animated canvas with 6 states. Real-time visual feedback.' },
           ],
           sharedHeading: 'Shared Intelligence',
@@ -360,7 +360,7 @@ Production
           },
           {
             q: 'How does voice mode work?',
-            a: 'Voice mode uses the OpenAI Realtime API for native audio-to-audio communication over a persistent WebSocket connection. The user speaks into their microphone, the audio streams to OpenAI for real-time transcription, and the transcribed text is sent to Claude for reasoning and RAG search. Before generating the spoken response, Claude adapts the content specifically for voice: sentences are kept to two or three maximum, markdown formatting is stripped entirely since bold and bullet points are meaningless in speech, and the response uses first-person conversational tone. The synthesized audio streams back through the WebSocket with sub-second latency. The entire pipeline shares the same agentic RAG, the same six defense layers, and the same Langfuse observability as text mode. Same intelligence, different output modality. Sessions are capped at 120 seconds with three sessions per IP per day via Supabase rate limiting.',
+            a: 'Voice mode uses the OpenAI Realtime API for native audio-to-audio communication over a persistent WebSocket connection. The user speaks into their microphone, the audio streams to OpenAI for real-time transcription, and the transcribed text is sent to Claude for reasoning and RAG search. Before generating the spoken response, Claude adapts the content specifically for voice: sentences are kept to two or three maximum, markdown formatting is stripped entirely since bold and bullet points are meaningless in speech, and the response uses conversational tone, third person about Joe. The synthesized audio streams back through the WebSocket with sub-second latency. The entire pipeline shares the same agentic RAG, the same six defense layers, and the same Langfuse observability as text mode. Same intelligence, different output modality. Sessions are capped at 120 seconds with three sessions per IP per day via Supabase rate limiting.',
           },
         ],
       },

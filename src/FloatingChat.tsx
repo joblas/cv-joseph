@@ -563,7 +563,7 @@ export default function FloatingChat({}: FloatingChatProps) {
           bottom: 'max(1.5rem, env(safe-area-inset-bottom, 0px) + 0.5rem)',
           right: 'max(1.5rem, env(safe-area-inset-right, 0px) + 0.5rem)',
         }}
-        aria-label={isOpen ? 'Close chat with Santi' : 'Open chat with Santi'}
+        aria-label={isOpen ? 'Close chat with Cloudy-Joe Agent' : 'Open chat with Cloudy-Joe Agent'}
       >
         <AnimatePresence mode="wait">
           {isOpen ? (
@@ -591,7 +591,7 @@ export default function FloatingChat({}: FloatingChatProps) {
                 <source srcSet="/foto-avatar-sm.webp" type="image/webp" />
                 <img
                   src="/foto-avatar-sm.webp"
-                  alt="Chat with Santi"
+                  alt="Cloudy-Joe Agent"
                   className="w-full h-full rounded-full object-cover"
                   width={56}
                   height={56}
@@ -624,7 +624,7 @@ export default function FloatingChat({}: FloatingChatProps) {
             ref={chatContainerRef}
             role="dialog"
             aria-modal="true"
-            aria-label="Chat with Santi"
+            aria-label="Chat with Cloudy-Joe Agent"
             initial={isMobile ? { opacity: 0 } : { opacity: 0, y: 20, scale: 0.95 }}
             animate={isMobile ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1 }}
             exit={isMobile ? { opacity: 0 } : { opacity: 0, y: 20, scale: 0.95 }}
@@ -649,7 +649,7 @@ export default function FloatingChat({}: FloatingChatProps) {
                   <source srcSet="/foto-avatar-sm.webp" type="image/webp" />
                   <img
                     src="/foto-avatar-sm.webp"
-                    alt="joseph avatar"
+                    alt="Cloudy-Joe Agent avatar"
                     className="w-10 h-10 rounded-full object-cover ring-2 ring-primary/20"
                     width={40}
                     height={40}

@@ -11,7 +11,7 @@ const content = {
       {
         heading: 'Que datos se recopilan',
         items: [
-          'Mensajes del chatbot: cuando interactuas con el chatbot "Joseph", los mensajes se procesan para generar respuestas. No se solicita ni almacena informacion personal identificable.',
+          'Mensajes del chatbot: cuando interactuas con el chatbot "Cloudy-Joe Agent", los mensajes se procesan para generar respuestas. No se solicita ni almacena informacion personal identificable.',
           'Audio del modo voz: si activas el modo voz, el audio se procesa en tiempo real para la conversacion y no se almacena de forma permanente.',
           'Analiticas de uso: se recopilan datos anonimos de navegacion (paginas visitadas, duracion, dispositivo) para mejorar el sitio.',
         ],
@@ -57,7 +57,7 @@ const content = {
       {
         heading: 'What data is collected',
         items: [
-          'Chatbot messages: when you interact with the "Joseph" chatbot, messages are processed to generate responses. No personally identifiable information is requested or stored.',
+          'Chatbot messages: when you interact with the "Cloudy-Joe Agent" chatbot, messages are processed to generate responses. No personally identifiable information is requested or stored.',
           'Voice mode audio: if you activate voice mode, audio is processed in real time for conversation and is not permanently stored.',
           'Usage analytics: anonymous browsing data (pages visited, duration, device) is collected to improve the site.',
         ],

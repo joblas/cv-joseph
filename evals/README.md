@@ -1,6 +1,6 @@
-# Evals Suite - Chatbot "Joseph"
+# Evals Suite - Chatbot "Cloudy-Joe Agent"
 
-Professional evaluation suite for the CV chatbot that speaks as Joseph.
+Professional evaluation suite for the CV chatbot that presents as Cloudy-Joe Agent, Joe's AI, and speaks about Joe in the third person.
 
 ## What are Evals
 

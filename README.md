@@ -18,7 +18,7 @@ Static CVs don't show what you can actually build. A PDF lists skills — it doe
 A production-grade interactive portfolio that **demonstrates the skills it describes**: dual-mode AI chatbot (text + voice) with agentic RAG, full LLMOps observability with custom dashboard, 71 automated evals as CI gate, prompt versioning, and a closed-loop that generates tests from production failures.
 
 **Key Features:**
-- **AI Chatbot "Joseph"** — Text (Claude Sonnet) + Voice (OpenAI Realtime API). Responds in first person as Joseph. Agentic RAG with hybrid search (pgvector + BM25) and Haiku reranking
+- **AI Chatbot "Cloudy-Joe Agent"** — Text (Claude Sonnet) + Voice (OpenAI Realtime API). Presents itself as Joe's AI agent (never as Joe), speaks about him in third person as Joseph. Agentic RAG with hybrid search (pgvector + BM25) and Haiku reranking
 - **6-Layer Defense** — Keyword detection, canary tokens, fingerprinting, anti-extraction, online safety scoring, adversarial red team. Real-time jailbreak email alerts
 - **71 Automated Evals** — 10 categories: factual accuracy, persona, boundaries, quality, safety, language, RAG quality, multi-turn, source badges, voice quality. CI gate on every push
 - **LLMOps Dashboard** — Private `/ops` with 8 tabs: Overview, Conversations, Costs, RAG, Security, Evals, Voice, System. Real data from Langfuse + Supabase
