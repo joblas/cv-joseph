@@ -678,12 +678,12 @@ const _translationsEn = {
     ],
     contactCtaTitle: 'Want to talk directly?',
     voice: {
-      start: 'Talk to Joseph',
+      start: 'Talk to Cloudy-Joe',
       stop: 'End',
       connecting: 'Connecting...',
       listening: 'Listening...',
       thinking: 'Thinking...',
-      searching: 'Searching my projects...',
+      searching: "Searching Joe's projects...",
       speaking: 'Speaking...',
       timeWarning: '15 seconds remaining',
       ended: 'Voice session ended',
@@ -692,6 +692,7 @@ const _translationsEn = {
       micDenied: 'Microphone access is needed for voice mode',
       switchToText: 'Switch to text',
       connection: 'Connection error. Please try again.',
+      unavailable: "Voice mode isn't available right now — text chat works.",
     },
   },
 };

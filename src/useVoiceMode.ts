@@ -311,7 +311,13 @@ export function useVoiceMode() {
       if (!tokenRes.ok) {
         const data = await tokenRes.json().catch(() => ({}));
         if (tokenRes.status === 429) {
-          setError(data.error === 'rate_limited' ? 'rateLimited' : 'rateLimited');
+          setError('rateLimited');
+          setStatus('error');
+          return;
+        }
+        if (tokenRes.status === 503) {
+          // Voice provider not configured on the server — not a transient error.
+          setError('unavailable');
           setStatus('error');
           return;
         }
