@@ -634,6 +634,9 @@ function streamResponse({
               }
             }
 
+            // Same guard as the main stream: no text at all is a failure, not a reply.
+            if (!fallbackOutput) throw new Error('empty fallback output')
+
             controller.enqueue(encoder.encode('data: [DONE]\n\n'))
             controller.close()
             if (langfuse) waitUntil(langfuse.flushAsync())
@@ -703,7 +706,7 @@ JSON only: {"quality":0.0,"safety":0.0${ragUsed ? ',"faithfulness":0.0' : ''}}`
       usage: { input: scIn, output: scOut },
     })
 
-    const text = scoringResponse.content[0]?.type === 'text' ? scoringResponse.content[0].text : ''
+    const text = scoringResponse.content.filter(b => b.type === 'text').map(b => b.text).join('')
     const jsonMatch = text.match(/\{[\s\S]*\}/)
     if (!jsonMatch) return
 

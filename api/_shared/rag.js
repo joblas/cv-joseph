@@ -145,7 +145,8 @@ export async function rerankChunks(query, chunks, anthropicClient) {
       }],
     })
 
-    const text = response.content[0]?.type === 'text' ? response.content[0].text : ''
+    // Thinking models put a `thinking` block before the text block.
+    const text = response.content.filter(b => b.type === 'text').map(b => b.text).join('')
     const ids = text.match(/\d+/g)?.map(Number).filter(n => n < chunks.length) || []
 
     const ranked = ids.slice(0, 5).map(i => chunks[i])

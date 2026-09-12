@@ -14,8 +14,9 @@ import Anthropic from '@anthropic-ai/sdk'
 export const CHAT_MODEL = process.env.CHAT_MODEL || 'claude-sonnet-4-6'
 // Small/fast model (reranking, intent classification, scoring)
 // On a foreign endpoint there is no Haiku; fall back to the main model there.
+const onAnthropic = !process.env.ANTHROPIC_BASE_URL || /(^|\.)anthropic\.com$/.test(new URL(process.env.ANTHROPIC_BASE_URL).hostname)
 export const FAST_MODEL =
-  process.env.CHAT_MODEL_FAST || (process.env.ANTHROPIC_BASE_URL ? CHAT_MODEL : 'claude-haiku-4-5-20251001')
+  process.env.CHAT_MODEL_FAST || (onAnthropic ? 'claude-haiku-4-5-20251001' : CHAT_MODEL)
 // Output budget for the streamed answer. Thinking models spend part of it on
 // hidden reasoning, so raise it (e.g. 2048) when CHAT_MODEL is one of those.
 const parsedMax = parseInt(process.env.CHAT_MAX_TOKENS || '', 10)
