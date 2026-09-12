@@ -65,6 +65,17 @@ walk(dstApi, (p) => {
     (_, name) => `import ${name} from '${rel}'`,
   )
 
+  // chat.js swallows Anthropic stream errors (they go only to Langfuse, which
+  // is unset here) — surface them in the Pages Functions log.
+  if (p.endsWith('/chat.js')) {
+    const before = out
+    out = out.replace(
+      "        generationSpan?.end({ metadata: { error: error.message } })",
+      "        console.error('[cf] chat stream error:', error && error.status, error && error.message)\n        generationSpan?.end({ metadata: { error: error.message } })",
+    )
+    if (out === before) { console.error('FATAL: chat.js stream catch anchor not found — update prep-cf-functions.mjs'); process.exit(1) }
+  }
+
   if (out !== raw) {
     writeFileSync(p, out)
     console.log('patched:', p.replace(dstApi, 'api'))
