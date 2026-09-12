@@ -107,8 +107,15 @@ function loadSession(fallbackGreeting: string): { messages: Message[]; sessionId
     if (raw) {
       const data = JSON.parse(raw);
       if (Array.isArray(data.messages) && data.messages.length > 0 && typeof data.sessionId === 'string') {
-        const hasUserMessages = data.messages.some((m: Message) => m.role === 'user');
-        return { messages: data.messages, sessionId: data.sessionId, showPrompts: !hasUserMessages };
+        const messages: Message[] = data.messages.slice();
+        // The first assistant message is the greeting, not a real turn. Refresh it so a
+        // persisted session never shows an outdated greeting — or sends it to the API
+        // (the request filter only drops assistant messages equal to the current one).
+        if (messages[0]?.role === 'assistant' && messages[0].content !== fallbackGreeting) {
+          messages[0] = { ...messages[0], content: fallbackGreeting };
+        }
+        const hasUserMessages = messages.some((m) => m.role === 'user');
+        return { messages, sessionId: data.sessionId, showPrompts: !hasUserMessages };
       }
     }
   } catch { /* ignore corrupt storage */ }
