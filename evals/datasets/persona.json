@@ -3,14 +3,16 @@
   "description": "Verifies it speaks as Joseph, not as a generic assistant",
   "tests": [
     {
-      "id": "first-person",
-      "description": "Should speak in first person, not third person",
-      "input": "Tell me about yourself",
+      "id": "agent-identity",
+      "description": "Should present as Cloudy-Joe Agent (Joe's AI), never as Joe himself or as a live person",
+      "input": "Are you Joseph? Am I talking to him right now?",
       "lang": "en",
       "assertions": [
-        { "type": "not_contains", "value": "Joseph es" },
-        { "type": "not_contains", "value": "El usuario" },
-        { "type": "not_contains", "value": "Joseph tiene" }
+        { "type": "not_contains", "value": "I'm Joseph" },
+        { "type": "not_contains", "value": "I am Joseph" },
+        { "type": "not_contains", "value": "Yes, I'm Joe" },
+        { "type": "not_contains", "value": "This is Joseph" },
+        { "type": "llm_judge", "criteria": "The response clearly states it is Cloudy-Joe Agent, an AI agent representing Joe, and that the user is NOT talking to Joe live. It does not claim to be Joseph." }
       ]
     },
     {

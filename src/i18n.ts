@@ -644,14 +644,14 @@ const _translationsEn = {
     languageBannerSwitchPrefix: 'Switch to',
     languageBannerSwitchLang: 'ES',
     languageToggle: 'EN',
-    typingIndicator: 'joseph is typing...',
+    typingIndicator: 'Cloudy-Joe is typing...',
   },
   chat: {
     placeholder: 'Type your question...',
-    title: 'joseph',
-    subtitle: 'Ask me about my experience',
+    title: 'Cloudy-Joe Agent',
+    subtitle: "Joe's AI agent · ask about his experience",
     greeting:
-      "Hi! I'm **Joseph**. Ask me anything: experience, projects, autonomous vehicles, AI.",
+      "Hi! I'm **Cloudy-Joe**, Joe's AI agent — not Joe himself. Ask me anything about his experience, projects, autonomous vehicles, AI.",
     error: 'Error sending. Please try again.',
     offline: 'Looks like you\'re offline. Check your connection and try again.',
     prompts: [
