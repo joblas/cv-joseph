@@ -1,10 +1,9 @@
 // ---------------------------------------------------------------------------
-// Personas — one agent brain, two named faces (Cloudy-Joe Agent on
-// cloudyjoe.com, Joe's Tech Agent on joestechsolutions.com). A persona
-// selects the system
-// prompt, the retrieval corpus, the lead sink, the contact address and the
-// browser origins allowed to call the shared API. Requests name their persona
-// in the body (`persona`); the default keeps cloudyjoe.com's behaviour intact.
+// Personas — one agent brain, two named faces: Cloudy-Joe Agent on cloudyjoe.com
+// and Joe's Tech Agent on joestechsolutions.com. A persona selects the system
+// prompt, the retrieval corpus, the lead sink, the contact address, the agent's
+// own name and the browser origins allowed to call the shared API. Requests name
+// their persona in the body (`persona`); the default keeps cloudyjoe.com intact.
 // ---------------------------------------------------------------------------
 import CLOUDYJOE_PROMPT from '../../chatbot-prompt.txt'
 import JTS_PROMPT from '../../jts-prompt.txt'
@@ -74,7 +73,7 @@ export const PERSONAS = {
     prompt: CLOUDYJOE_PROMPT,
     searchTool: CLOUDYJOE_SEARCH_TOOL,
     // Identity clause for spoken answers (api/rag-search.js); each face names itself
-    voiceIdentity: "You are Cloudy-Joe Agent, Joe's AI",
+    spokenIdentity: "You are Cloudy-Joe Agent, Joe's AI",
     // Langfuse-managed prompt (label "production") takes precedence when configured
     langfusePrompt: 'chatbot-system',
     rag: {
@@ -97,7 +96,7 @@ export const PERSONAS = {
     origins: [/^https:\/\/(www\.)?joestechsolutions\.com$/, /^https:\/\/([a-z0-9-]+\.)?joestechsolutions\.pages\.dev$/],
     prompt: JTS_PROMPT,
     searchTool: JTS_SEARCH_TOOL,
-    voiceIdentity: "You are Joe's Tech Agent, the AI for Joe's Tech Solutions",
+    spokenIdentity: "You are Joe's Tech Agent, the AI for Joe's Tech Solutions",
     langfusePrompt: null,
     rag: {
       kind: 'site_chunks', // JTS Supabase: search_site_chunks_public (anon key, read-only)

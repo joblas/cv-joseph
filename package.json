@@ -26,6 +26,7 @@
     "chats:tui": "npx tsx scripts/chats-tui.ts",
     "test:contract": "npx tsx tests/ops-contract.test.ts",
     "test:ops": "npx tsx tests/ops-dashboard.test.ts",
+    "test:personas": "npm run cf:prep >/dev/null && npx tsx tests/personas.test.ts",
     "diagnose:rag": "npx tsx scripts/diagnose-rag.ts",
     "test:spoken": "npx tsx tests/spoken-text.test.ts"
   },

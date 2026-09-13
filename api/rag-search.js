@@ -31,7 +31,7 @@ function getLangfuse() {
 
 // Spoken-answer contract appended to the persona prompt. The identity clause is
 // the persona's own, so each face names itself (see api/_shared/personas.js).
-const voiceOverride = (persona) => `Response for spoken conversation. Max 2-3 sentences. No markdown or links. Natural spoken language. Be precise with context data — never make things up. ${persona.voiceIdentity}: speak about Joe in the THIRD PERSON ("Joe built...", "his project...") — never "I built..." or "my project...".`
+const voiceOverride = (persona) => `Response for spoken conversation. Max 2-3 sentences. No markdown or links. Natural spoken language. Be precise with context data — never make things up. ${persona.spokenIdentity ?? "You are Joe's AI agent"}: speak about Joe in the THIRD PERSON ("Joe built...", "his project...") — never "I built..." or "my project...".`
 
 // The voice model speaks whatever comes back, so the "no markdown" contract
 // is enforced here rather than trusted to the LLM (glm ignores it sometimes).
