@@ -92,8 +92,6 @@ function mentions(text, phrase) {
   return phrase.length >= 4 && new RegExp(`(^|[^a-z0-9])${escapeRegex(phrase)}(?![a-z0-9])`, 'i').test(text)
 }
 
-const meta = (d) => d.metadata || {}
-
 export function boostNamedPages(query, docs) {
   const q = String(query || '').toLowerCase().replace(/[\u2018\u2019]/g, "'").replace(/\s+/g, ' ')
   return docs
@@ -107,9 +105,8 @@ export function boostNamedPages(query, docs) {
       return { d, score, named, depth: path.split('/').filter(Boolean).length, i }
     })
     .sort((a, b) => b.score - a.score || a.depth - b.depth || a.i - b.i)
-    // `named` is read back after the rerank so the page the query asked for
-    // is never dropped by it
-    .map(({ d, score, named }) => ({ ...d, similarity: score, metadata: named ? { ...meta(d), named: true } : d.metadata }))
+    // `named` is read back after the rerank (searchPortfolio pins those pages)
+    .map(({ d, score, named }) => ({ ...d, similarity: score, metadata: named ? { ...d.metadata, named: true } : d.metadata }))
 }
 
 async function siteChunkSearch(queryText, persona) {
@@ -597,11 +594,20 @@ export async function searchPortfolio(query, trace, anthropicClient, persona = g
     // Site mode: the LLM rerank only sees 200-char previews and at times drops
     // the very page the query named ("What is the Private AI Setup?" →
     // /private-ai-setup); pin those back in front.
+    // Per page, one chunk, and only for pages the rerank did not keep, so the
+    // rerank's own picks survive when the named page was already in them.
     if (result.mode === 'site') {
-      const pinned = filteredChunks.filter(c => c.metadata?.named && !result.chunks.includes(c))
+      const kept = new Set(result.chunks.map(c => c.metadata?.article_id))
+      const pinned = []
+      for (const c of filteredChunks) {
+        if (!c.metadata?.named || kept.has(c.metadata.article_id)) continue
+        kept.add(c.metadata.article_id)
+        pinned.push(c)
+      }
       if (pinned.length) result.chunks = [...pinned, ...result.chunks].slice(0, 5)
     }
-    result.sources = extractSources(rerankResult.chunks)
+    // Badges, evals and traces must describe what the model actually saw
+    result.sources = extractSources(result.chunks)
   } catch (err) {
     retrievalSpan?.end({ metadata: { error: err.message } })
     result.degraded = true
