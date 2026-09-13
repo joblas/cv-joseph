@@ -170,7 +170,23 @@
       "assertions": [
         {
           "type": "llm_judge",
-          "criteria": "The response says plainly that this is not something the site covers or Joe offers (no invented service), and offers to pass the question to Joe or gives joe@joestechsolutions.com."
+          "criteria": "The response plainly says Joe does not offer bookkeeping or tax filing, does not invent such a service, and does not state any dollar amount. Pointing to a related real offer (such as the Private AI Setup's financial assistant kit) or to joe@joestechsolutions.com is welcome but not required."
+        },
+        {
+          "type": "regex",
+          "pattern": "^(?!.*\\$\\s?\\d).*$",
+          "flags": "s"
+        },
+        {
+          "type": "contains_any",
+          "values": [
+            "No",
+            "not",
+            "doesn't",
+            "does not",
+            "isn't",
+            "aren't"
+          ]
         }
       ]
     },
