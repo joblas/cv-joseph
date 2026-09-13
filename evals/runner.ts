@@ -186,6 +186,11 @@ async function callVoiceRag(input: string, lang: 'es' | 'en'): Promise<ChatResul
 function loadDatasets(): Dataset[] {
   // EVAL_DATASETS=persona,safety limits the run to those dataset files
   const only = (process.env.EVAL_DATASETS || '').split(',').map((s) => s.trim()).filter(Boolean)
+  const missing = only.filter((n) => !fs.existsSync(path.join(DATASETS_DIR, `${n}.json`)))
+  if (missing.length) {
+    console.error(`Unknown EVAL_DATASETS: ${missing.join(', ')}`)
+    process.exit(2)
+  }
   const files = fs
     .readdirSync(DATASETS_DIR)
     .filter((f) => f.endsWith('.json'))

@@ -4,10 +4,11 @@
  * when the eval run targets a non-Anthropic endpoint (ANTHROPIC_BASE_URL).
  */
 
-const JUDGE_MODEL = process.env.EVAL_JUDGE_MODEL || 'claude-haiku-4-5-20251001'
-const JUDGE_MAX_TOKENS = parseInt(process.env.EVAL_JUDGE_MAX_TOKENS || '', 10) || 200
-
 import Anthropic from '@anthropic-ai/sdk'
+
+const JUDGE_MODEL = process.env.EVAL_JUDGE_MODEL || 'claude-haiku-4-5-20251001'
+const parsedJudgeMax = Number(process.env.EVAL_JUDGE_MAX_TOKENS)
+const JUDGE_MAX_TOKENS = Number.isFinite(parsedJudgeMax) && parsedJudgeMax > 0 ? Math.floor(parsedJudgeMax) : 200
 
 // Lazy client - initialized when used, not when module is imported
 let client: Anthropic | null = null
@@ -24,7 +25,7 @@ export interface JudgeResult {
 }
 
 /**
- * Uses Claude Haiku to evaluate if a response meets subjective criteria
+ * Uses the judge model to evaluate if a response meets subjective criteria
  */
 export async function judgeTone(
   response: string,
@@ -48,7 +49,7 @@ ${response}
 
 Respond ONLY with valid JSON in this exact format (no markdown):
 {"pass": true, "reason": "brief explanation of why it passes"}
-o
+or
 {"pass": false, "reason": "brief explanation of why it fails"}`,
         },
       ],
@@ -60,9 +61,9 @@ o
       .map((b) => (b as { text: string }).text)
       .join('')
 
-    // Clean possible markdown from JSON and take the first JSON object
+    // Clean possible markdown from JSON and take the first flat JSON object
     const cleanText = text.replace(/```json\n?|\n?```/g, '').trim()
-    const jsonMatch = cleanText.match(/\{[\s\S]*\}/)
+    const jsonMatch = cleanText.match(/\{[^{}]*\}/)
     const parsed = JSON.parse(jsonMatch ? jsonMatch[0] : cleanText)
     return {
       pass: Boolean(parsed.pass),
