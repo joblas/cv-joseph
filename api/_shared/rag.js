@@ -38,9 +38,24 @@ export function hasEmbeddings(persona = getPersona()) {
 // JTS site index rows (search_site_chunks_public) → the chunk shape the rest of
 // the pipeline expects. Page chunks become badge-able sources (page_path);
 // curated FAQ rows keep their content but get no badge.
+// site_chunks stores page text HTML-escaped; the model, the labels and the
+// badge titles want plain text ("Joe's", not "Joe&#x27;s").
+const HTML_ENTITIES = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ' }
+function decodeEntities(text) {
+  return String(text || '').replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (m, code) => {
+    if (code[0] === '#') {
+      const n = code[1].toLowerCase() === 'x' ? parseInt(code.slice(2), 16) : parseInt(code.slice(1), 10)
+      return Number.isFinite(n) ? String.fromCodePoint(n) : m
+    }
+    return HTML_ENTITIES[code.toLowerCase()] ?? m
+  })
+}
+
 function siteChunkToDocument(row) {
+  const title = decodeEntities(row.title)
+  const content = decodeEntities(row.content)
   let pagePath = ''
-  let articleId = row.source === 'kb' ? `kb:${row.title || 'faq'}` : 'page'
+  let articleId = row.source === 'kb' ? `kb:${title || 'faq'}` : 'page'
   try {
     if (/^https?:/.test(row.url)) {
       const u = new URL(row.url)
@@ -50,7 +65,7 @@ function siteChunkToDocument(row) {
   } catch { /* keep defaults */ }
   return {
     id: row.id,
-    content: row.title ? `${row.title}\n${row.content}` : row.content,
+    content: title ? `${title}\n${content}` : content,
     metadata: {
       kind: 'site', // formatChunksForContext / extractSources: site corpus, not a cloudyjoe article
       article_id: articleId,
@@ -58,7 +73,7 @@ function siteChunkToDocument(row) {
       section_anchor: '',
       page_path: pagePath,
       article_slug: pagePath ? pagePath.slice(1) : '',
-      title: row.title || '',
+      title,
     },
     similarity: Number(row.score) || 0,
   }

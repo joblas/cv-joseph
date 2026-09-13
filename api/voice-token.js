@@ -318,7 +318,7 @@ export default async function handler(req) {
     if (provider === 'gemini') {
       let minted
       try {
-        minted = await createGeminiToken(instructions)
+        minted = await createGeminiToken(instructions, persona)
       } catch (err) {
         console.error('Gemini auth_tokens error:', err?.message || err)
         return new Response(JSON.stringify({ error: 'Failed to create voice session' }), {
@@ -356,7 +356,7 @@ export default async function handler(req) {
         tools: [{
           type: 'function',
           name: 'search_portfolio',
-          description: 'Search your own published case studies for project details, architectures, metrics, and technical decisions.',
+          description: persona.searchTool.voiceDescription,
           parameters: {
             type: 'object',
             properties: {

@@ -202,7 +202,7 @@ function loadDatasets(): Dataset[] {
     .filter((f) => only.length === 0 || only.includes(f.replace(/\.json$/, '')))
   // A dataset written for one persona is meaningless against another
   const persona = process.env.EVAL_PERSONA || 'cloudyjoe'
-  return files
+  const datasets = files
     .map((file) => {
       const content = fs.readFileSync(path.join(DATASETS_DIR, file), 'utf-8')
       return JSON.parse(content) as Dataset
@@ -213,6 +213,11 @@ function loadDatasets(): Dataset[] {
       console.log(`   (skipping ${dataset.name}: written for persona ${target}, running ${persona})`)
       return false
     })
+  if (only.length > 0 && datasets.length === 0) {
+    console.error(`EVAL_DATASETS=${only.join(',')} selects nothing for persona ${persona} — set EVAL_PERSONA to match`)
+    process.exit(2)
+  }
+  return datasets
 }
 
 /**

@@ -79,7 +79,6 @@ export const PERSONAS = {
       articleBadges: true, // keyword-detected article badges + HOME fallback
     },
     leads: {
-      table: 'chat_leads',
       from: 'cloudyjoe.com <leads@subscribe.joestechsolutions.com>',
       subject: (email) => (email ? `Lead from cloudyjoe.com: ${email}` : 'Someone on cloudyjoe.com wants to get in touch'),
     },
@@ -101,7 +100,7 @@ export const PERSONAS = {
       articleBadges: false,
     },
     leads: {
-      table: 'chat_leads', // same table as cloudyjoe; `page` is stored as the full JTS URL (see leads.js)
+      // same chat_leads table as cloudyjoe; `page` is stored as the full JTS URL (see leads.js)
       from: 'joestechsolutions.com <leads@subscribe.joestechsolutions.com>',
       subject: (email) => (email ? `Lead from the site chat: ${email}` : 'Someone on the site chat asked for Joe'),
     },
