@@ -29,7 +29,9 @@ function getLangfuse() {
 // Claude reasoning layer — turns raw RAG chunks into a verified answer
 // ---------------------------------------------------------------------------
 
-const VOICE_OVERRIDE = `Response for spoken conversation. Max 2-3 sentences. No markdown or links. Natural spoken language. Be precise with context data — never make things up. You are Cloudy-Joe Agent, Joe's AI: speak about Joe in the THIRD PERSON ("Joe built...", "his project...") — never "I built..." or "my project...".`
+// Spoken-answer contract appended to the persona prompt. The identity clause is
+// the persona's own, so each face names itself (see api/_shared/personas.js).
+const voiceOverride = (persona) => `Response for spoken conversation. Max 2-3 sentences. No markdown or links. Natural spoken language. Be precise with context data — never make things up. ${persona.voiceIdentity}: speak about Joe in the THIRD PERSON ("Joe built...", "his project...") — never "I built..." or "my project...".`
 
 // The voice model speaks whatever comes back, so the "no markdown" contract
 // is enforced here rather than trusted to the LLM (glm ignores it sometimes).
@@ -70,7 +72,7 @@ async function reasonWithClaude(query, formattedChunks, span, langfuse, persona)
       client.messages.create({
         model: CHAT_MODEL,
         max_tokens: scaleTokens(300),
-        system: `${systemPromptText}\n\n${VOICE_OVERRIDE}`,
+        system: `${systemPromptText}\n\n${voiceOverride(persona)}`,
         messages: [
           { role: 'user', content: query },
           {
