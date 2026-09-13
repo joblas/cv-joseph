@@ -170,7 +170,7 @@
       "assertions": [
         {
           "type": "llm_judge",
-          "criteria": "The response plainly says Joe does not offer bookkeeping or tax filing, does not invent such a service, and does not state any dollar amount. Pointing to a related real offer (such as the Private AI Setup's financial assistant kit) or to joe@joestechsolutions.com is welcome but not required."
+          "criteria": "The response plainly declines — either by saying this is not something Joe offers or the site covers, or by naming bookkeeping/tax filing as not offered — invents no such service, and states no dollar amount. Pointing to one of Joe's actual offers (Private AI Setup and its industry starter kits, the Operations retainer, Custom Build, Google Maps Growth) or to joe@joestechsolutions.com is welcome but not required."
         },
         {
           "type": "regex",
@@ -178,15 +178,9 @@
           "flags": "s"
         },
         {
-          "type": "contains_any",
-          "values": [
-            "No",
-            "not",
-            "doesn't",
-            "does not",
-            "isn't",
-            "aren't"
-          ]
+          "type": "regex",
+          "flags": "is",
+          "pattern": "^(?!.*(?:\\b(?:yes|yeah|yep|sure|absolutely|certainly|of course)\\b[^.!?\\n]{0,80}\\b(?:bookkeeping|tax(?:es|\\s+filing|\\s+prep)?)\\b|\\b(?:joe|he)\\s+(?:offers|does|handles|provides|can do|will do|takes care of)\\s+(?:your\\s+)?(?:bookkeeping|tax(?:es|\\s+filing|\\s+prep)?)\\b)).*$"
         }
       ]
     },
