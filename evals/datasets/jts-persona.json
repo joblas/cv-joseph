@@ -26,13 +26,10 @@
     },
     {
       "id": "jts-services",
-      "description": "Names the three ways to work with Joe",
+      "description": "Names the three ways to work with Joe (the three offers are curated prompt facts, so a search is optional here)",
       "input": "What services does Joe offer?",
       "lang": "en",
       "assertions": [
-        {
-          "type": "rag_used"
-        },
         {
           "type": "contains_any",
           "values": [

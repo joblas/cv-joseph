@@ -92,6 +92,8 @@ function mentions(text, phrase) {
   return phrase.length >= 4 && new RegExp(`(^|[^a-z0-9])${escapeRegex(phrase)}(?![a-z0-9])`, 'i').test(text)
 }
 
+const meta = (d) => d.metadata || {}
+
 export function boostNamedPages(query, docs) {
   const q = String(query || '').toLowerCase().replace(/[\u2018\u2019]/g, "'").replace(/\s+/g, ' ')
   return docs
@@ -102,10 +104,12 @@ export function boostNamedPages(query, docs) {
       const titleHead = String(meta.title || '').split('|')[0].trim().toLowerCase()
       const named = (slugWords.length >= 6 && mentions(q, slugWords)) || (titleHead.length >= 8 && mentions(q, titleHead))
       const score = (Number(d.similarity) || 0) * (named ? 2 : 1)
-      return { d, score, depth: path.split('/').filter(Boolean).length, i }
+      return { d, score, named, depth: path.split('/').filter(Boolean).length, i }
     })
     .sort((a, b) => b.score - a.score || a.depth - b.depth || a.i - b.i)
-    .map(({ d, score }) => ({ ...d, similarity: score }))
+    // `named` is read back after the rerank so the page the query asked for
+    // is never dropped by it
+    .map(({ d, score, named }) => ({ ...d, similarity: score, metadata: named ? { ...meta(d), named: true } : d.metadata }))
 }
 
 async function siteChunkSearch(queryText, persona) {
@@ -589,6 +593,14 @@ export async function searchPortfolio(query, trace, anthropicClient, persona = g
     })
 
     result.chunks = rerankResult.chunks
+
+    // Site mode: the LLM rerank only sees 200-char previews and at times drops
+    // the very page the query named ("What is the Private AI Setup?" →
+    // /private-ai-setup); pin those back in front.
+    if (result.mode === 'site') {
+      const pinned = filteredChunks.filter(c => c.metadata?.named && !result.chunks.includes(c))
+      if (pinned.length) result.chunks = [...pinned, ...result.chunks].slice(0, 5)
+    }
     result.sources = extractSources(rerankResult.chunks)
   } catch (err) {
     retrievalSpan?.end({ metadata: { error: err.message } })
