@@ -23,7 +23,7 @@
       "headers": [
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; media-src 'self' data: https://*.hf.space https://huggingface.co; script-src 'self' 'unsafe-inline' https://vercel.live; style-src 'self' 'unsafe-inline' https://vercel.live; font-src 'self' https://vercel.live; img-src 'self' data: https:; connect-src 'self' https://vercel.live https://*.pusher.com wss://*.pusher.com https://va.vercel-scripts.com https://vitals.vercel-insights.com wss://api.openai.com https://api.openai.com https://*.hf.space https://huggingface.co; frame-src 'self' https://vercel.live https://player.mux.com https://www.youtube.com; frame-ancestors 'self'; form-action 'self'; base-uri 'self'; object-src 'none'"
+          "value": "default-src 'self'; media-src 'self' data: https://*.hf.space https://huggingface.co; script-src 'self' 'unsafe-inline' https://vercel.live; style-src 'self' 'unsafe-inline' https://vercel.live; font-src 'self' https://vercel.live; img-src 'self' data: https:; connect-src 'self' wss://generativelanguage.googleapis.com https://vercel.live https://*.pusher.com wss://*.pusher.com https://va.vercel-scripts.com https://vitals.vercel-insights.com wss://api.openai.com https://api.openai.com https://*.hf.space https://huggingface.co; frame-src 'self' https://vercel.live https://player.mux.com https://www.youtube.com; frame-ancestors 'self'; form-action 'self'; base-uri 'self'; object-src 'none'"
         },
         {
           "key": "Strict-Transport-Security",
@@ -61,39 +61,145 @@
     }
   ],
   "redirects": [
-    { "source": "/jacobo", "destination": "/hermes", "permanent": true },
-    { "source": "/agente-ia-jacobo", "destination": "/hermes", "permanent": true },
-    { "source": "/en", "destination": "/", "permanent": true },
-    { "source": "/en/", "destination": "/", "permanent": true },
-    { "source": "/sobre-mi", "destination": "/about", "permanent": true },
-    { "source": "/privacidad", "destination": "/privacy", "permanent": true },
-    { "source": "/n8n-para-pms", "destination": "/n8n-for-pms", "permanent": true },
-    { "source": "/business-os-para-airtable", "destination": "/hermes", "permanent": true },
-    { "source": "/seo-programatico", "destination": "/hermes", "permanent": true },
-    { "source": "/chatbot-que-se-cura-solo", "destination": "/self-healing-chatbot", "permanent": true },
-    { "source": "/openclaw", "destination": "/hermes", "permanent": true },
-    { "source": "/openclaw/", "destination": "/hermes", "permanent": true },
-    { "source": "/:path+/", "destination": "/:path+", "permanent": true }
+    {
+      "source": "/jacobo",
+      "destination": "/hermes",
+      "permanent": true
+    },
+    {
+      "source": "/agente-ia-jacobo",
+      "destination": "/hermes",
+      "permanent": true
+    },
+    {
+      "source": "/en",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/en/",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/sobre-mi",
+      "destination": "/about",
+      "permanent": true
+    },
+    {
+      "source": "/privacidad",
+      "destination": "/privacy",
+      "permanent": true
+    },
+    {
+      "source": "/n8n-para-pms",
+      "destination": "/n8n-for-pms",
+      "permanent": true
+    },
+    {
+      "source": "/business-os-para-airtable",
+      "destination": "/hermes",
+      "permanent": true
+    },
+    {
+      "source": "/seo-programatico",
+      "destination": "/hermes",
+      "permanent": true
+    },
+    {
+      "source": "/chatbot-que-se-cura-solo",
+      "destination": "/self-healing-chatbot",
+      "permanent": true
+    },
+    {
+      "source": "/openclaw",
+      "destination": "/hermes",
+      "permanent": true
+    },
+    {
+      "source": "/openclaw/",
+      "destination": "/hermes",
+      "permanent": true
+    },
+    {
+      "source": "/:path+/",
+      "destination": "/:path+",
+      "permanent": true
+    }
   ],
   "rewrites": [
-    { "source": "/n8n-for-pms", "destination": "/n8n-for-pms/index.html" },
-    { "source": "/ai-agent-jacobo", "destination": "/hermes/index.html" },
-    { "source": "/business-os-for-airtable", "destination": "/hermes/index.html" },
-    { "source": "/programmatic-seo", "destination": "/hermes/index.html" },
-    { "source": "/joblas-portfolio", "destination": "/joblas-portfolio/index.html" },
-    { "source": "/joblas-portfolio-founder", "destination": "/joblas-portfolio-founder/index.html" },
-    { "source": "/self-healing-chatbot", "destination": "/self-healing-chatbot/index.html" },
-    { "source": "/turnover-agent", "destination": "/turnover-agent/index.html" },
-    { "source": "/archive-beta-loop", "destination": "/archive-beta-loop/index.html" },
-    { "source": "/cbarrgs-agent", "destination": "/cbarrgs-agent/index.html" },
-    { "source": "/skate-workshop-loop", "destination": "/skate-workshop-loop/index.html" },
-    { "source": "/career-ops", "destination": "/career-ops-system/index.html" },
-    { "source": "/career-ops-system", "destination": "/career-ops-system/index.html" },
-    { "source": "/hermes", "destination": "/hermes/index.html" },
-    { "source": "/openclaw", "destination": "/hermes/index.html" },
-    { "source": "/av-career", "destination": "/about/index.html" },
-    { "source": "/about", "destination": "/about/index.html" },
-    { "source": "/privacy", "destination": "/privacy/index.html" }
+    {
+      "source": "/n8n-for-pms",
+      "destination": "/n8n-for-pms/index.html"
+    },
+    {
+      "source": "/ai-agent-jacobo",
+      "destination": "/hermes/index.html"
+    },
+    {
+      "source": "/business-os-for-airtable",
+      "destination": "/hermes/index.html"
+    },
+    {
+      "source": "/programmatic-seo",
+      "destination": "/hermes/index.html"
+    },
+    {
+      "source": "/joblas-portfolio",
+      "destination": "/joblas-portfolio/index.html"
+    },
+    {
+      "source": "/joblas-portfolio-founder",
+      "destination": "/joblas-portfolio-founder/index.html"
+    },
+    {
+      "source": "/self-healing-chatbot",
+      "destination": "/self-healing-chatbot/index.html"
+    },
+    {
+      "source": "/turnover-agent",
+      "destination": "/turnover-agent/index.html"
+    },
+    {
+      "source": "/archive-beta-loop",
+      "destination": "/archive-beta-loop/index.html"
+    },
+    {
+      "source": "/cbarrgs-agent",
+      "destination": "/cbarrgs-agent/index.html"
+    },
+    {
+      "source": "/skate-workshop-loop",
+      "destination": "/skate-workshop-loop/index.html"
+    },
+    {
+      "source": "/career-ops",
+      "destination": "/career-ops-system/index.html"
+    },
+    {
+      "source": "/career-ops-system",
+      "destination": "/career-ops-system/index.html"
+    },
+    {
+      "source": "/hermes",
+      "destination": "/hermes/index.html"
+    },
+    {
+      "source": "/openclaw",
+      "destination": "/hermes/index.html"
+    },
+    {
+      "source": "/av-career",
+      "destination": "/about/index.html"
+    },
+    {
+      "source": "/about",
+      "destination": "/about/index.html"
+    },
+    {
+      "source": "/privacy",
+      "destination": "/privacy/index.html"
+    }
   ],
   "crons": [
     {

@@ -166,21 +166,24 @@
     },
     {
       "id": "voice-availability-truthful",
-      "description": "Describing how the chat works must reflect real voice availability: with OPENAI_API_KEY unset in production it must say voice is unavailable and never invite the mic",
+      "description": "Describing how the chat works must reflect real voice availability. Production has a voice provider configured (GEMINI_API_KEY), so it must present voice as available and not call it unavailable. (Environment-coupled: invert if no voice key is set.)",
       "input": "How does this chatbot work? Does it have a voice mode?",
       "lang": "en",
       "assertions": [
         {
-          "type": "not_contains",
-          "value": "hit the mic"
-        },
-        {
           "type": "contains_any",
           "values": [
-            "unavailable",
-            "not available",
-            "temporarily"
+            "mic",
+            "voice"
           ]
+        },
+        {
+          "type": "not_contains",
+          "value": "unavailable"
+        },
+        {
+          "type": "not_contains",
+          "value": "not available"
         }
       ]
     }

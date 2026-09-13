@@ -687,7 +687,7 @@ const _translationsEn = {
       speaking: 'Speaking...',
       timeWarning: '15 seconds remaining',
       ended: 'Voice session ended',
-      rateLimited: 'You have reached the limit of 3 voice sessions per day',
+      rateLimited: 'You have reached the daily limit of voice sessions',
       unsupported: 'Your browser does not support audio input',
       micDenied: 'Microphone access is needed for voice mode',
       switchToText: 'Switch to text',

@@ -10,6 +10,7 @@ import {
 import { getSystemPrompt } from './_shared/prompt.js'
 import { captureLead, checkRateLimit } from './_shared/leads.js'
 import { CHAT_MODEL, FAST_MODEL, CHAT_MAX_TOKENS, scaleTokens, baseUrlHost, createAnthropicClient } from './_shared/models.js'
+import { voiceProvider } from './_shared/voice-provider.js'
 
 const client = createAnthropicClient()
 
@@ -167,7 +168,7 @@ export default async function handler(req) {
 
     // Truthful self-description: which model/provider serves this chat right now.
     const providerHost = baseUrlHost()
-    const voiceAvailable = !!process.env.OPENAI_API_KEY
+    const voiceAvailable = voiceProvider() !== null
     const runtimeContext = `\nRuntime: this chat is currently served by the model "${CHAT_MODEL}"${providerHost ? ` via ${providerHost}` : ' via the Anthropic API'}. If asked which AI model powers the chat, say exactly that.`
       + (voiceAvailable
         ? '\nVoice mode: available (the mic button in the chat).'

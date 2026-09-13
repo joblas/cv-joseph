@@ -1,4 +1,5 @@
 import { Langfuse } from 'langfuse'
+import { voiceProvider } from './_shared/voice-provider.js'
 
 export const config = {
   runtime: 'edge',
@@ -24,7 +25,9 @@ function getLangfuse() {
 // Rate limiting via Supabase
 // ---------------------------------------------------------------------------
 
-const MAX_SESSIONS_PER_IP = 3
+// Voice sessions per IP per 24h (cost control); VOICE_SESSIONS_PER_DAY overrides.
+const parsedCap = parseInt(process.env.VOICE_SESSIONS_PER_DAY || '', 10)
+const MAX_SESSIONS_PER_IP = Number.isInteger(parsedCap) && parsedCap > 0 ? parsedCap : 3
 const WINDOW_MS = 24 * 60 * 60 * 1000 // 24 hours
 
 async function checkRateLimit(ip) {
@@ -192,12 +195,103 @@ Portfolio: cloudyjoe.com`
 // Handler
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// Provider selection. Gemini Live (Google) is preferred when its key exists;
+// OpenAI Realtime remains available for the original path. VOICE_PROVIDER
+// can force one of 'gemini' | 'openai'.
+// ---------------------------------------------------------------------------
+
+export { voiceProvider }
+
+const GEMINI_LIVE_MODEL = process.env.GEMINI_LIVE_MODEL || 'models/gemini-3.1-flash-live-preview'
+const GEMINI_VOICE = process.env.GEMINI_VOICE || 'Charon'
+const GEMINI_WS_URL =
+  'wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContentConstrained'
+
+const SEARCH_TOOL_DESCRIPTION =
+  "Search Joe's published case studies for project details, architectures, metrics, and technical decisions."
+
+// Mint a single-use ephemeral token with the model, persona and tool locked in,
+// so the browser never sees the API key and cannot change the setup.
+// Gemini Live tends to answer project questions from memory unless told,
+// bluntly and first, that it must search. Prepended to the shared prompt.
+const GEMINI_TOOL_RULE = `## Tool rule (absolute)
+Before you say ANYTHING about a project, client, product, metric, architecture, or piece of Joe's work, you MUST first call search_portfolio with a short query and answer ONLY from its result. Never describe a project from memory — you will get it wrong. The only facts you may state without searching are Joe's identity, roles and career headlines listed under "About Joseph" below; greetings, contact info and questions about yourself need no search either.
+
+`
+
+async function createGeminiToken(instructions) {
+  const now = Date.now()
+  const response = await fetch(
+    'https://generativelanguage.googleapis.com/v1beta/auth_tokens',
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': process.env.GEMINI_API_KEY },
+      body: JSON.stringify({
+        uses: 1,
+        expireTime: new Date(now + 10 * 60 * 1000).toISOString(),
+        newSessionExpireTime: new Date(now + 2 * 60 * 1000).toISOString(),
+        bidiGenerateContentSetup: {
+          model: GEMINI_LIVE_MODEL,
+          generationConfig: {
+            responseModalities: ['AUDIO'],
+            speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: GEMINI_VOICE } } },
+          },
+          systemInstruction: { parts: [{ text: GEMINI_TOOL_RULE + instructions }] },
+          tools: [{
+            functionDeclarations: [{
+              name: 'search_portfolio',
+              description: SEARCH_TOOL_DESCRIPTION,
+              parameters: {
+                type: 'OBJECT',
+                properties: { query: { type: 'STRING', description: 'The search query to find relevant portfolio content' } },
+                required: ['query'],
+              },
+            }],
+          }],
+          inputAudioTranscription: {},
+          outputAudioTranscription: {},
+        },
+      }),
+    },
+  )
+  if (!response.ok) {
+    throw new Error(`Gemini auth_tokens ${response.status}: ${(await response.text()).slice(0, 300)}`)
+  }
+  const data = await response.json()
+  return { token: data.name, expiresAt: new Date(now + 10 * 60 * 1000).toISOString() }
+}
+
+// Langfuse trace for a voice session — created only after a token was minted,
+// so a failed mint leaves no orphan trace.
+async function createVoiceTrace({ lang, sessionId, provider, ip, rateLimit }) {
+  const langfuse = getLangfuse()
+  if (!langfuse) return null
+  const trace = langfuse.trace({
+    name: 'voice-session',
+    sessionId: sessionId || undefined,
+    tags: [lang, 'voice', provider],
+    metadata: { lang, provider, ip: ip.slice(0, 8) + '...', remaining: rateLimit.remaining },
+  })
+  await langfuse.flushAsync()
+  return trace.id
+}
+
 export default async function handler(req) {
+  const provider = voiceProvider()
+
+  // Cheap capability probe for the widget: which provider will serve voice?
+  if (req.method === 'GET') {
+    return new Response(JSON.stringify({ provider, available: !!provider }), {
+      headers: { 'Content-Type': 'application/json' },
+    })
+  }
+
   if (req.method !== 'POST') {
     return new Response('Method not allowed', { status: 405 })
   }
 
-  if (!process.env.OPENAI_API_KEY) {
+  if (!provider) {
     return new Response(JSON.stringify({ error: 'Voice mode not configured' }), {
       status: 503,
       headers: { 'Content-Type': 'application/json' },
@@ -213,7 +307,8 @@ export default async function handler(req) {
     if (!rateLimit.allowed) {
       return new Response(JSON.stringify({
         error: 'rate_limited',
-        message: 'You have reached the limit of 3 voice sessions per day',
+        message: `You have reached the daily limit of ${MAX_SESSIONS_PER_IP} voice sessions`,
+        limit: MAX_SESSIONS_PER_IP,
       }), {
         status: 429,
         headers: { 'Content-Type': 'application/json' },
@@ -223,6 +318,30 @@ export default async function handler(req) {
     // Compose prompt: base rules + language-specific voice affect
     const voiceAffect = VOICE_AFFECT_EN
     const instructions = `${VOICE_BASE_PROMPT}\n\n${voiceAffect}`
+
+    if (provider === 'gemini') {
+      let minted
+      try {
+        minted = await createGeminiToken(instructions)
+      } catch (err) {
+        console.error('Gemini auth_tokens error:', err?.message || err)
+        return new Response(JSON.stringify({ error: 'Failed to create voice session' }), {
+          status: 502,
+          headers: { 'Content-Type': 'application/json' },
+        })
+      }
+      const traceId = await createVoiceTrace({ lang, sessionId, provider, ip, rateLimit })
+      return new Response(JSON.stringify({
+        provider: 'gemini',
+        token: minted.token,
+        model: GEMINI_LIVE_MODEL,
+        wsUrl: GEMINI_WS_URL,
+        traceId,
+        expiresAt: minted.expiresAt,
+      }), {
+        headers: { 'Content-Type': 'application/json' },
+      })
+    }
 
     // Request ephemeral token from OpenAI Realtime API
     const response = await fetch('https://api.openai.com/v1/realtime/sessions', {
@@ -266,22 +385,10 @@ export default async function handler(req) {
     }
 
     const data = await response.json()
-
-    // Create Langfuse trace for this voice session
-    const langfuse = getLangfuse()
-    let traceId = null
-    if (langfuse) {
-      const trace = langfuse.trace({
-        name: 'voice-session',
-        sessionId: sessionId || undefined,
-        tags: [lang, 'voice'],
-        metadata: { lang, ip: ip.slice(0, 8) + '...', remaining: rateLimit.remaining },
-      })
-      traceId = trace.id
-      await langfuse.flushAsync()
-    }
+    const traceId = await createVoiceTrace({ lang, sessionId, provider, ip, rateLimit })
 
     return new Response(JSON.stringify({
+      provider: 'openai',
       token: data.client_secret?.value,
       traceId,
       expiresAt: data.client_secret?.expires_at,
