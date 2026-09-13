@@ -81,6 +81,8 @@ interface DatasetResult {
 // Configuration
 // By default uses vercel dev (port 3000), or another URL can be specified
 const CHAT_API_URL = process.env.CHAT_API_URL || 'http://localhost:3000/api/chat'
+// EVAL_PERSONA=jts runs the suite against another face of the same agent
+const EVAL_PERSONA = process.env.EVAL_PERSONA || undefined
 const RAG_SEARCH_URL = process.env.CHAT_API_URL
   ? process.env.CHAT_API_URL.replace('/api/chat', '/api/rag-search')
   : 'http://localhost:3000/api/rag-search'
@@ -109,6 +111,7 @@ async function callChat(input: string, lang: 'es' | 'en', conversation?: Convers
     body: JSON.stringify({
       messages,
       lang,
+      ...(EVAL_PERSONA ? { persona: EVAL_PERSONA } : {}),
     }),
   })
 
@@ -169,6 +172,7 @@ async function callVoiceRag(input: string, lang: 'es' | 'en'): Promise<ChatResul
       query: input,
       traceId: 'eval-' + Date.now(),
       lang,
+      ...(EVAL_PERSONA ? { persona: EVAL_PERSONA } : {}),
     }),
   })
 

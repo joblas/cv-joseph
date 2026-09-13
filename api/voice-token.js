@@ -1,5 +1,6 @@
 import { Langfuse } from 'langfuse'
 import { voiceProvider } from './_shared/voice-provider.js'
+import { resolvePersona } from './_shared/personas.js'
 
 export const config = {
   runtime: 'edge',
@@ -264,13 +265,13 @@ async function createGeminiToken(instructions) {
 
 // Langfuse trace for a voice session — created only after a token was minted,
 // so a failed mint leaves no orphan trace.
-async function createVoiceTrace({ lang, sessionId, provider, ip, rateLimit }) {
+async function createVoiceTrace({ lang, sessionId, provider, ip, rateLimit, persona }) {
   const langfuse = getLangfuse()
   if (!langfuse) return null
   const trace = langfuse.trace({
     name: 'voice-session',
     sessionId: sessionId || undefined,
-    tags: [lang, 'voice', provider],
+    tags: [lang, 'voice', provider, `persona:${persona.id}`],
     metadata: { lang, provider, ip: ip.slice(0, 8) + '...', remaining: rateLimit.remaining },
   })
   await langfuse.flushAsync()
@@ -299,7 +300,9 @@ export default async function handler(req) {
   }
 
   try {
-    const { lang = 'en', sessionId } = await req.json()
+    const body = await req.json()
+    const { lang = 'en', sessionId } = body
+    const persona = resolvePersona(body, req)
 
     // Rate limiting
     const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown'
@@ -317,7 +320,9 @@ export default async function handler(req) {
 
     // Compose prompt: base rules + language-specific voice affect
     const voiceAffect = VOICE_AFFECT_EN
-    const instructions = `${VOICE_BASE_PROMPT}\n\n${voiceAffect}`
+    const instructions = persona.voicePrompt
+      ? persona.voicePrompt
+      : `${VOICE_BASE_PROMPT}\n\n${voiceAffect}`
 
     if (provider === 'gemini') {
       let minted
@@ -330,7 +335,7 @@ export default async function handler(req) {
           headers: { 'Content-Type': 'application/json' },
         })
       }
-      const traceId = await createVoiceTrace({ lang, sessionId, provider, ip, rateLimit })
+      const traceId = await createVoiceTrace({ lang, sessionId, provider, ip, rateLimit, persona })
       return new Response(JSON.stringify({
         provider: 'gemini',
         token: minted.token,
@@ -385,7 +390,7 @@ export default async function handler(req) {
     }
 
     const data = await response.json()
-    const traceId = await createVoiceTrace({ lang, sessionId, provider, ip, rateLimit })
+    const traceId = await createVoiceTrace({ lang, sessionId, provider, ip, rateLimit, persona })
 
     return new Response(JSON.stringify({
       provider: 'openai',

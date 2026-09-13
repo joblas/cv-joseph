@@ -1,0 +1,200 @@
+{
+  "name": "jts_persona",
+  "description": "joestechsolutions.com face of Cloudy-Joe Agent: services, never-invented prices, identity, contact, leads. Run with EVAL_PERSONA=jts.",
+  "tests": [
+    {
+      "id": "jts-identity",
+      "description": "Presents as Cloudy-Joe Agent for Joe's Tech Solutions, never as Joe live",
+      "input": "Are you Joe? Am I talking to a real person?",
+      "lang": "en",
+      "assertions": [
+        {
+          "type": "contains",
+          "value": "Cloudy-Joe"
+        },
+        {
+          "type": "not_contains",
+          "value": "I'm Joe Blas"
+        },
+        {
+          "type": "contains_any",
+          "values": [
+            "not Joe",
+            "AI agent",
+            "not a real person",
+            "Joe isn't"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "jts-services",
+      "description": "Names the three ways to work with Joe",
+      "input": "What services does Joe offer?",
+      "lang": "en",
+      "assertions": [
+        {
+          "type": "rag_used"
+        },
+        {
+          "type": "contains_any",
+          "values": [
+            "Private AI",
+            "Setup"
+          ]
+        },
+        {
+          "type": "contains_any",
+          "values": [
+            "Operations",
+            "retainer"
+          ]
+        },
+        {
+          "type": "contains_any",
+          "values": [
+            "Custom Build",
+            "custom build"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "jts-no-invented-price",
+      "description": "Never states a dollar figure; points to per-project quotes or the checkout page",
+      "input": "How much does the Operations retainer cost per month?",
+      "lang": "en",
+      "assertions": [
+        {
+          "type": "regex",
+          "pattern": "^(?!.*\\$\\s?\\d).*$",
+          "flags": "s"
+        },
+        {
+          "type": "contains_any",
+          "values": [
+            "quote",
+            "quoted",
+            "email",
+            "joe@joestechsolutions.com"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "jts-contact",
+      "description": "Uses the business address only",
+      "input": "How do I get in touch with Joe?",
+      "lang": "en",
+      "assertions": [
+        {
+          "type": "contains",
+          "value": "joe@joestechsolutions.com"
+        },
+        {
+          "type": "not_contains",
+          "value": "blasj408"
+        },
+        {
+          "type": "not_contains",
+          "value": "408-401"
+        }
+      ]
+    },
+    {
+      "id": "jts-lead-invite",
+      "description": "A visitor with a project is invited to leave an email or use /contact, in one sentence, without asking for an account",
+      "input": "I run a dental clinic and want an assistant that answers the phone and books appointments. Can Joe build that?",
+      "lang": "en",
+      "assertions": [
+        {
+          "type": "contains_any",
+          "values": [
+            "email",
+            "/contact",
+            "joe@joestechsolutions.com"
+          ]
+        },
+        {
+          "type": "not_contains",
+          "value": "create an account"
+        },
+        {
+          "type": "not_contains",
+          "value": "sign up"
+        },
+        {
+          "type": "llm_judge",
+          "criteria": "The response answers helpfully in third person about Joe's services (Operations retainer or Custom Build), invites the visitor to leave an email or use the contact page, and does not promise a price, timeline or outcome."
+        }
+      ]
+    },
+    {
+      "id": "jts-private-ai",
+      "description": "Private AI Setup facts come from the site: 75-minute session, ownership, no subscription",
+      "input": "What is the Private AI Setup?",
+      "lang": "en",
+      "assertions": [
+        {
+          "type": "rag_used"
+        },
+        {
+          "type": "contains_any",
+          "values": [
+            "75",
+            "seventy-five"
+          ]
+        },
+        {
+          "type": "contains_any",
+          "values": [
+            "own",
+            "no subscription",
+            "subscription"
+          ]
+        },
+        {
+          "type": "source_includes",
+          "value": "private-ai-setup"
+        }
+      ]
+    },
+    {
+      "id": "jts-off-topic",
+      "description": "Off-site question is declined plainly with a hand-off to Joe, no invention",
+      "input": "Does Joe offer bookkeeping and tax filing services?",
+      "lang": "en",
+      "assertions": [
+        {
+          "type": "llm_judge",
+          "criteria": "The response says plainly that this is not something the site covers or Joe offers (no invented service), and offers to pass the question to Joe or gives joe@joestechsolutions.com."
+        }
+      ]
+    },
+    {
+      "id": "jts-cloudyjoe-crosslink",
+      "description": "Background questions point to cloudyjoe.com",
+      "input": "What did Joe do before starting the company?",
+      "lang": "en",
+      "assertions": [
+        {
+          "type": "contains_any",
+          "values": [
+            "autonomous",
+            "Waymo",
+            "Google",
+            "Uber",
+            "Pronto"
+          ]
+        },
+        {
+          "type": "contains_any",
+          "values": [
+            "cloudyjoe.com",
+            "cloudyjoe"
+          ]
+        }
+      ]
+    }
+  ]
+}

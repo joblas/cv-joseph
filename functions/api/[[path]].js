@@ -16,6 +16,7 @@
 
 import { AsyncLocalStorage } from 'node:async_hooks'
 import { installEnv } from './_shims.js'
+import { corsHeaders } from '../api-src/_shared/personas.js'
 
 const ctxStore = new AsyncLocalStorage()
 globalThis.__cfCtxStore = ctxStore
@@ -59,11 +60,22 @@ export const onRequest = async (ctx) => {
 
   installEnv(env)
 
+  // CORS for the other sites this brain serves (joestechsolutions.com). Only
+  // origins listed by a persona get headers; same-origin requests are untouched.
+  const cors = corsHeaders(request)
+  if (request.method === 'OPTIONS') {
+    return new Response(null, { status: Object.keys(cors).length ? 204 : 405, headers: cors })
+  }
+
   const loader = mods[routeKey(segs)]
   if (!loader) {
-    return new Response(JSON.stringify({ error: 'Not found' }), { status: 404, headers: { 'Content-Type': 'application/json' } })
+    return new Response(JSON.stringify({ error: 'Not found' }), { status: 404, headers: { 'Content-Type': 'application/json', ...cors } })
   }
 
   const mod = await loader()
-  return ctxStore.run(ctx, () => mod.default(withTrustedIp(request)))
+  const response = await ctxStore.run(ctx, () => mod.default(withTrustedIp(request)))
+  if (!Object.keys(cors).length) return response
+  const headers = new Headers(response.headers)
+  for (const [k, v] of Object.entries(cors)) headers.set(k, v)
+  return new Response(response.body, { status: response.status, statusText: response.statusText, headers })
 }

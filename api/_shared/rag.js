@@ -3,6 +3,7 @@
 // ---------------------------------------------------------------------------
 
 import { FAST_MODEL, scaleTokens } from './models.js'
+import { getPersona } from './personas.js'
 
 // ---------------------------------------------------------------------------
 // Cost tracking per span
@@ -25,12 +26,64 @@ export function calcCost(model, inputTokens, outputTokens = 0) {
 
 // Retrieval needs Supabase. With VOYAGE_API_KEY it is hybrid (vector +
 // keyword); without it, keyword-only over the same corpus (keyword_search RPC).
-export function isRagEnabled() {
-  return !!(process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY)
+export function isRagEnabled(persona = getPersona()) {
+  return !!(persona.rag.supabaseUrl() && persona.rag.supabaseKey())
 }
 
-export function hasEmbeddings() {
-  return !!process.env.VOYAGE_API_KEY
+export function hasEmbeddings(persona = getPersona()) {
+  // Only the cloudyjoe corpus carries Voyage vectors
+  return persona.rag.kind === 'documents' && !!process.env.VOYAGE_API_KEY
+}
+
+// JTS site index rows (search_site_chunks_public) → the chunk shape the rest of
+// the pipeline expects. Page chunks become badge-able sources (page_path);
+// curated FAQ rows keep their content but get no badge.
+function siteChunkToDocument(row) {
+  let pagePath = ''
+  let articleId = row.source === 'kb' ? `kb:${row.title || 'faq'}` : 'page'
+  try {
+    if (/^https?:/.test(row.url)) {
+      const u = new URL(row.url)
+      pagePath = u.pathname.replace(/\/$/, '') || '/'
+      articleId = pagePath === '/' ? 'home' : pagePath.slice(1).replace(/\//g, '-')
+    }
+  } catch { /* keep defaults */ }
+  return {
+    id: row.id,
+    content: row.title ? `${row.title}\n${row.content}` : row.content,
+    metadata: {
+      article_id: articleId,
+      section_id: row.source === 'kb' ? 'faq' : 'page',
+      section_anchor: '',
+      page_path: pagePath,
+      article_slug: pagePath ? pagePath.slice(1) : '',
+      title: row.title || '',
+    },
+    similarity: Number(row.score) || 0,
+  }
+}
+
+async function siteChunkSearch(queryText, persona) {
+  const t0 = Date.now()
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 2500)
+  try {
+    const key = persona.rag.supabaseKey()
+    const response = await fetch(`${persona.rag.supabaseUrl()}/rest/v1/rpc/search_site_chunks_public`, {
+      method: 'POST',
+      headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query_text: queryText, match_count: 12 }),
+      signal: controller.signal,
+    })
+    clearTimeout(timeout)
+    if (!response.ok) throw new Error(`Supabase site search failed: ${response.status}`)
+    const rows = await response.json()
+    return { chunks: rows.map(siteChunkToDocument), latencyMs: Date.now() - t0 }
+  } catch (err) {
+    clearTimeout(timeout)
+    if (err.name === 'AbortError') throw new Error('Supabase search timeout (>2.5s)')
+    throw err
+  }
 }
 
 export const PORTFOLIO_TOOL = {
@@ -243,7 +296,11 @@ export function diversifyByArticle(ranked) {
 export function formatChunksForContext(chunks) {
   return chunks.map((c, i) => {
     const meta = c.metadata || {}
-    const source = meta.article_id ? `[From your article: ${meta.article_id}, section: ${meta.section_id}]` : ''
+    const source = meta.section_id === 'faq'
+      ? `[Curated FAQ: ${meta.title || meta.article_id}]`
+      : meta.section_id === 'page'
+        ? `[From the site page: ${meta.page_path || meta.article_id}]`
+        : meta.article_id ? `[From your article: ${meta.article_id}, section: ${meta.section_id}]` : ''
     return `--- Your content ${i + 1} ${source} ---\n${c.content}`
   }).join('\n\n')
 }
@@ -368,7 +425,7 @@ export function detectMentionedArticles(responseText) {
 // RAG: full agentic search pipeline
 // ---------------------------------------------------------------------------
 
-export async function searchPortfolio(query, trace, anthropicClient) {
+export async function searchPortfolio(query, trace, anthropicClient, persona = getPersona()) {
   const result = {
     chunks: null,
     sources: [],
@@ -376,7 +433,7 @@ export async function searchPortfolio(query, trace, anthropicClient) {
     degradedReason: null,
     metrics: { embeddingMs: 0, retrievalMs: 0, rerankMs: 0 },
     usage: { embeddingTokens: 0, rerankInputTokens: 0, rerankOutputTokens: 0 },
-    mode: hasEmbeddings() ? 'hybrid' : 'keyword',
+    mode: persona.rag.kind === 'site_chunks' ? 'site' : hasEmbeddings(persona) ? 'hybrid' : 'keyword',
   }
 
   // 1. Embed (hybrid mode only)
@@ -404,9 +461,11 @@ export async function searchPortfolio(query, trace, anthropicClient) {
   // 2. Retrieve
   const retrievalSpan = trace?.span({ name: 'retrieval', metadata: { query, mode: result.mode } })
   try {
-    const searchResult = result.mode === 'hybrid'
-      ? await searchDocuments(query, embedding)
-      : await searchDocumentsByKeyword(query)
+    const searchResult = result.mode === 'site'
+      ? await siteChunkSearch(query, persona)
+      : result.mode === 'hybrid'
+        ? await searchDocuments(query, embedding)
+        : await searchDocumentsByKeyword(query)
     result.metrics.retrievalMs = searchResult.latencyMs
     retrievalSpan?.end({
       metadata: {

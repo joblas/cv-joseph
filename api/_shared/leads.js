@@ -1,3 +1,4 @@
+import { getPersona } from './personas.js'
 // ---------------------------------------------------------------------------
 // Lead capture for the cloudyjoe.com chatbot.
 //
@@ -80,7 +81,7 @@ export async function checkRateLimit(req, limit = 40) {
   }
 }
 
-async function notifyOwner({ email, kind, message, page, sessionId, lang }) {
+async function notifyOwner({ email, kind, message, page, sessionId, lang, persona }) {
   const key = process.env.RESEND_API_KEY
   const to = process.env.ALERT_EMAIL
   if (!key || !to) return false
@@ -89,12 +90,10 @@ async function notifyOwner({ email, kind, message, page, sessionId, lang }) {
       method: 'POST',
       headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        from: 'cloudyjoe.com <leads@subscribe.joestechsolutions.com>',
+        from: persona.leads.from,
         to: [to],
         ...(email ? { reply_to: email } : {}),
-        subject: email
-          ? `Lead from cloudyjoe.com: ${email}`
-          : 'Someone on cloudyjoe.com wants to get in touch',
+        subject: persona.leads.subject(email),
         text: [
           email ? `Email: ${email}` : 'Email: (not given)',
           `Type: ${kind}`,
@@ -146,12 +145,12 @@ async function alreadyNotified(sessionId, hasEmail) {
 
 // Record first, notify second: the row is the durable copy, so a Resend outage
 // costs a notification, not the lead. Never throws.
-export async function captureLead({ message, page, sessionId, lang, reply }) {
+export async function captureLead({ message, page, sessionId, lang, reply, persona = getPersona() }) {
   const hit = detectLead(message)
   if (!hit) return null
   try {
     const suppress = await alreadyNotified(sessionId, Boolean(hit.email))
-    const notified = suppress ? false : await notifyOwner({ ...hit, message, page, sessionId, lang })
+    const notified = suppress ? false : await notifyOwner({ ...hit, message, page, sessionId, lang, persona })
     if (supabaseConfigured()) {
       await fetch(`${process.env.SUPABASE_URL}/rest/v1/chat_leads`, {
         method: 'POST',
