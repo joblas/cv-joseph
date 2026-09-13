@@ -26,7 +26,8 @@
     "chats:tui": "npx tsx scripts/chats-tui.ts",
     "test:contract": "npx tsx tests/ops-contract.test.ts",
     "test:ops": "npx tsx tests/ops-dashboard.test.ts",
-    "diagnose:rag": "npx tsx scripts/diagnose-rag.ts"
+    "diagnose:rag": "npx tsx scripts/diagnose-rag.ts",
+    "test:spoken": "npx tsx tests/spoken-text.test.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.71.2",

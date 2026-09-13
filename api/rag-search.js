@@ -34,17 +34,22 @@ const VOICE_OVERRIDE = `Response for spoken conversation. Max 2-3 sentences. No 
 // is enforced here rather than trusted to the LLM (glm ignores it sometimes).
 export function toSpokenText(text) {
   return String(text || '')
-    .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1') // links → their text
-    .replace(/`{1,3}([^`]*)`{1,3}/g, '$1')
-    .replace(/^#{1,6}\s+/gm, '')
+    .replace(/\[([^\]\n]+)\]\([^)\n]*\)/g, '$1') // links → their text (single line)
+    .replace(/`{1,3}([^`\n]*)`{1,3}/g, '$1')
+    .replace(/^#{1,6}[ \t]+/gm, '')
     .replace(/\*\*|__/g, '')
-    .replace(/(^|\s)[*_](\S[^*_]*)[*_]/g, '$1$2')
-    .replace(/^\s*[-*•]\s+/gm, '')
-    .replace(/\s*->\s*/g, ': ')
-    .replace(/https?:\/\/\S+/g, '')
+    // *emphasis* / _emphasis_ on one line only; the closer must end the word so
+    // an unbalanced marker never swallows an underscore inside snake_case
+    .replace(/(^|\s)[*_](\S[^*_\n]*?)[*_](?![A-Za-z0-9])/g, '$1$2')
+    .replace(/^[ \t]*[-*•][ \t]+/gm, '')
+    .replace(/[ \t]*->[ \t]*/g, ': ')
+    .replace(/https?:\/\/[^\s,;)]+/g, '')
+    .replace(/[*`]/g, '') // any stray marker would be read aloud
     .replace(/[ \t]+/g, ' ')
-    .replace(/\n{2,}/g, '. ')
-    .replace(/\n/g, ' ')
+    // line breaks become sentence pauses unless the line already ends in punctuation
+    .replace(/([^.!?:;,\s])[ \t]*\n+/g, '$1. ')
+    .replace(/\n+/g, ' ')
+    .replace(/[ \t]+/g, ' ')
     .trim()
 }
 
