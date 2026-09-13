@@ -159,7 +159,7 @@ export default async function handler(req) {
         }
 
         results.evaluated++
-      } catch (e) {
+      } catch {
         results.errors++
       }
     }

@@ -320,12 +320,12 @@ export default function N8nForPMs() {
           {/* Lessons Learned */}
           <LessonsSection heading={t.lessons.heading} items={t.lessons.items} />
 
-          {/* Cross-link: Business OS */}
+          {/* Cross-link: Hermes */}
           <CaseStudyCta
-            heading={'What did I automate with those 170 hours?'}
-            body={'These workflows are a fraction of a larger system: 12 Airtable bases, 50+ automations, and an AI agent handling customers 24/7. All documented in the Business OS case study.'}
-            ctaLabel={'Read Business OS →'}
-            ctaHref={'/business-os-for-airtable'}
+            heading={'What runs Joe\'s own business?'}
+            body={'These workflows are the small version. Joe\'s own operation runs on Hermes: 40+ scheduled automations behind a C-suite + VP agent structure on Ollama Cloud, after retiring a 22-agent system.'}
+            ctaLabel={'Read the Hermes migration →'}
+            ctaHref={'/hermes'}
           />
 
           {/* FAQ */}

@@ -1,7 +1,7 @@
 import { CHAT_MODEL, scaleTokens, createAnthropicClient } from './_shared/models.js'
 import { Langfuse } from 'langfuse'
 import {
-  searchPortfolio, formatChunksForContext, extractSources, calcCost,
+  searchPortfolio, formatChunksForContext, calcCost,
   filterSourcesByResponse, detectMentionedArticles, HOME_SOURCE,
 } from './_shared/rag.js'
 import { getSystemPrompt } from './_shared/prompt.js'

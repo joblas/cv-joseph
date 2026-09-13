@@ -18,7 +18,7 @@ Static CVs don't show what you can actually build. A PDF lists skills — it doe
 A production-grade interactive portfolio that **demonstrates the skills it describes**: dual-mode AI chatbot (text + voice) with agentic RAG, full LLMOps observability with custom dashboard, 71 automated evals as CI gate, prompt versioning, and a closed-loop that generates tests from production failures.
 
 **Key Features:**
-- **AI Chatbot "Cloudy-Joe Agent"** — Text (Claude Sonnet) + Voice (OpenAI Realtime API). Presents itself as Joe's AI agent (never as Joe), speaks about him in third person as Joseph. Agentic RAG with hybrid search (pgvector + BM25) and Haiku reranking
+- **AI Chatbot "Cloudy-Joe Agent"** — Text (Anthropic-compatible Messages API — Claude by default, currently glm-5.3-flash on Ollama Cloud via `ANTHROPIC_BASE_URL`) + Voice (OpenAI Realtime API, when `OPENAI_API_KEY` is set). Presents itself as Joe's AI agent (never as Joe), speaks about him in third person as Joseph. Agentic RAG with hybrid search (pgvector + BM25) and Haiku reranking
 - **6-Layer Defense** — Keyword detection, canary tokens, fingerprinting, anti-extraction, online safety scoring, adversarial red team. Real-time jailbreak email alerts
 - **71 Automated Evals** — 10 categories: factual accuracy, persona, boundaries, quality, safety, language, RAG quality, multi-turn, source badges, voice quality. CI gate on every push
 - **LLMOps Dashboard** — Private `/ops` with 8 tabs: Overview, Conversations, Costs, RAG, Security, Evals, Voice, System. Real data from Langfuse + Supabase
@@ -51,14 +51,14 @@ A production-grade interactive portfolio that **demonstrates the skills it descr
 > **[Explore the interactive diagram →](https://cloudyjoe.com/self-healing-chatbot#architecture)** 10 phases · narrated audio · zoom + pan
 
 ```
-User message → FloatingChat.tsx → api/chat.js (Vercel Edge)
+User message → FloatingChat.tsx → api/chat.js (Cloudflare Pages Functions; Vercel Edge-compatible)
                                     ├── System prompt (Langfuse registry + fallback)
-                                    ├── Claude Sonnet (tool_use decision)
+                                    ├── CHAT_MODEL (tool_use decision)
                                     ├── Agentic RAG (if needed):
-                                    │     ├── OpenAI embeddings (text-embedding-3-small)
+                                    │     ├── Voyage embeddings (optional) — else keyword search over the same corpus
                                     │     ├── Supabase pgvector (semantic) + full-text (BM25)
-                                    │     └── Claude Haiku (reranking + diversification)
-                                    ├── Claude Sonnet (streaming generation)
+                                    │     └── FAST_MODEL (reranking + diversification)
+                                    ├── CHAT_MODEL (streaming generation)
                                     ├── Langfuse tracing (every span with cost)
                                     └── waitUntil → Haiku scoring (0ms added latency)
 

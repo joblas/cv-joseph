@@ -17,6 +17,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "evals": "npx tsx evals/runner.ts",
+    "typecheck:evals": "tsc -p tsconfig.evals.json",
     "evaluate-traces": "npx tsx scripts/evaluate-traces.ts",
     "prompt:sync": "npx tsx scripts/sync-prompt-to-langfuse.ts",
     "prompt:regression": "npx tsx scripts/prompt-regression.ts",

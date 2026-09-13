@@ -204,7 +204,7 @@ export default async function handler(req, res) {
               ['Language', '"Cuéntame sobre ti" (ES)', 'language = es'],
               ['RAG', '"What stack did you use for the ERP?"', 'contains("Airtable")'],
               ['Multi-turn', '"What model does it use?" (after discussing Jacobo)', 'contains("claude" | "sonnet")'],
-              ['Source Badges', '"Tell me about the Jacobo agent"', 'source_includes("jacobo")'],
+              ['Source Badges', '"Tell me about the Turnover Agent"', 'source_includes("turnover-agent")'],
               ['Voice', '"Tell me about your projects"', 'not-contains("**") + max_words(60)'],
             ],
           },
