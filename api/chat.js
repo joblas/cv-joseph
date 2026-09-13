@@ -300,6 +300,9 @@ export default async function handler(req) {
         tdInputTokens,
         tdOutputTokens,
         precomputedResponse: firstResponse,
+        // If the precomputed reply is empty (thinking model exhausted the tool
+        // decision budget), retry as a plain stream instead of failing outright.
+        fallbackMessages: cleanMessages,
         lang,
         promptVersion,
       })
@@ -641,7 +644,10 @@ function streamResponse({
             controller.close()
             if (langfuse) waitUntil(langfuse.flushAsync())
             return
-          } catch { /* fallback also failed, fall through to error message */ }
+          } catch (fallbackErr) {
+            // fall through to the last-resort error message
+            trace?.update({ metadata: { fallbackError: fallbackErr?.message } })
+          }
         }
 
         // Last resort: send error message through SSE
