@@ -199,6 +199,11 @@ LANGFUSE_SECRET_KEY=         # Langfuse tracing
 
 # Alerts & Dashboard
 RESEND_API_KEY=              # Jailbreak email alerts
+
+# Personas (joestechsolutions.com face of the same agent — see api/_shared/personas.js)
+JTS_SUPABASE_URL=            # JTS Supabase project URL (site_chunks index)
+JTS_SUPABASE_ANON_KEY=       # JTS publishable key (search_site_chunks_public is read-only)
+ALLOW_LOCAL_ORIGINS=         # =1 in .dev.vars only: lets http://localhost pages call the API
 OPS_DASHBOARD_SECRET=        # Dashboard password (/ops)
 ```
 

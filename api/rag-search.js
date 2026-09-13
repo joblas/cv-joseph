@@ -1,8 +1,9 @@
 import { CHAT_MODEL, scaleTokens, createAnthropicClient } from './_shared/models.js'
+import { resolvePersona } from './_shared/personas.js'
 import { Langfuse } from 'langfuse'
 import {
   searchPortfolio, formatChunksForContext, calcCost,
-  filterSourcesByResponse, detectMentionedArticles, HOME_SOURCE,
+  filterSourcesByResponse, filterSiteSources, detectMentionedArticles, HOME_SOURCE,
 } from './_shared/rag.js'
 import { getSystemPrompt } from './_shared/prompt.js'
 
@@ -58,12 +59,12 @@ export function toSpokenText(text) {
 const parsedReasonTimeout = parseInt(process.env.VOICE_REASON_TIMEOUT_MS || '', 10)
 const REASON_TIMEOUT_MS = Number.isInteger(parsedReasonTimeout) && parsedReasonTimeout > 0 ? parsedReasonTimeout : 3000
 
-async function reasonWithClaude(query, formattedChunks, span, langfuse) {
+async function reasonWithClaude(query, formattedChunks, span, langfuse, persona) {
   const t0 = Date.now()
   const reasoningSpan = span?.span({ name: 'claude-reasoning', metadata: { query } })
 
   try {
-    const { text: systemPromptText } = await getSystemPrompt(langfuse)
+    const { text: systemPromptText } = await getSystemPrompt(langfuse, persona)
 
     const response = await Promise.race([
       client.messages.create({
@@ -129,7 +130,9 @@ export default async function handler(req) {
   }
 
   try {
-    const { query, traceId, currentPage } = await req.json()
+    const body = await req.json()
+    const { query, traceId, currentPage } = body
+    const persona = resolvePersona(body, req)
 
     if (!traceId) {
       return new Response(JSON.stringify({ error: 'Missing traceId' }), {
@@ -156,7 +159,7 @@ export default async function handler(req) {
     const t0 = Date.now()
 
     try {
-      const ragResult = await searchPortfolio(query, ragSpan, client)
+      const ragResult = await searchPortfolio(query, ragSpan, client, persona)
 
       const formattedChunks = ragResult.chunks
         ? formatChunksForContext(ragResult.chunks)
@@ -175,7 +178,7 @@ export default async function handler(req) {
       // Latency budget: skip Claude reasoning if RAG already took >1.5s
       const ragElapsedMs = Date.now() - t0
       const reasonedAnswer = (ragResult.chunks && ragElapsedMs <= 1500)
-        ? await reasonWithClaude(query, formattedChunks, trace, langfuse)
+        ? await reasonWithClaude(query, formattedChunks, trace, langfuse, persona)
         : null
 
       // Tier 1: Claude + RAG → reasoned answer
@@ -187,22 +190,27 @@ export default async function handler(req) {
 
       // Filter sources to articles mentioned in the answer (same logic as chat.js)
       const responseText = reasonedAnswer || ''
-      let filteredSources = sources.length > 0
-        ? filterSourcesByResponse(sources, responseText)
-        : []
+      let filteredSources
+      if (persona.rag.articleBadges) {
+        filteredSources = sources.length > 0
+          ? filterSourcesByResponse(sources, responseText)
+          : []
 
-      // Enrich with keyword-detected articles not in RAG sources
-      const ragArticleIds = new Set(filteredSources.map(s => s.article_id))
-      const detected = detectMentionedArticles(responseText)
-      for (const d of detected) {
-        if (!ragArticleIds.has(d.article_id) && filteredSources.length < 3) {
-          filteredSources.push(d)
+        // Enrich with keyword-detected articles not in RAG sources
+        const ragArticleIds = new Set(filteredSources.map(s => s.article_id))
+        const detected = detectMentionedArticles(responseText)
+        for (const d of detected) {
+          if (!ragArticleIds.has(d.article_id) && filteredSources.length < 3) {
+            filteredSources.push(d)
+          }
         }
-      }
 
-      // Home fallback when RAG found chunks but no specific article matched
-      if (filteredSources.length === 0 && sources.length > 0) {
-        filteredSources = [HOME_SOURCE]
+        // Home fallback when RAG found chunks but no specific article matched
+        if (filteredSources.length === 0 && sources.length > 0) {
+          filteredSources = [HOME_SOURCE]
+        }
+      } else {
+        filteredSources = filterSiteSources(sources, responseText)
       }
 
       if (langfuse) await langfuse.flushAsync()

@@ -112,6 +112,8 @@ After each run, a report is generated at `results/report-YYYY-MM-DD.md` with:
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `CHAT_API_URL` | `http://localhost:3000/api/chat` | Chat API URL |
+| `EVAL_PERSONA` | `cloudyjoe` | Which face of the agent to test (`cloudyjoe` or `jts`); sent as `persona` in every request. Datasets declare theirs with a `persona` field and are skipped when it differs |
+| `EVAL_DATASETS` | (all for the persona) | Comma-separated dataset names to run, e.g. `jts-persona` |
 | `ANTHROPIC_API_KEY` | (required for LLM judge) | Anthropic API key |
 
 ### Configure API Key (for LLM Judge)

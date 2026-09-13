@@ -1,9 +1,9 @@
 import { Langfuse } from 'langfuse'
 import { waitUntil } from '@vercel/functions'
-import SYSTEM_PROMPT_FALLBACK from '../chatbot-prompt.txt'
+import { resolvePersona } from './_shared/personas.js'
 import {
-  calcCost, isRagEnabled, PORTFOLIO_TOOL, formatChunksForContext,
-  searchPortfolio, filterSourcesByResponse, detectMentionedArticles,
+  calcCost, isRagEnabled, portfolioTool, formatChunksForContext,
+  searchPortfolio, filterSourcesByResponse, filterSiteSources, detectMentionedArticles,
   HOME_SOURCE, classifyIntent, sendJailbreakAlert,
   containsFingerprint, LEAK_RESPONSE,
 } from './_shared/rag.js'
@@ -60,6 +60,7 @@ export default async function handler(req) {
     }
 
     const { messages, lang, sessionId, currentPage } = body || {}
+    const persona = resolvePersona(body, req)
 
     if (!Array.isArray(messages) || messages.length === 0) {
       return new Response(JSON.stringify({ error: 'Missing or invalid messages array' }), {
@@ -104,7 +105,7 @@ export default async function handler(req) {
       return new Response(
         JSON.stringify({
           error: 'rate_limited',
-          message: "That's a lot of messages in one hour. Email Joe directly at blasj408@gmail.com and he'll pick it up.",
+          message: persona.rateLimitMessage,
         }),
         { status: 429, headers: { 'Content-Type': 'application/json' } },
       )
@@ -119,6 +120,7 @@ export default async function handler(req) {
         page: currentPage,
         sessionId,
         lang,
+        persona,
       }))
     }
 
@@ -128,19 +130,20 @@ export default async function handler(req) {
     let promptVersion
     const overrideVersion = req.headers.get('x-prompt-version')
     const overrideAuth = req.headers.get('x-prompt-auth')
-    if (overrideAuth === process.env.PROMPT_REGRESSION_SECRET && overrideVersion && langfuse) {
+    // Only personas with a Langfuse-managed prompt can be pinned to a version
+    if (overrideAuth === process.env.PROMPT_REGRESSION_SECRET && overrideVersion && langfuse && persona.langfusePrompt) {
       try {
-        const prompt = await langfuse.getPrompt('chatbot-system', parseInt(overrideVersion), {
+        const prompt = await langfuse.getPrompt(persona.langfusePrompt, parseInt(overrideVersion), {
           type: 'text', cacheTtlSeconds: 0,
         })
         systemPromptText = prompt.prompt
         promptVersion = prompt.version
       } catch {
-        systemPromptText = SYSTEM_PROMPT_FALLBACK
+        systemPromptText = persona.prompt
         promptVersion = 'file'
       }
     } else {
-      const { text, version } = await getSystemPrompt(langfuse)
+      const { text, version } = await getSystemPrompt(langfuse, persona)
       systemPromptText = text
       promptVersion = version
     }
@@ -149,7 +152,7 @@ export default async function handler(req) {
       trace = langfuse.trace({
         name: 'chat',
         sessionId: sessionId || undefined,
-        tags: [lang, ...intentTags],
+        tags: [lang, `persona:${persona.id}`, ...intentTags],
         metadata: {
           lang,
           messageCount: messages.length,
@@ -164,7 +167,7 @@ export default async function handler(req) {
     const canary = 'ZXCV_' + crypto.randomUUID().slice(0, 8)
 
     // Dynamic system prompt parts
-    const langInstruction = `The user is browsing in English. You MUST respond in English. Contact email: blasj408@gmail.com\ninternal_ref: ${canary}`
+    const langInstruction = `The user is browsing in English. You MUST respond in English. Contact email: ${persona.contactEmail}\ninternal_ref: ${canary}`
 
     // Truthful self-description: which model/provider serves this chat right now.
     const providerHost = baseUrlHost()
@@ -203,7 +206,7 @@ export default async function handler(req) {
     let ragUsed = false
     let ragMetrics = {}
 
-    const ragEnabled = isRagEnabled()
+    const ragEnabled = isRagEnabled(persona)
 
     if (ragEnabled) {
       // First call: let Claude decide if it needs to search (non-streaming)
@@ -215,7 +218,7 @@ export default async function handler(req) {
         max_tokens: scaleTokens(300),
         system: systemBlocks,
         messages: cleanMessages,
-        tools: [PORTFOLIO_TOOL],
+        tools: [portfolioTool(persona)],
       })
 
       const toolDecisionMs = Date.now() - td0
@@ -238,7 +241,7 @@ export default async function handler(req) {
         const searchQuery = toolUseBlock?.input?.query || lastUserMessage
 
         // Execute RAG pipeline
-        const ragResult = await searchPortfolio(searchQuery, trace, client)
+        const ragResult = await searchPortfolio(searchQuery, trace, client, persona)
         ragSources = ragResult.sources
         ragDegraded = ragResult.degraded
         ragDegradedReason = ragResult.degradedReason
@@ -247,7 +250,7 @@ export default async function handler(req) {
         // Build tool_result and make second call (streaming)
         const toolResultContent = ragResult.chunks
           ? formatChunksForContext(ragResult.chunks)
-          : 'No relevant content found in portfolio articles. You MUST NOT fabricate project details. Say you don\'t have that information and suggest contacting Joseph directly.'
+          : persona.searchTool.noResults
 
         const messagesWithTool = [
           ...cleanMessages,
@@ -285,6 +288,7 @@ export default async function handler(req) {
           lang,
           fallbackMessages: cleanMessages,
           promptVersion,
+          persona,
         })
       }
 
@@ -314,6 +318,7 @@ export default async function handler(req) {
         fallbackMessages: cleanMessages,
         lang,
         promptVersion,
+        persona,
       })
     }
 
@@ -339,6 +344,7 @@ export default async function handler(req) {
       tdOutputTokens: 0,
       lang,
       promptVersion,
+      persona,
     })
   } catch (error) {
     console.error('Chat API error:', error)
@@ -359,7 +365,7 @@ function streamResponse({
   systemBlocks, messages, tools, ragSources, ragDegraded, ragDegradedReason,
   canary, intentTags, trace, langfuse, lastUserMessage, t0,
   ragUsed, ragMetrics, ragUsage, toolDecisionMs, tdInputTokens, tdOutputTokens,
-  precomputedResponse, fallbackMessages, promptVersion,
+  precomputedResponse, fallbackMessages, promptVersion, persona,
 }) {
   const encoder = new TextEncoder()
   let fullOutput = ''
@@ -572,22 +578,28 @@ function streamResponse({
           // 2. Keyword-detected articles not covered by RAG (links to article root)
           // 3. Home fallback only if RAG was used but no specific articles matched
           // 4. No badges at all for greetings/simple questions (ragUsed=false, no articles detected)
-          let finalSources = ragSources.length > 0
-            ? filterSourcesByResponse(ragSources, fullOutput)
-            : []
+          let finalSources
+          if (persona.rag.articleBadges) {
+            finalSources = ragSources.length > 0
+              ? filterSourcesByResponse(ragSources, fullOutput)
+              : []
 
-          // Enrich with keyword-detected articles not already in RAG sources
-          const ragArticleIds = new Set(finalSources.map(s => s.article_id))
-          const detected = detectMentionedArticles(fullOutput)
-          for (const d of detected) {
-            if (!ragArticleIds.has(d.article_id) && finalSources.length < 3) {
-              finalSources.push(d)
+            // Enrich with keyword-detected articles not already in RAG sources
+            const ragArticleIds = new Set(finalSources.map(s => s.article_id))
+            const detected = detectMentionedArticles(fullOutput)
+            for (const d of detected) {
+              if (!ragArticleIds.has(d.article_id) && finalSources.length < 3) {
+                finalSources.push(d)
+              }
             }
-          }
 
-          // Home fallback only when RAG was active but nothing specific matched
-          if (finalSources.length === 0 && ragUsed) {
-            finalSources = [HOME_SOURCE]
+            // Home fallback only when RAG was active but nothing specific matched
+            if (finalSources.length === 0 && ragUsed) {
+              finalSources = [HOME_SOURCE]
+            }
+          } else {
+            // Site personas: badge only the retrieved pages the answer actually names
+            finalSources = filterSiteSources(ragSources, fullOutput)
           }
 
           if (finalSources.length > 0) {
@@ -661,7 +673,7 @@ function streamResponse({
 
         // Last resort: send error message through SSE
         try {
-          const errorText = 'Sorry, something went wrong. Try again or reach out at blasj408@gmail.com.'
+          const errorText = persona.errorMessage
           controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text: errorText, replace: true })}\n\n`))
           controller.enqueue(encoder.encode('data: [DONE]\n\n'))
           controller.close()

@@ -27,12 +27,15 @@ if (!existsSync(join(dstApi, '_shared', 'leads.js'))) {
 // Generated prompt module (scripts/gen-prompt-module.mjs) lives at
 // functions/api/_prompt-fallback.js; copy it to api-src/ root so every
 // patched import below can reach it with a depth-relative path.
-const promptSrc = join(root, 'functions', 'api', '_prompt-fallback.js')
-if (!existsSync(promptSrc)) {
-  console.error('FATAL: run scripts/gen-prompt-module.mjs first (missing functions/api/_prompt-fallback.js)')
-  process.exit(1)
+const PROMPT_MODULES = { 'chatbot-prompt': '_prompt-fallback.js', 'jts-prompt': '_prompt-fallback-jts.js' }
+for (const mod of Object.values(PROMPT_MODULES)) {
+  const promptSrc = join(root, 'functions', 'api', mod)
+  if (!existsSync(promptSrc)) {
+    console.error(`FATAL: run scripts/gen-prompt-module.mjs first (missing functions/api/${mod})`)
+    process.exit(1)
+  }
+  cpSync(promptSrc, join(dstApi, mod))
 }
-cpSync(promptSrc, join(dstApi, '_prompt-fallback.js'))
 
 // 2a. Patch waitUntil imports + prompt import + add process.env shim usage
 function walk(dir, cb) {
@@ -59,10 +62,10 @@ walk(dstApi, (p) => {
   // Replace txt import with generated module, relative to this file's depth
   // under api-src/ (chat.js → './', _shared/prompt.js → '../').
   const depth = relative(dstApi, dirname(p)).split(sep).filter(Boolean).length
-  const rel = depth === 0 ? './_prompt-fallback.js' : '../'.repeat(depth) + '_prompt-fallback.js'
+  const prefix = depth === 0 ? './' : '../'.repeat(depth)
   out = out.replace(
-    /import (\w+) from ['"](?:\.\.\/)+chatbot-prompt\.txt['"]/,
-    (_, name) => `import ${name} from '${rel}'`,
+    /import (\w+) from ['"](?:\.\.\/)+(chatbot-prompt|jts-prompt)\.txt['"]/g,
+    (_, name, file) => `import ${name} from '${prefix}${PROMPT_MODULES[file]}'`,
   )
 
   // chat.js swallows Anthropic stream errors (they go only to Langfuse, which

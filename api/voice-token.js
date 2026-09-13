@@ -1,5 +1,6 @@
 import { Langfuse } from 'langfuse'
 import { voiceProvider } from './_shared/voice-provider.js'
+import { resolvePersona } from './_shared/personas.js'
 
 export const config = {
   runtime: 'edge',
@@ -208,19 +209,9 @@ const GEMINI_VOICE = process.env.GEMINI_VOICE || 'Charon'
 const GEMINI_WS_URL =
   'wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContentConstrained'
 
-const SEARCH_TOOL_DESCRIPTION =
-  "Search Joe's published case studies for project details, architectures, metrics, and technical decisions."
-
 // Mint a single-use ephemeral token with the model, persona and tool locked in,
 // so the browser never sees the API key and cannot change the setup.
-// Gemini Live tends to answer project questions from memory unless told,
-// bluntly and first, that it must search. Prepended to the shared prompt.
-const GEMINI_TOOL_RULE = `## Tool rule (absolute)
-Before you say ANYTHING about a project, client, product, metric, architecture, or piece of Joe's work, you MUST first call search_portfolio with a short query and answer ONLY from its result. Never describe a project from memory — you will get it wrong. The only facts you may state without searching are Joe's identity, roles and career headlines listed under "About Joseph" below; greetings, contact info and questions about yourself need no search either.
-
-`
-
-async function createGeminiToken(instructions) {
+async function createGeminiToken(instructions, persona) {
   const now = Date.now()
   const response = await fetch(
     'https://generativelanguage.googleapis.com/v1beta/auth_tokens',
@@ -237,11 +228,12 @@ async function createGeminiToken(instructions) {
             responseModalities: ['AUDIO'],
             speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: GEMINI_VOICE } } },
           },
-          systemInstruction: { parts: [{ text: GEMINI_TOOL_RULE + instructions }] },
+          // The persona's tool rule goes first: Gemini Live answers from memory otherwise
+          systemInstruction: { parts: [{ text: persona.searchTool.voiceRule + instructions }] },
           tools: [{
             functionDeclarations: [{
               name: 'search_portfolio',
-              description: SEARCH_TOOL_DESCRIPTION,
+              description: persona.searchTool.voiceDescription,
               parameters: {
                 type: 'OBJECT',
                 properties: { query: { type: 'STRING', description: 'The search query to find relevant portfolio content' } },
@@ -264,13 +256,13 @@ async function createGeminiToken(instructions) {
 
 // Langfuse trace for a voice session — created only after a token was minted,
 // so a failed mint leaves no orphan trace.
-async function createVoiceTrace({ lang, sessionId, provider, ip, rateLimit }) {
+async function createVoiceTrace({ lang, sessionId, provider, ip, rateLimit, persona }) {
   const langfuse = getLangfuse()
   if (!langfuse) return null
   const trace = langfuse.trace({
     name: 'voice-session',
     sessionId: sessionId || undefined,
-    tags: [lang, 'voice', provider],
+    tags: [lang, 'voice', provider, `persona:${persona.id}`],
     metadata: { lang, provider, ip: ip.slice(0, 8) + '...', remaining: rateLimit.remaining },
   })
   await langfuse.flushAsync()
@@ -299,7 +291,9 @@ export default async function handler(req) {
   }
 
   try {
-    const { lang = 'en', sessionId } = await req.json()
+    const body = await req.json()
+    const { lang = 'en', sessionId } = body
+    const persona = resolvePersona(body, req)
 
     // Rate limiting
     const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown'
@@ -317,12 +311,14 @@ export default async function handler(req) {
 
     // Compose prompt: base rules + language-specific voice affect
     const voiceAffect = VOICE_AFFECT_EN
-    const instructions = `${VOICE_BASE_PROMPT}\n\n${voiceAffect}`
+    const instructions = persona.voicePrompt
+      ? persona.voicePrompt
+      : `${VOICE_BASE_PROMPT}\n\n${voiceAffect}`
 
     if (provider === 'gemini') {
       let minted
       try {
-        minted = await createGeminiToken(instructions)
+        minted = await createGeminiToken(instructions, persona)
       } catch (err) {
         console.error('Gemini auth_tokens error:', err?.message || err)
         return new Response(JSON.stringify({ error: 'Failed to create voice session' }), {
@@ -330,7 +326,7 @@ export default async function handler(req) {
           headers: { 'Content-Type': 'application/json' },
         })
       }
-      const traceId = await createVoiceTrace({ lang, sessionId, provider, ip, rateLimit })
+      const traceId = await createVoiceTrace({ lang, sessionId, provider, ip, rateLimit, persona })
       return new Response(JSON.stringify({
         provider: 'gemini',
         token: minted.token,
@@ -360,7 +356,7 @@ export default async function handler(req) {
         tools: [{
           type: 'function',
           name: 'search_portfolio',
-          description: 'Search your own published case studies for project details, architectures, metrics, and technical decisions.',
+          description: persona.searchTool.voiceDescription,
           parameters: {
             type: 'object',
             properties: {
@@ -385,7 +381,7 @@ export default async function handler(req) {
     }
 
     const data = await response.json()
-    const traceId = await createVoiceTrace({ lang, sessionId, provider, ip, rateLimit })
+    const traceId = await createVoiceTrace({ lang, sessionId, provider, ip, rateLimit, persona })
 
     return new Response(JSON.stringify({
       provider: 'openai',

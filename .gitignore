@@ -58,5 +58,6 @@ scripts/chunks/
 # CF Pages Functions build outputs (scripts/prep-cf-functions.mjs)
 functions/api-src/
 functions/api/_prompt-fallback.js
+functions/api/_prompt-fallback-jts.js
 cf-headers.txt
 cf-redirects.txt

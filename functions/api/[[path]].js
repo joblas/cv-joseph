@@ -16,6 +16,7 @@
 
 import { AsyncLocalStorage } from 'node:async_hooks'
 import { installEnv } from './_shims.js'
+import { corsHeaders, originAllowed } from '../api-src/_shared/personas.js'
 
 const ctxStore = new AsyncLocalStorage()
 globalThis.__cfCtxStore = ctxStore
@@ -33,6 +34,8 @@ const mods = {
   'voice-token': () => import('../api-src/voice-token.js'),
   'voice-trace': () => import('../api-src/voice-trace.js'),
 }
+
+const PERSONA_ROUTES = new Set(['chat', 'rag-search', 'voice-token', 'voice-trace'])
 
 function routeKey(segs) {
   if (segs[0] === 'ops' && segs[1] === 'trace' && segs.length === 3) return 'ops/trace'
@@ -59,11 +62,29 @@ export const onRequest = async (ctx) => {
 
   installEnv(env)
 
-  const loader = mods[routeKey(segs)]
+  // CORS for the other sites this brain serves (joestechsolutions.com), on the
+  // persona routes only. A browser page whose Origin no persona lists is
+  // refused before dispatch, so it cannot spend model tokens with a blind
+  // (preflight-free) POST either. Requests without an Origin are untouched.
+  const key = routeKey(segs)
+  const origin = request.headers.get('origin')
+  const cors = PERSONA_ROUTES.has(key) ? corsHeaders(request) : {}
+  if (request.method === 'OPTIONS') {
+    return new Response(null, { status: Object.keys(cors).length ? 204 : 405, headers: cors })
+  }
+  if (origin && PERSONA_ROUTES.has(key) && !originAllowed(origin)) {
+    return new Response(JSON.stringify({ error: 'Origin not allowed' }), { status: 403, headers: { 'Content-Type': 'application/json' } })
+  }
+
+  const loader = mods[key]
   if (!loader) {
-    return new Response(JSON.stringify({ error: 'Not found' }), { status: 404, headers: { 'Content-Type': 'application/json' } })
+    return new Response(JSON.stringify({ error: 'Not found' }), { status: 404, headers: { 'Content-Type': 'application/json', ...cors } })
   }
 
   const mod = await loader()
-  return ctxStore.run(ctx, () => mod.default(withTrustedIp(request)))
+  const response = await ctxStore.run(ctx, () => mod.default(withTrustedIp(request)))
+  if (!Object.keys(cors).length) return response
+  const headers = new Headers(response.headers)
+  for (const [k, v] of Object.entries(cors)) headers.set(k, v)
+  return new Response(response.body, { status: response.status, statusText: response.statusText, headers })
 }

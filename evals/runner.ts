@@ -46,6 +46,7 @@ interface Test {
 interface Dataset {
   name: string
   description: string
+  persona?: string // which face of the agent the tests target (default cloudyjoe)
   tests: Test[]
 }
 
@@ -81,6 +82,8 @@ interface DatasetResult {
 // Configuration
 // By default uses vercel dev (port 3000), or another URL can be specified
 const CHAT_API_URL = process.env.CHAT_API_URL || 'http://localhost:3000/api/chat'
+// EVAL_PERSONA=jts runs the suite against another face of the same agent
+const EVAL_PERSONA = process.env.EVAL_PERSONA || undefined
 const RAG_SEARCH_URL = process.env.CHAT_API_URL
   ? process.env.CHAT_API_URL.replace('/api/chat', '/api/rag-search')
   : 'http://localhost:3000/api/rag-search'
@@ -109,6 +112,7 @@ async function callChat(input: string, lang: 'es' | 'en', conversation?: Convers
     body: JSON.stringify({
       messages,
       lang,
+      ...(EVAL_PERSONA ? { persona: EVAL_PERSONA } : {}),
     }),
   })
 
@@ -169,6 +173,7 @@ async function callVoiceRag(input: string, lang: 'es' | 'en'): Promise<ChatResul
       query: input,
       traceId: 'eval-' + Date.now(),
       lang,
+      ...(EVAL_PERSONA ? { persona: EVAL_PERSONA } : {}),
     }),
   })
 
@@ -195,10 +200,28 @@ function loadDatasets(): Dataset[] {
     .readdirSync(DATASETS_DIR)
     .filter((f) => f.endsWith('.json'))
     .filter((f) => only.length === 0 || only.includes(f.replace(/\.json$/, '')))
-  return files.map((file) => {
-    const content = fs.readFileSync(path.join(DATASETS_DIR, file), 'utf-8')
-    return JSON.parse(content) as Dataset
-  })
+  // A dataset written for one persona is meaningless against another
+  const persona = process.env.EVAL_PERSONA || 'cloudyjoe'
+  const datasets = files
+    .map((file) => {
+      const content = fs.readFileSync(path.join(DATASETS_DIR, file), 'utf-8')
+      return JSON.parse(content) as Dataset
+    })
+    .filter((dataset) => {
+      const target = dataset.persona || 'cloudyjoe'
+      if (target === persona) return true
+      console.log(`   (skipping ${dataset.name}: written for persona ${target}, running ${persona})`)
+      return false
+    })
+  if (datasets.length === 0) {
+    console.error(
+      only.length > 0
+        ? `EVAL_DATASETS=${only.join(',')} selects nothing for persona ${persona} — set EVAL_PERSONA to match`
+        : `No datasets for persona ${persona} — EVAL_PERSONA must be one a dataset declares (cloudyjoe, jts)`,
+    )
+    process.exit(2)
+  }
+  return datasets
 }
 
 /**
