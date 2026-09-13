@@ -14,7 +14,7 @@ import Anthropic from '@anthropic-ai/sdk'
 export const CHAT_MODEL = process.env.CHAT_MODEL || 'claude-sonnet-4-6'
 // Small/fast model (reranking, intent classification, scoring)
 // On a foreign endpoint there is no Haiku; fall back to the main model there.
-function baseUrlHost() {
+export function baseUrlHost() {
   try { return new URL(process.env.ANTHROPIC_BASE_URL).hostname } catch { return '' }
 }
 const onAnthropic = !process.env.ANTHROPIC_BASE_URL || /(^|\.)anthropic\.com$/.test(baseUrlHost())

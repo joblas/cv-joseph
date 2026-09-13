@@ -9,7 +9,7 @@ import {
 } from './_shared/rag.js'
 import { getSystemPrompt } from './_shared/prompt.js'
 import { captureLead, checkRateLimit } from './_shared/leads.js'
-import { CHAT_MODEL, FAST_MODEL, CHAT_MAX_TOKENS, scaleTokens, createAnthropicClient } from './_shared/models.js'
+import { CHAT_MODEL, FAST_MODEL, CHAT_MAX_TOKENS, scaleTokens, baseUrlHost, createAnthropicClient } from './_shared/models.js'
 
 const client = createAnthropicClient()
 
@@ -165,6 +165,10 @@ export default async function handler(req) {
     // Dynamic system prompt parts
     const langInstruction = `The user is browsing in English. You MUST respond in English. Contact email: blasj408@gmail.com\ninternal_ref: ${canary}`
 
+    // Truthful self-description: which model/provider serves this chat right now.
+    const providerHost = baseUrlHost()
+    const runtimeContext = `\nRuntime: this chat is currently served by the model "${CHAT_MODEL}"${providerHost ? ` via ${providerHost}` : ' via the Anthropic API'}. If asked which AI model powers the chat, say exactly that.`
+
     // Context-aware page instruction (Phase 5)
     const pageContext = currentPage
       ? `\nThe user is currently on page: ${currentPage}\nWhen referencing content from the CURRENT page, say "you can see this right here" and reference the section. When referencing OTHER articles, mention them by name.`
@@ -178,7 +182,7 @@ export default async function handler(req) {
       },
       {
         type: 'text',
-        text: langInstruction + pageContext,
+        text: langInstruction + runtimeContext + pageContext,
       },
     ]
 
