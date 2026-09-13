@@ -23,7 +23,12 @@
             "not Joe",
             "AI agent",
             "not a real person",
-            "Joe isn't"
+            "Joe isn't",
+            "Joe's AI",
+            "No —",
+            "No,",
+            "not a person",
+            "not human"
           ]
         }
       ]
@@ -198,4 +203,4 @@
       ]
     }
   ]
-}
+}\n

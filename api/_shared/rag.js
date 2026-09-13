@@ -82,6 +82,26 @@ function siteChunkToDocument(row) {
   }
 }
 
+// The site index is keyword-ranked with near-flat scores, so the page a query
+// names ("what is the private ai setup?" → /private-ai-setup) can sit below
+// its own sub-pages — and the reranker only sees the top 10. A page whose slug
+// words or title head appear in the query is doubled; parents win ties.
+export function boostNamedPages(query, docs) {
+  const q = String(query || '').toLowerCase()
+  return docs
+    .map((d, i) => {
+      const meta = d.metadata || {}
+      const path = meta.page_path || ''
+      const slugWords = path.split('/').filter(Boolean).join(' ').replace(/-/g, ' ').toLowerCase()
+      const titleHead = String(meta.title || '').split('|')[0].trim().toLowerCase()
+      const named = (slugWords.length >= 6 && q.includes(slugWords)) || (titleHead.length >= 8 && q.includes(titleHead))
+      const score = (Number(d.similarity) || 0) * (named ? 2 : 1)
+      return { d, score, depth: path.split('/').filter(Boolean).length, i }
+    })
+    .sort((a, b) => b.score - a.score || a.depth - b.depth || a.i - b.i)
+    .map(({ d, score }) => ({ ...d, similarity: score }))
+}
+
 async function siteChunkSearch(queryText, persona) {
   const t0 = Date.now()
   const controller = new AbortController()
@@ -97,7 +117,7 @@ async function siteChunkSearch(queryText, persona) {
     clearTimeout(timeout)
     if (!response.ok) throw new Error(`Supabase site search failed: ${response.status}`)
     const rows = await response.json()
-    return { chunks: rows.map(siteChunkToDocument), latencyMs: Date.now() - t0 }
+    return { chunks: boostNamedPages(queryText, rows.map(siteChunkToDocument)), latencyMs: Date.now() - t0 }
   } catch (err) {
     clearTimeout(timeout)
     if (err.name === 'AbortError') throw new Error('Supabase search timeout (>2.5s)')
@@ -368,10 +388,12 @@ export function filterSiteSources(sources, responseText) {
   const matched = pages.filter(s => {
     const path = s.page_path_en.toLowerCase()
     if (path !== '/' && lower.includes(path)) return true
-    const slugWords = path.split('/').pop().replace(/-/g, ' ')
-    if (slugWords.length >= 6 && lower.includes(slugWords)) return true
-    const title = (s.title || '').toLowerCase().trim()
-    return title.length >= 6 && lower.includes(title)
+    // Multi-word slugs only ("google maps growth"); a single word such as
+    // "construction" or "healthcare" is too common to prove the page was used
+    const slug = path.split('/').pop()
+    if (slug.includes('-') && lower.includes(slug.replace(/-/g, ' '))) return true
+    const titleHead = (s.title || '').split('|')[0].trim().toLowerCase()
+    return titleHead.length >= 8 && lower.includes(titleHead)
   })
   return (matched.length > 0 ? matched : pages.slice(0, 1)).slice(0, 3)
 }
