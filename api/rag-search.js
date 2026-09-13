@@ -30,6 +30,29 @@ function getLangfuse() {
 
 const VOICE_OVERRIDE = `Response for spoken conversation. Max 2-3 sentences. No markdown or links. Natural spoken language. Be precise with context data — never make things up. You are Cloudy-Joe Agent, Joe's AI: speak about Joe in the THIRD PERSON ("Joe built...", "his project...") — never "I built..." or "my project...".`
 
+// The voice model speaks whatever comes back, so the "no markdown" contract
+// is enforced here rather than trusted to the LLM (glm ignores it sometimes).
+export function toSpokenText(text) {
+  return String(text || '')
+    .replace(/\[([^\]\n]+)\]\([^)\n]*\)/g, '$1') // links → their text (single line)
+    .replace(/`{1,3}([^`\n]*)`{1,3}/g, '$1')
+    .replace(/^#{1,6}[ \t]+/gm, '')
+    .replace(/\*\*|__/g, '')
+    // *emphasis* / _emphasis_ on one line only; the closer must end the word so
+    // an unbalanced marker never swallows an underscore inside snake_case
+    .replace(/(^|\s)[*_](\S[^*_\n]*?)[*_](?![A-Za-z0-9])/g, '$1$2')
+    .replace(/^[ \t]*[-*•][ \t]+/gm, '')
+    .replace(/[ \t]*->[ \t]*/g, ': ')
+    .replace(/https?:\/\/[^\s,;)]+/g, '')
+    .replace(/[*`]/g, '') // any stray marker would be read aloud
+    .replace(/[ \t]+/g, ' ')
+    // line breaks become sentence pauses unless the line already ends in punctuation
+    .replace(/([^.!?:;,\s])[ \t]*\n+/g, '$1. ')
+    .replace(/\n+/g, ' ')
+    .replace(/[ \t]+/g, ' ')
+    .trim()
+}
+
 async function reasonWithClaude(query, formattedChunks, span, langfuse) {
   const t0 = Date.now()
   const reasoningSpan = span?.span({ name: 'claude-reasoning', metadata: { query } })
@@ -66,10 +89,10 @@ async function reasonWithClaude(query, formattedChunks, span, langfuse) {
       new Promise((_, reject) => setTimeout(() => reject(new Error('Claude reasoning timeout (>3s)')), 3000)),
     ])
 
-    const answer = response.content
+    const answer = toSpokenText(response.content
       .filter(b => b.type === 'text')
       .map(b => b.text)
-      .join('')
+      .join(''))
 
     const inputTokens = response.usage?.input_tokens || 0
     const outputTokens = response.usage?.output_tokens || 0
