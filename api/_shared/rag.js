@@ -82,6 +82,32 @@ function siteChunkToDocument(row) {
   }
 }
 
+// The site index is keyword-ranked with near-flat scores, so the page a query
+// names ("what is the private ai setup?" → /private-ai-setup) can sit below
+// its own sub-pages — and the reranker only sees the top 10. A page whose slug
+// words or title head appear in the query is doubled; parents win ties.
+const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+/** Whole-phrase match: "contact" must not fire on "subcontracting" */
+function mentions(text, phrase) {
+  return phrase.length >= 4 && new RegExp(`(^|[^a-z0-9])${escapeRegex(phrase)}(?![a-z0-9])`, 'i').test(text)
+}
+
+export function boostNamedPages(query, docs) {
+  const q = String(query || '').toLowerCase().replace(/[\u2018\u2019]/g, "'").replace(/\s+/g, ' ')
+  return docs
+    .map((d, i) => {
+      const meta = d.metadata || {}
+      const path = meta.page_path || ''
+      const slugWords = path.split('/').filter(Boolean).join(' ').replace(/-/g, ' ').toLowerCase()
+      const titleHead = String(meta.title || '').split('|')[0].trim().toLowerCase()
+      const named = (slugWords.length >= 6 && mentions(q, slugWords)) || (titleHead.length >= 8 && mentions(q, titleHead))
+      const score = (Number(d.similarity) || 0) * (named ? 2 : 1)
+      return { d, score, depth: path.split('/').filter(Boolean).length, i }
+    })
+    .sort((a, b) => b.score - a.score || a.depth - b.depth || a.i - b.i)
+    .map(({ d, score }) => ({ ...d, similarity: score }))
+}
+
 async function siteChunkSearch(queryText, persona) {
   const t0 = Date.now()
   const controller = new AbortController()
@@ -97,7 +123,7 @@ async function siteChunkSearch(queryText, persona) {
     clearTimeout(timeout)
     if (!response.ok) throw new Error(`Supabase site search failed: ${response.status}`)
     const rows = await response.json()
-    return { chunks: rows.map(siteChunkToDocument), latencyMs: Date.now() - t0 }
+    return { chunks: boostNamedPages(queryText, rows.map(siteChunkToDocument)), latencyMs: Date.now() - t0 }
   } catch (err) {
     clearTimeout(timeout)
     if (err.name === 'AbortError') throw new Error('Supabase search timeout (>2.5s)')
@@ -368,10 +394,15 @@ export function filterSiteSources(sources, responseText) {
   const matched = pages.filter(s => {
     const path = s.page_path_en.toLowerCase()
     if (path !== '/' && lower.includes(path)) return true
-    const slugWords = path.split('/').pop().replace(/-/g, ' ')
-    if (slugWords.length >= 6 && lower.includes(slugWords)) return true
-    const title = (s.title || '').toLowerCase().trim()
-    return title.length >= 6 && lower.includes(title)
+    // Multi-word slugs ("google maps growth") as a phrase; a single word only
+    // for top-level pages ("contact", "services") — on a nested page such as
+    // /private-ai-setup/industries/construction it is too common to prove use
+    const parts = path.split('/').filter(Boolean)
+    const slug = parts[parts.length - 1] || ''
+    if (slug.includes('-') && mentions(lower, slug.replace(/-/g, ' '))) return true
+    if (parts.length === 1 && slug && mentions(lower, slug)) return true
+    const titleHead = (s.title || '').split('|')[0].trim().toLowerCase()
+    return titleHead.length >= 8 && mentions(lower, titleHead)
   })
   return (matched.length > 0 ? matched : pages.slice(0, 1)).slice(0, 3)
 }
