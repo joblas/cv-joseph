@@ -7,7 +7,7 @@
  * in; the browser only ever holds that token.
  *
  * Wire protocol (BidiGenerateContentConstrained, v1alpha):
- *   → { setup: { model } }                      ← { setupComplete }
+ *   → { setup: { model } }                      ← { setupComplete }   (then history + audio)
  *   → { clientContent: { turns, turnComplete } }  (chat history)
  *   → { realtimeInput: { audio: { data, mimeType: 'audio/pcm;rate=16000' } } }
  *   ← { serverContent: { modelTurn: { parts: [{ inlineData }] }, inputTranscription,
@@ -33,9 +33,15 @@ const OUTPUT_RATE = 24000;
 
 function base64ToInt16(b64: string): Int16Array {
   const binary = atob(b64);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  const len = binary.length & ~1; // PCM16: ignore a trailing odd byte
+  const bytes = new Uint8Array(len);
+  for (let i = 0; i < len; i++) bytes[i] = binary.charCodeAt(i);
   return new Int16Array(bytes.buffer);
+}
+
+function makeAudioContext(options?: AudioContextOptions): AudioContext {
+  const Ctor = (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext);
+  return new Ctor(options);
 }
 
 function int16ToBase64(pcm: Int16Array): string {
@@ -91,6 +97,9 @@ export function useGeminiVoice() {
   const transcriptRef = useRef<TranscriptEntry[]>([]);
   const userBufRef = useRef('');
   const assistantBufRef = useRef('');
+  const historyRef = useRef<Message[]>([]);
+  const captureRef = useRef<{ ctx: AudioContext; source: MediaStreamAudioSourceNode } | null>(null);
+  const cancelledCallsRef = useRef<Set<string>>(new Set());
 
   const commitTranscript = useCallback(() => {
     const next = [...transcriptRef.current];
@@ -146,14 +155,17 @@ export function useGeminiVoice() {
     playbackCtxRef.current = null;
     inAnalyserRef.current = null;
     outAnalyserRef.current = null;
+    captureRef.current = null;
+    cancelledCallsRef.current = new Set();
     setIsSearching(false);
   }, [stopPlayback]);
 
-  const stop = useCallback(() => {
+  const stop = useCallback((): TranscriptEntry[] => {
     commitTranscript();
     void sendTrace();
     cleanup();
     setStatus('idle');
+    return transcriptRef.current;
   }, [cleanup, commitTranscript, sendTrace]);
 
   const fail = useCallback((code: string) => {
@@ -196,6 +208,7 @@ export function useGeminiVoice() {
     setIsSearching(true);
     const responses = [];
     for (const call of calls) {
+      if (cancelledCallsRef.current.has(call.id)) continue;
       let result = 'Search temporarily unavailable — answer from your general knowledge.';
       if (call.name === 'search_portfolio') {
         try {
@@ -214,14 +227,57 @@ export function useGeminiVoice() {
       responses.push({ id: call.id, name: call.name, response: { result } });
     }
     setIsSearching(false);
-    if (ws.readyState === WebSocket.OPEN) {
+    if (responses.length && ws.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify({ toolResponse: { functionResponses: responses } }));
     }
   }, []);
 
+  const startCapture = useCallback((ctx: AudioContext, source: MediaStreamAudioSourceNode, ws: WebSocket) => {
+    const ratio = ctx.sampleRate / INPUT_RATE;
+    const processor = ctx.createScriptProcessor(4096, 1, 1);
+    processorRef.current = processor;
+    const silent = ctx.createGain();
+    silent.gain.value = 0;
+    source.connect(processor);
+    processor.connect(silent);
+    silent.connect(ctx.destination);
+    processor.onaudioprocess = (event) => {
+      if (ws.readyState !== WebSocket.OPEN) return;
+      const input = event.inputBuffer.getChannelData(0);
+      const outLen = Math.floor(input.length / ratio);
+      const pcm = new Int16Array(outLen);
+      for (let i = 0; i < outLen; i++) {
+        const srcIdx = i * ratio;
+        const i0 = Math.floor(srcIdx);
+        const i1 = Math.min(i0 + 1, input.length - 1);
+        const frac = srcIdx - i0;
+        const s = Math.max(-1, Math.min(1, input[i0] * (1 - frac) + input[i1] * frac));
+        pcm[i] = s < 0 ? s * 0x8000 : s * 0x7fff;
+      }
+      ws.send(JSON.stringify({ realtimeInput: { audio: { data: int16ToBase64(pcm), mimeType: `audio/pcm;rate=${INPUT_RATE}` } } }));
+    };
+  }, []);
+
   const handleServerMessage = useCallback((msg: Record<string, unknown>, ws: WebSocket) => {
     if (msg.setupComplete) {
+      // Only now may we send anything else: prior chat turns, then live audio
+      const turns = historyRef.current
+        .filter((m) => m.content && m.content.trim())
+        .slice(-10)
+        .map((m) => ({ role: m.role === 'user' ? 'user' : 'model', parts: [{ text: m.content }] }));
+      if (turns.length && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ clientContent: { turns, turnComplete: false } }));
+      }
+      const cap = captureRef.current;
+      if (cap) startCapture(cap.ctx, cap.source, ws);
       setStatus('listening');
+      return;
+    }
+    if (msg.toolCallCancellation) {
+      // The user spoke over the model during a search; drop those calls
+      const ids = (msg.toolCallCancellation as { ids?: string[] }).ids || [];
+      for (const id of ids) cancelledCallsRef.current.add(id);
+      setIsSearching(false);
       return;
     }
     if (msg.toolCall) {
@@ -230,7 +286,8 @@ export function useGeminiVoice() {
       return;
     }
     if (msg.goAway) {
-      fail('connection');
+      // Advance notice from the server: end cleanly (transcript + trace kept)
+      stop();
       return;
     }
     const sc = msg.serverContent as {
@@ -260,33 +317,8 @@ export function useGeminiVoice() {
       commitTranscript();
       scheduleListening();
     }
-  }, [commitTranscript, fail, handleToolCall, playChunk, scheduleListening, stopPlayback]);
+  }, [commitTranscript, handleToolCall, playChunk, scheduleListening, startCapture, stop, stopPlayback]);
 
-  const startCapture = useCallback((ctx: AudioContext, source: MediaStreamAudioSourceNode, ws: WebSocket) => {
-    const ratio = ctx.sampleRate / INPUT_RATE;
-    const processor = ctx.createScriptProcessor(4096, 1, 1);
-    processorRef.current = processor;
-    const silent = ctx.createGain();
-    silent.gain.value = 0;
-    source.connect(processor);
-    processor.connect(silent);
-    silent.connect(ctx.destination);
-    processor.onaudioprocess = (event) => {
-      if (ws.readyState !== WebSocket.OPEN) return;
-      const input = event.inputBuffer.getChannelData(0);
-      const outLen = Math.floor(input.length / ratio);
-      const pcm = new Int16Array(outLen);
-      for (let i = 0; i < outLen; i++) {
-        const srcIdx = i * ratio;
-        const i0 = Math.floor(srcIdx);
-        const i1 = Math.min(i0 + 1, input.length - 1);
-        const frac = srcIdx - i0;
-        const s = Math.max(-1, Math.min(1, input[i0] * (1 - frac) + input[i1] * frac));
-        pcm[i] = s < 0 ? s * 0x8000 : s * 0x7fff;
-      }
-      ws.send(JSON.stringify({ realtimeInput: { audio: { data: int16ToBase64(pcm), mimeType: `audio/pcm;rate=${INPUT_RATE}` } } }));
-    };
-  }, []);
 
   const start = useCallback(async (history: Message[], lang: string, sessionId: string, currentPage?: string) => {
     if (!isSupported) { fail('unsupported'); return; }
@@ -305,7 +337,19 @@ export function useGeminiVoice() {
     setRemainingSeconds(SESSION_TIMEOUT_S);
 
     try {
-      // 1. Ephemeral token (persona + tool locked server-side)
+      // 1. Microphone first — a slow or denied permission prompt must not burn
+      //    a single-use token (and one of the daily sessions)
+      let stream: MediaStream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      } catch {
+        fail('micDenied');
+        return;
+      }
+      if (!activeRef.current) { stream.getTracks().forEach((t) => t.stop()); return; }
+      streamRef.current = stream;
+
+      // 2. Ephemeral token (persona + tool locked server-side)
       const tokenRes = await fetch('/api/voice-token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -320,27 +364,18 @@ export function useGeminiVoice() {
       const { token, model, wsUrl, traceId } = await tokenRes.json();
       traceIdRef.current = traceId || null;
       if (!token || !wsUrl || !model) { fail('connection'); return; }
-
-      // 2. Microphone
-      let stream: MediaStream;
-      try {
-        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      } catch {
-        fail('micDenied');
-        return;
-      }
-      if (!activeRef.current) { stream.getTracks().forEach((t) => t.stop()); return; }
-      streamRef.current = stream;
+      if (!activeRef.current) return;
 
       // 3. Audio graph: capture at the device rate (resampled to 16 kHz), playback at 24 kHz
-      const captureCtx = new AudioContext();
+      const captureCtx = makeAudioContext();
       captureCtxRef.current = captureCtx;
       const source = captureCtx.createMediaStreamSource(stream);
       const inAnalyser = captureCtx.createAnalyser();
       inAnalyser.fftSize = 512;
       source.connect(inAnalyser);
       inAnalyserRef.current = inAnalyser;
-      const playbackCtx = new AudioContext({ sampleRate: OUTPUT_RATE });
+      captureRef.current = { ctx: captureCtx, source };
+      const playbackCtx = makeAudioContext({ sampleRate: OUTPUT_RATE });
       playbackCtxRef.current = playbackCtx;
       const outAnalyser = playbackCtx.createAnalyser();
       outAnalyser.fftSize = 512;
@@ -348,18 +383,11 @@ export function useGeminiVoice() {
       outAnalyserRef.current = outAnalyser;
       await Promise.all([captureCtx.resume(), playbackCtx.resume()]);
 
-      // 4. Live session
+      // 4. Live session — setup only; history and audio wait for setupComplete
+      historyRef.current = history;
       const ws = new WebSocket(`${wsUrl}?access_token=${encodeURIComponent(token)}`);
       wsRef.current = ws;
-      ws.onopen = () => {
-        ws.send(JSON.stringify({ setup: { model } }));
-        const turns = history
-          .filter((m) => m.content && m.content.trim())
-          .slice(-10)
-          .map((m) => ({ role: m.role === 'user' ? 'user' : 'model', parts: [{ text: m.content }] }));
-        if (turns.length) ws.send(JSON.stringify({ clientContent: { turns, turnComplete: false } }));
-        startCapture(captureCtx, source, ws);
-      };
+      ws.onopen = () => { ws.send(JSON.stringify({ setup: { model } })); };
       ws.onmessage = async (ev) => {
         const raw = typeof ev.data === 'string' ? ev.data : await (ev.data as Blob).text();
         try {
@@ -369,7 +397,11 @@ export function useGeminiVoice() {
         }
       };
       ws.onerror = () => { if (activeRef.current) fail('connection'); };
-      ws.onclose = () => { if (activeRef.current) fail('connection'); };
+      ws.onclose = (e) => {
+        if (!activeRef.current) return;
+        console.warn('[GeminiVoice] socket closed', e.code, e.reason);
+        fail('connection');
+      };
 
       // 5. Session cap
       timerRef.current = window.setInterval(() => {
@@ -381,7 +413,24 @@ export function useGeminiVoice() {
     } catch {
       fail('connection');
     }
-  }, [fail, handleServerMessage, isSupported, startCapture, stop]);
+  }, [fail, handleServerMessage, isSupported, stop]);
+
+  // Transcript reaches Langfuse even if the tab closes mid-session
+  useEffect(() => {
+    const beacon = () => {
+      if (!traceIdRef.current || transcriptRef.current.length === 0) return;
+      const blob = new Blob([JSON.stringify({
+        traceId: traceIdRef.current,
+        sessionId: sessionIdRef.current,
+        transcript: transcriptRef.current,
+        durationMs: Date.now() - sessionStartRef.current,
+        lang: langRef.current,
+      })], { type: 'application/json' });
+      navigator.sendBeacon('/api/voice-trace', blob);
+    };
+    window.addEventListener('beforeunload', beacon);
+    return () => window.removeEventListener('beforeunload', beacon);
+  }, []);
 
   const cleanupRef = useRef(cleanup);
   useEffect(() => { cleanupRef.current = cleanup; }, [cleanup]);

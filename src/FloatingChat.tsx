@@ -168,16 +168,18 @@ export default function FloatingChat({}: FloatingChatProps) {
   // Voice mode
   const voiceMode = useVoiceMode();
   const geminiVoice = useGeminiVoice();
-  // Which provider the server will hand out a token for (GET /api/voice-token)
-  const [voiceProvider, setVoiceProvider] = useState<'openai' | 'gemini' | null>(null);
+  // Which provider the server will hand out a token for (GET /api/voice-token).
+  // Probed when the chat opens; the mic stays disabled until it is known.
+  const [voiceProvider, setVoiceProvider] = useState<'openai' | 'gemini' | 'none' | null>(null);
   useEffect(() => {
+    if (!isOpen || voiceProvider !== null) return;
     let cancelled = false;
     fetch('/api/voice-token')
       .then((r) => (r.ok ? r.json() : null))
-      .then((d) => { if (!cancelled && d?.provider) setVoiceProvider(d.provider); })
-      .catch(() => {});
+      .then((d) => { if (!cancelled) setVoiceProvider(d?.provider || 'none'); })
+      .catch(() => { if (!cancelled) setVoiceProvider('none'); });
     return () => { cancelled = true; };
-  }, []);
+  }, [isOpen, voiceProvider]);
   const activeVoice = voiceProvider === 'gemini' ? geminiVoice : voiceMode;
 
   // Word-by-word streaming refs
@@ -342,8 +344,10 @@ export default function FloatingChat({}: FloatingChatProps) {
   };
 
   const handleStopVoice = () => {
-    // Merge transcript into messages
-    const transcript = activeVoice.state.transcript;
+    // Merge transcript into messages (Gemini commits its last turn inside stop())
+    const transcript = voiceProvider === 'gemini'
+      ? geminiVoice.stop()
+      : (() => { const t = voiceMode.state.transcript; voiceMode.stop(); return t; })();
     if (transcript.length > 0) {
       setMessages(prev => [
         ...prev,
@@ -351,7 +355,6 @@ export default function FloatingChat({}: FloatingChatProps) {
       ]);
       setShowPrompts(false);
     }
-    activeVoice.stop();
     setMode('text');
   };
 
@@ -374,7 +377,7 @@ export default function FloatingChat({}: FloatingChatProps) {
   };
 
   // Can toggle to voice?
-  const canStartVoice = !isLoading && !isStreaming && activeVoice.isSupported;
+  const canStartVoice = !isLoading && !isStreaming && voiceProvider !== null && voiceProvider !== 'none' && activeVoice.isSupported;
 
   const sendMessage = async (messageText?: string) => {
     const text = messageText || input.trim();
