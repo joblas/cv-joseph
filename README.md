@@ -60,7 +60,7 @@ User message → FloatingChat.tsx → api/chat.js (Cloudflare Pages Functions; V
                                     │     └── FAST_MODEL (reranking + diversification)
                                     ├── CHAT_MODEL (streaming generation)
                                     ├── Langfuse tracing (every span with cost)
-                                    └── waitUntil → Haiku scoring (0ms added latency)
+                                    └── waitUntil → FAST_MODEL scoring (0ms added latency)
 
 Voice mode → useVoiceMode.ts → api/voice-token.js → OpenAI Realtime WebSocket
                                   └── api/rag-search.js (function calling for RAG)
@@ -113,7 +113,7 @@ Private, password-protected dashboard with 8 tabs showing real production data:
 
 ## Evals & Testing
 
-71 automated tests across 10 categories. ~70% deterministic (contains, regex, word count), ~30% LLM-as-Judge (Haiku).
+71 automated tests across 10 categories. ~70% deterministic (contains, regex, word count), ~30% LLM-as-Judge (FAST_MODEL — Haiku by default, `EVAL_JUDGE_MODEL` to override).
 
 | Category | Tests | Type |
 |----------|-------|------|
@@ -250,7 +250,7 @@ api/
 evals/
 ├── datasets/                # 10 JSON datasets (71 test cases)
 ├── assertions.ts            # Deterministic assertions
-├── llm-judge.ts             # LLM-as-Judge (Haiku)
+├── llm-judge.ts             # LLM-as-Judge (Haiku by default; EVAL_JUDGE_MODEL)
 └── runner.ts                # Eval runner
 
 scripts/                     # See "Scripts & CLI Tools" section above
