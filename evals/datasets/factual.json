@@ -163,6 +163,26 @@
           "value": "Vercel"
         }
       ]
+    },
+    {
+      "id": "voice-availability-truthful",
+      "description": "Describing how the chat works must reflect real voice availability: with OPENAI_API_KEY unset in production it must say voice is unavailable and never invite the mic",
+      "input": "How does this chatbot work? Does it have a voice mode?",
+      "lang": "en",
+      "assertions": [
+        {
+          "type": "not_contains",
+          "value": "hit the mic"
+        },
+        {
+          "type": "contains_any",
+          "values": [
+            "unavailable",
+            "not available",
+            "temporarily"
+          ]
+        }
+      ]
     }
   ]
 }
