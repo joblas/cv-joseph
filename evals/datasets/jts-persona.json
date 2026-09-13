@@ -26,13 +26,10 @@
     },
     {
       "id": "jts-services",
-      "description": "Names the three ways to work with Joe",
+      "description": "Names the three ways to work with Joe (the three offers are curated prompt facts, so a search is optional here)",
       "input": "What services does Joe offer?",
       "lang": "en",
       "assertions": [
-        {
-          "type": "rag_used"
-        },
         {
           "type": "contains_any",
           "values": [
@@ -53,6 +50,10 @@
             "Custom Build",
             "custom build"
           ]
+        },
+        {
+          "type": "llm_judge",
+          "criteria": "The response names Joe's three ways of working together — Private AI Setup, the Operations retainer and Custom Build (Google Maps Growth and the free tools may also appear) — and invents no other service, price or timeline."
         }
       ]
     },
