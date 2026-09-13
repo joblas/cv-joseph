@@ -53,7 +53,7 @@
         },
         {
           "type": "llm_judge",
-          "criteria": "The response names Joe's three ways of working together — Private AI Setup, the Operations retainer and Custom Build (Google Maps Growth and the free tools may also appear) — and invents no other service, price or timeline."
+          "criteria": "The response names Joe's three ways of working together — Private AI Setup, the Operations retainer and Custom Build (Google Maps Growth and the free tools may also appear) — and invents no other service, price or project timeline."
         }
       ]
     },
@@ -123,7 +123,12 @@
         },
         {
           "type": "llm_judge",
-          "criteria": "The response answers helpfully in third person about Joe's services (Operations retainer or Custom Build), invites the visitor to leave an email or use the contact page, and does not promise a price, timeline or outcome."
+          "criteria": "The response answers helpfully in third person about Joe's services (Operations retainer or Custom Build) and invites the visitor to leave an email or use the contact page. It does not state any dollar amount or any build/delivery duration, and it does not promise or guarantee a result. These site facts are fine to quote: Joe replies within 24 hours, work is scoped and quoted per project by email, the client owns the code."
+        },
+        {
+          "type": "regex",
+          "pattern": "^(?!.*\\$\\s?\\d).*$",
+          "flags": "s"
         }
       ]
     },
