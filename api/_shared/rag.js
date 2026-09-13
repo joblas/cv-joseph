@@ -504,6 +504,10 @@ export function classifyIntent(text) {
 // Jailbreak alert
 // ---------------------------------------------------------------------------
 
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]))
+}
+
 export async function sendJailbreakAlert(userMessage) {
   if (!process.env.RESEND_API_KEY || !process.env.ALERT_EMAIL) return
 
@@ -522,7 +526,7 @@ export async function sendJailbreakAlert(userMessage) {
         <p><strong>Time:</strong> ${new Date().toISOString()}</p>
         <p><strong>User message:</strong></p>
         <blockquote style="background: #f5f5f5; padding: 15px; border-left: 4px solid #e74c3c;">
-          ${userMessage.slice(0, 500)}${userMessage.length > 500 ? '...' : ''}
+          ${escapeHtml(userMessage.slice(0, 500))}${userMessage.length > 500 ? '...' : ''}
         </blockquote>
         <p style="margin-top: 20px;">
           <a href="https://cloud.langfuse.com" style="background: #e74c3c; color: #fff; padding: 10px 20px; text-decoration: none; border-radius: 5px;">

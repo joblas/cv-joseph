@@ -238,7 +238,7 @@ export function runAssertion(
       break
 
     case 'source_not_includes':
-      passed = !ragSources?.some(s => s.article_id === assertion.value) ?? true
+      passed = !(ragSources?.some(s => s.article_id === assertion.value) ?? false)
       reason = passed
         ? `Sources do not include "${assertion.value}" (correct)`
         : `Sources unexpectedly include "${assertion.value}"`

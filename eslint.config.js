@@ -6,7 +6,17 @@ import tseslint from 'typescript-eslint'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
 export default defineConfig([
-  globalIgnores(['dist']),
+  globalIgnores(['dist', 'functions/api-src', 'functions/api/_prompt-fallback.js']),
+  {
+    // Vercel/Cloudflare API handlers (plain ESM JS)
+    files: ['api/**/*.js', 'functions/api/*.js'],
+    extends: [js.configs.recommended],
+    languageOptions: {
+      ecmaVersion: 2024,
+      sourceType: 'module',
+      globals: { ...globals.browser, ...globals.node, ...globals.serviceworker },
+    },
+  },
   {
     files: ['**/*.{ts,tsx}'],
     extends: [

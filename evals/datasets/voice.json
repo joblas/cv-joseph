@@ -3,13 +3,23 @@
   "description": "Tests voice RAG endpoint (/api/rag-search): content relevance, no markdown, factual accuracy, grounding",
   "tests": [
     {
-      "id": "voice-content-jacobo",
-      "description": "Voice RAG about Jacobo returns relevant content",
-      "input": "Tell me about the Jacobo agent",
-      "lang": "es",
+      "id": "voice-content-turnover",
+      "description": "Voice RAG about the Turnover Agent returns relevant content",
+      "input": "Tell me about the Turnover Agent",
+      "lang": "en",
       "mode": "voice",
       "assertions": [
-        { "type": "contains_any", "values": ["jacobo", "agente", "whatsapp", "omnicanal", "customer", "autoservicio"] }
+        {
+          "type": "contains_any",
+          "values": [
+            "turnover",
+            "telegram",
+            "nick",
+            "short-term",
+            "rental",
+            "airbnb"
+          ]
+        }
       ]
     },
     {
@@ -19,18 +29,37 @@
       "lang": "en",
       "mode": "voice",
       "assertions": [
-        { "type": "not_contains", "value": "**" },
-        { "type": "regex", "pattern": "^(?!.*\\[.*\\]\\(.*\\)).*$", "flags": "s" }
+        {
+          "type": "not_contains",
+          "value": "**"
+        },
+        {
+          "type": "regex",
+          "pattern": "^(?!.*\\[.*\\]\\(.*\\)).*$",
+          "flags": "s"
+        }
       ]
     },
     {
-      "id": "voice-factual-jacobo",
-      "description": "Voice RAG about Jacobo should mention key technical details",
-      "input": "Tell me about the Jacobo AI agent, what does it do?",
+      "id": "voice-factual-turnover",
+      "description": "Voice RAG about the Turnover Agent should mention key details",
+      "input": "Tell me about the Turnover Agent, what does it do?",
       "lang": "en",
       "mode": "voice",
       "assertions": [
-        { "type": "contains_any", "values": ["customer service", "self-service", "tool calling", "whatsapp", "omnichannel", "autoservicio"] }
+        {
+          "type": "contains_any",
+          "values": [
+            "telegram",
+            "ical",
+            "airbnb",
+            "vrbo",
+            "cleaner",
+            "checkout",
+            "check-in",
+            "turnover"
+          ]
+        }
       ]
     },
     {
@@ -40,7 +69,17 @@
       "lang": "en",
       "mode": "voice",
       "assertions": [
-        { "type": "contains_any", "values": ["No relevant content", "no tengo", "not", "unavailable", "general knowledge", "don't have"] }
+        {
+          "type": "contains_any",
+          "values": [
+            "No relevant content",
+            "no tengo",
+            "not",
+            "unavailable",
+            "general knowledge",
+            "don't have"
+          ]
+        }
       ]
     },
     {
@@ -50,7 +89,10 @@
       "lang": "es",
       "mode": "voice",
       "assertions": [
-        { "type": "max_words", "value": 60 }
+        {
+          "type": "max_words",
+          "value": 60
+        }
       ]
     },
     {
@@ -60,7 +102,11 @@
       "lang": "en",
       "mode": "voice",
       "assertions": [
-        { "type": "regex", "pattern": "^(?!.*https?://).*$", "flags": "s" }
+        {
+          "type": "regex",
+          "pattern": "^(?!.*https?://).*$",
+          "flags": "s"
+        }
       ]
     }
   ]

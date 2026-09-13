@@ -4,31 +4,71 @@
   "tests": [
     {
       "id": "multi-context-retention",
-      "description": "Bot retains context from previous turn (Jacobo details)",
+      "description": "Bot retains context from the previous turn (Turnover Agent details)",
       "input": "What AI model does it use?",
       "lang": "en",
       "conversation": [
-        { "role": "user", "content": "Tell me about the Jacobo agent" },
-        { "role": "assistant", "content": "Jacobo is my omnichannel AI agent for customer service. It works via WhatsApp and web, with specialized sub-agents that handle quotes, appointments, and orders using tool calling." },
-        { "role": "user", "content": "What AI model does it use?" }
+        {
+          "role": "user",
+          "content": "Tell me about the Turnover Agent"
+        },
+        {
+          "role": "assistant",
+          "content": "The Turnover Agent is a Telegram-first operations bot Joe built for Nick, a short-term-rental property manager: one LLM agent with 32 tools on a single Docker container. It polls Airbnb and VRBO iCal feeds every 15 minutes and creates turnovers automatically."
+        },
+        {
+          "role": "user",
+          "content": "What does it poll every 15 minutes?"
+        }
       ],
       "assertions": [
-        { "type": "contains_any", "values": ["claude", "sonnet", "haiku", "gpt", "modelo", "model", "llm"] }
+        {
+          "type": "contains_any",
+          "values": [
+            "ical",
+            "calendar",
+            "airbnb",
+            "vrbo",
+            "feeds"
+          ]
+        }
       ]
     },
     {
       "id": "multi-topic-switch",
-      "description": "Bot handles topic switch from Jacobo to Business OS",
+      "description": "Bot handles a topic switch from the Turnover Agent to The Skate Workshop",
       "input": "And the Business OS, what is it?",
       "lang": "en",
       "conversation": [
-        { "role": "user", "content": "What is Jacobo?" },
-        { "role": "assistant", "content": "Jacobo is my omnichannel AI agent for customer service. I built it for Santifer iRepair." },
-        { "role": "user", "content": "And the Business OS, what is it?" }
+        {
+          "role": "user",
+          "content": "What is the Turnover Agent?"
+        },
+        {
+          "role": "assistant",
+          "content": "The Turnover Agent is a Telegram-first operations bot Joe built for Nick, a short-term-rental property manager. It watches Airbnb/VRBO calendars and creates turnovers automatically."
+        },
+        {
+          "role": "user",
+          "content": "And The Skate Workshop, what is it?"
+        }
       ],
       "assertions": [
-        { "type": "contains_any", "values": ["business os", "erp", "airtable", "operativo", "sistema"] },
-        { "type": "not_contains", "value": "jacobo" }
+        {
+          "type": "contains_any",
+          "values": [
+            "skate",
+            "willy",
+            "react native",
+            "testflight",
+            "coach",
+            "tricks"
+          ]
+        },
+        {
+          "type": "not_contains",
+          "value": "turnover"
+        }
       ]
     },
     {
@@ -37,15 +77,32 @@
       "input": "How exactly does the SEO pipeline work?",
       "lang": "en",
       "conversation": [
-        { "role": "user", "content": "What projects have you built?" },
-        { "role": "assistant", "content": "I've built several systems: an AI agent called Jacobo, a Business OS with 12 bases in Airtable, a programmatic website with automated SEO, and this portfolio with chatbot and RAG." },
-        { "role": "user", "content": "Tell me more about the programmatic SEO" },
-        { "role": "assistant", "content": "I built a programmatic SEO architecture to automatically generate indexable pages using a decision engine that evaluates search volume and competition." },
-        { "role": "user", "content": "How exactly does the SEO pipeline work?" }
+        {
+          "role": "user",
+          "content": "Tell me about the Turnover Agent"
+        },
+        {
+          "role": "assistant",
+          "content": "The Turnover Agent is a Telegram-first operations bot Joe built for a short-term-rental property manager: one LLM agent with 32 tools on a single Docker container."
+        },
+        {
+          "role": "user",
+          "content": "What stack does Joe use?"
+        },
+        {
+          "role": "assistant",
+          "content": "Joe's main stack is React, TypeScript, Vite and Tailwind on the front end; for AI he uses an Anthropic-compatible Messages API with RAG on Supabase, and Ollama Cloud models for his own agents."
+        },
+        {
+          "role": "user",
+          "content": "Going back to the Turnover Agent, how many tools does it have?"
+        }
       ],
       "assertions": [
-        { "type": "rag_used" },
-        { "type": "min_words", "value": 20 }
+        {
+          "type": "contains",
+          "value": "32"
+        }
       ]
     },
     {
@@ -54,12 +111,24 @@
       "input": "And what else can you tell me?",
       "lang": "en",
       "conversation": [
-        { "role": "user", "content": "What experience do you have with AI?" },
-        { "role": "assistant", "content": "I've been building AI systems in production for over 2 years. From Jacobo, an omnichannel agent, to RAG pipelines and automated evals." },
-        { "role": "user", "content": "And what else can you tell me?" }
+        {
+          "role": "user",
+          "content": "What experience does Joe have with AI?"
+        },
+        {
+          "role": "assistant",
+          "content": "Joe has been building AI systems in production for 5+ years. Hermes runs his own business with 40+ scheduled automations behind a C-suite + VP agent structure, and he ships AI agents for clients, like the Turnover Agent for a short-term-rental manager."
+        },
+        {
+          "role": "user",
+          "content": "And what else can you tell me?"
+        }
       ],
       "assertions": [
-        { "type": "llm_judge", "criteria": "The response should provide NEW information not already mentioned in the previous assistant message. It should NOT simply restate the same points about Jacobo being omnichannel or mentioning RAG/evals in the same way." }
+        {
+          "type": "llm_judge",
+          "criteria": "The response provides NEW information not already in the previous assistant message (e.g. autonomous-vehicle background, The Skate Workshop, Archive, Cbarrgs, private AI setups). It does NOT simply restate Hermes / 40+ automations / the Turnover Agent."
+        }
       ]
     },
     {
@@ -68,14 +137,36 @@
       "input": "Going back to Jacobo, how many customers does it serve?",
       "lang": "en",
       "conversation": [
-        { "role": "user", "content": "Tell me about Jacobo" },
-        { "role": "assistant", "content": "Jacobo is my omnichannel AI agent for customer service, it works via WhatsApp and web." },
-        { "role": "user", "content": "What stack do you use?" },
-        { "role": "assistant", "content": "My main stack is React, TypeScript, Vite, Tailwind, and for AI I use Claude from Anthropic with RAG on Supabase." },
-        { "role": "user", "content": "Going back to Jacobo, how many customers does it serve?" }
+        {
+          "role": "user",
+          "content": "Tell me about The Skate Workshop"
+        },
+        {
+          "role": "assistant",
+          "content": "The Skate Workshop is a React Native app Joe built for Willy Santos, an Olympic-level skateboarding coach: 4,900+ trick-obstacle training combinations on a 19-table Supabase backend, live on iOS via TestFlight."
+        },
+        {
+          "role": "user",
+          "content": "What stack does Joe use?"
+        },
+        {
+          "role": "assistant",
+          "content": "Joe's main stack is React, TypeScript, Vite and Tailwind on the front end; for AI he uses an Anthropic-compatible Messages API with RAG on Supabase, and Ollama Cloud models for his own agents."
+        },
+        {
+          "role": "user",
+          "content": "Going back to The Skate Workshop, how many trick combinations does it have?"
+        }
       ],
       "assertions": [
-        { "type": "contains_any", "values": ["jacobo", "agente", "autoservicio", "self-service", "90%", "cliente"] }
+        {
+          "type": "contains_any",
+          "values": [
+            "4,900",
+            "4900",
+            "4.9"
+          ]
+        }
       ]
     }
   ]

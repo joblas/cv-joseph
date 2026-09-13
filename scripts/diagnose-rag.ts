@@ -21,10 +21,14 @@ const AUTH = Buffer.from(`${LANGFUSE_PUBLIC_KEY}:${LANGFUSE_SECRET_KEY}`).toStri
 // Maps keywords to articles that SHOULD be found when those keywords appear.
 // This is the "ground truth" that the RAG should discover.
 const ARTICLE_KEYWORDS: Record<string, string[]> = {
-  'n8n-for-pms': ['n8n', 'workflow', 'automation', 'automatable friday', 'intelligent router', 'maven', 'marily'],
-  'business-os': ['erp', 'business os', 'airtable', 'operaciones', 'operations', 'crm', 'inventario', 'inventory', 'n8n'],
-  'programmatic-seo': ['seo', 'programat', 'paginas', 'pages', 'dataforseo', 'indexa', 'impresiones', 'impressions'],
-  'self-healing-chatbot': ['chatbot', 'rag', 'langfuse', 'evals', 'jailbreak', 'prompt', 'defensa', 'defense', 'scoring'],
+  'n8n-for-pms':          ['n8n', 'workflow', 'automation', 'template', 'product manager'],
+  'self-healing-chatbot': ['chatbot', 'rag', 'langfuse', 'evals', 'jailbreak', 'prompt', 'defense', 'scoring'],
+  'career-ops':           ['career', 'open-source', 'fork', 'job search', 'resume'],
+  'hermes':               ['hermes', 'openclaw', 'lurkr', 'agents', 'migration', 'delegation', 'ollama'],
+  'turnover-agent':       ['turnover', 'telegram', 'airbnb', 'vrbo', 'ical', 'cleaner', 'property manager', 'rental'],
+  'archive-beta-loop':    ['archive', 'salon', 'beta', 'inventory', 'expo', 'ota', 'texts'],
+  'cbarrgs-agent':        ['cbarrgs', 'musician', 'artist', 'website', 'coding agent'],
+  'skate-workshop-loop':  ['skate', 'willy', 'coach', 'testflight', 'react native', 'tricks'],
 }
 
 // Reverse map: keyword → articles

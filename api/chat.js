@@ -358,7 +358,7 @@ function streamResponse({
   systemBlocks, messages, tools, ragSources, ragDegraded, ragDegradedReason,
   canary, intentTags, trace, langfuse, lastUserMessage, t0,
   ragUsed, ragMetrics, ragUsage, toolDecisionMs, tdInputTokens, tdOutputTokens,
-  precomputedResponse, lang, fallbackMessages, promptVersion,
+  precomputedResponse, fallbackMessages, promptVersion,
 }) {
   const encoder = new TextEncoder()
   let fullOutput = ''
