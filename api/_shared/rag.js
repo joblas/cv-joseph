@@ -52,6 +52,7 @@ function siteChunkToDocument(row) {
     id: row.id,
     content: row.title ? `${row.title}\n${row.content}` : row.content,
     metadata: {
+      kind: 'site', // formatChunksForContext / extractSources: site corpus, not a cloudyjoe article
       article_id: articleId,
       section_id: row.source === 'kb' ? 'faq' : 'page',
       section_anchor: '',
@@ -86,9 +87,15 @@ async function siteChunkSearch(queryText, persona) {
   }
 }
 
+// Tool definition per persona (same name everywhere; the description is the
+// persona's — cloudyjoe speaks in Joe's first person, JTS searches a site).
+export function portfolioTool(persona = getPersona()) {
+  return { ...PORTFOLIO_TOOL, description: persona.searchTool.description }
+}
+
 export const PORTFOLIO_TOOL = {
   name: 'search_portfolio',
-  description: "Search your own published case studies for project details. You wrote these articles — they are YOUR words about YOUR projects. The system prompt only has brief summaries; this tool has the FULL content you authored: architectures, sub-agents, workflows, Airtable structures, metrics, technical decisions, pipeline details, code patterns, and lessons learned. Use this whenever the user asks for specifics about any project. Remember: speak from this content as your own experience, never cite it as an external source.",
+  description: getPersona().searchTool.description,
   input_schema: {
     type: 'object',
     properties: {
@@ -296,11 +303,13 @@ export function diversifyByArticle(ranked) {
 export function formatChunksForContext(chunks) {
   return chunks.map((c, i) => {
     const meta = c.metadata || {}
-    const source = meta.section_id === 'faq'
-      ? `[Curated FAQ: ${meta.title || meta.article_id}]`
-      : meta.section_id === 'page'
-        ? `[From the site page: ${meta.page_path || meta.article_id}]`
-        : meta.article_id ? `[From your article: ${meta.article_id}, section: ${meta.section_id}]` : ''
+    // Site personas label by corpus (`kind`), never by section id: cloudyjoe's
+    // articles all carry a `faq` section that must keep its first-person label.
+    const source = meta.kind === 'site'
+      ? (meta.section_id === 'faq'
+        ? `[Curated FAQ: ${meta.title || meta.article_id}]`
+        : `[From the site page: ${meta.page_path || meta.article_id}]`)
+      : meta.article_id ? `[From your article: ${meta.article_id}, section: ${meta.section_id}]` : ''
     return `--- Your content ${i + 1} ${source} ---\n${c.content}`
   }).join('\n\n')
 }
@@ -323,9 +332,30 @@ export function extractSources(chunks) {
       page_path_es: meta.page_path_es || meta.page_path || '',
       article_slug_en: meta.article_slug_en || meta.article_slug || '',
       article_slug_es: meta.article_slug_es || meta.article_slug || '',
+      ...(meta.kind === 'site' ? { title: meta.title || '' } : {}),
     })
   }
   return sources
+}
+
+/**
+ * Site personas: keep a retrieved page only when the answer names its path,
+ * its title or its slug words ("google maps growth"); otherwise fall back to
+ * the top hit. Mirrors filterSourcesByResponse for the article corpus. Max 3.
+ */
+export function filterSiteSources(sources, responseText) {
+  const pages = sources.filter(s => s.page_path_en)
+  if (!responseText || pages.length === 0) return pages.slice(0, 3)
+  const lower = responseText.toLowerCase()
+  const matched = pages.filter(s => {
+    const path = s.page_path_en.toLowerCase()
+    if (path !== '/' && lower.includes(path)) return true
+    const slugWords = path.split('/').pop().replace(/-/g, ' ')
+    if (slugWords.length >= 6 && lower.includes(slugWords)) return true
+    const title = (s.title || '').toLowerCase().trim()
+    return title.length >= 6 && lower.includes(title)
+  })
+  return (matched.length > 0 ? matched : pages.slice(0, 1)).slice(0, 3)
 }
 
 // Two keyword tables (ids/paths mirror src/articles/registry.ts — keep in sync):

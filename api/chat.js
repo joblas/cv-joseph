@@ -2,8 +2,8 @@ import { Langfuse } from 'langfuse'
 import { waitUntil } from '@vercel/functions'
 import { resolvePersona } from './_shared/personas.js'
 import {
-  calcCost, isRagEnabled, PORTFOLIO_TOOL, formatChunksForContext,
-  searchPortfolio, filterSourcesByResponse, detectMentionedArticles,
+  calcCost, isRagEnabled, portfolioTool, formatChunksForContext,
+  searchPortfolio, filterSourcesByResponse, filterSiteSources, detectMentionedArticles,
   HOME_SOURCE, classifyIntent, sendJailbreakAlert,
   containsFingerprint, LEAK_RESPONSE,
 } from './_shared/rag.js'
@@ -130,9 +130,10 @@ export default async function handler(req) {
     let promptVersion
     const overrideVersion = req.headers.get('x-prompt-version')
     const overrideAuth = req.headers.get('x-prompt-auth')
-    if (overrideAuth === process.env.PROMPT_REGRESSION_SECRET && overrideVersion && langfuse) {
+    // Only personas with a Langfuse-managed prompt can be pinned to a version
+    if (overrideAuth === process.env.PROMPT_REGRESSION_SECRET && overrideVersion && langfuse && persona.langfusePrompt) {
       try {
-        const prompt = await langfuse.getPrompt('chatbot-system', parseInt(overrideVersion), {
+        const prompt = await langfuse.getPrompt(persona.langfusePrompt, parseInt(overrideVersion), {
           type: 'text', cacheTtlSeconds: 0,
         })
         systemPromptText = prompt.prompt
@@ -217,7 +218,7 @@ export default async function handler(req) {
         max_tokens: scaleTokens(300),
         system: systemBlocks,
         messages: cleanMessages,
-        tools: [PORTFOLIO_TOOL],
+        tools: [portfolioTool(persona)],
       })
 
       const toolDecisionMs = Date.now() - td0
@@ -249,7 +250,7 @@ export default async function handler(req) {
         // Build tool_result and make second call (streaming)
         const toolResultContent = ragResult.chunks
           ? formatChunksForContext(ragResult.chunks)
-          : 'No relevant content found in portfolio articles. You MUST NOT fabricate project details. Say you don\'t have that information and suggest contacting Joseph directly.'
+          : persona.searchTool.noResults
 
         const messagesWithTool = [
           ...cleanMessages,
@@ -287,7 +288,7 @@ export default async function handler(req) {
           lang,
           fallbackMessages: cleanMessages,
           promptVersion,
-        persona,
+          persona,
         })
       }
 
@@ -343,7 +344,7 @@ export default async function handler(req) {
       tdOutputTokens: 0,
       lang,
       promptVersion,
-        persona,
+      persona,
     })
   } catch (error) {
     console.error('Chat API error:', error)
@@ -597,8 +598,8 @@ function streamResponse({
               finalSources = [HOME_SOURCE]
             }
           } else {
-            // Site personas: badge the retrieved pages that have a path, top 3
-            finalSources = ragSources.filter(s => s.page_path_en).slice(0, 3)
+            // Site personas: badge only the retrieved pages the answer actually names
+            finalSources = filterSiteSources(ragSources, fullOutput)
           }
 
           if (finalSources.length > 0) {

@@ -1,5 +1,6 @@
 {
   "name": "jts_persona",
+  "persona": "jts",
   "description": "joestechsolutions.com face of Cloudy-Joe Agent: services, never-invented prices, identity, contact, leads. Run with EVAL_PERSONA=jts.",
   "tests": [
     {

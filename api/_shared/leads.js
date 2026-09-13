@@ -1,4 +1,4 @@
-import { getPersona } from './personas.js'
+import { getPersona, DEFAULT_PERSONA } from './personas.js'
 // ---------------------------------------------------------------------------
 // Lead capture for the cloudyjoe.com chatbot.
 //
@@ -166,7 +166,9 @@ export async function captureLead({ message, page, sessionId, lang, reply, perso
           kind: hit.kind,
           visitor_message: String(message).slice(0, 4000),
           assistant_reply: reply ? String(reply).slice(0, 4000) : null,
-          page: page ?? null,
+          // Shared table: non-default personas store the full site URL so their
+          // leads stay distinguishable from cloudyjoe's bare paths.
+          page: page == null ? null : persona.id === DEFAULT_PERSONA ? page : `${persona.site}${String(page).startsWith('/') ? '' : '/'}${page}`,
           lang: lang ?? null,
           notified,
         }),

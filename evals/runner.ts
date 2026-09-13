@@ -46,6 +46,7 @@ interface Test {
 interface Dataset {
   name: string
   description: string
+  persona?: string // which face of the agent the tests target (default cloudyjoe)
   tests: Test[]
 }
 
@@ -199,10 +200,19 @@ function loadDatasets(): Dataset[] {
     .readdirSync(DATASETS_DIR)
     .filter((f) => f.endsWith('.json'))
     .filter((f) => only.length === 0 || only.includes(f.replace(/\.json$/, '')))
-  return files.map((file) => {
-    const content = fs.readFileSync(path.join(DATASETS_DIR, file), 'utf-8')
-    return JSON.parse(content) as Dataset
-  })
+  // A dataset written for one persona is meaningless against another
+  const persona = process.env.EVAL_PERSONA || 'cloudyjoe'
+  return files
+    .map((file) => {
+      const content = fs.readFileSync(path.join(DATASETS_DIR, file), 'utf-8')
+      return JSON.parse(content) as Dataset
+    })
+    .filter((dataset) => {
+      const target = dataset.persona || 'cloudyjoe'
+      if (target === persona) return true
+      console.log(`   (skipping ${dataset.name}: written for persona ${target}, running ${persona})`)
+      return false
+    })
 }
 
 /**

@@ -209,19 +209,9 @@ const GEMINI_VOICE = process.env.GEMINI_VOICE || 'Charon'
 const GEMINI_WS_URL =
   'wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContentConstrained'
 
-const SEARCH_TOOL_DESCRIPTION =
-  "Search Joe's published case studies for project details, architectures, metrics, and technical decisions."
-
 // Mint a single-use ephemeral token with the model, persona and tool locked in,
 // so the browser never sees the API key and cannot change the setup.
-// Gemini Live tends to answer project questions from memory unless told,
-// bluntly and first, that it must search. Prepended to the shared prompt.
-const GEMINI_TOOL_RULE = `## Tool rule (absolute)
-Before you say ANYTHING about a project, client, product, metric, architecture, or piece of Joe's work, you MUST first call search_portfolio with a short query and answer ONLY from its result. Never describe a project from memory — you will get it wrong. The only facts you may state without searching are Joe's identity, roles and career headlines listed under "About Joseph" below; greetings, contact info and questions about yourself need no search either.
-
-`
-
-async function createGeminiToken(instructions) {
+async function createGeminiToken(instructions, persona) {
   const now = Date.now()
   const response = await fetch(
     'https://generativelanguage.googleapis.com/v1beta/auth_tokens',
@@ -238,11 +228,12 @@ async function createGeminiToken(instructions) {
             responseModalities: ['AUDIO'],
             speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: GEMINI_VOICE } } },
           },
-          systemInstruction: { parts: [{ text: GEMINI_TOOL_RULE + instructions }] },
+          // The persona's tool rule goes first: Gemini Live answers from memory otherwise
+          systemInstruction: { parts: [{ text: persona.searchTool.voiceRule + instructions }] },
           tools: [{
             functionDeclarations: [{
               name: 'search_portfolio',
-              description: SEARCH_TOOL_DESCRIPTION,
+              description: persona.searchTool.voiceDescription,
               parameters: {
                 type: 'OBJECT',
                 properties: { query: { type: 'STRING', description: 'The search query to find relevant portfolio content' } },

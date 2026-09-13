@@ -3,7 +3,7 @@ import { resolvePersona } from './_shared/personas.js'
 import { Langfuse } from 'langfuse'
 import {
   searchPortfolio, formatChunksForContext, calcCost,
-  filterSourcesByResponse, detectMentionedArticles, HOME_SOURCE,
+  filterSourcesByResponse, filterSiteSources, detectMentionedArticles, HOME_SOURCE,
 } from './_shared/rag.js'
 import { getSystemPrompt } from './_shared/prompt.js'
 
@@ -210,7 +210,7 @@ export default async function handler(req) {
           filteredSources = [HOME_SOURCE]
         }
       } else {
-        filteredSources = sources.filter(s => s.page_path_en).slice(0, 3)
+        filteredSources = filterSiteSources(sources, responseText)
       }
 
       if (langfuse) await langfuse.flushAsync()

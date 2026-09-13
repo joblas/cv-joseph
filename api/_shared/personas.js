@@ -33,15 +33,43 @@ const JTS_VOICE_PROMPT = `You are Cloudy-Joe Agent — the AI agent for Joe Blas
 - Uncertainty: "I don't have that on the site, but leave your email and Joe will answer that himself."
 - Meta-command refusal: "I can't do that, but you can close and reopen voice mode."`
 
+// Dev origins are only honoured when ALLOW_LOCAL_ORIGINS=1 (.dev.vars / preview),
+// never as a permanent production allow-list entry.
 const LOCAL_ORIGINS = [/^http:\/\/localhost(:\d+)?$/, /^http:\/\/127\.0\.0\.1(:\d+)?$/]
+const localOriginsAllowed = () => process.env.ALLOW_LOCAL_ORIGINS === '1'
+
+// Cloudyjoe's search tool speaks in Joe's first person (the corpus is his own
+// case studies); the JTS tool searches a company site. Same tool name so the
+// prompts and the voice client stay shared.
+const CLOUDYJOE_SEARCH_TOOL = {
+  description: "Search your own published case studies for project details. You wrote these articles — they are YOUR words about YOUR projects. The system prompt only has brief summaries; this tool has the FULL content you authored: architectures, sub-agents, workflows, Airtable structures, metrics, technical decisions, pipeline details, code patterns, and lessons learned. Use this whenever the user asks for specifics about any project. Remember: speak from this content as your own experience, never cite it as an external source.",
+  voiceDescription: "Search Joe's published case studies for project details, architectures, metrics, and technical decisions.",
+  noResults: 'No relevant content found in portfolio articles. You MUST NOT fabricate project details. Say you don\'t have that information and suggest contacting Joseph directly.',
+  // Gemini Live tends to answer from memory unless told, bluntly and first, that it must search.
+  voiceRule: `## Tool rule (absolute)
+Before you say ANYTHING about a project, client, product, metric, architecture, or piece of Joe's work, you MUST first call search_portfolio with a short query and answer ONLY from its result. Never describe a project from memory — you will get it wrong. The only facts you may state without searching are Joe's identity, roles and career headlines listed under "About Joseph" below; greetings, contact info and questions about yourself need no search either.
+
+`,
+}
+
+const JTS_SEARCH_TOOL = {
+  description: "Search joestechsolutions.com — the service pages, the curated FAQ and the blog — for what Joe's Tech Solutions offers, how each service works, what is included, the process, and how to get in touch. Use it before answering anything specific about a service, the setup session, Google Maps Growth, the free tools, timelines or pricing policy; answer only from what it returns.",
+  voiceDescription: "Search joestechsolutions.com (service pages, curated FAQ, blog) for what Joe's Tech Solutions offers, how each service works and how to get in touch.",
+  noResults: 'No relevant content found on joestechsolutions.com. You MUST NOT invent services, prices, timelines or details. Say you don\'t have that on the site and suggest emailing joe@joestechsolutions.com.',
+  voiceRule: `## Tool rule (absolute)
+Before you say ANYTHING specific about a service, offer, process, timeline, tool, client result or piece of Joe's Tech Solutions' work, you MUST first call search_portfolio with a short query and answer ONLY from its result. Never describe a service from memory — you will get it wrong. The only facts you may state without searching are the identity, offer names and contact facts already in your instructions; greetings and questions about yourself need no search either.
+
+`,
+}
 
 export const PERSONAS = {
   cloudyjoe: {
     id: 'cloudyjoe',
     site: 'https://cloudyjoe.com',
     contactEmail: 'blasj408@gmail.com',
-    origins: [/^https:\/\/(www\.)?cloudyjoe\.com$/, /^https:\/\/[a-z0-9-]+\.cloudyjoe\.pages\.dev$/, ...LOCAL_ORIGINS],
+    origins: [/^https:\/\/(www\.)?cloudyjoe\.com$/, /^https:\/\/([a-z0-9-]+\.)?cloudyjoe\.pages\.dev$/],
     prompt: CLOUDYJOE_PROMPT,
+    searchTool: CLOUDYJOE_SEARCH_TOOL,
     // Langfuse-managed prompt (label "production") takes precedence when configured
     langfusePrompt: 'chatbot-system',
     rag: {
@@ -62,8 +90,9 @@ export const PERSONAS = {
     id: 'jts',
     site: 'https://www.joestechsolutions.com',
     contactEmail: 'joe@joestechsolutions.com',
-    origins: [/^https:\/\/(www\.)?joestechsolutions\.com$/, /^https:\/\/[a-z0-9-]+\.joestechsolutions\.pages\.dev$/, ...LOCAL_ORIGINS],
+    origins: [/^https:\/\/(www\.)?joestechsolutions\.com$/, /^https:\/\/([a-z0-9-]+\.)?joestechsolutions\.pages\.dev$/],
     prompt: JTS_PROMPT,
+    searchTool: JTS_SEARCH_TOOL,
     langfusePrompt: null,
     rag: {
       kind: 'site_chunks', // JTS Supabase: search_site_chunks_public (anon key, read-only)
@@ -72,7 +101,7 @@ export const PERSONAS = {
       articleBadges: false,
     },
     leads: {
-      table: 'chat_leads', // same table as cloudyjoe; `page` carries the full JTS URL
+      table: 'chat_leads', // same table as cloudyjoe; `page` is stored as the full JTS URL (see leads.js)
       from: 'joestechsolutions.com <leads@subscribe.joestechsolutions.com>',
       subject: (email) => (email ? `Lead from the site chat: ${email}` : 'Someone on the site chat asked for Joe'),
     },
@@ -85,12 +114,17 @@ export const PERSONAS = {
 export const DEFAULT_PERSONA = 'cloudyjoe'
 
 export function getPersona(id) {
-  return PERSONAS[typeof id === 'string' && PERSONAS[id] ? id : DEFAULT_PERSONA]
+  // hasOwn: `constructor`, `__proto__`, `toString`… are attacker-controlled input, not personas
+  return PERSONAS[typeof id === 'string' && Object.hasOwn(PERSONAS, id) ? id : DEFAULT_PERSONA]
+}
+
+export function personaOrigins(persona) {
+  return localOriginsAllowed() ? [...persona.origins, ...LOCAL_ORIGINS] : persona.origins
 }
 
 export function personaAllowsOrigin(persona, origin) {
-  if (!origin) return true // same-origin / non-browser callers
-  return persona.origins.some((re) => re.test(origin))
+  if (!origin) return true // non-browser callers (evals, curl) send no Origin
+  return personaOrigins(persona).some((re) => re.test(origin))
 }
 
 // Resolve the persona for a request: the body's `persona` when the calling
@@ -102,13 +136,17 @@ export function resolvePersona(body, req) {
   return personaAllowsOrigin(persona, origin) ? persona : getPersona(DEFAULT_PERSONA)
 }
 
-// CORS: an origin is allowed if any persona lists it. Same-origin requests
-// carry no Origin header and get no CORS headers.
+// CORS: an origin is allowed if any persona lists it (browsers send Origin on
+// every POST, so cloudyjoe.com's own widget goes through here too — harmless).
+// Requests without an Origin header get no CORS headers.
+export function originAllowed(origin) {
+  return Object.values(PERSONAS).some((p) => personaOrigins(p).some((re) => re.test(origin)))
+}
+
 export function corsHeaders(req) {
   const origin = req?.headers?.get?.('origin') || null
   if (!origin) return {}
-  const allowed = Object.values(PERSONAS).some((p) => p.origins.some((re) => re.test(origin)))
-  if (!allowed) return {}
+  if (!originAllowed(origin)) return {}
   return {
     'Access-Control-Allow-Origin': origin,
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
