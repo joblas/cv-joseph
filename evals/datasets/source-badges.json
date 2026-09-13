@@ -3,13 +3,18 @@
   "description": "Tests that source badges are accurate: correct articles linked, no badges on greetings, correct language paths",
   "tests": [
     {
-      "id": "badge-jacobo-en",
-      "description": "Question about Jacobo should include jacobo badge",
-      "input": "Tell me about the Jacobo agent and how it works",
+      "id": "badge-turnover-en",
+      "description": "Question about the Turnover Agent should include the turnover-agent badge",
+      "input": "Tell me about the Turnover Agent and how it works",
       "lang": "en",
       "assertions": [
-        { "type": "rag_used" },
-        { "type": "source_includes", "value": "jacobo" }
+        {
+          "type": "rag_used"
+        },
+        {
+          "type": "source_includes",
+          "value": "turnover-agent"
+        }
       ]
     },
     {
@@ -18,17 +23,24 @@
       "input": "Hey",
       "lang": "en",
       "assertions": [
-        { "type": "rag_not_used" }
+        {
+          "type": "rag_not_used"
+        }
       ]
     },
     {
-      "id": "badge-pseo-en",
-      "description": "Question about SEO in EN should include programmatic-seo badge",
-      "input": "Tell me about your programmatic SEO project",
+      "id": "badge-hermes-en",
+      "description": "Question about the OpenClaw → Hermes migration should include the hermes badge",
+      "input": "Tell me about the OpenClaw to Hermes migration",
       "lang": "en",
       "assertions": [
-        { "type": "rag_used" },
-        { "type": "source_includes", "value": "programmatic-seo" }
+        {
+          "type": "rag_used"
+        },
+        {
+          "type": "source_includes",
+          "value": "hermes"
+        }
       ]
     },
     {
@@ -37,18 +49,28 @@
       "input": "How does this chatbot work?",
       "lang": "en",
       "assertions": [
-        { "type": "rag_used" },
-        { "type": "source_includes", "value": "self-healing-chatbot" }
+        {
+          "type": "rag_used"
+        },
+        {
+          "type": "source_includes",
+          "value": "self-healing-chatbot"
+        }
       ]
     },
     {
-      "id": "badge-business-os",
-      "description": "Question about Business OS / ERP should include business-os badge",
-      "input": "Tell me about your ERP system",
+      "id": "badge-skate-loop",
+      "description": "Question about the Skate Workshop should include the skate-workshop-loop badge",
+      "input": "Tell me about the Skate Workshop app and its dev loop",
       "lang": "en",
       "assertions": [
-        { "type": "rag_used" },
-        { "type": "source_includes", "value": "business-os" }
+        {
+          "type": "rag_used"
+        },
+        {
+          "type": "source_includes",
+          "value": "skate-workshop-loop"
+        }
       ]
     }
   ]

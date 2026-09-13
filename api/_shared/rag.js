@@ -271,35 +271,59 @@ export function extractSources(chunks) {
   return sources
 }
 
-// Keywords that signal the response actually references a given article
+// Two keyword tables (ids/paths mirror src/articles/registry.ts — keep in sync):
+// ARTICLE_KEYWORDS — broad tokens used to KEEP a retrieved source when the
+//   answer references its subject (paraphrases included).
+// ARTICLE_DETECT_KEYWORDS — narrow tokens used to ADD a badge from the answer
+//   text alone (no retrieval), so a passing mention of "Hermes" in an answer
+//   about another project does not attach the Hermes badge.
 export const ARTICLE_KEYWORDS = {
   'n8n-for-pms':          ['n8n', 'nodemation'],
-  'jacobo':               ['jacobo', 'agente ia', 'ai agent', 'whatsapp', 'multi-agent', 'multiagent'],
-  'business-os':          ['business os', 'erp', 'airtable bases', 'crm', 'inventory'],
-  'programmatic-seo':     ['seo programático', 'programmatic seo', 'web programática', 'programmatic web', 'decision engine', 'indexable', 'dataforseo', 'seo pipeline', 'seo automatizado', 'automated seo'],
-  'self-healing-chatbot': ['chatbot', 'this chat', 'este chat', 'evals', 'self-healing', 'closed-loop', 'langfuse', 'rag'],
-  'joblas-portfolio':     ['joblas', 'joseph blas', 'portfolio'],
+  'self-healing-chatbot': ['self-healing', 'this chat', 'closed-loop', 'langfuse', 'evals'],
+  'career-ops':           ['career-ops', 'career ops'],
+  'hermes':               ['hermes', 'openclaw', 'lurkr'],
+  'turnover-agent':       ['turnover', 'nick', 'airbnb', 'vrbo', 'short-term rental', 'short-term-rental', 'property manager'],
+  'archive-beta-loop':    ['archive', 'salon', 'van '],
+  'cbarrgs-agent':        ['cbarrgs', 'musician'],
+  'skate-workshop-loop':  ['skate', 'willy'],
+}
+
+export const ARTICLE_DETECT_KEYWORDS = {
+  'n8n-for-pms':          ['n8n', 'nodemation'],
+  'self-healing-chatbot': ['self-healing chatbot', 'this chat'],
+  'career-ops':           ['career-ops', 'career ops'],
+  'hermes':               ['hermes migration', 'openclaw', 'lurkr', '22-agent', '22 agents'],
+  'turnover-agent':       ['turnover agent', 'turnover-agent'],
+  'archive-beta-loop':    ['archive beta', 'archive-beta', 'archive salon', 'archive loop'],
+  'cbarrgs-agent':        ['cbarrgs'],
+  'skate-workshop-loop':  ['skate workshop', 'skate-workshop', 'willy santos'],
 }
 
 /** Filter RAG sources to only articles actually mentioned in the response, max 3 */
 export function filterSourcesByResponse(sources, responseText) {
   if (!responseText || sources.length === 0) return sources
   const lower = responseText.toLowerCase()
-  return sources.filter(s => {
+  const matched = sources.filter(s => {
     const keywords = ARTICLE_KEYWORDS[s.article_id]
     if (!keywords) return true // unknown article — keep it
     return keywords.some(kw => lower.includes(kw))
-  }).slice(0, 3)
+  })
+  // Retrieval already ranked these; if the answer names none of them, keep
+  // the top hit instead of collapsing to the home badge.
+  return (matched.length > 0 ? matched : sources.slice(0, 1)).slice(0, 3)
 }
 
 // Static article routes — used to generate badges from keywords regardless of RAG
+// (single-language site: the ES path is the same route)
 export const ARTICLE_ROUTES = {
-  'n8n-for-pms':          { page_path_es: '/n8n-para-pms', page_path_en: '/n8n-for-pms' },
-  'jacobo':               { page_path_es: '/agente-ia-jacobo', page_path_en: '/ai-agent-jacobo' },
-  'business-os':          { page_path_es: '/business-os-para-airtable', page_path_en: '/business-os-for-airtable' },
-  'programmatic-seo':     { page_path_es: '/seo-programatico', page_path_en: '/programmatic-seo' },
-  'self-healing-chatbot': { page_path_es: '/chatbot-que-se-cura-solo', page_path_en: '/self-healing-chatbot' },
-  'joblas-portfolio':     { page_path_es: '/joblas-portfolio', page_path_en: '/joblas-portfolio-founder' },
+  'n8n-for-pms':          { page_path_es: '/n8n-for-pms', page_path_en: '/n8n-for-pms' },
+  'self-healing-chatbot': { page_path_es: '/self-healing-chatbot', page_path_en: '/self-healing-chatbot' },
+  'career-ops':           { page_path_es: '/career-ops-system', page_path_en: '/career-ops-system' },
+  'hermes':               { page_path_es: '/hermes', page_path_en: '/hermes' },
+  'turnover-agent':       { page_path_es: '/turnover-agent', page_path_en: '/turnover-agent' },
+  'archive-beta-loop':    { page_path_es: '/archive-beta-loop', page_path_en: '/archive-beta-loop' },
+  'cbarrgs-agent':        { page_path_es: '/cbarrgs-agent', page_path_en: '/cbarrgs-agent' },
+  'skate-workshop-loop':  { page_path_es: '/skate-workshop-loop', page_path_en: '/skate-workshop-loop' },
 }
 
 // Home fallback
@@ -317,24 +341,27 @@ export const HOME_SOURCE = {
 export function detectMentionedArticles(responseText) {
   if (!responseText) return []
   const lower = responseText.toLowerCase()
-  const sources = []
-  for (const [articleId, keywords] of Object.entries(ARTICLE_KEYWORDS)) {
-    if (keywords.some(kw => lower.includes(kw))) {
-      const routes = ARTICLE_ROUTES[articleId]
-      if (routes) {
-        sources.push({
-          article_id: articleId,
-          section_id: 'main',
-          section_anchor: '',
-          page_path_es: routes.page_path_es,
-          page_path_en: routes.page_path_en,
-          article_slug_es: routes.page_path_es.slice(1),
-          article_slug_en: routes.page_path_en.slice(1),
-        })
-      }
-    }
+  const found = []
+  for (const [articleId, keywords] of Object.entries(ARTICLE_DETECT_KEYWORDS)) {
+    const positions = keywords.map(kw => lower.indexOf(kw)).filter(i => i >= 0)
+    if (positions.length === 0) continue
+    const routes = ARTICLE_ROUTES[articleId]
+    if (!routes) continue
+    found.push({
+      idx: Math.min(...positions),
+      source: {
+        article_id: articleId,
+        section_id: 'main',
+        section_anchor: '',
+        page_path_es: routes.page_path_es,
+        page_path_en: routes.page_path_en,
+        article_slug_es: routes.page_path_es.slice(1),
+        article_slug_en: routes.page_path_en.slice(1),
+      },
+    })
   }
-  return sources.slice(0, 3)
+  // Rank by first mention so the article the answer is about wins the 3 slots
+  return found.sort((a, b) => a.idx - b.idx).slice(0, 3).map(f => f.source)
 }
 
 // ---------------------------------------------------------------------------
