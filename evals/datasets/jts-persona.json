@@ -123,7 +123,7 @@
         },
         {
           "type": "llm_judge",
-          "criteria": "The response answers helpfully in third person about Joe's services (Operations retainer or Custom Build), invites the visitor to leave an email or use the contact page, and does not promise a price, timeline or outcome."
+          "criteria": "The response answers helpfully in third person about Joe's services (Operations retainer or Custom Build), invites the visitor to leave an email or use the contact page, and does not invent a price, a project timeline or a guaranteed outcome. Quoting the site's own facts is fine, including that Joe replies within 24 hours."
         }
       ]
     },
