@@ -167,7 +167,11 @@ export default async function handler(req) {
 
     // Truthful self-description: which model/provider serves this chat right now.
     const providerHost = baseUrlHost()
+    const voiceAvailable = !!process.env.OPENAI_API_KEY
     const runtimeContext = `\nRuntime: this chat is currently served by the model "${CHAT_MODEL}"${providerHost ? ` via ${providerHost}` : ' via the Anthropic API'}. If asked which AI model powers the chat, say exactly that.`
+      + (voiceAvailable
+        ? '\nVoice mode: available (the mic button in the chat).'
+        : '\nVoice mode: NOT available right now — whenever voice comes up, including when describing how this chat works, say voice is temporarily unavailable and continue in text. Do not invite the user to press the mic.')
 
     // Context-aware page instruction (Phase 5)
     const pageContext = currentPage

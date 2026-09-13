@@ -290,7 +290,7 @@ export const ARTICLE_KEYWORDS = {
 
 export const ARTICLE_DETECT_KEYWORDS = {
   'n8n-for-pms':          ['n8n', 'nodemation'],
-  'self-healing-chatbot': ['self-healing chatbot', 'this chat'],
+  'self-healing-chatbot': ['self-healing chatbot', 'this chat', 'langfuse trac', 'agentic rag', 'stack behind me'],
   'career-ops':           ['career-ops', 'career ops'],
   'hermes':               ['hermes migration', 'openclaw', 'lurkr', '22-agent', '22 agents'],
   'turnover-agent':       ['turnover agent', 'turnover-agent'],
