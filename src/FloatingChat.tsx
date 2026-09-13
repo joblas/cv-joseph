@@ -19,6 +19,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { translations } from './i18n';
 import { getSectionLabels, getPageTitles } from './articles/registry';
 import { useVoiceMode } from './useVoiceMode';
+import { useGeminiVoice } from './useGeminiVoice';
 import VoiceOrb from './VoiceOrb';
 
 interface RagSource {
@@ -166,6 +167,18 @@ export default function FloatingChat({}: FloatingChatProps) {
 
   // Voice mode
   const voiceMode = useVoiceMode();
+  const geminiVoice = useGeminiVoice();
+  // Which provider the server will hand out a token for (GET /api/voice-token)
+  const [voiceProvider, setVoiceProvider] = useState<'openai' | 'gemini' | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    fetch('/api/voice-token')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => { if (!cancelled && d?.provider) setVoiceProvider(d.provider); })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, []);
+  const activeVoice = voiceProvider === 'gemini' ? geminiVoice : voiceMode;
 
   // Word-by-word streaming refs
   const fullTextRef = useRef('');        // full accumulated text from SSE
@@ -325,12 +338,12 @@ export default function FloatingChat({}: FloatingChatProps) {
   // Voice mode handlers
   const handleStartVoice = () => {
     setMode('voice');
-    voiceMode.start(messages, 'en', sessionId, location.pathname);
+    activeVoice.start(messages, 'en', sessionId, location.pathname);
   };
 
   const handleStopVoice = () => {
     // Merge transcript into messages
-    const transcript = voiceMode.state.transcript;
+    const transcript = activeVoice.state.transcript;
     if (transcript.length > 0) {
       setMessages(prev => [
         ...prev,
@@ -338,7 +351,7 @@ export default function FloatingChat({}: FloatingChatProps) {
       ]);
       setShowPrompts(false);
     }
-    voiceMode.stop();
+    activeVoice.stop();
     setMode('text');
   };
 
@@ -351,17 +364,17 @@ export default function FloatingChat({}: FloatingChatProps) {
     const statusMap: Record<string, string> = {
       connecting: v.connecting,
       listening: v.listening,
-      thinking: voiceMode.isSearching ? v.searching : v.thinking,
+      thinking: activeVoice.isSearching ? v.searching : v.thinking,
       speaking: v.speaking,
-      error: voiceMode.state.error
-        ? v[voiceMode.state.error as keyof typeof v] || v.connection
+      error: activeVoice.state.error
+        ? v[activeVoice.state.error as keyof typeof v] || v.connection
         : '',
     };
-    return statusMap[voiceMode.state.status] || '';
+    return statusMap[activeVoice.state.status] || '';
   };
 
   // Can toggle to voice?
-  const canStartVoice = !isLoading && !isStreaming && voiceMode.isSupported;
+  const canStartVoice = !isLoading && !isStreaming && activeVoice.isSupported;
 
   const sendMessage = async (messageText?: string) => {
     const text = messageText || input.trim();
@@ -919,10 +932,10 @@ export default function FloatingChat({}: FloatingChatProps) {
                   className="flex-1 flex items-center justify-center overflow-hidden"
                 >
                   <VoiceOrb
-                    status={voiceMode.state.status}
-                    getInputLevel={voiceMode.getInputLevel}
-                    getOutputLevel={voiceMode.getOutputLevel}
-                    remainingSeconds={voiceMode.state.remainingSeconds}
+                    status={activeVoice.state.status}
+                    getInputLevel={activeVoice.getInputLevel}
+                    getOutputLevel={activeVoice.getOutputLevel}
+                    remainingSeconds={activeVoice.state.remainingSeconds}
                     statusText={getVoiceStatusText()}
                     transcript={undefined}
                     isMobile={isMobile}
@@ -933,9 +946,9 @@ export default function FloatingChat({}: FloatingChatProps) {
             </AnimatePresence>
 
             {/* Source badges in voice mode — positioned at bottom above input */}
-            {mode === 'voice' && voiceMode.voiceSources.length > 0 && (
+            {mode === 'voice' && activeVoice.voiceSources.length > 0 && (
               <div className="flex flex-wrap justify-center gap-1.5 px-4 py-2 border-t border-border/50 bg-card/80">
-                {voiceMode.voiceSources.map((source, si) => {
+                {activeVoice.voiceSources.map((source, si) => {
                   const targetPath = source.page_path_en;
                   const sectionLabels = getSectionLabels()[targetPath] || {};
                   const anchorId = source.section_anchor.replace(/^#/, '');
