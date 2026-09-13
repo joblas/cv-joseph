@@ -23,7 +23,7 @@ A production-grade interactive portfolio that **demonstrates the skills it descr
 - **71 Automated Evals** — 10 categories: factual accuracy, persona, boundaries, quality, safety, language, RAG quality, multi-turn, source badges, voice quality. CI gate on every push
 - **LLMOps Dashboard** — Private `/ops` with 8 tabs: Overview, Conversations, Costs, RAG, Security, Evals, Voice, System. Real data from Langfuse + Supabase
 - **Closed Loop** — Trace → online scoring → quality < 0.7 → auto-generate test → CI gate blocks deploy
-- **Voice Mode** — OpenAI Realtime API, audio-to-audio, shared RAG pipeline, ~$0.25/session
+- **Voice Mode** — Gemini Live API (OpenAI Realtime as the legacy alternative), audio-to-audio, shared RAG pipeline, ~$0.25/session
 - **8 Published Articles** — case studies with JSON-LD, prerendered HTML, cross-linked RAG, and interactive architecture diagrams
 - **Interactive Architecture Diagram** — GSAP-animated SVG with narrated audio, pan/zoom, dark mode sync. [Explore it →](https://cloudyjoe.com/self-healing-chatbot#architecture)
 - **GEO-ready** — `llms.txt`, structured data (JSON-LD), AI crawler-friendly robots.txt

@@ -1,4 +1,5 @@
 import { Langfuse } from 'langfuse'
+import { voiceProvider } from './_shared/voice-provider.js'
 
 export const config = {
   runtime: 'edge',
@@ -200,14 +201,7 @@ Portfolio: cloudyjoe.com`
 // can force one of 'gemini' | 'openai'.
 // ---------------------------------------------------------------------------
 
-export function voiceProvider() {
-  const forced = process.env.VOICE_PROVIDER
-  if (forced === 'gemini') return process.env.GEMINI_API_KEY ? 'gemini' : null
-  if (forced === 'openai') return process.env.OPENAI_API_KEY ? 'openai' : null
-  if (process.env.GEMINI_API_KEY) return 'gemini'
-  if (process.env.OPENAI_API_KEY) return 'openai'
-  return null
-}
+export { voiceProvider }
 
 const GEMINI_LIVE_MODEL = process.env.GEMINI_LIVE_MODEL || 'models/gemini-3.1-flash-live-preview'
 const GEMINI_VOICE = process.env.GEMINI_VOICE || 'Charon'

@@ -6,7 +6,7 @@
  * ephemeral token with the model, persona and search_portfolio tool locked
  * in; the browser only ever holds that token.
  *
- * Wire protocol (BidiGenerateContentConstrained, v1alpha):
+ * Wire protocol (BidiGenerateContentConstrained, v1beta):
  *   → { setup: { model } }                      ← { setupComplete }   (then history + audio)
  *   → { clientContent: { turns, turnComplete } }  (chat history)
  *   → { realtimeInput: { audio: { data, mimeType: 'audio/pcm;rate=16000' } } }
@@ -113,12 +113,14 @@ export function useGeminiVoice() {
 
   const sendTrace = useCallback(async () => {
     if (!traceIdRef.current || transcriptRef.current.length === 0) return;
+    const traceId = traceIdRef.current;
+    traceIdRef.current = null; // one trace POST per session (stop() can run twice: cap/goAway + End)
     try {
       await fetch('/api/voice-trace', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          traceId: traceIdRef.current,
+          traceId,
           sessionId: sessionIdRef.current,
           transcript: transcriptRef.current,
           durationMs: Date.now() - sessionStartRef.current,
@@ -224,6 +226,8 @@ export function useGeminiVoice() {
           // keep the fallback text
         }
       }
+      // The cancellation typically arrives while the search is in flight
+      if (cancelledCallsRef.current.has(call.id)) continue;
       responses.push({ id: call.id, name: call.name, response: { result } });
     }
     setIsSearching(false);

@@ -180,6 +180,10 @@ export default function FloatingChat({}: FloatingChatProps) {
       .catch(() => { if (!cancelled) setVoiceProvider('none'); });
     return () => { cancelled = true; };
   }, [isOpen, voiceProvider]);
+  // A failed probe ('none') is retried the next time the chat is opened
+  useEffect(() => {
+    if (!isOpen && voiceProvider === 'none') setVoiceProvider(null);
+  }, [isOpen, voiceProvider]);
   const activeVoice = voiceProvider === 'gemini' ? geminiVoice : voiceMode;
 
   // Word-by-word streaming refs
