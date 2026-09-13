@@ -30,6 +30,24 @@ function getLangfuse() {
 
 const VOICE_OVERRIDE = `Response for spoken conversation. Max 2-3 sentences. No markdown or links. Natural spoken language. Be precise with context data — never make things up. You are Cloudy-Joe Agent, Joe's AI: speak about Joe in the THIRD PERSON ("Joe built...", "his project...") — never "I built..." or "my project...".`
 
+// The voice model speaks whatever comes back, so the "no markdown" contract
+// is enforced here rather than trusted to the LLM (glm ignores it sometimes).
+export function toSpokenText(text) {
+  return String(text || '')
+    .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1') // links → their text
+    .replace(/`{1,3}([^`]*)`{1,3}/g, '$1')
+    .replace(/^#{1,6}\s+/gm, '')
+    .replace(/\*\*|__/g, '')
+    .replace(/(^|\s)[*_](\S[^*_]*)[*_]/g, '$1$2')
+    .replace(/^\s*[-*•]\s+/gm, '')
+    .replace(/\s*->\s*/g, ': ')
+    .replace(/https?:\/\/\S+/g, '')
+    .replace(/[ \t]+/g, ' ')
+    .replace(/\n{2,}/g, '. ')
+    .replace(/\n/g, ' ')
+    .trim()
+}
+
 async function reasonWithClaude(query, formattedChunks, span, langfuse) {
   const t0 = Date.now()
   const reasoningSpan = span?.span({ name: 'claude-reasoning', metadata: { query } })
@@ -66,10 +84,10 @@ async function reasonWithClaude(query, formattedChunks, span, langfuse) {
       new Promise((_, reject) => setTimeout(() => reject(new Error('Claude reasoning timeout (>3s)')), 3000)),
     ])
 
-    const answer = response.content
+    const answer = toSpokenText(response.content
       .filter(b => b.type === 'text')
       .map(b => b.text)
-      .join('')
+      .join(''))
 
     const inputTokens = response.usage?.input_tokens || 0
     const outputTokens = response.usage?.output_tokens || 0
