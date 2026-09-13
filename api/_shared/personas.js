@@ -1,15 +1,17 @@
 // ---------------------------------------------------------------------------
-// Personas — one Cloudy-Joe Agent, several faces. A persona selects the system
-// prompt, the retrieval corpus, the lead sink, the contact address and the
-// browser origins allowed to call the shared API. Requests name their persona
-// in the body (`persona`); the default keeps cloudyjoe.com's behaviour intact.
+// Personas — one agent brain, two named faces: Cloudy-Joe Agent on cloudyjoe.com
+// and Joe's Tech Agent on joestechsolutions.com. A persona selects the system
+// prompt, the retrieval corpus, the lead sink, the contact address, the agent's
+// own name and the browser origins allowed to call the shared API. Requests name
+// their persona in the body (`persona`); the default keeps cloudyjoe.com intact.
 // ---------------------------------------------------------------------------
 import CLOUDYJOE_PROMPT from '../../chatbot-prompt.txt'
 import JTS_PROMPT from '../../jts-prompt.txt'
 
 // Condensed spoken-mode persona for joestechsolutions.com (the text prompt is
-// too long for a voice system instruction; this mirrors VOICE_BASE_PROMPT).
-const JTS_VOICE_PROMPT = `You are Cloudy-Joe Agent — the AI agent for Joe Blas and his company Joe's Tech Solutions (joestechsolutions.com), speaking by voice with a visitor who may become a client. You are not Joe, and the caller is not talking to Joe live; say so plainly if asked. Talk about Joe and the company in the third person; first person only for yourself.
+// too long for a voice system instruction; it parallels VOICE_BASE_PROMPT but
+// keeps its own identity line — this face is Joe's Tech Agent, cloudyjoe's is not).
+const JTS_VOICE_PROMPT = `You are Joe's Tech Agent — the AI agent for Joe Blas and his company Joe's Tech Solutions (joestechsolutions.com), speaking by voice with a visitor who may become a client. You are not Joe, and the caller is not talking to Joe live; say so plainly if asked. Talk about Joe and the company in the third person; first person only for yourself.
 
 ## Voice rules (CRITICAL)
 - Responses VERY short: max 2-3 punchy sentences. Spoken conversation, not an article.
@@ -70,6 +72,8 @@ export const PERSONAS = {
     origins: [/^https:\/\/(www\.)?cloudyjoe\.com$/, /^https:\/\/([a-z0-9-]+\.)?cloudyjoe\.pages\.dev$/],
     prompt: CLOUDYJOE_PROMPT,
     searchTool: CLOUDYJOE_SEARCH_TOOL,
+    // Identity clause for spoken answers (api/rag-search.js); each face names itself
+    spokenIdentity: "You are Cloudy-Joe Agent, Joe's AI",
     // Langfuse-managed prompt (label "production") takes precedence when configured
     langfusePrompt: 'chatbot-system',
     rag: {
@@ -92,6 +96,7 @@ export const PERSONAS = {
     origins: [/^https:\/\/(www\.)?joestechsolutions\.com$/, /^https:\/\/([a-z0-9-]+\.)?joestechsolutions\.pages\.dev$/],
     prompt: JTS_PROMPT,
     searchTool: JTS_SEARCH_TOOL,
+    spokenIdentity: "You are Joe's Tech Agent, the AI for Joe's Tech Solutions",
     langfusePrompt: null,
     rag: {
       kind: 'site_chunks', // JTS Supabase: search_site_chunks_public (anon key, read-only)
