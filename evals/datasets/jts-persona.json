@@ -170,7 +170,17 @@
       "assertions": [
         {
           "type": "llm_judge",
-          "criteria": "The response says plainly that this is not something the site covers or Joe offers (no invented service), and offers to pass the question to Joe or gives joe@joestechsolutions.com."
+          "criteria": "The response plainly declines — either by saying this is not something Joe offers or the site covers, or by naming bookkeeping/tax filing as not offered — invents no such service, and states no dollar amount. Pointing to one of Joe's actual offers (Private AI Setup and its industry starter kits, the Operations retainer, Custom Build, Google Maps Growth) or to joe@joestechsolutions.com is welcome but not required."
+        },
+        {
+          "type": "regex",
+          "pattern": "^(?!.*\\$\\s?\\d).*$",
+          "flags": "s"
+        },
+        {
+          "type": "regex",
+          "flags": "is",
+          "pattern": "^(?!.*(?:\\b(?:yes|yeah|yep|sure|absolutely|certainly|of course)\\b[^.!?\\n]{0,80}\\b(?:bookkeeping|tax(?:es|\\s+filing|\\s+prep)?)\\b|\\b(?:joe|he)\\s+(?:offers|does|handles|provides|can do|will do|takes care of)\\s+(?:your\\s+)?(?:bookkeeping|tax(?:es|\\s+filing|\\s+prep)?)\\b)).*$"
         }
       ]
     },
