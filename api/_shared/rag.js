@@ -45,7 +45,10 @@ function decodeEntities(text) {
   return String(text || '').replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (m, code) => {
     if (code[0] === '#') {
       const n = code[1].toLowerCase() === 'x' ? parseInt(code.slice(2), 16) : parseInt(code.slice(1), 10)
-      return Number.isFinite(n) ? String.fromCodePoint(n) : m
+      // Only real scalar values: fromCodePoint throws above 0x10FFFF, and NUL /
+      // lone surrogates have no place in a prompt
+      const valid = Number.isFinite(n) && n > 0 && n <= 0x10ffff && !(n >= 0xd800 && n <= 0xdfff)
+      return valid ? String.fromCodePoint(n) : m
     }
     return HTML_ENTITIES[code.toLowerCase()] ?? m
   })

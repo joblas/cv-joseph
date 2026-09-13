@@ -168,9 +168,9 @@ export async function captureLead({ message, page, sessionId, lang, reply, perso
           assistant_reply: reply ? String(reply).slice(0, 4000) : null,
           // Shared table: non-default personas store the full site URL so their
           // leads stay distinguishable from cloudyjoe's bare paths.
-          page: page == null || persona.id === DEFAULT_PERSONA || /^https?:\/\//.test(String(page))
+          page: persona.id === DEFAULT_PERSONA || typeof page !== 'string' || !page.trim() || /^https?:\/\//i.test(page)
             ? page ?? null
-            : `${persona.site}${String(page).startsWith('/') ? '' : '/'}${page}`,
+            : `${persona.site}${page.startsWith('/') ? '' : '/'}${page}`,
           lang: lang ?? null,
           notified,
         }),

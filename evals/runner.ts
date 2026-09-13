@@ -213,8 +213,12 @@ function loadDatasets(): Dataset[] {
       console.log(`   (skipping ${dataset.name}: written for persona ${target}, running ${persona})`)
       return false
     })
-  if (only.length > 0 && datasets.length === 0) {
-    console.error(`EVAL_DATASETS=${only.join(',')} selects nothing for persona ${persona} — set EVAL_PERSONA to match`)
+  if (datasets.length === 0) {
+    console.error(
+      only.length > 0
+        ? `EVAL_DATASETS=${only.join(',')} selects nothing for persona ${persona} — set EVAL_PERSONA to match`
+        : `No datasets for persona ${persona} — EVAL_PERSONA must be one a dataset declares (cloudyjoe, jts)`,
+    )
     process.exit(2)
   }
   return datasets
