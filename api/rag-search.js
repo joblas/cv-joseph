@@ -53,6 +53,11 @@ export function toSpokenText(text) {
     .trim()
 }
 
+// Tier-1 reasoning budget. Thinking models need more than the original 3 s;
+// past it the raw chunks are returned instead (sanitised below).
+const parsedReasonTimeout = parseInt(process.env.VOICE_REASON_TIMEOUT_MS || '', 10)
+const REASON_TIMEOUT_MS = Number.isInteger(parsedReasonTimeout) && parsedReasonTimeout > 0 ? parsedReasonTimeout : 3000
+
 async function reasonWithClaude(query, formattedChunks, span, langfuse) {
   const t0 = Date.now()
   const reasoningSpan = span?.span({ name: 'claude-reasoning', metadata: { query } })
@@ -86,7 +91,7 @@ async function reasonWithClaude(query, formattedChunks, span, langfuse) {
           },
         ],
       }),
-      new Promise((_, reject) => setTimeout(() => reject(new Error('Claude reasoning timeout (>3s)')), 3000)),
+      new Promise((_, reject) => setTimeout(() => reject(new Error(`Claude reasoning timeout (>${REASON_TIMEOUT_MS}ms)`)), REASON_TIMEOUT_MS)),
     ])
 
     const answer = toSpokenText(response.content
@@ -176,7 +181,9 @@ export default async function handler(req) {
       // Tier 1: Claude + RAG → reasoned answer
       // Tier 2: RAG only (Claude failed) → raw chunks
       // Tier 3: both failed → handled by catch below
-      const context = reasonedAnswer || formattedChunks
+      // Both tiers are spoken verbatim by the voice model, so the raw-chunk
+      // fallback must honour the no-markdown contract too.
+      const context = toSpokenText(reasonedAnswer || formattedChunks)
 
       // Filter sources to articles mentioned in the answer (same logic as chat.js)
       const responseText = reasonedAnswer || ''
