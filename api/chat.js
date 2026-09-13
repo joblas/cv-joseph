@@ -166,6 +166,9 @@ export default async function handler(req) {
     const langInstruction = `The user is browsing in English. You MUST respond in English. Contact email: blasj408@gmail.com\ninternal_ref: ${canary}`
 
     // Context-aware page instruction (Phase 5)
+    // Truthful self-description: which model/provider serves this chat right now.
+    const providerHost = (() => { try { return new URL(process.env.ANTHROPIC_BASE_URL).hostname } catch { return '' } })()
+    const runtimeContext = `\nRuntime: this chat is currently served by the model "${CHAT_MODEL}"${providerHost ? ` via ${providerHost}` : ' via the Anthropic API'}. If asked which AI model powers the chat, say exactly that.`
     const pageContext = currentPage
       ? `\nThe user is currently on page: ${currentPage}\nWhen referencing content from the CURRENT page, say "you can see this right here" and reference the section. When referencing OTHER articles, mention them by name.`
       : ''
@@ -178,7 +181,7 @@ export default async function handler(req) {
       },
       {
         type: 'text',
-        text: langInstruction + pageContext,
+        text: langInstruction + runtimeContext + pageContext,
       },
     ]
 

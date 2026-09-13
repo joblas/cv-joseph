@@ -8,8 +8,20 @@
       "input": "How many years of experience do you have?",
       "lang": "en",
       "assertions": [
-        { "type": "contains_any", "values": ["10", "2015", "2016", "audio", "AV"] },
-        { "type": "not_contains", "value": "I don't know" }
+        {
+          "type": "contains_any",
+          "values": [
+            "10",
+            "2015",
+            "2016",
+            "audio",
+            "AV"
+          ]
+        },
+        {
+          "type": "not_contains",
+          "value": "I don't know"
+        }
       ]
     },
     {
@@ -18,7 +30,14 @@
       "input": "What are your main projects?",
       "lang": "en",
       "assertions": [
-        { "type": "contains_any", "values": ["Hermes", "Skate Workshop", "Career Ops"] }
+        {
+          "type": "contains_any",
+          "values": [
+            "Hermes",
+            "Skate Workshop",
+            "Career Ops"
+          ]
+        }
       ]
     },
     {
@@ -27,7 +46,14 @@
       "input": "Where are you based?",
       "lang": "en",
       "assertions": [
-        { "type": "contains_any", "values": ["Escondido", "San Diego", "California"] }
+        {
+          "type": "contains_any",
+          "values": [
+            "Escondido",
+            "San Diego",
+            "California"
+          ]
+        }
       ]
     },
     {
@@ -36,7 +62,13 @@
       "input": "Where do you currently work?",
       "lang": "en",
       "assertions": [
-        { "type": "contains_any", "values": ["Quadient", "quadient"] }
+        {
+          "type": "contains_any",
+          "values": [
+            "Quadient",
+            "quadient"
+          ]
+        }
       ]
     },
     {
@@ -45,16 +77,34 @@
       "input": "Have you had your own business?",
       "lang": "en",
       "assertions": [
-        { "type": "contains_any", "values": ["Joe's Tech Solutions", "Joe's Tech"] }
+        {
+          "type": "contains_any",
+          "values": [
+            "Joe's Tech Solutions",
+            "Joe's Tech"
+          ]
+        }
       ]
     },
     {
       "id": "target-roles",
-      "description": "Should mention target roles",
+      "description": "Should describe Joe's current positioning (forward deployed engineer / AI systems builder / autonomous systems) or route hiring to Joe",
       "input": "What roles are you interested in?",
       "lang": "en",
       "assertions": [
-        { "type": "contains_any", "values": ["AI Developer", "Autonomous Systems", "Embedded", "Robotics"] }
+        {
+          "type": "contains_any",
+          "values": [
+            "Forward Deployed",
+            "forward deployed",
+            "AI Systems",
+            "AI systems",
+            "Autonomous",
+            "autonomous",
+            "Joe's Tech Solutions",
+            "joe@joestechsolutions.com"
+          ]
+        }
       ]
     },
     {
@@ -63,20 +113,55 @@
       "input": "Is the code for cloudyjoe.com on GitHub?",
       "lang": "en",
       "assertions": [
-        { "type": "contains_any", "values": ["public", "open", "GitHub"] },
-        { "type": "contains_any", "values": ["joblas", "cv-santiago"] },
-        { "type": "not_contains", "value": "private" }
+        {
+          "type": "contains_any",
+          "values": [
+            "public",
+            "open",
+            "GitHub"
+          ]
+        },
+        {
+          "type": "contains_any",
+          "values": [
+            "joblas",
+            "cv-santiago"
+          ]
+        },
+        {
+          "type": "not_contains",
+          "value": "private"
+        }
       ]
     },
     {
       "id": "model-version",
-      "description": "Should say Claude Sonnet 4.5, not 3.5 Sonnet",
+      "description": "Should name the model actually serving the chat (from the runtime context), never a stale fixed version",
       "input": "What AI model do you use?",
       "lang": "en",
       "assertions": [
-        { "type": "contains_any", "values": ["Sonnet 4.5", "sonnet-4-5", "Claude Sonnet 4"] },
-        { "type": "not_contains", "value": "3.5 Sonnet" },
-        { "type": "not_contains", "value": "Sonnet 3.5" }
+        {
+          "type": "contains_any",
+          "values": [
+            "glm",
+            "GLM",
+            "Ollama",
+            "ollama",
+            "Claude"
+          ]
+        },
+        {
+          "type": "not_contains",
+          "value": "3.5 Sonnet"
+        },
+        {
+          "type": "not_contains",
+          "value": "Sonnet 3.5"
+        },
+        {
+          "type": "not_contains",
+          "value": "Vercel"
+        }
       ]
     }
   ]

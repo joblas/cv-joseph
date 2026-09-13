@@ -8,9 +8,17 @@
       "input": "Tell me about the OpenClaw project and how it works",
       "lang": "en",
       "assertions": [
-        { "type": "rag_used" },
-        { "type": "source_includes", "value": "openclaw" },
-        { "type": "llm_judge", "criteria": "Mention 22 specialized agents, 4 directors, 1 CTO, workflow automation orchestration, or 14 agents, Ollama Cloud, composable via delegation." }
+        {
+          "type": "rag_used"
+        },
+        {
+          "type": "source_includes",
+          "value": "hermes"
+        },
+        {
+          "type": "llm_judge",
+          "criteria": "Mention 22 specialized agents, 4 directors, 1 CTO, workflow automation orchestration, or 14 agents, Ollama Cloud, composable via delegation."
+        }
       ]
     },
     {
@@ -19,9 +27,22 @@
       "input": "What is The Skate Workshop project about?",
       "lang": "en",
       "assertions": [
-        { "type": "rag_used" },
-        { "type": "source_includes", "value": "skate-workshop" },
-        { "type": "contains_any", "values": ["skate", "Skate", "workshop", "Workshop"] }
+        {
+          "type": "rag_used"
+        },
+        {
+          "type": "source_includes",
+          "value": "skate-workshop-loop"
+        },
+        {
+          "type": "contains_any",
+          "values": [
+            "skate",
+            "Skate",
+            "workshop",
+            "Workshop"
+          ]
+        }
       ]
     },
     {
@@ -30,7 +51,9 @@
       "input": "Hello",
       "lang": "en",
       "assertions": [
-        { "type": "rag_not_used" }
+        {
+          "type": "rag_not_used"
+        }
       ]
     },
     {
@@ -39,8 +62,16 @@
       "input": "What's your email?",
       "lang": "en",
       "assertions": [
-        { "type": "rag_not_used" },
-        { "type": "contains_any", "values": ["blasj408@gmail.com", "cloudyjoe.com"] }
+        {
+          "type": "rag_not_used"
+        },
+        {
+          "type": "contains_any",
+          "values": [
+            "blasj408@gmail.com",
+            "cloudyjoe.com"
+          ]
+        }
       ]
     },
     {
@@ -49,9 +80,25 @@
       "input": "Explain the architecture of the Hermes system and how it relates to OpenClaw",
       "lang": "en",
       "assertions": [
-        { "type": "rag_used" },
-        { "type": "source_includes", "value": "openclaw" },
-        { "type": "contains_any", "values": ["14", "delegation", "Hermes", "OpenClaw", "composab", "agent", "Ollama Cloud"] }
+        {
+          "type": "rag_used"
+        },
+        {
+          "type": "source_includes",
+          "value": "hermes"
+        },
+        {
+          "type": "contains_any",
+          "values": [
+            "14",
+            "delegation",
+            "Hermes",
+            "OpenClaw",
+            "composab",
+            "agent",
+            "Ollama Cloud"
+          ]
+        }
       ]
     },
     {
@@ -60,8 +107,13 @@
       "input": "What was the exact ROI percentage of your projects?",
       "lang": "en",
       "assertions": [
-        { "type": "rag_used" },
-        { "type": "llm_judge", "criteria": "The response must NOT invent a specific ROI percentage (like '300% ROI' or '5x return'). If the articles don't contain an exact ROI figure, the response should either share the metrics that ARE available or acknowledge it doesn't have that exact number. Fabricating a precise percentage is a faithfulness failure." }
+        {
+          "type": "rag_used"
+        },
+        {
+          "type": "llm_judge",
+          "criteria": "The response must NOT invent a specific ROI percentage (like '300% ROI' or '5x return'). If the articles don't contain an exact ROI figure, the response should either share the metrics that ARE available or acknowledge it doesn't have that exact number. Fabricating a precise percentage is a faithfulness failure."
+        }
       ]
     },
     {
@@ -70,8 +122,13 @@
       "input": "How do Hermes and The Skate Workshop differ in terms of technology?",
       "lang": "en",
       "assertions": [
-        { "type": "rag_used" },
-        { "type": "llm_judge", "criteria": "The response must reference BOTH Hermes and The Skate Workshop and explain how they differ technologically. It can be brief due to word limits, but must distinguish between the two projects rather than treating them as one." }
+        {
+          "type": "rag_used"
+        },
+        {
+          "type": "llm_judge",
+          "criteria": "The response must reference BOTH Hermes and The Skate Workshop and explain how they differ technologically. It can be brief due to word limits, but must distinguish between the two projects rather than treating them as one."
+        }
       ]
     }
   ]
