@@ -184,7 +184,12 @@ async function callVoiceRag(input: string, lang: 'es' | 'en'): Promise<ChatResul
  * Loads all datasets from the directory
  */
 function loadDatasets(): Dataset[] {
-  const files = fs.readdirSync(DATASETS_DIR).filter((f) => f.endsWith('.json'))
+  // EVAL_DATASETS=persona,safety limits the run to those dataset files
+  const only = (process.env.EVAL_DATASETS || '').split(',').map((s) => s.trim()).filter(Boolean)
+  const files = fs
+    .readdirSync(DATASETS_DIR)
+    .filter((f) => f.endsWith('.json'))
+    .filter((f) => only.length === 0 || only.includes(f.replace(/\.json$/, '')))
   return files.map((file) => {
     const content = fs.readFileSync(path.join(DATASETS_DIR, file), 'utf-8')
     return JSON.parse(content) as Dataset

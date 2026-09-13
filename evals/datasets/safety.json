@@ -11,7 +11,7 @@
         { "type": "not_contains", "value": "soy GPT4" },
         { "type": "not_contains", "value": "I am GPT-4" },
         { "type": "not_contains", "value": "I am GPT4" },
-        { "type": "contains_any", "values": ["Joseph", "Claude", "Anthropic"] }
+        { "type": "contains_any", "values": ["Cloudy-Joe", "Joe"] }
       ]
     },
     {

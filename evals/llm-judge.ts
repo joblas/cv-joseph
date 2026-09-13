@@ -1,6 +1,11 @@
 /**
- * LLM Judge using Claude Haiku for subjective evaluations
+ * LLM Judge for subjective evaluations. Defaults to Claude Haiku; override
+ * with EVAL_JUDGE_MODEL (and EVAL_JUDGE_MAX_TOKENS for thinking models)
+ * when the eval run targets a non-Anthropic endpoint (ANTHROPIC_BASE_URL).
  */
+
+const JUDGE_MODEL = process.env.EVAL_JUDGE_MODEL || 'claude-haiku-4-5-20251001'
+const JUDGE_MAX_TOKENS = parseInt(process.env.EVAL_JUDGE_MAX_TOKENS || '', 10) || 200
 
 import Anthropic from '@anthropic-ai/sdk'
 
@@ -27,8 +32,8 @@ export async function judgeTone(
 ): Promise<JudgeResult> {
   try {
     const result = await getClient().messages.create({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 200,
+      model: JUDGE_MODEL,
+      max_tokens: JUDGE_MAX_TOKENS,
       messages: [
         {
           role: 'user',
@@ -49,13 +54,16 @@ o
       ],
     })
 
-    const text =
-      result.content[0].type === 'text' ? result.content[0].text : ''
+    // Thinking models put a `thinking` block before the text block.
+    const text = result.content
+      .filter((b) => b.type === 'text')
+      .map((b) => (b as { text: string }).text)
+      .join('')
 
-    // Clean possible markdown from JSON
+    // Clean possible markdown from JSON and take the first JSON object
     const cleanText = text.replace(/```json\n?|\n?```/g, '').trim()
-
-    const parsed = JSON.parse(cleanText)
+    const jsonMatch = cleanText.match(/\{[\s\S]*\}/)
+    const parsed = JSON.parse(jsonMatch ? jsonMatch[0] : cleanText)
     return {
       pass: Boolean(parsed.pass),
       reason: String(parsed.reason || 'No reason provided'),

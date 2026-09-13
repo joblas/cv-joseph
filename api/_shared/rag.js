@@ -272,13 +272,16 @@ export function extractSources(chunks) {
 }
 
 // Keywords that signal the response actually references a given article
+// (ids/paths mirror src/articles/registry.ts — keep in sync when articles change)
 export const ARTICLE_KEYWORDS = {
   'n8n-for-pms':          ['n8n', 'nodemation'],
-  'jacobo':               ['jacobo', 'agente ia', 'ai agent', 'whatsapp', 'multi-agent', 'multiagent'],
-  'business-os':          ['business os', 'erp', 'airtable bases', 'crm', 'inventory'],
-  'programmatic-seo':     ['seo programático', 'programmatic seo', 'web programática', 'programmatic web', 'decision engine', 'indexable', 'dataforseo', 'seo pipeline', 'seo automatizado', 'automated seo'],
-  'self-healing-chatbot': ['chatbot', 'this chat', 'este chat', 'evals', 'self-healing', 'closed-loop', 'langfuse', 'rag'],
-  'joblas-portfolio':     ['joblas', 'joseph blas', 'portfolio'],
+  'self-healing-chatbot': ['self-healing', 'this chat', 'closed-loop', 'langfuse', 'evals'],
+  'career-ops':           ['career-ops', 'career ops'],
+  'hermes':               ['hermes', 'openclaw', 'lurkr'],
+  'turnover-agent':       ['turnover agent', 'turnover-agent', 'short-term rental', 'short-term-rental'],
+  'archive-beta-loop':    ['archive beta', 'archive-beta', 'archive salon', 'archive loop'],
+  'cbarrgs-agent':        ['cbarrgs'],
+  'skate-workshop-loop':  ['skate workshop', 'skate-workshop', 'willy santos'],
 }
 
 /** Filter RAG sources to only articles actually mentioned in the response, max 3 */
@@ -293,13 +296,16 @@ export function filterSourcesByResponse(sources, responseText) {
 }
 
 // Static article routes — used to generate badges from keywords regardless of RAG
+// (single-language site: the ES path is the same route)
 export const ARTICLE_ROUTES = {
-  'n8n-for-pms':          { page_path_es: '/n8n-para-pms', page_path_en: '/n8n-for-pms' },
-  'jacobo':               { page_path_es: '/agente-ia-jacobo', page_path_en: '/ai-agent-jacobo' },
-  'business-os':          { page_path_es: '/business-os-para-airtable', page_path_en: '/business-os-for-airtable' },
-  'programmatic-seo':     { page_path_es: '/seo-programatico', page_path_en: '/programmatic-seo' },
-  'self-healing-chatbot': { page_path_es: '/chatbot-que-se-cura-solo', page_path_en: '/self-healing-chatbot' },
-  'joblas-portfolio':     { page_path_es: '/joblas-portfolio', page_path_en: '/joblas-portfolio-founder' },
+  'n8n-for-pms':          { page_path_es: '/n8n-for-pms', page_path_en: '/n8n-for-pms' },
+  'self-healing-chatbot': { page_path_es: '/self-healing-chatbot', page_path_en: '/self-healing-chatbot' },
+  'career-ops':           { page_path_es: '/career-ops-system', page_path_en: '/career-ops-system' },
+  'hermes':               { page_path_es: '/hermes', page_path_en: '/hermes' },
+  'turnover-agent':       { page_path_es: '/turnover-agent', page_path_en: '/turnover-agent' },
+  'archive-beta-loop':    { page_path_es: '/archive-beta-loop', page_path_en: '/archive-beta-loop' },
+  'cbarrgs-agent':        { page_path_es: '/cbarrgs-agent', page_path_en: '/cbarrgs-agent' },
+  'skate-workshop-loop':  { page_path_es: '/skate-workshop-loop', page_path_en: '/skate-workshop-loop' },
 }
 
 // Home fallback
