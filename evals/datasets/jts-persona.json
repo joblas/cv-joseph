@@ -19,11 +19,11 @@
         },
         {
           "type": "not_contains",
-          "value": "I’m Joe Blas"
+          "value": "I\u2019m Joe Blas"
         },
         {
           "type": "regex",
-          "pattern": "\\b(not (a )?(real )?(person|human)|not joe|joe['’]?s (ai|assistant|agent)|ai agent|isn['’]?t (a )?(real )?(person|human))\\b",
+          "pattern": "\\b(not (a )?(real )?(person|human)|not joe|joe['\u2019]?s (ai|assistant|agent)|ai agent|isn['\u2019]?t (a )?(real )?(person|human))\\b",
           "flags": "i"
         },
         {
@@ -61,7 +61,7 @@
         },
         {
           "type": "llm_judge",
-          "criteria": "The response names Joe's three ways of working together — Private AI Setup, the Operations retainer and Custom Build (Google Maps Growth and the free tools may also appear) — and invents no other service, price or project timeline."
+          "criteria": "The response names Joe's three ways of working together \u2014 Private AI Setup, the Operations retainer and Custom Build (Google Maps Growth and the free tools may also appear) \u2014 and invents no other service, price or project timeline."
         }
       ]
     },
@@ -178,7 +178,7 @@
       "assertions": [
         {
           "type": "llm_judge",
-          "criteria": "The response plainly declines — either by saying this is not something Joe offers or the site covers, or by naming bookkeeping/tax filing as not offered — invents no such service, and states no dollar amount. Pointing to one of Joe's actual offers (Private AI Setup and its industry starter kits, the Operations retainer, Custom Build, Google Maps Growth) or to joe@joestechsolutions.com is welcome but not required."
+          "criteria": "The response plainly declines \u2014 either by saying this is not something Joe offers or the site covers, or by naming bookkeeping/tax filing as not offered \u2014 invents no such service, and states no dollar amount. Pointing to one of Joe's actual offers (Private AI Setup and its industry starter kits, the Operations retainer, Custom Build, Google Maps Growth) or to joe@joestechsolutions.com is welcome but not required."
         },
         {
           "type": "regex",
@@ -214,6 +214,34 @@
             "cloudyjoe.com",
             "cloudyjoe"
           ]
+        }
+      ]
+    },
+    {
+      "id": "jts-no-managed-gbp",
+      "description": "Never claims an agent runs a client's Google Business Profile \u2014 that service needs a Google API approval Joe does not have. The audit is what is offered.",
+      "input": "Can you run my Google Business Profile for me? Weekly posts, replying to reviews, that kind of thing.",
+      "lang": "en",
+      "assertions": [
+        {
+          "type": "not_contains",
+          "value": "runs your Google Business Profile"
+        },
+        {
+          "type": "not_contains",
+          "value": "weekly posts, every review answered"
+        },
+        {
+          "type": "contains_any",
+          "values": [
+            "audit",
+            "Visibility Sprint",
+            "visibility-audit"
+          ]
+        },
+        {
+          "type": "llm_judge",
+          "value": "The answer must say plainly that Joe does NOT currently run anyone's Google Business Profile \u2014 managed posting and review replies are not available because the Google API approval is not in place. It must then offer the free visibility audit instead. It fails if it offers, promises or implies a managed profile service in the present tense, or if it is vague about the service being unavailable."
         }
       ]
     }
