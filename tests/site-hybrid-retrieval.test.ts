@@ -390,6 +390,10 @@ check('the LLM fallback reranker budget stays within a few seconds',
   check('the LLM fallback reranker is actually reached', opts !== null)
   check('...and is given an explicit timeout, not the SDK\u2019s 600s default',
     typeof opts?.timeout === 'number' && opts.timeout > 0 && opts.timeout <= 3000)
+  // A timeout alone does not bound the CALL: the SDK retries while attempts
+  // remain, so maxRetries 2 would still permit ~3x the timeout plus backoff.
+  check('...and no retries, so the timeout bounds the call and not just one attempt',
+    opts?.maxRetries === 0)
 }
 
 // --- 6. voyageRerank degradation contract ---------------------------------------

@@ -529,6 +529,15 @@ export async function rerankChunks(query, chunks, anthropicClient) {
       // quality rather than failing the turn — and past ~2.5s on a
       // 1-CPU-second budget the ranking is not worth waiting for anyway.
       timeout: LLM_RERANK_TIMEOUT_MS,
+      // `timeout` bounds ONE ATTEMPT, not the call: the SDK retries while
+      // attempts remain and only throws once they are exhausted, with
+      // maxRetries defaulting to 2. So the cap above alone would still allow
+      // 3 x 2500ms plus backoff, about 9s. Retrying is not worth it here —
+      // the catch below falls back to the fused order instantly and the
+      // ranking difference is small, so a retry buys little and costs the
+      // visitor seconds. This is the same attempt-vs-call distinction that
+      // made RERANK_TIMEOUT_MS bound the Voyage attempt rather than the step.
+      maxRetries: 0,
       messages: [{
         role: 'user',
         content: `Query: "${query}"\nRank these chunks by relevance. Return ONLY the top 5 IDs as comma-separated numbers (most relevant first):\n${numbered}`,
