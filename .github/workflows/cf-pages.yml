@@ -31,9 +31,22 @@ jobs:
             echo "branch=main" >> "$GITHUB_OUTPUT"
             echo "kind=production" >> "$GITHUB_OUTPUT"
           fi
-      - name: Install + build (static site + Pages Functions)
+      - name: Install
+        run: npm ci
+      # Gate the deploy on the offline suites. Until 2026-09-20 this workflow ran
+      # no tests at all, so every tests/*.test.ts in the repo was decorative — a
+      # test added in a PR could never fail CI on that PR or any later one.
+      # Only the suites that need no secrets and no live endpoint belong here:
+      # test:contract needs LANGFUSE_* and test:ops probes the deployed site, so
+      # both fail in a clean checkout for environmental reasons, not code ones.
+      - name: Test
         run: |
-          npm ci
+          npm run test:rag-hybrid
+          npm run test:rag-query
+          npm run test:personas
+          npm run test:spoken
+      - name: Build (static site + Pages Functions)
+        run: |
           npm run cf:prep   # api/ → functions/api-src/ (Workers shims), prompt module
           npm run build
           npm run cf:post   # _headers/_redirects from vercel.json into dist/

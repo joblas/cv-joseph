@@ -544,8 +544,12 @@ function streamResponse({
           // Calculate total cost across all spans
           const costBreakdown = {
             toolDecision: calcCost(CHAT_MODEL, tdInputTokens || 0, tdOutputTokens || 0),
-            embedding: calcCost('text-embedding-3-small', ragUsage?.embeddingTokens || 0),
-            reranking: calcCost(FAST_MODEL, ragUsage?.rerankInputTokens || 0, ragUsage?.rerankOutputTokens || 0),
+            // Price what RAN, not what this file once assumed. These were
+            // hardcoded to an OpenAI embedding model nothing calls and to
+            // FAST_MODEL, so the site corpus's two paid Voyage calls both
+            // reported $0 while the one non-zero figure used the wrong rate.
+            embedding: calcCost(ragUsage?.embeddingModel || 'text-embedding-3-small', ragUsage?.embeddingTokens || 0),
+            reranking: calcCost(ragUsage?.rerankModel || FAST_MODEL, ragUsage?.rerankInputTokens || 0, ragUsage?.rerankOutputTokens || 0),
             generation: generationCost,
           }
           costBreakdown.total = Object.values(costBreakdown).reduce((a, b) => a + b, 0)
