@@ -169,6 +169,8 @@ const WORK_INTENT = new RegExp([
   /\bhas\s+(?:he|joe|you)\s+(?:ever\s+)?(?:built|made|done|worked on)\b/,
   // "can I see some of his apps", "show me the work"
   /\b(?:see|show me|look at)\b[^?]{0,30}?\b(?:work|projects?|portfolio|apps?|sites?)\b/,
+  /\b(?:see|show me|look at)\b[^?]{0,30}?\b(?:built|made|done|shipped)\b/,          // "show me what he has built"
+  /\bwho\s+(?:has|have)\s+(?:he|joe|you|they)\s+worked\s+(?:with|for)\b/,
 ].map((r) => r.source).join('|'), 'i')
 
 export function expandSiteQuery(query) {
@@ -180,7 +182,16 @@ export function expandSiteQuery(query) {
   return additions.length ? `${q} ${additions.join(' ')}` : q
 }
 
+// The RPC gets the EXPANDED query; boostNamedPages gets the ORIGINAL one.
+// Feeding the expanded string to both would make every case-study page count as
+// "named" for any work question, flattening the boost exactly when it fires.
+// Returned as a pair so that invariant is testable rather than merely commented.
+export function buildSiteSearchArgs(queryText) {
+  return { rpcQuery: expandSiteQuery(queryText), boostQuery: queryText }
+}
+
 async function siteChunkSearch(queryText, persona) {
+  const { rpcQuery, boostQuery } = buildSiteSearchArgs(queryText)
   const t0 = Date.now()
   const controller = new AbortController()
   const timeout = setTimeout(() => controller.abort(), 2500)
@@ -189,13 +200,13 @@ async function siteChunkSearch(queryText, persona) {
     const response = await fetch(`${persona.rag.supabaseUrl()}/rest/v1/rpc/search_site_chunks_public`, {
       method: 'POST',
       headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ query_text: expandSiteQuery(queryText), match_count: 12 }),
+      body: JSON.stringify({ query_text: rpcQuery, match_count: 12 }),
       signal: controller.signal,
     })
     clearTimeout(timeout)
     if (!response.ok) throw new Error(`Supabase site search failed: ${response.status}`)
     const rows = await response.json()
-    return { chunks: boostNamedPages(queryText, rows.map(siteChunkToDocument)), latencyMs: Date.now() - t0 }
+    return { chunks: boostNamedPages(boostQuery, rows.map(siteChunkToDocument)), latencyMs: Date.now() - t0 }
   } catch (err) {
     clearTimeout(timeout)
     if (err.name === 'AbortError') throw new Error('Supabase search timeout (>2.5s)')
