@@ -1,7 +1,11 @@
-// The JTS site index is lexical — `hasEmbeddings` (api/_shared/rag.js) admits
-// only `kind: 'documents'`, and all 229 site_chunks rows have a NULL embedding.
-// A page is reachable only through a token it literally contains, and no
-// /portfolio chunk contains the word "example". Measured on the live index:
+// HISTORICAL NOTE (the numbers below are the 2026-09-19 measurement, kept
+// because they are what this function was built against): the JTS site index
+// was lexical-only, and all 229 site_chunks rows had a NULL embedding. A page
+// was reachable only through a token it literally contained, and no /portfolio
+// chunk contains the word "example". As of 2026-09-20 the corpus is embedded
+// (voyage-3.5) and retrieval is hybrid — but expansion still earns its keep,
+// because the lexical leg of the hybrid RPC has exactly this blind spot.
+// Measured on the live index before embeddings:
 //
 //   'examples of his work'      -> 0 portfolio rows -> 6 after expansion
 //   'what else does Joe build'  -> 0 portfolio rows -> 7 after expansion
