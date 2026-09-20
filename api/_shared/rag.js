@@ -134,17 +134,46 @@ export function boostNamedPages(query, docs) {
 // a name that was never there teaches the agent to cite work that does not exist.
 export const JTS_CASE_STUDIES = ['The Skate Workshop', 'RenFaire Directory', 'Cbarrgs Music', 'FixBot']
 
-// What a visitor says when they want Joe's actual output rather than a service
-// description. Deliberately generous: a false positive is cheap -- appending
-// this vocabulary to a services question left its top four results byte-identical
-// on the live index -- while a false negative is the bug this function fixes.
-// Bare "work" is excluded on purpose: "how does the setup work" is a process
-// question, and pulling case studies into it would displace the process page.
-const WORK_INTENT = /\b(?:examples?|portfolios?|case ?stud(?:y|ies)|track record|(?:past|previous|prior|client|his|your|joe's) (?:work|projects?|clients?|builds?)|projects?|built|builds?|made|makes|shipped|created)\b/i
+// What a visitor says when they want to SEE Joe's past output. Every alternative
+// here needs a possessive, a retrospective, or an explicit "show me" — never a
+// bare service verb.
+//
+// This was learned the hard way. A first version matched bare `build|built|made|
+// project`, which are this site's core SERVICE vocabulary: "Custom Build" is one
+// of the three offers and pricing is phrased "quoted per project". Measured on
+// the live index, that version was actively harmful — expanding a query it should
+// not have touched evicted the chunk that answered it:
+//
+//   'how much is it per project'  -> kb:Pricing and quotes fell from rank 1 to
+//                                    off the list entirely
+//   'what is a custom build'      -> kb:What a Custom Build looks like, gone
+//   'can you build me a chatbot'  -> kb:The three ways to work with Joe, gone
+//
+// Deleting the pricing chunk is the worst case on this site: HARD GUARDRAIL 1
+// forbids stating a price that is not in context. Shortening the appended text
+// did not fix it — only a precise trigger does. A false positive here is NOT
+// cheap, so the rule is: when in doubt, do not expand. The model can still
+// search again, and the tool description now tells it to.
+const WORK_INTENT = new RegExp([
+  /\bexamples?\b/,                                                  // "examples of his work"
+  /\bportfolios?\b/,
+  /\bcase ?stud(?:y|ies)\b/,
+  /\btrack record\b/,
+  /\bsamples? of\b/,
+  // possessive or retrospective: "his work", "past projects", "your apps"
+  /\b(?:past|previous|prior|other|his|her|their|your|joe'?s)\s+(?:work|projects?|clients?|builds?|apps?|sites?|websites?)\b/,
+  // "what else does Joe build", "what other things has he made"
+  /\bwhat\s+(?:else|other)\b[^?]{0,40}?\b(?:build|built|make|made|do|does|done|ship|shipped)\b/,
+  // "what has Joe done before", "has he ever built"
+  /\bwhat\s+(?:has|have)\s+(?:he|joe|you|they)\b[^?]{0,30}?\b(?:built|made|done|shipped|worked)\b/,
+  /\bhas\s+(?:he|joe|you)\s+(?:ever\s+)?(?:built|made|done|worked on)\b/,
+  // "can I see some of his apps", "show me the work"
+  /\b(?:see|show me|look at)\b[^?]{0,30}?\b(?:work|projects?|portfolio|apps?|sites?)\b/,
+].map((r) => r.source).join('|'), 'i')
 
 export function expandSiteQuery(query) {
   const q = String(query ?? '').trim()
-  if (!q || !WORK_INTENT.test(q)) return q
+  if (!q || !WORK_INTENT.test(q.replace(/[\u2018\u2019]/g, "'"))) return q
   const lower = q.toLowerCase()
   const additions = ['portfolio', 'case studies', ...JTS_CASE_STUDIES]
     .filter((term) => !lower.includes(term.toLowerCase()))
