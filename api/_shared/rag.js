@@ -73,11 +73,7 @@ async function embedSiteQuery(text, apiKey) {
     })
     if (!res.ok) throw new Error(`Voyage embedding failed: ${res.status}`)
     const data = await res.json()
-    // The vector is an array; attach the billed token count to it rather than
-    // changing the return shape at four call sites.
-    const vec = data.data[0].embedding
-    vec.__tokens = data.usage?.total_tokens || 0
-    return vec
+    return { embedding: data.data[0].embedding, tokens: data.usage?.total_tokens || 0 }
   } finally {
     clearTimeout(timer)
   }
@@ -328,8 +324,9 @@ async function siteChunkSearch(queryText, persona) {
   let siteEmbedTokens = 0
   if (voyageKey) {
     try {
-      embedding = await embedSiteQuery(rpcQuery, voyageKey)
-      siteEmbedTokens = embedding.__tokens || 0
+      const embedded = await embedSiteQuery(rpcQuery, voyageKey)
+      embedding = embedded.embedding
+      siteEmbedTokens = embedded.tokens
     } catch (err) {
       console.warn('[rag] site embed failed, keyword only:', err.message)
     }
