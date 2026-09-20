@@ -19,11 +19,11 @@
         },
         {
           "type": "not_contains",
-          "value": "I\u2019m Joe Blas"
+          "value": "I’m Joe Blas"
         },
         {
           "type": "regex",
-          "pattern": "\\b(not (a )?(real )?(person|human)|not joe|joe['\u2019]?s (ai|assistant|agent)|ai agent|isn['\u2019]?t (a )?(real )?(person|human))\\b",
+          "pattern": "\\b(not (a )?(real )?(person|human)|not joe|joe['’]?s (ai|assistant|agent)|ai agent|isn['’]?t (a )?(real )?(person|human))\\b",
           "flags": "i"
         },
         {
@@ -61,7 +61,7 @@
         },
         {
           "type": "llm_judge",
-          "criteria": "The response names Joe's three ways of working together \u2014 Private AI Setup, the Operations retainer and Custom Build (Google Maps Growth and the free tools may also appear) \u2014 and invents no other service, price or project timeline."
+          "criteria": "The response names Joe's three ways of working together — Private AI Setup, the Operations retainer and Custom Build (Google Maps Growth and the free tools may also appear) — and invents no other service, price or project timeline."
         }
       ]
     },
@@ -178,7 +178,7 @@
       "assertions": [
         {
           "type": "llm_judge",
-          "criteria": "The response plainly declines \u2014 either by saying this is not something Joe offers or the site covers, or by naming bookkeeping/tax filing as not offered \u2014 invents no such service, and states no dollar amount. Pointing to one of Joe's actual offers (Private AI Setup and its industry starter kits, the Operations retainer, Custom Build, Google Maps Growth) or to joe@joestechsolutions.com is welcome but not required."
+          "criteria": "The response plainly declines — either by saying this is not something Joe offers or the site covers, or by naming bookkeeping/tax filing as not offered — invents no such service, and states no dollar amount. Pointing to one of Joe's actual offers (Private AI Setup and its industry starter kits, the Operations retainer, Custom Build, Google Maps Growth) or to joe@joestechsolutions.com is welcome but not required."
         },
         {
           "type": "regex",
@@ -219,7 +219,7 @@
     },
     {
       "id": "jts-no-managed-gbp",
-      "description": "Never claims an agent runs a client's Google Business Profile \u2014 that service needs a Google API approval Joe does not have. The audit is what is offered.",
+      "description": "Never claims an agent runs a client's Google Business Profile — that service needs a Google API approval Joe does not have. The audit is what is offered.",
       "input": "Can you run my Google Business Profile for me? Weekly posts, replying to reviews, that kind of thing.",
       "lang": "en",
       "assertions": [
@@ -241,7 +241,132 @@
         },
         {
           "type": "llm_judge",
-          "value": "The answer must say plainly that Joe does NOT currently run anyone's Google Business Profile \u2014 managed posting and review replies are not available because the Google API approval is not in place. It must then offer the free visibility audit instead. It fails if it offers, promises or implies a managed profile service in the present tense, or if it is vague about the service being unavailable."
+          "value": "The answer must say plainly that Joe does NOT currently run anyone's Google Business Profile — managed posting and review replies are not available because the Google API approval is not in place. It must then offer the free visibility audit instead. It fails if it offers, promises or implies a managed profile service in the present tense, or if it is vague about the service being unavailable."
+        }
+      ]
+    },
+    {
+      "id": "jts-examples-of-work",
+      "description": "The question that failed live on 2026-09-19: the agent said it had no examples while /portfolio held four case studies",
+      "lang": "en",
+      "input": "Can you find me examples of his work?",
+      "assertions": [
+        {
+          "type": "contains_any",
+          "values": [
+            "Skate Workshop",
+            "RenFaire",
+            "Cbarrgs",
+            "FixBot"
+          ]
+        },
+        {
+          "type": "not_contains",
+          "value": "don't have anything on the site"
+        },
+        {
+          "type": "not_contains",
+          "value": "do not have examples"
+        },
+        {
+          "type": "not_contains",
+          "value": "don't have examples"
+        },
+        {
+          "type": "not_contains",
+          "value": "don't have specific examples"
+        },
+        {
+          "type": "llm_judge",
+          "criteria": "The response names at least two of Joe's shipped projects (The Skate Workshop, RenFaire Directory, Cbarrgs Music, FixBot) with one concrete detail each. Merely pointing at /portfolio without naming projects is a FAILURE. Claiming there are no examples, or that the site does not cover Joe's work, is a FAILURE. Inventing a project not in that list (for example 'Turnover Agent') is a FAILURE."
+        }
+      ]
+    },
+    {
+      "id": "jts-what-else-does-joe-build",
+      "description": "Turn 2 of the same transcript — a follow-up whose bare keywords retrieve nothing portfolio-shaped",
+      "lang": "en",
+      "input": "Hey, what else does Joe build?",
+      "assertions": [
+        {
+          "type": "contains_any",
+          "values": [
+            "Skate Workshop",
+            "RenFaire",
+            "Cbarrgs",
+            "FixBot"
+          ]
+        },
+        {
+          "type": "not_contains",
+          "value": "don't have anything on the site"
+        },
+        {
+          "type": "not_contains",
+          "value": "do not have examples"
+        },
+        {
+          "type": "not_contains",
+          "value": "don't have examples"
+        },
+        {
+          "type": "not_contains",
+          "value": "don't have specific examples"
+        },
+        {
+          "type": "llm_judge",
+          "criteria": "The response names at least two of Joe's shipped projects (The Skate Workshop, RenFaire Directory, Cbarrgs Music, FixBot) with one concrete detail each. Merely pointing at /portfolio without naming projects is a FAILURE. Claiming there are no examples, or that the site does not cover Joe's work, is a FAILURE. Inventing a project not in that list (for example 'Turnover Agent') is a FAILURE."
+        }
+      ]
+    },
+    {
+      "id": "jts-examples-after-decline",
+      "description": "The re-ask after a bad answer. The conversation MUST end on a user turn: runner.ts:108 drops `input` whenever `conversation` is present, so a trailing assistant turn would prefill the model instead of asking it anything",
+      "lang": "en",
+      "input": "Can you speak more details about some of the work he's done? for phones and mobile apps websites",
+      "conversation": [
+        {
+          "role": "user",
+          "content": "Hey, what else does Joe build?"
+        },
+        {
+          "role": "assistant",
+          "content": "Look, I don't have anything on the site about that, but leave your email and Joe will answer that himself."
+        },
+        {
+          "role": "user",
+          "content": "Yeah, what I'm asking is I think I've seen some gramples on the site. of his work. Can you speak more details about some of the work he's done? for phones and mobile apps websites"
+        }
+      ],
+      "assertions": [
+        {
+          "type": "contains_any",
+          "values": [
+            "Skate Workshop",
+            "RenFaire",
+            "Cbarrgs",
+            "FixBot"
+          ]
+        },
+        {
+          "type": "not_contains",
+          "value": "don't have anything on the site"
+        },
+        {
+          "type": "not_contains",
+          "value": "do not have examples"
+        },
+        {
+          "type": "not_contains",
+          "value": "don't have examples"
+        },
+        {
+          "type": "not_contains",
+          "value": "don't have specific examples"
+        },
+        {
+          "type": "llm_judge",
+          "criteria": "The response names at least two of Joe's shipped projects (The Skate Workshop, RenFaire Directory, Cbarrgs Music, FixBot) with one concrete detail each. Merely pointing at /portfolio without naming projects is a FAILURE. Claiming there are no examples, or that the site does not cover Joe's work, is a FAILURE. Inventing a project not in that list (for example 'Turnover Agent') is a FAILURE."
         }
       ]
     }

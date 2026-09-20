@@ -109,6 +109,48 @@ export function boostNamedPages(query, docs) {
     .map(({ d, score, named }) => ({ ...d, similarity: score, metadata: named ? { ...d.metadata, named: true } : d.metadata }))
 }
 
+// ---------------------------------------------------------------------------
+// Visitor vocabulary -> site vocabulary
+//
+// The JTS corpus is retrieved lexically: `hasEmbeddings` above admits only
+// `kind: 'documents'`, and every one of the 229 site_chunks rows has a NULL
+// embedding. A page can therefore only be found through a token it literally
+// contains -- and no /portfolio chunk contains the word "example", which is the
+// word visitors reach for. Measured against the live index on 2026-09-19:
+//
+//   'examples of his work'      -> 0 portfolio rows (Terms of Service, industry pages)
+//   the same query, expanded    -> 6 portfolio rows across 3 case-study pages
+//   'what else does Joe build'  -> 0 portfolio rows
+//   the same query, expanded    -> 7 portfolio rows across 3 case-study pages
+//
+// chat.js sends whatever the MODEL typed into its tool call, so before this
+// existed a correct answer depended on the model guessing the word "portfolio".
+// Expansion is append-only: the visitor's own words stay in front and keep
+// their ranking weight, and we only add terms the query does not already carry.
+// ---------------------------------------------------------------------------
+
+// The case studies joestechsolutions.com actually publishes (src/app/portfolio).
+// Keep in step with that page: a name that drifts silently stops retrieving, and
+// a name that was never there teaches the agent to cite work that does not exist.
+export const JTS_CASE_STUDIES = ['The Skate Workshop', 'RenFaire Directory', 'Cbarrgs Music', 'FixBot']
+
+// What a visitor says when they want Joe's actual output rather than a service
+// description. Deliberately generous: a false positive is cheap -- appending
+// this vocabulary to a services question left its top four results byte-identical
+// on the live index -- while a false negative is the bug this function fixes.
+// Bare "work" is excluded on purpose: "how does the setup work" is a process
+// question, and pulling case studies into it would displace the process page.
+const WORK_INTENT = /\b(?:examples?|portfolios?|case ?stud(?:y|ies)|track record|(?:past|previous|prior|client|his|your|joe's) (?:work|projects?|clients?|builds?)|projects?|built|builds?|made|makes|shipped|created)\b/i
+
+export function expandSiteQuery(query) {
+  const q = String(query ?? '').trim()
+  if (!q || !WORK_INTENT.test(q)) return q
+  const lower = q.toLowerCase()
+  const additions = ['portfolio', 'case studies', ...JTS_CASE_STUDIES]
+    .filter((term) => !lower.includes(term.toLowerCase()))
+  return additions.length ? `${q} ${additions.join(' ')}` : q
+}
+
 async function siteChunkSearch(queryText, persona) {
   const t0 = Date.now()
   const controller = new AbortController()
@@ -118,7 +160,7 @@ async function siteChunkSearch(queryText, persona) {
     const response = await fetch(`${persona.rag.supabaseUrl()}/rest/v1/rpc/search_site_chunks_public`, {
       method: 'POST',
       headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ query_text: queryText, match_count: 12 }),
+      body: JSON.stringify({ query_text: expandSiteQuery(queryText), match_count: 12 }),
       signal: controller.signal,
     })
     clearTimeout(timeout)
