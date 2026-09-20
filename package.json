@@ -29,7 +29,8 @@
     "test:personas": "npm run cf:prep >/dev/null && npx tsx tests/personas.test.ts",
     "test:rag-query": "npm run cf:prep >/dev/null && npx tsx tests/site-query-expansion.test.ts",
     "diagnose:rag": "npx tsx scripts/diagnose-rag.ts",
-    "test:spoken": "npx tsx tests/spoken-text.test.ts"
+    "test:spoken": "npx tsx tests/spoken-text.test.ts",
+    "test:rag-hybrid": "npm run cf:prep >/dev/null && npx tsx tests/site-hybrid-retrieval.test.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.71.2",

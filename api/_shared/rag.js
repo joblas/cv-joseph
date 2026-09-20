@@ -15,6 +15,64 @@ export const MODEL_COSTS = {
   'text-embedding-3-small': { input: 0.02 / 1e6 },
 }
 
+// The site corpus embeds with Voyage. voyage-3.5 returns 1024-dimensional
+// vectors, which is exactly what site_chunks.embedding is declared as — the
+// column was built around this model. The cloudyjoe corpus is separate and uses
+// voyage-3-lite at 512 dims (see embedQuery below); the two are not
+// interchangeable, which is why this is its own function.
+//
+// Voyage embeddings are asymmetric: the indexer embeds chunks with
+// input_type "document", so the query side must use "query" to land in the
+// same space.
+const SITE_EMBED_MODEL = 'voyage-3.5'
+const SITE_RERANK_MODEL = 'rerank-2.5'
+
+async function embedSiteQuery(text) {
+  const res = await fetch('https://api.voyageai.com/v1/embeddings', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${process.env.VOYAGE_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ model: SITE_EMBED_MODEL, input: [text], input_type: 'query' }),
+  })
+  if (!res.ok) throw new Error(`Voyage embedding failed: ${res.status}`)
+  const data = await res.json()
+  return data.data[0].embedding
+}
+
+// The reranker the original site-assistant used. It reads the FULL chunk text,
+// unlike the LLM rerank further down, which sees the first 200 characters of
+// ten candidates and costs an entire model round trip — the single largest
+// contributor to time-to-first-token. Verified against the live API: asked for
+// "examples of his work", it ranks Skate Workshop copy above Terms of Service,
+// which is the exact confusion that produced the "I have no examples" answer.
+//
+// Returns null when there is no key or too few candidates to matter, so the
+// caller keeps the fused order — the same way the original degraded.
+export async function voyageRerank(query, chunks, topK = 6) {
+  const key = process.env.VOYAGE_API_KEY
+  if (!key || chunks.length <= topK) return null
+  try {
+    const res = await fetch('https://api.voyageai.com/v1/rerank', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: SITE_RERANK_MODEL,
+        query,
+        documents: chunks.map((c) => `${c.metadata?.title || ''}\n${c.content}`),
+        top_k: topK,
+      }),
+    })
+    if (!res.ok) throw new Error(`voyage rerank ${res.status}`)
+    const data = await res.json()
+    return data.data.map((d) => ({ ...chunks[d.index], similarity: d.relevance_score }))
+  } catch (err) {
+    console.warn('[rag] voyage rerank failed, keeping fused order:', err.message)
+    return null
+  }
+}
+
 export function calcCost(model, inputTokens, outputTokens = 0) {
   const r = MODEL_COSTS[model]
   return r ? (inputTokens * (r.input || 0)) + (outputTokens * (r.output || 0)) : 0
@@ -31,7 +89,12 @@ export function isRagEnabled(persona = getPersona()) {
 }
 
 export function hasEmbeddings(persona = getPersona()) {
-  // Only the cloudyjoe corpus carries Voyage vectors
+  // Gates the `hybrid` retrieval MODE in searchPortfolio, which is the cloudyjoe
+  // path (voyage-3-lite, 512 dims, `documents`). It does NOT mean "this corpus
+  // has vectors" — since 2026-09-20 the JTS site_chunks corpus is fully embedded
+  // too (voyage-3.5, 1024 dims), but it runs in `site` mode and does its own
+  // embedding inside siteChunkSearch. Reading this as "only cloudyjoe has
+  // vectors" is how an audit concluded the JTS embeddings never shipped.
   return persona.rag.kind === 'documents' && !!process.env.VOYAGE_API_KEY
 }
 
@@ -197,10 +260,28 @@ async function siteChunkSearch(queryText, persona) {
   const timeout = setTimeout(() => controller.abort(), 2500)
   try {
     const key = persona.rag.supabaseKey()
-    const response = await fetch(`${persona.rag.supabaseUrl()}/rest/v1/rpc/search_site_chunks_public`, {
+    // Semantic leg. The database still carries the original hybrid function,
+    // search_site_chunks(query_text, query_embedding, ...); only the caller
+    // stopped passing a vector. Embed the query when a Voyage key exists and
+    // use the hybrid wrapper; otherwise fall through to the keyword-only RPC.
+    // A failed embedding is never fatal — it degrades to keyword, as the
+    // original did.
+    let embedding = null
+    if (process.env.VOYAGE_API_KEY) {
+      try {
+        embedding = await embedSiteQuery(rpcQuery)
+      } catch (err) {
+        console.warn('[rag] site embed failed, keyword only:', err.message)
+      }
+    }
+    const rpc = embedding ? 'search_site_chunks_hybrid_public' : 'search_site_chunks_public'
+    const body = embedding
+      ? { query_text: rpcQuery, query_embedding: embedding, match_count: 16 }
+      : { query_text: rpcQuery, match_count: 12 }
+    const response = await fetch(`${persona.rag.supabaseUrl()}/rest/v1/rpc/${rpc}`, {
       method: 'POST',
       headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ query_text: rpcQuery, match_count: 12 }),
+      body: JSON.stringify(body),
       signal: controller.signal,
     })
     clearTimeout(timeout)
@@ -652,9 +733,22 @@ export async function searchPortfolio(query, trace, anthropicClient, persona = g
       return result
     }
 
-    // 3. Re-rank
-    const rerankGen = trace?.generation({ name: 'reranking', model: FAST_MODEL, metadata: { query } })
-    const rerankResult = await rerankChunks(query, filteredChunks, anthropicClient)
+    // 3. Re-rank.
+    //
+    // The site corpus reranks with Voyage: one ~100ms API call that reads the
+    // full chunk text. The LLM reranker below is the fallback — it costs a
+    // model round trip and sees only the first 200 characters of ten
+    // candidates, which on a 1-CPU-second budget is the difference between a
+    // fast answer and a slow one. Voyage returns null with no key or too few
+    // candidates, and we fall through to the old path unchanged.
+    const t0Rerank = Date.now()
+    const voyaged = result.mode === 'site' ? await voyageRerank(query, filteredChunks) : null
+    const rerankGen = voyaged
+      ? trace?.generation({ name: 'reranking', model: SITE_RERANK_MODEL, metadata: { query } })
+      : trace?.generation({ name: 'reranking', model: FAST_MODEL, metadata: { query } })
+    const rerankResult = voyaged
+      ? { chunks: voyaged, latencyMs: Date.now() - t0Rerank, rerankedOrder: null, usage: null }
+      : await rerankChunks(query, filteredChunks, anthropicClient)
     result.metrics.rerankMs = rerankResult.latencyMs
     if (rerankResult.usage) {
       result.usage.rerankInputTokens = rerankResult.usage.input_tokens
