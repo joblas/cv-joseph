@@ -30,7 +30,10 @@
 // emptied the list, and searchPortfolio returned `no_match` before ever
 // reaching the reranker. Nine genuinely-broken mutants passed. Rows here are
 // {id, source, url, title, content, priority, score} — what the RPC returns.
-import { searchPortfolio, voyageRerank } from '../functions/api-src/_shared/rag.js'
+import {
+  searchPortfolio, voyageRerank,
+  EMBED_TIMEOUT_MS, RERANK_TIMEOUT_MS, SITE_SEARCH_TIMEOUT_MS, LLM_RERANK_TIMEOUT_MS,
+} from '../functions/api-src/_shared/rag.js'
 import { getPersona } from '../functions/api-src/_shared/personas.js'
 
 let failed = 0
@@ -155,11 +158,13 @@ const withinMs = async <T>(p: Promise<T>, ms: number) => {
   check('Voyage’s ranking is what survives, not the RPC order',
     res.chunks?.[0]?.metadata?.title === 'Title 6')
   // Voyage ranked [6,1,9,2,12,3]; rows 9 and 2 repeat pages already covered by
-  // 1 and 6. diversifyByArticle takes one chunk per distinct page first, then
-  // backfills to its cap of 5 — so the result is 5 chunks led by four distinct
-  // pages, NOT Voyage's raw 6. Bypassing diversify returns 6 in raw order,
-  // which is six chunks of one case study on a real corpus: the exact bug.
-  check('diversify caps the voyaged result at 5, not Voyage\u2019s raw 6', res.chunks?.length === 5)
+  // 1 and 6. diversifyByArticle emits one chunk per DISTINCT page first with no
+  // length check, then backfills to 5 — so with four distinct pages the result
+  // is 5. The cap is NOT universal: six distinct pages would return six (case
+  // 1b below pins that). Bypassing diversify returns Voyage's raw 6 in raw
+  // order, which on a real corpus is six chunks of one case study: the bug.
+  check('with four distinct pages, diversify returns 5 (one per page, then backfill)',
+    res.chunks?.length === 5)
   check('the first four chunks are four DIFFERENT pages',
     new Set(res.chunks.slice(0, 4).map((c: any) => c.metadata.article_id)).size === 4)
   check('a distinct page is pulled ahead of a repeat of one already covered',
@@ -171,6 +176,33 @@ const withinMs = async <T>(p: Promise<T>, ms: number) => {
   check('the embed reports the model that actually ran', res.usage?.embeddingModel === 'voyage-3.5')
   check('the embed reports its billed tokens', res.usage?.embeddingTokens === 8)
   check('the rerank reports rerank-2.5, not the LLM fallback', res.usage?.rerankModel === 'rerank-2.5')
+}
+
+// --- 1b. The cap is per-page, not a hard 5 ------------------------------------
+// diversifyByArticle's pass 1 has no length check, so when every ranked chunk
+// is from a different page all of them survive. Asserting "always 5" would have
+// been wrong about the code and would fail the first time a real work question
+// spanned six pages.
+{
+  resetEnv()
+  process.env.VOYAGE_API_KEY = 'stub-key'
+  const SIX_PAGES = ['/a-page', '/b-page', '/c-page', '/d-page', '/e-page', '/f-page']
+  const sixPageRows = () => Array.from({ length: 16 }, (_, i) => ({
+    id: `row-${i}`, source: 'page',
+    url: `https://www.joestechsolutions.com${SIX_PAGES[i % 6]}`,
+    title: `Title ${i}`, content: `Body ${i}. ${'filler '.repeat(40)}TAIL-${i}`,
+    priority: 1, score: 0.9 - i * 0.01,
+  }))
+  // Six consecutive indices over a 6-page cycle: one chunk from each page.
+  const rerankSpread = () => ({
+    data: [0, 1, 2, 3, 4, 5].map((index, r) => ({ index, relevance_score: 0.99 - r * 0.1 })),
+  })
+  stubFetch({ 'embeddings': embedOK, '/rpc/': sixPageRows, '/v1/rerank': rerankSpread })
+  const res: any = await searchPortfolio('examples of his work', null, null, jts)
+  check('six distinct pages all survive — the cap is per-page, not a hard 5',
+    res.chunks?.length === 6)
+  check('...and every one is a different page',
+    new Set(res.chunks.map((c: any) => c.metadata.article_id)).size === 6)
 }
 
 // --- 2. No key: byte-for-byte the pre-change behaviour --------------------------
@@ -267,6 +299,99 @@ const withinMs = async <T>(p: Promise<T>, ms: number) => {
     supabaseBudgetMs > 2150)
 }
 
+// --- 5a. A page the visitor NAMED is pinned back in over the reranker --------
+// boostNamedPages marks a chunk `named` when the query literally contains its
+// slug, and searchPortfolio then pins those pages ahead of the rerank's picks:
+// asking "what is on the portfolio page" must return the portfolio page even
+// if a semantic reranker preferred something else.
+//
+// The main fixture cannot see this. Its query is "examples of his work", and
+// `boostQuery` is deliberately the ORIGINAL query rather than the expanded one
+// (see buildSiteSearchArgs), so no slug ever appears in it and `named` is
+// never true — which is why deleting the whole pinning block went undetected.
+// This case names the slug outright and hands back a ranking with no
+// /portfolio chunk in it, so pinning has something to do.
+{
+  resetEnv()
+  process.env.VOYAGE_API_KEY = 'stub-key'
+  // The reranker's indices address the array AFTER boostNamedPages has doubled
+  // named scores and re-sorted, NOT the raw RPC order. With "portfolio" in the
+  // query, the four /portfolio rows carry 2x score and occupy positions 0-3, so
+  // the last six positions are guaranteed portfolio-free. An earlier version
+  // used 1,2,3,5,6,7 reasoning about raw row indices and accidentally selected
+  // boosted /portfolio rows — it passed with pinning deleted, because the boost
+  // alone put the page up front.
+  const rerankNoPortfolio = () => ({
+    data: [10, 11, 12, 13, 14, 15].map((index, r) => ({ index, relevance_score: 0.99 - r * 0.1 })),
+  })
+  stubFetch({ 'embeddings': embedOK, '/rpc/': rpcRows, '/v1/rerank': rerankNoPortfolio })
+  const res: any = await searchPortfolio('what is on the portfolio page', null, null, jts)
+  const first = res.chunks?.[0]
+  check('the named page is pinned to the front even though the reranker omitted it',
+    first?.metadata?.page_path === '/portfolio')
+  check('...and is marked as named, which is what pinning reads',
+    first?.metadata?.named === true)
+}
+
+// --- 5b. The Supabase leg is bounded too ---------------------------------------
+// Review found the suite guarded both Voyage legs and left the third entirely
+// uncovered: a hung Supabase, and dropping `signal` from that fetch, both went
+// undetected. It is the same defect class as B1, on the leg most likely to
+// stall in practice.
+{
+  resetEnv()
+  process.env.VOYAGE_API_KEY = 'stub-key'
+  stubFetch({ 'embeddings': embedOK, '/rpc/': () => HANG, '/v1/rerank': rerankOK })
+  const out = await withinMs(searchPortfolio('examples of his work', null, null, jts), 6000)
+  check('a HUNG Supabase does not hang the turn', out !== HANG)
+}
+
+// --- 5c. The budgets themselves, pinned by value --------------------------------
+// Behavioural bounds alone let every constant drift: 800 -> 2400 and
+// 2500 -> 60000 both stayed inside the guards above and passed. A value check
+// is deterministic, and unlike tightening those guards it cannot flake when a
+// loaded CI runner delays the event loop.
+check('the embed budget stays sub-second', EMBED_TIMEOUT_MS > 0 && EMBED_TIMEOUT_MS <= 1000)
+check('the rerank budget stays sub-second', RERANK_TIMEOUT_MS > 0 && RERANK_TIMEOUT_MS <= 1000)
+check('the Supabase budget stays within a few seconds',
+  SITE_SEARCH_TIMEOUT_MS > 0 && SITE_SEARCH_TIMEOUT_MS <= 3000)
+// The point of separate budgets is that the worst case is their SUM, and that
+// the sum stays inside what a visitor will wait through.
+check('the three budgets sum to under 5s',
+  EMBED_TIMEOUT_MS + RERANK_TIMEOUT_MS + SITE_SEARCH_TIMEOUT_MS < 5000)
+check('the LLM fallback reranker budget stays within a few seconds',
+  LLM_RERANK_TIMEOUT_MS > 0 && LLM_RERANK_TIMEOUT_MS <= 3000)
+
+// --- 5d. The LLM fallback reranker is bounded too -------------------------------
+// When Voyage is unavailable the code falls through to rerankChunks, which
+// calls the Anthropic SDK. That SDK defaults to a 600 000 ms timeout with
+// maxRetries 2 — ten minutes of a held chat turn — and it was the last
+// unbounded call left in the retrieval path once both Voyage legs were capped.
+//
+// Asserted as the OPTION THE CODE SENDS rather than by timing, because a stub
+// client cannot implement the SDK's own timeout: a fake that hangs would hang
+// whether or not the fix is present, so a timing assertion here would prove
+// nothing either way.
+{
+  resetEnv()
+  process.env.VOYAGE_API_KEY = 'stub-key'
+  // Voyage rerank 500s -> voyageRerank returns null -> the LLM path runs.
+  stubFetch({ 'embeddings': embedOK, '/rpc/': rpcRows, '/v1/rerank': () => ({ __status: 500 }) })
+  let opts: any = null
+  const fakeAnthropic = {
+    messages: {
+      create: async (o: any) => {
+        opts = o
+        return { content: [{ type: 'text', text: '0,1,2,3,4' }], usage: { input_tokens: 10, output_tokens: 5 } }
+      },
+    },
+  }
+  await searchPortfolio('examples of his work', null, fakeAnthropic, jts)
+  check('the LLM fallback reranker is actually reached', opts !== null)
+  check('...and is given an explicit timeout, not the SDK\u2019s 600s default',
+    typeof opts?.timeout === 'number' && opts.timeout > 0 && opts.timeout <= 3000)
+}
+
 // --- 6. voyageRerank degradation contract ---------------------------------------
 // null means "keep the fused order" — the caller falls through to the LLM
 // reranker on null, so [] would silently empty the context window instead.
@@ -328,4 +453,4 @@ const many = Array.from({ length: 10 }, (_, i) => ({ content: `chunk ${i}`, meta
 ;(globalThis as any).fetch = origFetch
 process.env = origEnv
 if (failed) { console.error(`\n${failed} check(s) failed`); process.exit(1) }
-console.log('ok — hybrid path end to end, 2 hang paths bounded, slow-embed budget, 6 degradation cases')
+console.log('ok — hybrid path end to end, 3 legs + LLM fallback bounded, named-page pinning, 7 degradation cases')

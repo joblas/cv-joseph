@@ -52,9 +52,16 @@ const SITE_EMBED_DIMS = 1024
 // signal — surfaced as `retrieval_timeout` with zero chunks, blaming Supabase
 // for Voyage's latency. Measured: a 2600ms embed produced chunks=null where
 // the pre-change code would have returned keyword results.
-const EMBED_TIMEOUT_MS = 800
-const RERANK_TIMEOUT_MS = 700
-const SITE_SEARCH_TIMEOUT_MS = 2500
+// Exported so the suite can pin the VALUES, not merely that a bound exists.
+// Review found that asserting "it is bounded" behaviourally left every budget
+// free to drift: 800 -> 2400 and 2500 -> 60000 both passed, because each still
+// finished inside the test's own guard. Pinning the numbers is deterministic
+// and, unlike a tighter wall-clock guard, cannot flake on a loaded runner.
+export const EMBED_TIMEOUT_MS = 800
+export const RERANK_TIMEOUT_MS = 700
+export const SITE_SEARCH_TIMEOUT_MS = 2500
+// The LLM reranker (rerankChunks) is the fallback when Voyage is unavailable.
+export const LLM_RERANK_TIMEOUT_MS = 2500
 
 async function embedSiteQuery(text, apiKey) {
   const controller = new AbortController()
@@ -514,6 +521,14 @@ export async function rerankChunks(query, chunks, anthropicClient) {
     const response = await anthropicClient.messages.create({
       model: FAST_MODEL,
       max_tokens: scaleTokens(150),
+      // The Anthropic SDK defaults to a 600s timeout with maxRetries 2, so an
+      // unhealthy-but-responsive provider could hold a chat turn for ten
+      // minutes. This was the last unbounded call left in the retrieval path
+      // after the two Voyage legs were bounded. Safe to cap: the catch below
+      // falls back to the fused order, so exceeding this degrades ranking
+      // quality rather than failing the turn — and past ~2.5s on a
+      // 1-CPU-second budget the ranking is not worth waiting for anyway.
+      timeout: LLM_RERANK_TIMEOUT_MS,
       messages: [{
         role: 'user',
         content: `Query: "${query}"\nRank these chunks by relevance. Return ONLY the top 5 IDs as comma-separated numbers (most relevant first):\n${numbered}`,

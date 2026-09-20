@@ -37,8 +37,9 @@ jobs:
       # no tests at all, so every tests/*.test.ts in the repo was decorative — a
       # test added in a PR could never fail CI on that PR or any later one.
       # Only the suites that need no secrets and no live endpoint belong here:
-      # test:contract needs LANGFUSE_* and test:ops probes the deployed site, so
-      # both fail in a clean checkout for environmental reasons, not code ones.
+      # test:contract needs LANGFUSE_*, and test:ops probes the deployed site and
+      # fails parsing a 200 that returns the SPA HTML shell (not, as first
+      # written here, a 503) — both environmental, neither about the code.
       - name: Test
         run: |
           npm run test:rag-hybrid
