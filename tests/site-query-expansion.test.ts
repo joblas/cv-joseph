@@ -15,6 +15,7 @@
 // strings; review mutation-tested it and all three mutants passed — appending
 // the block 50x, injecting phantom project names into the output, and replacing
 // the whole regex with a four-string whitelist. Each of those now fails here.
+import { readFileSync } from 'node:fs'
 import { expandSiteQuery, buildSiteSearchArgs, JTS_CASE_STUDIES } from '../functions/api-src/_shared/rag.js'
 
 // Hardcoded ON PURPOSE — this list is the spec, not a mirror of the source.
@@ -82,6 +83,19 @@ const MUST_NOT_EXPAND = [
   'what data do you collect on the projects page',
   'can I email you about a project',
   'makes sense, how do I pay',
+  // imperative process questions — the NEW-6 regression: "show me how X is
+  // done" is not a portfolio browse, and expanding it evicted the chunk that
+  // answered it (kb:Pricing and quotes fell from rank 1 on the first two).
+  'show me how pricing is done',
+  'show me how the checkout is done',
+  'look at how billing is done',
+  'can I see how the setup is done',
+  'I want to see how the audit is done',
+  'show me how it is built',
+  'can I see how the assistant is built',
+  'show me how onboarding is done',
+  'let me see what gets made',
+  'can I see how this is done',
 ]
 for (const q of MUST_NOT_EXPAND) {
   check(`leaves untouched: "${q.slice(0, 38)}"`, expandSiteQuery(q) === q)
@@ -94,6 +108,18 @@ for (const q of [...MUST_EXPAND, ...MUST_NOT_EXPAND]) {
   check(`ranker keeps the visitor's own query: "${q.slice(0, 30)}"`, boostQuery === q)
   check(`  ...while the RPC gets the expanded one`, rpcQuery === expandSiteQuery(q))
 }
+
+// The consumer, not just the helper. buildSiteSearchArgs gives the invariant one
+// definition, but siteChunkSearch is where it is USED, and two mutants at that
+// call site — ranking on rpcQuery, or sending boostQuery to the RPC — passed the
+// whole suite. siteChunkSearch is not exported and does its own fetch, so assert
+// structurally on the shipped source. Brittle to renames by design: a rename
+// here should force a deliberate look at the invariant.
+const ragSource = readFileSync(new URL('../functions/api-src/_shared/rag.js', import.meta.url), 'utf8')
+check('siteChunkSearch sends the EXPANDED query to the RPC',
+  /query_text:\s*rpcQuery/.test(ragSource))
+check('siteChunkSearch ranks on the ORIGINAL query',
+  /boostNamedPages\(\s*boostQuery\s*,/.test(ragSource))
 
 // --- robustness ---------------------------------------------------------------
 check('empty string is safe', expandSiteQuery('') === '')

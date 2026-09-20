@@ -169,7 +169,7 @@ const WORK_INTENT = new RegExp([
   /\bhas\s+(?:he|joe|you)\s+(?:ever\s+)?(?:built|made|done|worked on)\b/,
   // "can I see some of his apps", "show me the work"
   /\b(?:see|show me|look at)\b[^?]{0,30}?\b(?:work|projects?|portfolio|apps?|sites?)\b/,
-  /\b(?:see|show me|look at)\b[^?]{0,30}?\b(?:built|made|done|shipped)\b/,          // "show me what he has built"
+  /\b(?:see|show me|look at)\b[^?]{0,20}?\bwhat\b[^?]{0,20}?\b(?:he|joe|you|they)\b[^?]{0,15}?\b(?:built|made|done|shipped)\b/,
   /\bwho\s+(?:has|have)\s+(?:he|joe|you|they)\s+worked\s+(?:with|for)\b/,
 ].map((r) => r.source).join('|'), 'i')
 
