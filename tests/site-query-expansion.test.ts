@@ -98,9 +98,15 @@ const desc = jts.searchTool.description
 check('tool description names the portfolio', /portfolio/i.test(desc))
 check('tool description names case studies', /case stud/i.test(desc))
 check('tool description lists the examples trigger', /examples of/i.test(desc))
-// Both faces must tell the same story about managed Google Business Profile.
-check('voice prompt does not promise managed profile upkeep',
-  !/an agent runs a local business's Google Business Profile/i.test(jts.voicePrompt || ''))
+// No prompt may state a project's status as a curated fact: /portfolio and
+// /portfolio/skate-workshop disagree ("Live ... Android builds rolling" vs
+// "Development is paused"), and a curated fact overrides the retrieved page.
+for (const claim of ['Android builds rolling', 'Live on iOS']) {
+  check(`text prompt does not hard-code the disputed status "${claim}"`,
+    !(jts.prompt || '').includes(claim))
+  check(`voice prompt does not hard-code the disputed status "${claim}"`,
+    !(jts.voicePrompt || '').includes(claim))
+}
 
 if (failed) { console.error(`\n${failed} check(s) failed`); process.exit(1) }
 console.log('ok — site query expansion bridges visitor vocabulary to the lexical index')
