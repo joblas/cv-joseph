@@ -219,36 +219,52 @@ const withinMs = async <T>(p: Promise<T>, ms: number) => {
     out !== HANG && Array.isArray(out?.chunks) && out.chunks.length > 0)
 }
 
-// --- 5. A SLOW embed must not spend the Supabase budget -------------------------
-// Sharing one 2500ms timer across both legs made a slow-but-successful embed
-// return zero chunks and report `retrieval_timeout` — blaming Supabase for
-// Voyage's latency. The legs are sequential and separately bounded.
+// --- 5. The Supabase leg gets its OWN budget, not the embed’s leftovers ------
+// Measured directly rather than raced. An earlier version slept 1200ms in the
+// embed and 1500ms in Supabase and asserted "chunks came back" — which was
+// doubly weak: it needed a stub that IGNORED the abort signal (a 1200ms embed
+// is impossible now, the 800ms budget kills it), and it passed either way,
+// because a keyword fallback also returns chunks.
+//
+// This instead lets the Supabase leg hang and records how long ITS signal took
+// to fire. The arithmetic is the whole test:
+//   sequential budgets  -> the timer is armed when Supabase starts -> ~2500ms
+//   one timer armed before a 700ms embed -> 2500 - 700            -> ~1800ms
+// 2150 is the midpoint, so each side carries ~350ms against runner jitter,
+// and because this measures ONE timer interval rather than racing two sleeps,
+// a loaded runner delays both branches equally instead of skewing them.
 {
   resetEnv()
   process.env.VOYAGE_API_KEY = 'stub-key'
+  const EMBED_MS = 700   // deliberately UNDER the 800ms embed budget: it must succeed
+  let supabaseBudgetMs = -1
+  let rpcUrl = ''
   ;(globalThis as any).fetch = async (url: string, init: any) => {
     if (String(url).includes('embeddings')) {
-      await new Promise((r) => setTimeout(r, 1200))   // slower than the embed budget
-      return { ok: true, status: 200, json: async () => embedOK() }
-    }
-    if (String(url).includes('/rpc/')) {
-      await new Promise((r) => setTimeout(r, 1500))
+      await new Promise((r) => setTimeout(r, EMBED_MS))
       if (init?.signal?.aborted) {
         const e: any = new Error('The operation was aborted'); e.name = 'AbortError'; throw e
       }
-      return { ok: true, status: 200, json: async () => rpcRows() }
+      return { ok: true, status: 200, json: async () => embedOK() }
+    }
+    if (String(url).includes('/rpc/')) {
+      rpcUrl = String(url)
+      const t0 = Date.now()
+      await new Promise<void>((res) => init?.signal?.addEventListener('abort', () => {
+        supabaseBudgetMs = Date.now() - t0; res()
+      }))
+      const e: any = new Error('The operation was aborted'); e.name = 'AbortError'; throw e
     }
     return { ok: true, status: 200, json: async () => rerankOK() }
   }
-  const res: any = await searchPortfolio('examples of his work', null, null, jts)
-  // 1200ms embed + 1500ms Supabase = 2700ms of wall clock, MORE than the 2500ms
-  // retrieval budget. Under two sequential budgets this succeeds, because
-  // Supabase gets its own fresh 2500ms. Under one timer armed before the embed
-  // it aborts mid-query and returns nothing — the original defect. Only a slow
-  // Supabase leg can tell those apart; an instant stub passes either way.
-  check('a slow embed still yields chunks rather than retrieval_timeout',
-    Array.isArray(res?.chunks) && res.chunks.length > 0)
-  check('...and is not reported as a Supabase failure', res?.degradedReason !== 'retrieval_timeout')
+  await searchPortfolio('examples of his work', null, null, jts)
+  // `usage` is only populated on the retrieval SUCCESS path, and this case
+  // deliberately fails that leg — so the observable proof that the embed
+  // succeeded is that the hybrid RPC was the one chosen.
+  check('the embed under its budget succeeded (otherwise this case proves nothing)',
+    rpcUrl.includes('search_site_chunks_hybrid_public'))
+  check('the Supabase leg is given its own full budget, not what the embed left over',
+    supabaseBudgetMs > 2150)
 }
 
 // --- 6. voyageRerank degradation contract ---------------------------------------
