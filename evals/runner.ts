@@ -105,6 +105,15 @@ const colors = {
  * Calls the chat API and gets the full response (without streaming)
  */
 async function callChat(input: string, lang: 'es' | 'en', conversation?: ConversationMessage[]): Promise<ChatResult> {
+  // `input` is ignored when `conversation` is supplied, so a conversation that
+  // ends on an assistant turn asks the model nothing — it prefills it, and the
+  // case silently grades a continuation. Caught 2026-09-19; fail loudly instead.
+  if (conversation?.length && conversation[conversation.length - 1].role !== 'user') {
+    throw new Error(
+      `conversation must end on a user turn (ends on "${conversation[conversation.length - 1].role}") — ` +
+      'otherwise the model is prefilled and `input` is silently discarded'
+    )
+  }
   const messages = conversation || [{ role: 'user', content: input }]
   const response = await fetch(CHAT_API_URL, {
     method: 'POST',

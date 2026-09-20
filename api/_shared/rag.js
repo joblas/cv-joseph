@@ -109,7 +109,89 @@ export function boostNamedPages(query, docs) {
     .map(({ d, score, named }) => ({ ...d, similarity: score, metadata: named ? { ...d.metadata, named: true } : d.metadata }))
 }
 
+// ---------------------------------------------------------------------------
+// Visitor vocabulary -> site vocabulary
+//
+// The JTS corpus is retrieved lexically: `hasEmbeddings` above admits only
+// `kind: 'documents'`, and every one of the 229 site_chunks rows has a NULL
+// embedding. A page can therefore only be found through a token it literally
+// contains -- and no /portfolio chunk contains the word "example", which is the
+// word visitors reach for. Measured against the live index on 2026-09-19:
+//
+//   'examples of his work'      -> 0 portfolio rows (Terms of Service, industry pages)
+//   the same query, expanded    -> 6 portfolio rows across 3 case-study pages
+//   'what else does Joe build'  -> 0 portfolio rows
+//   the same query, expanded    -> 7 portfolio rows across 3 case-study pages
+//
+// chat.js sends whatever the MODEL typed into its tool call, so before this
+// existed a correct answer depended on the model guessing the word "portfolio".
+// Expansion is append-only: the visitor's own words stay in front and keep
+// their ranking weight, and we only add terms the query does not already carry.
+// ---------------------------------------------------------------------------
+
+// The case studies joestechsolutions.com actually publishes (src/app/portfolio).
+// Keep in step with that page: a name that drifts silently stops retrieving, and
+// a name that was never there teaches the agent to cite work that does not exist.
+export const JTS_CASE_STUDIES = ['The Skate Workshop', 'RenFaire Directory', 'Cbarrgs Music', 'FixBot']
+
+// What a visitor says when they want to SEE Joe's past output. Every alternative
+// here needs a possessive, a retrospective, or an explicit "show me" — never a
+// bare service verb.
+//
+// This was learned the hard way. A first version matched bare `build|built|made|
+// project`, which are this site's core SERVICE vocabulary: "Custom Build" is one
+// of the three offers and pricing is phrased "quoted per project". Measured on
+// the live index, that version was actively harmful — expanding a query it should
+// not have touched evicted the chunk that answered it:
+//
+//   'how much is it per project'  -> kb:Pricing and quotes fell from rank 1 to
+//                                    off the list entirely
+//   'what is a custom build'      -> kb:What a Custom Build looks like, gone
+//   'can you build me a chatbot'  -> kb:The three ways to work with Joe, gone
+//
+// Deleting the pricing chunk is the worst case on this site: HARD GUARDRAIL 1
+// forbids stating a price that is not in context. Shortening the appended text
+// did not fix it — only a precise trigger does. A false positive here is NOT
+// cheap, so the rule is: when in doubt, do not expand. The model can still
+// search again, and the tool description now tells it to.
+const WORK_INTENT = new RegExp([
+  /\bexamples?\b/,                                                  // "examples of his work"
+  /\bportfolios?\b/,
+  /\bcase ?stud(?:y|ies)\b/,
+  /\btrack record\b/,
+  /\bsamples? of\b/,
+  // possessive or retrospective: "his work", "past projects", "your apps"
+  /\b(?:past|previous|prior|other|his|her|their|your|joe'?s)\s+(?:work|projects?|clients?|builds?|apps?|sites?|websites?)\b/,
+  // "what else does Joe build", "what other things has he made"
+  /\bwhat\s+(?:else|other)\b[^?]{0,40}?\b(?:build|built|make|made|do|does|done|ship|shipped)\b/,
+  // "what has Joe done before", "has he ever built"
+  /\bwhat\s+(?:has|have)\s+(?:he|joe|you|they)\b[^?]{0,30}?\b(?:built|made|done|shipped|worked)\b/,
+  /\bhas\s+(?:he|joe|you)\s+(?:ever\s+)?(?:built|made|done|worked on)\b/,
+  // "can I see some of his apps", "show me the work"
+  /\b(?:see|show me|look at)\b[^?]{0,30}?\b(?:work|projects?|portfolio|apps?|sites?)\b/,
+  /\b(?:see|show me|look at)\b[^?]{0,20}?\bwhat\b[^?]{0,20}?\b(?:he|joe|you|they)\b[^?]{0,15}?\b(?:built|made|done|shipped)\b/,
+  /\bwho\s+(?:has|have)\s+(?:he|joe|you|they)\s+worked\s+(?:with|for)\b/,
+].map((r) => r.source).join('|'), 'i')
+
+export function expandSiteQuery(query) {
+  const q = String(query ?? '').trim()
+  if (!q || !WORK_INTENT.test(q.replace(/[\u2018\u2019]/g, "'"))) return q
+  const lower = q.toLowerCase()
+  const additions = ['portfolio', 'case studies', ...JTS_CASE_STUDIES]
+    .filter((term) => !lower.includes(term.toLowerCase()))
+  return additions.length ? `${q} ${additions.join(' ')}` : q
+}
+
+// The RPC gets the EXPANDED query; boostNamedPages gets the ORIGINAL one.
+// Feeding the expanded string to both would make every case-study page count as
+// "named" for any work question, flattening the boost exactly when it fires.
+// Returned as a pair so that invariant is testable rather than merely commented.
+export function buildSiteSearchArgs(queryText) {
+  return { rpcQuery: expandSiteQuery(queryText), boostQuery: queryText }
+}
+
 async function siteChunkSearch(queryText, persona) {
+  const { rpcQuery, boostQuery } = buildSiteSearchArgs(queryText)
   const t0 = Date.now()
   const controller = new AbortController()
   const timeout = setTimeout(() => controller.abort(), 2500)
@@ -118,13 +200,13 @@ async function siteChunkSearch(queryText, persona) {
     const response = await fetch(`${persona.rag.supabaseUrl()}/rest/v1/rpc/search_site_chunks_public`, {
       method: 'POST',
       headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ query_text: queryText, match_count: 12 }),
+      body: JSON.stringify({ query_text: rpcQuery, match_count: 12 }),
       signal: controller.signal,
     })
     clearTimeout(timeout)
     if (!response.ok) throw new Error(`Supabase site search failed: ${response.status}`)
     const rows = await response.json()
-    return { chunks: boostNamedPages(queryText, rows.map(siteChunkToDocument)), latencyMs: Date.now() - t0 }
+    return { chunks: boostNamedPages(boostQuery, rows.map(siteChunkToDocument)), latencyMs: Date.now() - t0 }
   } catch (err) {
     clearTimeout(timeout)
     if (err.name === 'AbortError') throw new Error('Supabase search timeout (>2.5s)')
