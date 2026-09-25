@@ -62,7 +62,7 @@ const cjRows = () => Array.from({ length: 6 }, (_, i) => ({
 }))
 
 // Per-case knobs.
-const mode = { site: 'rows' as 'rows' | 'empty' | 'fail', limitOk: true, model: 'fail' as 'fail' | 'answer' }
+const mode = { site: 'rows' as 'rows' | 'empty' | 'fail' | 'hang', limitOk: true, limitHang: false, model: 'fail' as 'fail' | 'answer' }
 const sent: { url: string; body: any }[] = []
 ;(globalThis as any).fetch = async (url: string, init: any) => {
   const u = String(url)
@@ -70,10 +70,17 @@ const sent: { url: string; body: any }[] = []
   sent.push({ url: u, body })
   const json = (b: unknown, status = 200) => ({ ok: status < 400, status, json: async () => b, text: async () => JSON.stringify(b), headers: new Headers({ 'content-type': 'application/json' }) })
   if (init?.signal?.aborted) { const e: any = new Error('aborted'); e.name = 'AbortError'; throw e }
-  if (u.includes('/rpc/check_chat_rate_limit')) return json(mode.limitOk)
+  if (u.includes('/rpc/check_chat_rate_limit')) {
+    if (mode.limitHang) return new Promise((_res, rej) => init?.signal?.addEventListener('abort', () => { const e: any = new Error('aborted'); e.name = 'AbortError'; rej(e) }))
+    return json(mode.limitOk)
+  }
   if (u.includes('voyageai.com/v1/embeddings')) return json({ data: [{ embedding: Array(1024).fill(0.01) }], usage: { total_tokens: 6 } })
   if (u.includes('voyageai.com/v1/rerank')) return json({ data: [0, 1, 2, 3, 4, 5].map((index, r) => ({ index, relevance_score: 0.9 - r * 0.1 })) })
   if (u.startsWith('https://stub-jts.supabase.co/rest/v1/rpc/')) {
+    if (mode.site === 'hang') {
+      // Never answers; rejects only when the handler's own retrieval timer aborts it.
+      return new Promise((_res, rej) => init?.signal?.addEventListener('abort', () => { const e: any = new Error('aborted'); e.name = 'AbortError'; rej(e) }))
+    }
     if (mode.site === 'fail') return json({ message: 'upstream down' }, 503)
     return json(mode.site === 'empty' ? [] : siteRows())
   }
@@ -89,11 +96,19 @@ const sent: { url: string; body: any }[] = []
 
 check('tracing is genuinely off for this run (production’s state)', !process.env.LANGFUSE_PUBLIC_KEY)
 const { default: handler } = await import('../functions/api-src/rag-search.js')
-const reset = () => { mode.site = 'rows'; mode.limitOk = true; mode.model = 'fail'; sent.length = 0 }
-const post = (body: Record<string, unknown>, origin = 'https://www.joestechsolutions.com') =>
+const reset = () => { mode.site = 'rows'; mode.limitOk = true; mode.limitHang = false; mode.model = 'fail'; sent.length = 0 }
+const post = (body: Record<string, unknown>, origin = 'https://www.joestechsolutions.com', extra: Record<string, string> = {}) =>
   handler(new Request('https://cloudyjoe.com/api/rag-search', {
-    method: 'POST', headers: { 'Content-Type': 'application/json', Origin: origin }, body: JSON.stringify(body),
+    method: 'POST', headers: { 'Content-Type': 'application/json', Origin: origin, ...extra }, body: JSON.stringify(body),
   }))
+// Raced against a live guard, so a missing timeout FAILS a named check instead
+// of leaving the event loop idle — review found that removing the retrieval
+// timer made this file exit 13 mid-run, silently skipping every later check.
+const withinMs = async <T,>(p: Promise<T>, ms: number): Promise<T | 'HUNG'> => {
+  let t: any
+  const guard = new Promise<'HUNG'>((res) => { t = setTimeout(() => res('HUNG'), ms) })
+  try { return await Promise.race([p, guard]) } finally { clearTimeout(t) }
+}
 
 // --- 1. The exact request the JTS widget sends when voice-token issued no trace
 {
@@ -146,12 +161,60 @@ const post = (body: Record<string, unknown>, origin = 'https://www.joestechsolut
   check('...and says nothing about content', body.context === undefined && body.error === 'search_unavailable')
 }
 
+// --- 4b. A retrieval TIMEOUT — the most likely real failure — is a 503 too -----
+// Review found a mutant that 503'd only 'retrieval_fail' and let timeouts fall
+// back to 200 "No relevant content found." — there was no timeout case.
+{
+  reset(); mode.site = 'hang'
+  const res = await withinMs(post({ query: 'private AI setup', traceId: null, persona: 'jts' }), 6000)
+  check('a retrieval that times out is bounded by the handler\u2019s own budget, not a hang', res !== 'HUNG')
+  check('...and is a 503, not a 200 claiming nothing exists', res !== 'HUNG' && res.status === 503)
+}
+
 // --- 5. The real control: a per-IP rate limit ---------------------------------
 {
   reset(); mode.limitOk = false
   const res = await post({ query: 'private AI setup', traceId: null, persona: 'jts' })
   check('over the per-IP limit -> 429', res.status === 429)
   check('...before any paid work is done', !sent.some((s) => s.url.includes('voyageai.com') || s.url.includes('127.0.0.1:9')))
+}
+{
+  // The limit VALUE, not just that a limit exists: the limiter stub ignores
+  // p_limit, so lowering it to 6/hr (which breaks real voice sessions) passed.
+  reset()
+  await post({ query: 'private AI setup', traceId: null, persona: 'jts' })
+  const lim = sent.find((s) => s.url.includes('/rpc/check_chat_rate_limit'))
+  check('the per-IP limit is 60 an hour', lim?.body?.p_limit === 60)
+}
+{
+  // A caller that omits `persona` gets the default (cloudyjoe) persona. Review
+  // found a limiter applied only to the JTS persona would leave it unmetered.
+  reset(); mode.limitOk = false
+  const res = await post({ query: 'tell me about the agent fleet', traceId: null }, 'https://cloudyjoe.com')
+  check('a caller with no persona is rate-limited too', res.status === 429)
+}
+{
+  // Any traceId must not buy a way round the limit: that would be the old
+  // any-string bypass back again. Review found every 429 case sent null.
+  reset(); mode.limitOk = false
+  const res = await post({ query: 'private AI setup', traceId: 'x', persona: 'jts' })
+  check('a caller WITH a traceId is rate-limited too', res.status === 429)
+}
+{
+  // The bucket must be the caller's own IP. A limiter that lost it would put
+  // every visitor in one bucket: 60 searches an hour, then voice AND text chat
+  // lock out site-wide.
+  reset()
+  await post({ query: 'private AI setup', traceId: null, persona: 'jts' }, 'https://www.joestechsolutions.com', { 'cf-connecting-ip': '203.0.113.7' })
+  const lim = sent.find((s) => s.url.includes('/rpc/check_chat_rate_limit'))
+  check('the limit is counted against the caller\u2019s own IP', lim?.body?.p_ip === '203.0.113.7')
+}
+{
+  // A limiter that HANGS fails open, like one that errors — it runs before
+  // every chat message and voice search, so it must never stall them.
+  reset(); mode.limitHang = true
+  const res = await withinMs(post({ query: 'private AI setup', traceId: null, persona: 'jts' }), 6000)
+  check('a hung rate limiter is bounded and fails open — the search still answers', res !== 'HUNG' && res.status === 200)
 }
 
 // --- 6. Input the endpoint must refuse or bound -------------------------------
@@ -168,8 +231,44 @@ const post = (body: Record<string, unknown>, origin = 'https://www.joestechsolut
   check('a 10,000-character query is capped before it reaches the paid embedding', embedded.length > 0 && embedded.length <= 600)
 }
 {
+  // ...and before it reaches the paid MODEL: a cap applied only to the
+  // embedding (or only to the trace) passed the check above.
+  reset(); mode.model = 'answer'
+  await post({ query: 'x'.repeat(10_000), traceId: null, persona: 'jts' })
+  const modelCall = sent.find((s) => s.url.includes('127.0.0.1:9'))
+  const longestRun = Math.max(0, ...(JSON.stringify(modelCall?.body ?? '').match(/x+/g) || []).map((r) => r.length))
+  check('the reasoning model is actually called in this case', !!modelCall)
+  check('...and never sees more than the capped 500 characters of query', longestRun > 0 && longestRun <= 500)
+}
+{
   const res = await handler(new Request('https://cloudyjoe.com/api/rag-search', { method: 'GET' }))
   check('a non-POST is 405', res.status === 405)
+}
+
+// --- 6b. The inner catch can no longer tell the model to invent -------------------
+// It returned 200 "answer from your general knowledge" and is hard to reach
+// from outside, so this guards the source directly: that text may never come back.
+{
+  // Driven for real: the response's own serialisation is made to throw, which
+  // lands in the handler's inner catch. (Scoped to one sentinel page and
+  // restored at once, so nothing else is affected.)
+  reset()
+  const realStringify = JSON.stringify
+  JSON.stringify = ((v: any, ...rest: any[]) => {
+    // Only the handler's RESPONSE object ({context, sources, currentPage}) —
+    // not this test's own request body, which carries the same currentPage.
+    if (v && typeof v === 'object' && v.currentPage === '/__throw_in_inner_try__' && 'context' in v) throw new Error('boom')
+    return (realStringify as any)(v, ...rest)
+  }) as typeof JSON.stringify
+  let res: Response
+  try { res = await post({ query: 'private AI setup', traceId: null, persona: 'jts', currentPage: '/__throw_in_inner_try__' }) }
+  finally { JSON.stringify = realStringify }
+  const body: any = await res!.json()
+  check('an error inside the handler is a 503, never a 200 the model would trust', res!.status === 503)
+  check('...and carries no context for the model to repeat', body.context === undefined)
+  // Backstop for the wording, since the phrase is the thing that did harm.
+  const src = (await import('node:fs')).readFileSync(new URL('../functions/api-src/rag-search.js', import.meta.url), 'utf8')
+  check('rag-search never tells the model to answer from general knowledge', !/general knowledge/i.test(src))
 }
 
 // --- 7. Nothing escaped to the network ---------------------------------------

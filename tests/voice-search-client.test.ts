@@ -1,19 +1,22 @@
 /* eslint-disable @typescript-eslint/no-explicit-any --
- * Drives runSearchForModel through a stubbed network and inspects plain
- * Response objects; `any` at that boundary keeps each case one line.
+ * Drives runSearchForModel / answerToolCalls through a stubbed network and
+ * inspects plain Response objects; `any` at that boundary keeps each case short.
  */
 // What cloudyjoe.com's voice clients tell the model after a search, driven
-// through the REAL step (src/voiceSearch.ts) with a stubbed network — not a
-// helper handed pre-parsed data. Both clients (Gemini Live and OpenAI
-// Realtime) route through it; the last check holds them to that.
+// through the REAL search step and the REAL per-batch logic (src/voiceSearch.ts)
+// with the network stubbed.
 //
 // The defect: each client sent `context || 'No relevant content found.'`, so a
 // failed request reached the model as "the site has nothing on this". The rule
 // these checks hold: the ONLY text that may report an empty search is the
-// backend's own, in a successful response. The same rule and wording live in
-// the joestechsolutions.com widget.
+// backend's own, in a successful response. Same rule, wording and shape as the
+// joestechsolutions.com widget (src/components/chat/agent-api.ts there).
+//
+// Review of the JTS twin found its hook wiring covered only by a regex — eight
+// wrong changes passed, including discarding the search result and sending an
+// empty query. The batch logic now lives in answerToolCalls() and is driven here.
 import { readFileSync } from 'node:fs'
-import { SEARCH_FAILED_FOR_MODEL, runSearchForModel } from '../src/voiceSearch.ts'
+import { SEARCH_FAILED_FOR_MODEL, SEARCH_TIMEOUT_MS, answerToolCalls, runSearchForModel } from '../src/voiceSearch.ts'
 
 let failed = 0
 function check(name: string, cond: boolean) {
@@ -21,58 +24,165 @@ function check(name: string, cond: boolean) {
 }
 const reply = (status: number, body: string | null, type = 'application/json') =>
   async () => new Response(body, { status, headers: { 'Content-Type': type } })
-const BODY = { query: 'what is the turnover agent', traceId: null, currentPage: '/' }
+const FIELDS = { query: 'what is the turnover agent', traceId: null, currentPage: '/' }
 const SOURCES = [{ article_id: 'turnover-agent' }]
 const isFailed = (o: any) => o.result === SEARCH_FAILED_FOR_MODEL && Array.isArray(o.sources) && o.sources.length === 0
 
-// Success, and the backend's own empty result.
+// --- the search step -----------------------------------------------------------
 {
-  const o: any = await runSearchForModel(BODY, reply(200, JSON.stringify({ context: 'Real content.', sources: SOURCES })))
+  const o: any = await runSearchForModel(FIELDS, reply(200, JSON.stringify({ context: 'Real content.', sources: SOURCES })))
   check('a successful search passes context and sources through', o.result === 'Real content.' && o.sources.length === 1)
-  const e: any = await runSearchForModel(BODY, reply(200, JSON.stringify({ context: 'No relevant content found.', sources: [] })))
+  const e: any = await runSearchForModel(FIELDS, reply(200, JSON.stringify({ context: 'No relevant content found.', sources: [] })))
   check('the backend’s own empty result is the one way to report nothing found', e.result === 'No relevant content found.')
 }
-// Every failure path.
 check('the exact 401 production returned is a failure',
-  isFailed(await runSearchForModel(BODY, reply(401, JSON.stringify({ error: 'Missing traceId' })))))
-check('the backend’s new 503 for a failed retrieval is a failure',
-  isFailed(await runSearchForModel(BODY, reply(503, JSON.stringify({ error: 'search_unavailable' })))))
-check('a 429 rate limit is a failure', isFailed(await runSearchForModel(BODY, reply(429, JSON.stringify({ error: 'rate_limited' })))))
-check('a 500 with an empty body is a failure', isFailed(await runSearchForModel(BODY, reply(500, null))))
-check('a 502 HTML page is a failure', isFailed(await runSearchForModel(BODY, reply(502, '<html>Bad Gateway</html>', 'text/html'))))
-check('a thrown fetch is a failure', isFailed(await runSearchForModel(BODY, async () => { throw new TypeError('Failed to fetch') })))
+  isFailed(await runSearchForModel(FIELDS, reply(401, JSON.stringify({ error: 'Missing traceId' })))))
+check('a 500 with an empty body is a failure', isFailed(await runSearchForModel(FIELDS, reply(500, null))))
+check('a 502 HTML page is a failure', isFailed(await runSearchForModel(FIELDS, reply(502, '<html>Bad Gateway</html>', 'text/html'))))
+check('a thrown fetch is a failure', isFailed(await runSearchForModel(FIELDS, async () => { throw new TypeError('Failed to fetch') })))
 for (const body of ['null', '{}', '{"context":""}', '{"context":"  "}', '{"context":42}', 'not json']) {
-  check(`an unreadable 200 (${body}) is a failure, never an invented empty`, isFailed(await runSearchForModel(BODY, reply(200, body))))
+  check(`an unreadable 200 (${body}) is a failure, never an invented empty`, isFailed(await runSearchForModel(FIELDS, reply(200, body))))
 }
-check('status wins over body: a 503 carrying "No relevant content found." is a failure',
-  isFailed(await runSearchForModel(BODY, reply(503, JSON.stringify({ context: 'No relevant content found.', sources: SOURCES })))))
-check('an error never yields source badges, even if it carries some',
-  isFailed(await runSearchForModel(BODY, reply(500, JSON.stringify({ sources: SOURCES })))))
-
-// The request it sends.
+// Every error status, not just 503: a `status >= 500` check passed a 503-only test.
+for (const status of [400, 401, 403, 429, 500, 502, 503]) {
+  check(`status wins over body: a ${status} carrying "No relevant content found." is a failure`,
+    isFailed(await runSearchForModel(FIELDS, reply(status, JSON.stringify({ context: 'No relevant content found.', sources: SOURCES })))))
+}
 {
   let seen: any = null
-  await runSearchForModel(BODY, async (input: string, init: RequestInit) => {
+  await runSearchForModel(FIELDS, async (input: string, init: RequestInit) => {
     seen = { input, init }
     return new Response('{"context":"ok"}', { status: 200 })
   })
   check('it POSTs JSON to /api/rag-search', seen?.input === '/api/rag-search' && seen?.init?.method === 'POST')
-  check('with exactly the body it was given', JSON.stringify(JSON.parse(seen?.init?.body)) === JSON.stringify(BODY))
+  check('with exactly the fields it was given', JSON.stringify(JSON.parse(seen?.init?.body)) === JSON.stringify(FIELDS))
 }
-
-// The failure text, pinned verbatim: a rewording like "describe it from what
-// you remember" or "tell them the site doesn't cover it" passes any keyword test.
+{
+  // Raced against an explicit guard: Node's AbortSignal.timeout timer is
+  // unref'd, so a missing timeout would otherwise just let the event loop exit
+  // — which a JTS mutation run once misread as every mutant killed.
+  const hang = (_i: string, init: RequestInit) => new Promise<Response>((_res, rej) => {
+    init.signal?.addEventListener('abort', () => rej(new DOMException('timed out', 'TimeoutError')))
+  })
+  let guardTimer: ReturnType<typeof setTimeout> | undefined
+  const guard = new Promise<'HUNG'>((res) => { guardTimer = setTimeout(() => res('HUNG'), 2000) })
+  const o: any = await Promise.race([runSearchForModel(FIELDS, hang, 50), guard])
+  clearTimeout(guardTimer)
+  check('a hung request is bounded by the search timeout', o !== 'HUNG' && isFailed(o))
+}
 check('failure text pinned exactly', SEARCH_FAILED_FOR_MODEL ===
   "Search failed — a technical error, not an empty result. Tell the caller you couldn't look that up just now, and say nothing about whether the site covers it. Share only what is already in your instructions, and offer the contact email from your instructions for anything more.")
 
-// Both clients route every search through it, with no second path to the model.
-for (const file of ['src/useGeminiVoice.ts', 'src/useVoiceMode.ts']) {
-  const src = readFileSync(new URL(`../${file}`, import.meta.url), 'utf8')
-  check(`${file} calls runSearchForModel`, /await runSearchForModel</.test(src))
-  check(`${file} has no inline empty-result fallback`, !/No relevant content found/.test(src))
-  check(`${file} never tells the model to use general knowledge`, !/general knowledge/.test(src))
-  check(`${file} does not call /api/rag-search itself`, !/\/api\/rag-search/.test(src))
+// --- the batch logic -----------------------------------------------------------
+function ok(result: string, sources: unknown[] = SOURCES) { return { result, sources } }
+{
+  const { responses } = await answerToolCalls([{ id: 'c1', name: 'search_portfolio', args: { query: 'q' } }],
+    { isCancelled: () => false, traceId: null, search: async () => ok('REAL ANSWER') })
+  check('the search RESULT is what the model gets', JSON.stringify(responses) === JSON.stringify([{ id: 'c1', name: 'search_portfolio', response: { result: 'REAL ANSWER' } }]))
+}
+{
+  const seen: any[] = []
+  await answerToolCalls([{ id: 'c1', name: 'search_portfolio', args: { query: 'agent fleet' } }],
+    { isCancelled: () => false, traceId: 't-1', currentPage: '/about', search: async (f) => { seen.push(f); return ok('x') } })
+  check('the query comes from the call’s args, trace and page from context',
+    JSON.stringify(seen) === JSON.stringify([{ query: 'agent fleet', traceId: 't-1', currentPage: '/about' }]))
+}
+{
+  const good = await answerToolCalls([{ id: 'a', name: 'search_portfolio', args: { query: 'q' } }],
+    { isCancelled: () => false, traceId: null, search: async () => ok('x', SOURCES) })
+  const bad = await answerToolCalls([{ id: 'b', name: 'search_portfolio', args: { query: 'q' } }],
+    { isCancelled: () => false, traceId: null, search: async () => ({ result: SEARCH_FAILED_FOR_MODEL, sources: [] }) })
+  check('a successful search sets badges', JSON.stringify(good.sources) === JSON.stringify(SOURCES))
+  check('a failed search CLEARS them', Array.isArray(bad.sources) && bad.sources.length === 0)
+}
+{
+  let searched = false
+  const out = await answerToolCalls([{ id: 'x', name: 'search_portfolio', args: { query: 'q' } }],
+    { isCancelled: () => true, traceId: null, search: async () => { searched = true; return ok('x') } })
+  check('cancelled BEFORE: never searched, no response, badges untouched', !searched && out.responses.length === 0 && out.sources === null)
+}
+{
+  let cancelled = false
+  const out = await answerToolCalls([{ id: 'x', name: 'search_portfolio', args: { query: 'q' } }],
+    { isCancelled: () => cancelled, traceId: null, search: async () => { cancelled = true; return ok('x') } })
+  check('cancelled DURING: no response, badges untouched', out.responses.length === 0 && out.sources === null)
+}
+{
+  let searched = false
+  const out = await answerToolCalls([{ id: 'u', name: 'delete_everything' }],
+    { isCancelled: () => false, traceId: null, search: async () => { searched = true; return ok('x') } })
+  check('an unknown tool gets the failure text and never searches',
+    !searched && out.responses[0]?.response.result === SEARCH_FAILED_FOR_MODEL && out.sources === null)
+}
+
+// --- the PRODUCTION path ----------------------------------------------------------
+// Every batch case above injects its own `search`, but the Gemini hook uses the
+// default. Review found that making the default drop the query (every real
+// search '' -> 400 -> voice blind again) or shortening its timeout passed. This
+// drives the default search, fetch and timeout through a signal-honouring stub.
+{
+  const original = globalThis.fetch
+  let sentBody: any = null
+  globalThis.fetch = ((_i: string, init?: RequestInit) => new Promise<Response>((resolve, reject) => {
+    sentBody = JSON.parse(String(init?.body))
+    const abort = () => { clearTimeout(t); reject(new DOMException('aborted', 'AbortError')) }
+    const t = setTimeout(() => resolve(new Response(JSON.stringify({ context: 'REAL CONTEXT', sources: SOURCES }), { status: 200 })), 20)
+    if (init?.signal?.aborted) return abort()
+    init?.signal?.addEventListener('abort', abort)
+  })) as typeof fetch
+  try {
+    const out = await answerToolCalls([{ id: 'c1', name: 'search_portfolio', args: { query: 'agent fleet' } }],
+      { isCancelled: () => false, traceId: null, currentPage: '/' })
+    check('production path: the default search’s real result reaches the model', out.responses[0]?.response.result === 'REAL CONTEXT')
+    check('production path: it sends the call’s own query', sentBody?.query === 'agent fleet')
+  } finally {
+    globalThis.fetch = original
+  }
+}
+check('the default search timeout is 10 seconds', SEARCH_TIMEOUT_MS === 10_000)
+{
+  // Safari 15 has no AbortSignal.timeout; the fallback must still bound a hang.
+  const saved = (AbortSignal as any).timeout
+  ;(AbortSignal as any).timeout = undefined
+  const hang = (_i: string, init: RequestInit) => new Promise<Response>((_res, rej) => {
+    init.signal?.addEventListener('abort', () => rej(new DOMException('timed out', 'TimeoutError')))
+  })
+  let guardTimer: ReturnType<typeof setTimeout> | undefined
+  const guard = new Promise<'HUNG'>((res) => { guardTimer = setTimeout(() => res('HUNG'), 2000) })
+  try {
+    const o: any = await Promise.race([runSearchForModel(FIELDS, hang, 50), guard])
+    check('without AbortSignal.timeout (Safari 15), a hung search is still bounded', o !== 'HUNG' && isFailed(o))
+    // The property that matters on Safari 15: a NORMAL search still works. A
+    // bounded-hang check alone cannot see this — with no fallback the missing
+    // API throws and every search fails instantly, which also looks "bounded".
+    const ok200: any = await runSearchForModel(FIELDS, reply(200, JSON.stringify({ context: 'Works on Safari 15.', sources: SOURCES })))
+    check('...and a normal search still WORKS there (not an instant failure)', ok200.result === 'Works on Safari 15.')
+  } finally {
+    clearTimeout(guardTimer)
+    ;(AbortSignal as any).timeout = saved
+  }
+}
+
+// --- the clients -----------------------------------------------------------------
+{
+  const gemini = readFileSync(new URL('../src/useGeminiVoice.ts', import.meta.url), 'utf8')
+  check('Gemini client hands the whole batch to answerToolCalls', /const \{ responses, sources \} = await answerToolCalls<RagSource>\(calls,/.test(gemini))
+  check('Gemini client sets badges from the batch', /if \(sources\) setVoiceSources\(sources\)/.test(gemini))
+  // Review: `isCancelled: () => false` would answer calls Gemini had cancelled,
+  // and `responses.length > 1` would never answer a single-call batch — Gemini
+  // would wait forever.
+  check('Gemini client takes cancellation from the real set', /isCancelled: \(id\) => cancelledCallsRef\.current\.has\(id\)/.test(gemini))
+  check('Gemini client answers every non-empty batch', /if \(responses\.length && ws\.readyState === WebSocket\.OPEN\)/.test(gemini))
+  check('...with exactly those responses', /ws\.send\(JSON\.stringify\(\{ toolResponse: \{ functionResponses: responses \} \}\)\)/.test(gemini))
+  const openai = readFileSync(new URL('../src/useVoiceMode.ts', import.meta.url), 'utf8')
+  check('OpenAI client searches with the call’s own query', /await runSearchForModel<RagSource>\(\{\s*query,/.test(openai))
+  check('OpenAI client sends the search result as the function output', /output: result/.test(openai))
+  for (const [name, src] of [['useGeminiVoice.ts', gemini], ['useVoiceMode.ts', openai]] as const) {
+    check(`${name} has no inline empty-result fallback`, !/No relevant content found/.test(src))
+    check(`${name} never tells the model to use general knowledge`, !/general knowledge/.test(src))
+    check(`${name} does not call /api/rag-search itself`, !/\/api\/rag-search/.test(src))
+  }
 }
 
 if (failed) { console.error(`\n${failed} check(s) failed`); process.exit(1) }
-console.log('ok — both voice clients report failures as failures; only the backend may say "empty"')
+console.log('ok — both voice clients: every failure reported as a failure, batch wiring tested, search bounded')
