@@ -259,7 +259,7 @@ export function boostNamedPages(query, docs) {
 // The case studies joestechsolutions.com actually publishes (src/app/portfolio).
 // Keep in step with that page: a name that drifts silently stops retrieving, and
 // a name that was never there teaches the agent to cite work that does not exist.
-export const JTS_CASE_STUDIES = ['The Skate Workshop', 'RenFaire Directory', 'Cbarrgs Music', 'FixBot']
+export const JTS_CASE_STUDIES = ['The Skate Workshop', 'RenFaire Directory', 'Cbarrgs Music', 'FixBot', 'Turnover Agent', 'Archive Salon']
 
 // What a visitor says when they want to SEE Joe's past output. Every alternative
 // here needs a possessive, a retrospective, or an explicit "show me" — never a

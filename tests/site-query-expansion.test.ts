@@ -27,7 +27,7 @@ import { expandSiteQuery, buildSiteSearchArgs, JTS_CASE_STUDIES } from '../funct
 // renaming 'FixBot' to 'FixBot Pro' would change expected and actual together
 // and the suite would still pass, shipping a product that does not exist.
 const EXPECTED_ADDITIONS = ['portfolio', 'case studies',
-  'The Skate Workshop', 'RenFaire Directory', 'Cbarrgs Music', 'FixBot']
+  'The Skate Workshop', 'RenFaire Directory', 'Cbarrgs Music', 'FixBot', 'Turnover Agent', 'Archive Salon']
 
 let failed = 0
 function check(name: string, cond: boolean) {
@@ -138,14 +138,21 @@ check('a query already naming portfolio is not double-expanded',
 // a real case study is an instruction to fabricate.
 const { getPersona } = await import('../functions/api-src/_shared/personas.js')
 const jts = getPersona('jts')
-check('case-study list is exactly the four published names, in order',
+check('case-study list is exactly the six published names, in order',
   JSON.stringify(JTS_CASE_STUDIES) === JSON.stringify(EXPECTED_ADDITIONS.slice(2)))
-for (const name of ['Skate Workshop', 'RenFaire Directory', 'Cbarrgs Music', 'FixBot']) {
+for (const name of ['Skate Workshop', 'RenFaire Directory', 'Cbarrgs Music', 'FixBot', 'Turnover Agent', 'Archive Salon']) {
   check(`case-study list names ${name}`, JTS_CASE_STUDIES.some((p) => p.includes(name)))
   check(`text prompt names ${name}`, (jts.prompt || '').includes(name))
   check(`voice prompt names ${name}`, (jts.voicePrompt || '').includes(name))
+  check(`search tool description names ${name}`, (jts.searchTool.description || '').includes(name))
 }
-for (const phantom of ['Turnover Agent', 'Archive Salon', 'Fairway']) {
+// Turnover Agent and Archive Salon USED to be phantoms here, correctly: on
+// 2026-09-20 neither had a case study page, so naming them was an instruction
+// to fabricate. Both were published by owner directive — Archive Salon
+// 2026-09-21 (#54, Decision 5), Turnover Agent 2026-09-22 (#63) — and both are
+// in the live index, so they moved to the published list above. Moving a name
+// out of this list needs a live page to point at, not just a wish to cite it.
+for (const phantom of ['Fairway']) {
   check(`text prompt does not cite ${phantom}`, !(jts.prompt || '').includes(phantom))
   check(`voice prompt does not cite ${phantom}`, !(jts.voicePrompt || '').includes(phantom))
 }

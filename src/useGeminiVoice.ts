@@ -18,6 +18,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { VoiceStatus, RagSource } from './useVoiceMode';
 import { SESSION_TIMEOUT_S } from './useVoiceMode';
+import { SEARCH_FAILED_FOR_MODEL, runSearchForModel } from './voiceSearch';
 
 interface TranscriptEntry {
   role: 'user' | 'assistant';
@@ -211,23 +212,22 @@ export function useGeminiVoice() {
     const responses = [];
     for (const call of calls) {
       if (cancelledCallsRef.current.has(call.id)) continue;
-      let result = 'Search temporarily unavailable — answer from your general knowledge.';
+      // runSearchForModel (src/voiceSearch.ts) owns every failure path and is
+      // tested in tests/voice-search-client.test.ts.
+      let result = SEARCH_FAILED_FOR_MODEL;
+      let sources: RagSource[] = [];
       if (call.name === 'search_portfolio') {
-        try {
-          const res = await fetch('/api/rag-search', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ query: call.args?.query || '', traceId: traceIdRef.current, currentPage: currentPageRef.current }),
-          });
-          const data = await res.json();
-          if (data.sources?.length) setVoiceSources(data.sources);
-          result = data.context || 'No relevant content found.';
-        } catch {
-          // keep the fallback text
-        }
+        ({ result, sources } = await runSearchForModel<RagSource>({
+          query: call.args?.query || '',
+          traceId: traceIdRef.current,
+          currentPage: currentPageRef.current,
+        }));
       }
       // The cancellation typically arrives while the search is in flight
       if (cancelledCallsRef.current.has(call.id)) continue;
+      // Badges only after the cancellation check, and only from a successful
+      // search: a failed one clears the previous answer's badges.
+      if (call.name === 'search_portfolio') setVoiceSources(sources);
       responses.push({ id: call.id, name: call.name, response: { result } });
     }
     setIsSearching(false);

@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useAudioAnalyser } from './useAudioAnalyser';
+import { runSearchForModel } from './voiceSearch';
 
 export type VoiceStatus = 'idle' | 'connecting' | 'listening' | 'thinking' | 'speaking' | 'error';
 
@@ -687,44 +688,23 @@ export function useVoiceMode() {
 
   // Handle function calling (RAG search)
   async function handleFunctionCall(callId: string, query: string, ws: WebSocket, _lang: string, _sessionId: string) {
-    try {
-      const res = await fetch('/api/rag-search', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query, traceId: traceIdRef.current, currentPage: currentPageRef.current }),
-      });
-
-      const { context, sources } = await res.json();
-
-      // Show source badges in voice UI
-      if (sources?.length > 0) {
-        setVoiceSources(sources);
-      }
-
-      // Send function output back
-      ws.send(JSON.stringify({
-        type: 'conversation.item.create',
-        item: {
-          type: 'function_call_output',
-          call_id: callId,
-          output: context || 'No relevant content found.',
-        },
-      }));
-
-      // Ask the model to continue responding
-      ws.send(JSON.stringify({ type: 'response.create' }));
-    } catch {
-      // Send error output
-      ws.send(JSON.stringify({
-        type: 'conversation.item.create',
-        item: {
-          type: 'function_call_output',
-          call_id: callId,
-          output: 'Search temporarily unavailable — answer from your general knowledge.',
-        },
-      }));
-      ws.send(JSON.stringify({ type: 'response.create' }));
-    }
+    // Same tested path as the Gemini client (src/voiceSearch.ts). This used to
+    // report ANY failure to the model as an empty search, and a thrown fetch as
+    // licence to answer from memory — both now forbidden by the voice prompts.
+    // runSearchForModel never throws.
+    const { result, sources } = await runSearchForModel<RagSource>({
+      query,
+      traceId: traceIdRef.current,
+      currentPage: currentPageRef.current,
+    });
+    setVoiceSources(sources);
+    if (ws.readyState !== WebSocket.OPEN) return;
+    ws.send(JSON.stringify({
+      type: 'conversation.item.create',
+      item: { type: 'function_call_output', call_id: callId, output: result },
+    }));
+    // Ask the model to continue responding
+    ws.send(JSON.stringify({ type: 'response.create' }));
   }
 
   // Play base64-encoded PCM Int16 audio
