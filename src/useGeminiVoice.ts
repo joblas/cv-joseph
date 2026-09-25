@@ -211,7 +211,10 @@ export function useGeminiVoice() {
     const responses = [];
     for (const call of calls) {
       if (cancelledCallsRef.current.has(call.id)) continue;
-      let result = 'Search temporarily unavailable — answer from your general knowledge.';
+      // Deliberately NOT "answer from your general knowledge": the voice prompt
+      // forbids describing work from memory, and a failed search is exactly
+      // when the model is most tempted to. Say it failed; claim nothing absent.
+      let result = 'Search failed — a technical error, not an empty result. Do not say the site lacks this. Share only what is already in your instructions, and offer the contact email from your instructions for anything more.';
       if (call.name === 'search_portfolio') {
         try {
           const res = await fetch('/api/rag-search', {
@@ -221,7 +224,13 @@ export function useGeminiVoice() {
           });
           const data = await res.json();
           if (data.sources?.length) setVoiceSources(data.sources);
-          result = data.context || 'No relevant content found.';
+          // A failed lookup is not an empty one. This used to read
+          // `data.context || 'No relevant content found.'`, so a 401 or 500 —
+          // whose body has no `context` — reached the model as a confident
+          // "the site has nothing on this", and the agent repeated that to the
+          // caller. Only a successful response may say nothing was found; a
+          // failure keeps the "unavailable" default above.
+          if (res.ok) result = data.context || 'No relevant content found.';
         } catch {
           // keep the fallback text
         }

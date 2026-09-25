@@ -136,13 +136,23 @@ export default async function handler(req) {
     const { query, traceId, currentPage } = body
     const persona = resolvePersona(body, req)
 
-    if (!traceId) {
-      return new Response(JSON.stringify({ error: 'Missing traceId' }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' },
-      })
-    }
-
+    // traceId is OPTIONAL, and must stay optional. It is observability
+    // plumbing — the Langfuse trace the voice session opened — not
+    // authentication. This handler used to answer a missing one with a 401,
+    // and that check did two things, both wrong:
+    //
+    //   - It excluded no attacker. Any non-empty string passed; nothing
+    //     compared it to a trace the server had actually issued.
+    //   - It excluded every real visitor whenever tracing is off. voice-token
+    //     returns traceId: null when LANGFUSE_* is unset, which has been
+    //     production's normal state since the Cloudflare move. So every voice
+    //     search 401'd, the widget turned the 401 into "No relevant content
+    //     found.", and the voice agent — on both sites — told callers the site
+    //     had no details about things it covers at length. Reproduced
+    //     2026-09-25 against production: the agent searched on exactly the
+    //     turns that needed it and was told, every time, that nothing existed.
+    //
+    // A real control here would be a per-IP rate limit, not a presence check.
     if (!query) {
       return new Response(JSON.stringify({ error: 'Missing query' }), {
         status: 400,
