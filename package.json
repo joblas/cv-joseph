@@ -30,7 +30,9 @@
     "test:rag-query": "npm run cf:prep >/dev/null && tsx tests/site-query-expansion.test.ts",
     "diagnose:rag": "tsx scripts/diagnose-rag.ts",
     "test:spoken": "npm run cf:prep >/dev/null && tsx tests/spoken-text.test.ts",
-    "test:rag-hybrid": "npm run cf:prep >/dev/null && tsx tests/site-hybrid-retrieval.test.ts"
+    "test:rag-hybrid": "npm run cf:prep >/dev/null && tsx tests/site-hybrid-retrieval.test.ts",
+    "test:voice-search": "npm run cf:prep >/dev/null && tsx tests/rag-search-voice.test.ts",
+    "test:agent-prompts": "npm run cf:prep >/dev/null && tsx tests/jts-agent-prompts.test.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.71.2",
