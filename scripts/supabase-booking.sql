@@ -220,7 +220,10 @@ as $$
   select b.id, b.status, b.google_event_id, b.slot_start, b.slot_end
     from public.bookings b
    where (b.status = 'pending' and b.created_at < now() - interval '60 seconds')
-      or (b.status = 'confirmed' and b.slot_start > now()
+      -- Confirmed rows only once they are 5 minutes old: right after an insert
+      -- Google may briefly 404 the new event, and a second visitor's reconcile
+      -- must not release a booking that was just made (review of #30).
+      or (b.status = 'confirmed' and b.slot_start > now() and b.created_at < now() - interval '5 minutes'
           and (b.email = lower(trim(p_email)) or b.slot_start = p_start))
    -- This visitor's own rows first, so unrelated stale rows the Worker could
    -- not settle can never crowd them out of the limit.

@@ -31,6 +31,8 @@
 // an unbounded await there hangs the visitor's reply (learned in #27).
 // ---------------------------------------------------------------------------
 
+import { boundedFetch } from './bounded-fetch.js'
+
 const TOKEN_URL = 'https://oauth2.googleapis.com/token'
 const API = 'https://www.googleapis.com/calendar/v3'
 export const SCOPES = [
@@ -46,6 +48,9 @@ export const GOOGLE_TIMEOUT_MS = 4000
 export function calendarOwner() {
   return process.env.BOOKING_CALENDAR_OWNER || 'joe@joestechsolutions.com'
 }
+// NEVER change BOOKING_CALENDAR_ID while bookings are live: reconcile looks
+// each booking's event up on THIS calendar, so events left on the old one read
+// as deleted and their holds are released (review of #30).
 export function calendarId() {
   return process.env.BOOKING_CALENDAR_ID || calendarOwner()
 }
@@ -77,15 +82,8 @@ export function pemToPkcs8(pem) {
   return out.buffer
 }
 
-async function bounded(url, init) {
-  const controller = new AbortController()
-  const timer = setTimeout(() => controller.abort(), GOOGLE_TIMEOUT_MS)
-  try {
-    return await fetch(url, { ...init, signal: controller.signal })
-  } finally {
-    clearTimeout(timer)
-  }
-}
+// Every call's deadline covers its body too (bounded-fetch.js).
+const bounded = (url, init) => boundedFetch(url, init, GOOGLE_TIMEOUT_MS)
 
 // --- the access token --------------------------------------------------------
 let cached = null // { token, expiresAt }

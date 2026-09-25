@@ -71,7 +71,7 @@ let getBody: any = null, getStatus = 200
 ;(globalThis as any).fetch = async (url: string, init: any) => {
   calls.push({ url: String(url), init })
   if (hang) return new Promise((_r, rej) => init?.signal?.addEventListener('abort', () => { const e: any = new Error('aborted'); e.name = 'AbortError'; rej(e) }))
-  const json = (b: any, status = 200) => ({ ok: status < 400, status, json: async () => b })
+  const json = (b: any, status = 200) => new Response(JSON.stringify(b), { status, headers: { 'content-type': 'application/json' } })
   if (String(url).startsWith('https://oauth2.googleapis.com/token')) return json(tokenBody, tokenStatus)
   if (String(url).endsWith('/freeBusy')) return json(fbBody, fbStatus)
   if (String(url).includes('/events?')) return json(insertBody, insertStatus)
@@ -242,15 +242,32 @@ check('calendar defaults to joe@joestechsolutions.com', G.calendarId() === 'joe@
 {
   // A secondary calendar changes WHICH calendar, never WHO is impersonated:
   // delegation can only be granted to a real Workspace user.
+  // Guarded: a regression here must FAIL named checks, not crash the suite.
   process.env.BOOKING_CALENDAR_ID = 'c_bookings@group.calendar.google.com'
+  const SECONDARY = 'c_bookings%40group.calendar.google.com'
   reset()
-  await G.accessToken(1_790_000_000_000)
-  const claims = jsonPart(new URLSearchParams(calls[0]?.init?.body).get('assertion')!.split('.')[1])
-  fbBody = { calendars: { 'c_bookings@group.calendar.google.com': { busy: [] } } }
-  await G.freeBusy(0, 1)
-  const fb = JSON.parse(calls.find((c) => c.url.endsWith('/freeBusy'))?.init?.body)
-  check('with a secondary calendar, the JWT still impersonates the owner', claims.sub === 'joe@joestechsolutions.com')
-  check('...and free/busy reads the secondary calendar', fb.items?.[0]?.id === 'c_bookings@group.calendar.google.com')
+  let sub = '', fbId = '', insertUrl = '', getUrl = ''
+  try {
+    await G.accessToken(1_790_000_000_000)
+    sub = jsonPart(new URLSearchParams(calls[0]?.init?.body).get('assertion')!.split('.')[1]).sub
+    fbBody = { calendars: { 'c_bookings@group.calendar.google.com': { busy: [] } } }
+    await G.freeBusy(0, 1)
+    fbId = JSON.parse(calls.find((c) => c.url.endsWith('/freeBusy'))?.init?.body).items?.[0]?.id
+    insertStatus = 200; insertBody = { id: ev.eventId }
+    await G.insertEvent(ev)
+    insertUrl = calls.find((c) => c.url.includes('/events?'))?.url || ''
+    getStatus = 200; getBody = { id: ev.eventId, status: 'confirmed', start: { dateTime: '2026-09-29T01:30:00Z' }, end: { dateTime: '2026-09-29T02:00:00Z' } }
+    await G.getEvent(ev.eventId)
+    getUrl = calls.find((c) => c.url.includes('/events/'))?.url || ''
+  } catch (e: any) {
+    check(`the secondary-calendar path runs without throwing (${e.message})`, false)
+  }
+  check('with a secondary calendar, the JWT still impersonates the owner', sub === 'joe@joestechsolutions.com')
+  check('...free/busy reads the secondary calendar', fbId === 'c_bookings@group.calendar.google.com')
+  check('...events are created on it', insertUrl.includes(`/calendars/${SECONDARY}/events?`))
+  // If lookups read a different calendar than inserts, every lookup 404s and
+  // reconcile releases every live booking.
+  check('...and events are LOOKED UP on the same calendar they were created on', getUrl.includes(`/calendars/${SECONDARY}/events/`))
   delete process.env.BOOKING_CALENDAR_ID
 }
 check('configured only when both service-account secrets exist', G.googleConfigured() === true)

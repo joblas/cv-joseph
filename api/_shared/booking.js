@@ -51,6 +51,7 @@ import {
 } from './availability.js'
 import { freeBusy, getEvent, googleConfigured, insertEvent } from './google-calendar.js'
 import { clientIp } from './leads.js'
+import { boundedFetch } from './bounded-fetch.js'
 import { waitUntil } from '@vercel/functions'
 
 export const BOOKING_TOOL_NAMES = ['check_availability', 'send_verification_code', 'book_call']
@@ -138,11 +139,7 @@ export function bookingVoiceNote(persona) {
 
 // --- small, bounded I/O -------------------------------------------------------
 
-async function bounded(url, init, ms) {
-  const controller = new AbortController()
-  const timer = setTimeout(() => controller.abort(), ms)
-  try { return await fetch(url, { ...init, signal: controller.signal }) } finally { clearTimeout(timer) }
-}
+const bounded = boundedFetch // the deadline covers the body too
 
 export async function rpc(name, args) {
   const res = await bounded(`${process.env.SUPABASE_URL}/rest/v1/rpc/${name}`, {

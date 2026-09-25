@@ -64,7 +64,7 @@ const mode = {
   busy: [] as { start: string; end: string }[],
   freeBusy: 'ok' as 'ok' | 'http' | 'calendar-error',
   issue: 'ok' as string, check: 'ok' as string, reserve: `ok:${BOOKING_ID}` as string,
-  rpcStatus: 200, rpcHang: false, insert: 'ok' as Insert, resend: 200,
+  rpcStatus: 200, rpcHang: false, rpcBodyStall: false, insert: 'ok' as Insert, resend: 200,
   get: 'missing' as Get, getTimes: { start: '2026-09-29T01:30:00Z', end: '2026-09-29T02:00:00Z' },
   candidates: [] as any[], candidatesFail: false,
   ownerHold: null as null | Promise<void>,
@@ -72,7 +72,7 @@ const mode = {
 const resetMode = () => {
   Object.assign(mode, {
     busy: [], freeBusy: 'ok', issue: 'ok', check: 'ok', reserve: `ok:${BOOKING_ID}`,
-    rpcStatus: 200, rpcHang: false, insert: 'ok', resend: 200,
+    rpcStatus: 200, rpcHang: false, rpcBodyStall: false, insert: 'ok', resend: 200,
     get: 'missing', getTimes: { start: '2026-09-29T01:30:00Z', end: '2026-09-29T02:00:00Z' },
     candidates: [], candidatesFail: false, ownerHold: null,
   })
@@ -110,6 +110,13 @@ const json = (b: unknown, status = 200) => new Response(JSON.stringify(b), { sta
       return new Promise((_, reject) => init.signal?.addEventListener('abort', () => {
         const e: any = new Error('aborted'); e.name = 'AbortError'; reject(e)
       }))
+    }
+    if (mode.rpcBodyStall) {
+      // Headers arrive at once; the body never does (until the caller aborts,
+      // which is what a real fetch does to a body still streaming).
+      return new Response(new ReadableStream({
+        start(c) { init.signal?.addEventListener('abort', () => { const e: any = new Error('aborted'); e.name = 'AbortError'; c.error(e) }) },
+      }), { status: 200, headers: { 'content-type': 'application/json' } })
     }
     if (mode.rpcStatus !== 200) return json({ message: 'db down' }, mode.rpcStatus)
     const fn = u.split('/rpc/')[1]
@@ -421,6 +428,26 @@ for (const get of ['missing', 'error'] as const) {
 }
 {
   resetMode()
+  mode.candidates = [
+    { id: 'cccccccc-0000-0000-0000-000000000001', status: 'pending', google_event_id: null, slot_start: '2026-09-29T01:30:00+00:00', slot_end: '2026-09-29T02:00:00+00:00' },
+    { id: 'cccccccc-0000-0000-0000-000000000002', status: 'confirmed', google_event_id: 'evtgone', slot_start: '2026-09-30T01:30:00+00:00', slot_end: '2026-09-30T02:00:00+00:00' },
+  ]
+  mode.get = 'missing'
+  await run('book_call', { slot: 'Mon, Sep 28, 7:00 PM PT', email: 'visitor@example.com', code: '123456' })
+  const synced = rpcCalls('booking_sync').map((c) => `${c.body.p_id}:${c.body.p_status}`).sort()
+  check('EVERY candidate is settled, not just the first',
+    JSON.stringify(synced) === JSON.stringify(['cccccccc-0000-0000-0000-000000000001:failed', 'cccccccc-0000-0000-0000-000000000002:cancelled']))
+}
+{
+  resetMode()
+  mode.candidates = [{ id: 'bbbbbbbb-0000-0000-0000-000000000007', status: 'confirmed', google_event_id: 'evtlonger', slot_start: '2026-09-29T01:30:00+00:00', slot_end: '2026-09-29T02:00:00+00:00' }]
+  mode.get = 'exists'; mode.getTimes = { start: '2026-09-29T01:30:00Z', end: '2026-09-29T02:30:00Z' }
+  await run('book_call', { slot: 'Mon, Sep 28, 7:00 PM PT', email: 'visitor@example.com', code: '123456' })
+  const sync = rpcCalls('booking_sync')[0]?.body
+  check('a change to the END time alone is followed too', sync?.p_end === '2026-09-29T02:30:00.000Z')
+}
+{
+  resetMode()
   mode.candidates = [{ id: 'bbbbbbbb-0000-0000-0000-000000000005', status: 'confirmed', google_event_id: 'evtsame', slot_start: '2026-09-29T01:30:00+00:00', slot_end: '2026-09-29T02:00:00+00:00' }]
   mode.get = 'exists'
   await run('book_call', { slot: 'Mon, Sep 28, 7:00 PM PT', email: 'visitor@example.com', code: '123456' })
@@ -510,6 +537,19 @@ check('database calls give up within 3s, email within 4s (a chat reply waits on 
   clearTimeout(guard)
   check('a hung database returns an honest failure instead of hanging the chat', out !== 'HUNG' && /couldn't be completed/.test(out) && Date.now() - t0 < B.RPC_TIMEOUT_MS + 1500)
   check('...and no code email went out for a code that was never recorded', emails().length === 0)
+}
+{
+  // The deadline must cover the BODY, not just the headers: an untimed
+  // res.json() let a stalled reply outlast reconcile (review of #30).
+  resetMode(); mode.rpcBodyStall = true
+  const t0 = Date.now()
+  let guard: ReturnType<typeof setTimeout> | undefined
+  const out = await Promise.race([
+    run('send_verification_code', { email: 'visitor@example.com' }),
+    new Promise<string>((r) => { guard = setTimeout(() => r('HUNG'), B.RPC_TIMEOUT_MS + 2000) }),
+  ])
+  clearTimeout(guard)
+  check('a reply whose headers arrive but whose body stalls is cut off at the deadline', out !== 'HUNG' && /couldn't be completed/.test(out) && Date.now() - t0 < B.RPC_TIMEOUT_MS + 1500)
 }
 
 if (failed) { console.error(`${failed} check(s) failed`); process.exit(1) }
