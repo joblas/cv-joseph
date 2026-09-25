@@ -44,6 +44,17 @@ export interface SearchFields {
 // ordinary thrown-fetch failure path.
 export const SEARCH_TIMEOUT_MS = 10_000;
 
+// AbortSignal.timeout needs Safari 16 / Chrome 103 / Firefox 100, and this
+// site's build (es2022, no polyfills) does not provide it. On Safari 15 the call
+// throws inside the try, so every voice search would take the failure path —
+// honest, but blind. Fall back to a controller and a timer where it is missing.
+function timeoutSignal(ms: number): AbortSignal {
+  if (typeof AbortSignal.timeout === 'function') return AbortSignal.timeout(ms);
+  const controller = new AbortController();
+  setTimeout(() => controller.abort(new DOMException('The operation timed out.', 'TimeoutError')), ms);
+  return controller.signal;
+}
+
 export async function runSearchForModel<S = unknown>(
   fields: SearchFields,
   fetchImpl: FetchLike = (input, init) => fetch(input, init),
@@ -56,7 +67,7 @@ export async function runSearchForModel<S = unknown>(
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(fields),
-      signal: AbortSignal.timeout(timeoutMs),
+      signal: timeoutSignal(timeoutMs),
     });
   } catch {
     return failed;

@@ -16,7 +16,7 @@
 // wrong changes passed, including discarding the search result and sending an
 // empty query. The batch logic now lives in answerToolCalls() and is driven here.
 import { readFileSync } from 'node:fs'
-import { SEARCH_FAILED_FOR_MODEL, answerToolCalls, runSearchForModel } from '../src/voiceSearch.ts'
+import { SEARCH_FAILED_FOR_MODEL, SEARCH_TIMEOUT_MS, answerToolCalls, runSearchForModel } from '../src/voiceSearch.ts'
 
 let failed = 0
 function check(name: string, cond: boolean) {
@@ -115,11 +115,65 @@ function ok(result: string, sources: unknown[] = SOURCES) { return { result, sou
     !searched && out.responses[0]?.response.result === SEARCH_FAILED_FOR_MODEL && out.sources === null)
 }
 
+// --- the PRODUCTION path ----------------------------------------------------------
+// Every batch case above injects its own `search`, but the Gemini hook uses the
+// default. Review found that making the default drop the query (every real
+// search '' -> 400 -> voice blind again) or shortening its timeout passed. This
+// drives the default search, fetch and timeout through a signal-honouring stub.
+{
+  const original = globalThis.fetch
+  let sentBody: any = null
+  globalThis.fetch = ((_i: string, init?: RequestInit) => new Promise<Response>((resolve, reject) => {
+    sentBody = JSON.parse(String(init?.body))
+    const abort = () => { clearTimeout(t); reject(new DOMException('aborted', 'AbortError')) }
+    const t = setTimeout(() => resolve(new Response(JSON.stringify({ context: 'REAL CONTEXT', sources: SOURCES }), { status: 200 })), 20)
+    if (init?.signal?.aborted) return abort()
+    init?.signal?.addEventListener('abort', abort)
+  })) as typeof fetch
+  try {
+    const out = await answerToolCalls([{ id: 'c1', name: 'search_portfolio', args: { query: 'agent fleet' } }],
+      { isCancelled: () => false, traceId: null, currentPage: '/' })
+    check('production path: the default search’s real result reaches the model', out.responses[0]?.response.result === 'REAL CONTEXT')
+    check('production path: it sends the call’s own query', sentBody?.query === 'agent fleet')
+  } finally {
+    globalThis.fetch = original
+  }
+}
+check('the default search timeout is 10 seconds', SEARCH_TIMEOUT_MS === 10_000)
+{
+  // Safari 15 has no AbortSignal.timeout; the fallback must still bound a hang.
+  const saved = (AbortSignal as any).timeout
+  ;(AbortSignal as any).timeout = undefined
+  const hang = (_i: string, init: RequestInit) => new Promise<Response>((_res, rej) => {
+    init.signal?.addEventListener('abort', () => rej(new DOMException('timed out', 'TimeoutError')))
+  })
+  let guardTimer: ReturnType<typeof setTimeout> | undefined
+  const guard = new Promise<'HUNG'>((res) => { guardTimer = setTimeout(() => res('HUNG'), 2000) })
+  try {
+    const o: any = await Promise.race([runSearchForModel(FIELDS, hang, 50), guard])
+    check('without AbortSignal.timeout (Safari 15), a hung search is still bounded', o !== 'HUNG' && isFailed(o))
+    // The property that matters on Safari 15: a NORMAL search still works. A
+    // bounded-hang check alone cannot see this — with no fallback the missing
+    // API throws and every search fails instantly, which also looks "bounded".
+    const ok200: any = await runSearchForModel(FIELDS, reply(200, JSON.stringify({ context: 'Works on Safari 15.', sources: SOURCES })))
+    check('...and a normal search still WORKS there (not an instant failure)', ok200.result === 'Works on Safari 15.')
+  } finally {
+    clearTimeout(guardTimer)
+    ;(AbortSignal as any).timeout = saved
+  }
+}
+
 // --- the clients -----------------------------------------------------------------
 {
   const gemini = readFileSync(new URL('../src/useGeminiVoice.ts', import.meta.url), 'utf8')
   check('Gemini client hands the whole batch to answerToolCalls', /const \{ responses, sources \} = await answerToolCalls<RagSource>\(calls,/.test(gemini))
   check('Gemini client sets badges from the batch', /if \(sources\) setVoiceSources\(sources\)/.test(gemini))
+  // Review: `isCancelled: () => false` would answer calls Gemini had cancelled,
+  // and `responses.length > 1` would never answer a single-call batch — Gemini
+  // would wait forever.
+  check('Gemini client takes cancellation from the real set', /isCancelled: \(id\) => cancelledCallsRef\.current\.has\(id\)/.test(gemini))
+  check('Gemini client answers every non-empty batch', /if \(responses\.length && ws\.readyState === WebSocket\.OPEN\)/.test(gemini))
+  check('...with exactly those responses', /ws\.send\(JSON\.stringify\(\{ toolResponse: \{ functionResponses: responses \} \}\)\)/.test(gemini))
   const openai = readFileSync(new URL('../src/useVoiceMode.ts', import.meta.url), 'utf8')
   check('OpenAI client searches with the call’s own query', /await runSearchForModel<RagSource>\(\{\s*query,/.test(openai))
   check('OpenAI client sends the search result as the function output', /output: result/.test(openai))
