@@ -35,11 +35,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Booking SQL battery and race
+        # `shell: bash` adds pipefail, so psql's own exit code survives `tee`.
+        # The anchored greps accept only the real success lines, never an error
+        # snippet that happens to quote them.
+        shell: bash
         run: |
           psql -v ON_ERROR_STOP=1 -f scripts/supabase-booking.test.sql 2>&1 | tee battery.log
-          grep -q 'booking SQL: all checks passed' battery.log
+          grep -qE 'NOTICE:  booking SQL: all checks passed$' battery.log
           psql -v ON_ERROR_STOP=1 -f scripts/supabase-booking.race.sql 2>&1 | tee race.log
-          grep -q 'booking race: all checks passed' race.log
+          grep -qx 'booking race: all checks passed' race.log
 
   build-deploy:
     runs-on: ubuntu-latest

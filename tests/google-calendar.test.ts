@@ -67,18 +67,24 @@ const verify = async (jwt: string) => {
 const calls: { url: string; init: any }[] = []
 let tokenStatus = 200, tokenBody: any = { access_token: 'ya29.stub', expires_in: 3600, token_type: 'Bearer' }
 let fbBody: any = null, fbStatus = 200, insertBody: any = null, insertStatus = 200, hang = false
-let getBody: any = null, getStatus = 200
+let getBody: any = null, getStatus = 200, tokenBodyStall = false
 ;(globalThis as any).fetch = async (url: string, init: any) => {
   calls.push({ url: String(url), init })
   if (hang) return new Promise((_r, rej) => init?.signal?.addEventListener('abort', () => { const e: any = new Error('aborted'); e.name = 'AbortError'; rej(e) }))
   const json = (b: any, status = 200) => new Response(JSON.stringify(b), { status, headers: { 'content-type': 'application/json' } })
+  if (String(url).startsWith('https://oauth2.googleapis.com/token') && tokenBodyStall) {
+    // Headers arrive; the body never does, until the caller aborts.
+    return new Response(new ReadableStream({
+      start(c) { init?.signal?.addEventListener('abort', () => { const e: any = new Error('aborted'); e.name = 'AbortError'; c.error(e) }) },
+    }), { status: 200, headers: { 'content-type': 'application/json' } })
+  }
   if (String(url).startsWith('https://oauth2.googleapis.com/token')) return json(tokenBody, tokenStatus)
   if (String(url).endsWith('/freeBusy')) return json(fbBody, fbStatus)
   if (String(url).includes('/events?')) return json(insertBody, insertStatus)
   if (String(url).includes('/events/')) return json(getBody, getStatus)
   return json({}, 404)
 }
-const reset = () => { calls.length = 0; G._resetTokenCache(); tokenStatus = 200; tokenBody = { access_token: 'ya29.stub', expires_in: 3600 }; hang = false }
+const reset = () => { calls.length = 0; G._resetTokenCache(); tokenStatus = 200; tokenBody = { access_token: 'ya29.stub', expires_in: 3600 }; hang = false; tokenBodyStall = false }
 
 // --- 2. The token exchange -----------------------------------------------------
 {
@@ -235,6 +241,18 @@ getStatus = 200
   clearTimeout(guardTimer)
   check('a hung Google request is aborted within the timeout, not awaited forever', out === 'threw')
   check('the timeout stays a few seconds (it sits in a chat reply)', G.GOOGLE_TIMEOUT_MS > 0 && G.GOOGLE_TIMEOUT_MS <= 5000)
+}
+{
+  // The deadline covers the BODY: a token response whose body stalls must not
+  // outlast reconcile and then create an event on a released row (review of #30).
+  reset(); tokenBodyStall = true
+  let guardTimer: any
+  const t0 = Date.now()
+  const guard = new Promise((res) => { guardTimer = setTimeout(() => res('HUNG'), G.GOOGLE_TIMEOUT_MS + 3000) })
+  const out = await Promise.race([G.accessToken().then(() => 'ok', () => 'threw'), guard])
+  clearTimeout(guardTimer)
+  check('a Google reply whose headers arrive but whose body stalls is cut off at the deadline',
+    out === 'threw' && Date.now() - t0 < G.GOOGLE_TIMEOUT_MS + 1500)
 }
 
 // --- 6. Config ------------------------------------------------------------------

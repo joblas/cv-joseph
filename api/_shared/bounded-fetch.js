@@ -14,8 +14,13 @@ export async function boundedFetch(url, init, ms) {
   try {
     const res = await fetch(url, { ...init, signal: controller.signal })
     const body = await res.text()
+    // The body is now decoded text: the original encoding and length headers
+    // describe bytes that no longer exist, so they must not travel with it.
+    const headers = new Headers(res.headers)
+    headers.delete('content-encoding')
+    headers.delete('content-length')
     return new Response(NULL_BODY.has(res.status) ? null : body, {
-      status: res.status, statusText: res.statusText, headers: res.headers,
+      status: res.status, statusText: res.statusText, headers,
     })
   } finally {
     clearTimeout(timer)

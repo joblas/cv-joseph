@@ -32,7 +32,7 @@ declare
   v_start timestamptz := date_trunc('hour', now()) + interval '2 days';
   f text;
   r_fresh uuid; r_stale uuid; r_mine uuid; r_slot uuid; r_past uuid; r_other uuid; r_failed uuid;
-  r_59 uuid; r_61 uuid; r_newconf uuid;
+  r_59 uuid; r_61 uuid; r_newconf uuid; r_6min uuid;
   ids uuid[];
 begin
   -- --- booking_issue_code: caps and windows -----------------------------------
@@ -188,12 +188,14 @@ begin
     ('x', 'p61@example.com', v_start + interval '9 days', v_start + interval '9 days 30 minutes', 'pending', now() - interval '61 seconds') returning id into r_61;
   insert into public.bookings (session_id, email, slot_start, slot_end, status, google_event_id, created_at) values
     ('x', 'me@example.com', v_start + interval '12 days', v_start + interval '12 days 30 minutes', 'confirmed', 'evt_new', now() - interval '4 minutes') returning id into r_newconf;
+  insert into public.bookings (session_id, email, slot_start, slot_end, status, google_event_id, created_at) values
+    ('x', 'me@example.com', v_start + interval '13 days', v_start + interval '13 days 30 minutes', 'confirmed', 'evt_6', now() - interval '6 minutes') returning id into r_6min;
   select array_agg(c.id) into ids from public.booking_candidates(' ME@example.com ', v_start + interval '4 days') c;
-  assert ids[1:2] @> array[r_mine, r_slot] and ids[1:2] <@ array[r_mine, r_slot], 'this visitor''s email and slot rows come first';
-  assert ids[3:4] @> array[r_stale, r_61] and ids[3:4] <@ array[r_stale, r_61] and cardinality(ids) = 4, 'then stale pending rows; nothing else';
+  assert ids[1:3] @> array[r_mine, r_slot, r_6min] and ids[1:3] <@ array[r_mine, r_slot, r_6min], 'this visitor''s email and slot rows come first (a confirmed row 6 minutes old included)';
+  assert ids[4:5] @> array[r_stale, r_61] and ids[4:5] <@ array[r_stale, r_61] and cardinality(ids) = 5, 'then stale pending rows; nothing else';
   assert not (ids @> array[r_fresh]) and not (ids @> array[r_59]), 'a pending row still in flight (under 60s) is never touched';
   assert not (ids @> array[r_newconf]), 'a booking confirmed under 5 minutes ago is never touched (Google may not show it yet)';
-  delete from public.bookings where id in (r_59, r_61, r_newconf);
+  delete from public.bookings where id in (r_59, r_61, r_newconf, r_6min);
   assert not (ids @> array[r_past]) and not (ids @> array[r_other]) and not (ids @> array[r_failed]), 'past, unrelated and dead rows are not candidates';
   -- The visitor's rows can't be crowded out of the limit by stale rows elsewhere
   -- (these six are OLDER than the visitor's rows, so age order alone would
