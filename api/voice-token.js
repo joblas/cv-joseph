@@ -1,6 +1,7 @@
 import { Langfuse } from 'langfuse'
 import { voiceProvider } from './_shared/voice-provider.js'
 import { resolvePersona } from './_shared/personas.js'
+import { bookingVoiceNote } from './_shared/booking.js'
 
 export const config = {
   runtime: 'edge',
@@ -311,9 +312,9 @@ export default async function handler(req) {
 
     // Compose prompt: base rules + language-specific voice affect
     const voiceAffect = VOICE_AFFECT_EN
-    const instructions = persona.voicePrompt
+    const instructions = (persona.voicePrompt
       ? persona.voicePrompt
-      : `${VOICE_BASE_PROMPT}\n\n${voiceAffect}`
+      : `${VOICE_BASE_PROMPT}\n\n${voiceAffect}`) + bookingVoiceNote(persona)
 
     if (provider === 'gemini') {
       let minted

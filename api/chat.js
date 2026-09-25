@@ -2,13 +2,14 @@ import { Langfuse } from 'langfuse'
 import { waitUntil } from '@vercel/functions'
 import { resolvePersona } from './_shared/personas.js'
 import {
-  calcCost, isRagEnabled, portfolioTool, formatChunksForContext,
+  calcCost, isRagEnabled, portfolioTool, formatChunksForContext, PORTFOLIO_TOOL,
   searchPortfolio, filterSourcesByResponse, filterSiteSources, detectMentionedArticles,
   HOME_SOURCE, classifyIntent, sendJailbreakAlert,
   containsFingerprint, LEAK_RESPONSE,
 } from './_shared/rag.js'
 import { getSystemPrompt } from './_shared/prompt.js'
 import { captureLead, checkRateLimit } from './_shared/leads.js'
+import { BOOKING_TOOL_NAMES, bookingContext, bookingFallbackText, bookingTools, runBookingTool } from './_shared/booking.js'
 import { CHAT_MODEL, FAST_MODEL, CHAT_MAX_TOKENS, scaleTokens, baseUrlHost, createAnthropicClient } from './_shared/models.js'
 import { voiceProvider } from './_shared/voice-provider.js'
 
@@ -176,6 +177,7 @@ export default async function handler(req) {
       + (voiceAvailable
         ? '\nVoice mode: available (the mic button in the chat).'
         : '\nVoice mode: NOT available right now — whenever voice comes up, including when describing how this chat works, say voice is temporarily unavailable and continue in text. Do not invite the user to press the mic.')
+      + bookingContext(persona)
 
     // Context-aware page instruction (Phase 5)
     const pageContext = currentPage
@@ -207,9 +209,11 @@ export default async function handler(req) {
     let ragMetrics = {}
 
     const ragEnabled = isRagEnabled(persona)
+    // Booking tools appear only when every booking secret is set (booking.js).
+    const tools = [...(ragEnabled ? [portfolioTool(persona)] : []), ...bookingTools(persona)]
 
-    if (ragEnabled) {
-      // First call: let Claude decide if it needs to search (non-streaming)
+    if (tools.length) {
+      // First call: let Claude decide if it needs a tool (non-streaming)
       const toolDecisionSpan = trace?.span({ name: 'tool_decision' })
       const td0 = Date.now()
 
@@ -218,7 +222,7 @@ export default async function handler(req) {
         max_tokens: scaleTokens(300),
         system: systemBlocks,
         messages: cleanMessages,
-        tools: [portfolioTool(persona)],
+        tools,
       })
 
       const toolDecisionMs = Date.now() - td0
@@ -236,33 +240,41 @@ export default async function handler(req) {
       })
 
       if (firstResponse.stop_reason === 'tool_use') {
-        ragUsed = true
-        const toolUseBlock = firstResponse.content.find(b => b.type === 'tool_use')
-        const searchQuery = toolUseBlock?.input?.query || lastUserMessage
-
-        // Execute RAG pipeline
-        const ragResult = await searchPortfolio(searchQuery, trace, client, persona)
-        ragSources = ragResult.sources
-        ragDegraded = ragResult.degraded
-        ragDegradedReason = ragResult.degradedReason
-        ragMetrics = ragResult.metrics
-
-        // Build tool_result and make second call (streaming)
-        const toolResultContent = ragResult.chunks
-          ? formatChunksForContext(ragResult.chunks)
-          : persona.searchTool.noResults
+        // Every tool_use block needs a tool_result in the next message, or the
+        // request is malformed. With one tool the model called at most one;
+        // with booking tools it may call two at once (search + availability).
+        let ragResult = null
+        let bookingRan = false
+        const bookingResults = []
+        const toolResults = []
+        for (const block of firstResponse.content.filter(b => b.type === 'tool_use')) {
+          let content
+          if (block.name === PORTFOLIO_TOOL.name && ragEnabled && !ragResult) {
+            ragUsed = true
+            ragResult = await searchPortfolio(block.input?.query || lastUserMessage, trace, client, persona)
+            ragSources = ragResult.sources
+            ragDegraded = ragResult.degraded
+            ragDegradedReason = ragResult.degradedReason
+            ragMetrics = ragResult.metrics
+            content = ragResult.chunks
+              ? formatChunksForContext(ragResult.chunks)
+              : persona.searchTool.noResults
+          } else if (BOOKING_TOOL_NAMES.includes(block.name)) {
+            bookingRan = true
+            content = await runBookingTool(block.name, block.input, { sessionId, req, persona })
+            bookingResults.push(content)
+          } else if (block.name === PORTFOLIO_TOOL.name && ragResult) {
+            content = 'Already searched in this message; answer from that result.'
+          } else {
+            content = 'That tool does not exist. Answer without it.'
+          }
+          toolResults.push({ type: 'tool_result', tool_use_id: block.id, content })
+        }
 
         const messagesWithTool = [
           ...cleanMessages,
           { role: 'assistant', content: firstResponse.content },
-          {
-            role: 'user',
-            content: [{
-              type: 'tool_result',
-              tool_use_id: toolUseBlock.id,
-              content: toolResultContent,
-            }],
-          },
+          { role: 'user', content: toolResults },
         ]
 
         // Stream the final response (with fallback if streaming fails)
@@ -281,12 +293,18 @@ export default async function handler(req) {
           t0,
           ragUsed,
           ragMetrics,
-          ragUsage: ragResult.usage,
+          ragUsage: ragResult?.usage || { embeddingTokens: 0, rerankInputTokens: 0, rerankOutputTokens: 0 },
           toolDecisionMs,
           tdInputTokens,
           tdOutputTokens,
           lang,
-          fallbackMessages: cleanMessages,
+          // The fallback normally drops the tool results (it retries without
+          // retrieval). A booking result must survive it: a call may already
+          // be on Joe's calendar, and a reply that doesn't know would mislead.
+          fallbackMessages: bookingRan ? messagesWithTool : cleanMessages,
+          // ...and if every attempt fails, the visitor still hears what
+          // happened to their call instead of a generic error.
+          lastResortText: bookingRan ? bookingFallbackText(bookingResults, persona) : null,
           promptVersion,
           persona,
         })
@@ -365,7 +383,7 @@ function streamResponse({
   systemBlocks, messages, tools, ragSources, ragDegraded, ragDegradedReason,
   canary, intentTags, trace, langfuse, lastUserMessage, t0,
   ragUsed, ragMetrics, ragUsage, toolDecisionMs, tdInputTokens, tdOutputTokens,
-  precomputedResponse, fallbackMessages, promptVersion, persona,
+  precomputedResponse, fallbackMessages, promptVersion, persona, lastResortText = null,
 }) {
   const encoder = new TextEncoder()
   let fullOutput = ''
@@ -677,7 +695,7 @@ function streamResponse({
 
         // Last resort: send error message through SSE
         try {
-          const errorText = persona.errorMessage
+          const errorText = lastResortText || persona.errorMessage
           controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text: errorText, replace: true })}\n\n`))
           controller.enqueue(encoder.encode('data: [DONE]\n\n'))
           controller.close()

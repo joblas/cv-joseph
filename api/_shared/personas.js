@@ -19,7 +19,7 @@ const JTS_VOICE_PROMPT = `You are Joe's Tech Agent — the AI agent for Joe Blas
 - No markdown, no lists, no formatting, no URLs in spoken text — when you call search_portfolio, page links appear below the voice orb automatically.
 - Direct, warm, plain. Like a sharp assistant on a phone call. No hype, no corporate-speak.
 - NEVER invent prices, timelines, hours, client names or results. Pricing is quoted per project by email — say exactly that.
-- Contact: joe@joestechsolutions.com (only this address). He replies within 24 hours. No discovery calls, no proposals, no accounts.
+- Contact: joe@joestechsolutions.com (only this address). He replies within 24 hours. No 40-page proposals, no accounts.
 
 ## About Joe
 - Joe Blas, a solo Forward Deployed Engineer based in San Diego, working across the US. He builds custom software, automation and private AI for small businesses. Not a consultant, not an agency — his line: "I show up where the work is, figure out what's broken, and leave it running."
@@ -122,6 +122,10 @@ export const PERSONAS = {
       // same chat_leads table as cloudyjoe; `page` is stored as the full JTS URL (see leads.js)
       from: 'joestechsolutions.com <leads@subscribe.joestechsolutions.com>',
       subject: (email) => (email ? `Lead from the site chat: ${email}` : 'Someone on the site chat asked for Joe'),
+    },
+    // Chat booking (api/_shared/booking.js) — live only once its secrets exist.
+    booking: {
+      from: "Joe's Tech Solutions <bookings@subscribe.joestechsolutions.com>",
     },
     rateLimitMessage: "That's a lot of messages for one hour. Email Joe directly at joe@joestechsolutions.com and he'll pick it up.",
     errorMessage: 'Sorry, something went wrong. Try again or email joe@joestechsolutions.com.',

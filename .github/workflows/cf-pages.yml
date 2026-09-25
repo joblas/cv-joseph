@@ -14,6 +14,37 @@ permissions:
   pull-requests: write
 
 jobs:
+  # The booking migration's own tests. supabase-booking.test.sql rolls back;
+  # supabase-booking.race.sql works in a scratch database it creates and
+  # drops. Both run against a throwaway Postgres service — never a project.
+  booking-sql:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_PASSWORD: ci
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 2s --health-timeout 5s --health-retries 30
+    env:
+      PGHOST: localhost
+      PGUSER: postgres
+      PGPASSWORD: ci
+    steps:
+      - uses: actions/checkout@v4
+      - name: Booking SQL battery and race
+        # `shell: bash` adds pipefail, so psql's own exit code survives `tee`.
+        # The anchored greps accept only the real success lines, never an error
+        # snippet that happens to quote them.
+        shell: bash
+        run: |
+          psql -v ON_ERROR_STOP=1 -f scripts/supabase-booking.test.sql 2>&1 | tee battery.log
+          grep -qE 'NOTICE:  booking SQL: all checks passed$' battery.log
+          psql -v ON_ERROR_STOP=1 -f scripts/supabase-booking.race.sql 2>&1 | tee race.log
+          grep -qx 'booking race: all checks passed' race.log
+
   build-deploy:
     runs-on: ubuntu-latest
     steps:
@@ -49,6 +80,10 @@ jobs:
           npm run test:voice-search
           npm run test:agent-prompts
           npm run test:voice-client
+          npm run test:availability
+          npm run test:google-calendar
+          npm run test:booking
+          npm run test:chat-booking
       - name: Build (static site + Pages Functions)
         run: |
           npm run cf:prep   # api/ → functions/api-src/ (Workers shims), prompt module
