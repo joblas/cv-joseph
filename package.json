@@ -33,7 +33,11 @@
     "test:rag-hybrid": "npm run cf:prep >/dev/null && tsx tests/site-hybrid-retrieval.test.ts",
     "test:voice-search": "npm run cf:prep >/dev/null && tsx tests/rag-search-voice.test.ts",
     "test:agent-prompts": "npm run cf:prep >/dev/null && tsx tests/jts-agent-prompts.test.ts",
-    "test:voice-client": "tsx tests/voice-search-client.test.ts"
+    "test:voice-client": "tsx tests/voice-search-client.test.ts",
+    "test:availability": "npm run cf:prep >/dev/null && tsx tests/availability.test.ts",
+    "test:google-calendar": "npm run cf:prep >/dev/null && tsx tests/google-calendar.test.ts",
+    "test:booking": "npm run cf:prep >/dev/null && tsx tests/booking.test.ts",
+    "test:chat-booking": "npm run cf:prep >/dev/null && tsx tests/chat-booking.test.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.71.2",
