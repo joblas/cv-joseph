@@ -62,7 +62,7 @@ const cjRows = () => Array.from({ length: 6 }, (_, i) => ({
 }))
 
 // Per-case knobs.
-const mode = { site: 'rows' as 'rows' | 'empty' | 'fail', limitOk: true, model: 'fail' as 'fail' | 'answer' }
+const mode = { site: 'rows' as 'rows' | 'empty' | 'fail' | 'hang', limitOk: true, model: 'fail' as 'fail' | 'answer' }
 const sent: { url: string; body: any }[] = []
 ;(globalThis as any).fetch = async (url: string, init: any) => {
   const u = String(url)
@@ -74,6 +74,10 @@ const sent: { url: string; body: any }[] = []
   if (u.includes('voyageai.com/v1/embeddings')) return json({ data: [{ embedding: Array(1024).fill(0.01) }], usage: { total_tokens: 6 } })
   if (u.includes('voyageai.com/v1/rerank')) return json({ data: [0, 1, 2, 3, 4, 5].map((index, r) => ({ index, relevance_score: 0.9 - r * 0.1 })) })
   if (u.startsWith('https://stub-jts.supabase.co/rest/v1/rpc/')) {
+    if (mode.site === 'hang') {
+      // Never answers; rejects only when the handler's own retrieval timer aborts it.
+      return new Promise((_res, rej) => init?.signal?.addEventListener('abort', () => { const e: any = new Error('aborted'); e.name = 'AbortError'; rej(e) }))
+    }
     if (mode.site === 'fail') return json({ message: 'upstream down' }, 503)
     return json(mode.site === 'empty' ? [] : siteRows())
   }
@@ -146,12 +150,38 @@ const post = (body: Record<string, unknown>, origin = 'https://www.joestechsolut
   check('...and says nothing about content', body.context === undefined && body.error === 'search_unavailable')
 }
 
+// --- 4b. A retrieval TIMEOUT — the most likely real failure — is a 503 too -----
+// Review found a mutant that 503'd only 'retrieval_fail' and let timeouts fall
+// back to 200 "No relevant content found." — there was no timeout case.
+{
+  reset(); mode.site = 'hang'
+  const t0 = Date.now()
+  const res = await post({ query: 'private AI setup', traceId: null, persona: 'jts' })
+  check('a retrieval that times out is a 503, not a 200 claiming nothing exists', res.status === 503)
+  check('...after the handler\u2019s own ~2.5s budget, not a hang', Date.now() - t0 < 6000)
+}
+
 // --- 5. The real control: a per-IP rate limit ---------------------------------
 {
   reset(); mode.limitOk = false
   const res = await post({ query: 'private AI setup', traceId: null, persona: 'jts' })
   check('over the per-IP limit -> 429', res.status === 429)
   check('...before any paid work is done', !sent.some((s) => s.url.includes('voyageai.com') || s.url.includes('127.0.0.1:9')))
+}
+{
+  // The limit VALUE, not just that a limit exists: the limiter stub ignores
+  // p_limit, so lowering it to 6/hr (which breaks real voice sessions) passed.
+  reset()
+  await post({ query: 'private AI setup', traceId: null, persona: 'jts' })
+  const lim = sent.find((s) => s.url.includes('/rpc/check_chat_rate_limit'))
+  check('the per-IP limit is 60 an hour', lim?.body?.p_limit === 60)
+}
+{
+  // A caller that omits `persona` gets the default (cloudyjoe) persona. Review
+  // found a limiter applied only to the JTS persona would leave it unmetered.
+  reset(); mode.limitOk = false
+  const res = await post({ query: 'tell me about the agent fleet', traceId: null }, 'https://cloudyjoe.com')
+  check('a caller with no persona is rate-limited too', res.status === 429)
 }
 
 // --- 6. Input the endpoint must refuse or bound -------------------------------
@@ -168,8 +198,26 @@ const post = (body: Record<string, unknown>, origin = 'https://www.joestechsolut
   check('a 10,000-character query is capped before it reaches the paid embedding', embedded.length > 0 && embedded.length <= 600)
 }
 {
+  // ...and before it reaches the paid MODEL: a cap applied only to the
+  // embedding (or only to the trace) passed the check above.
+  reset(); mode.model = 'answer'
+  await post({ query: 'x'.repeat(10_000), traceId: null, persona: 'jts' })
+  const modelCall = sent.find((s) => s.url.includes('127.0.0.1:9'))
+  const longestRun = Math.max(0, ...(JSON.stringify(modelCall?.body ?? '').match(/x+/g) || []).map((r) => r.length))
+  check('the reasoning model is actually called in this case', !!modelCall)
+  check('...and never sees more than the capped 500 characters of query', longestRun > 0 && longestRun <= 500)
+}
+{
   const res = await handler(new Request('https://cloudyjoe.com/api/rag-search', { method: 'GET' }))
   check('a non-POST is 405', res.status === 405)
+}
+
+// --- 6b. The inner catch can no longer tell the model to invent -------------------
+// It returned 200 "answer from your general knowledge" and is hard to reach
+// from outside, so this guards the source directly: that text may never come back.
+{
+  const src = (await import('node:fs')).readFileSync(new URL('../functions/api-src/rag-search.js', import.meta.url), 'utf8')
+  check('rag-search never tells the model to answer from general knowledge', !/general knowledge/i.test(src))
 }
 
 // --- 7. Nothing escaped to the network ---------------------------------------

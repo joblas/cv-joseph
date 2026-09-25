@@ -31,9 +31,23 @@ export interface SearchOutcome<S = unknown> {
 
 type FetchLike = (input: string, init: RequestInit) => Promise<Response>;
 
+/** What a voice client knows about the search it is running. */
+export interface SearchFields {
+  query: string;
+  traceId: string | null;
+  currentPage?: string;
+}
+
+// A hung request would otherwise leave the model waiting until the session
+// cap. The backend bounds itself well inside this (retrieval 2.5s, reasoning
+// 3s), so only a truly stuck request reaches it, and it then takes the
+// ordinary thrown-fetch failure path.
+export const SEARCH_TIMEOUT_MS = 10_000;
+
 export async function runSearchForModel<S = unknown>(
-  body: Record<string, unknown>,
+  fields: SearchFields,
   fetchImpl: FetchLike = (input, init) => fetch(input, init),
+  timeoutMs: number = SEARCH_TIMEOUT_MS,
 ): Promise<SearchOutcome<S>> {
   const failed: SearchOutcome<S> = { result: SEARCH_FAILED_FOR_MODEL, sources: [] };
   let res: Response;
@@ -41,7 +55,8 @@ export async function runSearchForModel<S = unknown>(
     res = await fetchImpl('/api/rag-search', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
+      body: JSON.stringify(fields),
+      signal: AbortSignal.timeout(timeoutMs),
     });
   } catch {
     return failed;
@@ -56,4 +71,51 @@ export async function runSearchForModel<S = unknown>(
   const d = data as { context?: unknown; sources?: unknown } | null;
   if (typeof d?.context !== 'string' || !d.context.trim()) return failed;
   return { result: d.context, sources: Array.isArray(d.sources) ? (d.sources as S[]) : [] };
+}
+
+export interface ToolCall {
+  id: string;
+  name: string;
+  args?: { query?: string };
+}
+export interface ToolResponse {
+  id: string;
+  name: string;
+  response: { result: string };
+}
+
+/**
+ * Answer one batch of Gemini Live tool calls. Pure apart from `search`, so the
+ * hook's wiring is testable: the search RESULT is what the model gets, the
+ * query comes from the call's args, a call cancelled before or during its
+ * search gets no response and moves no badges, and a failed search clears the
+ * badges. Same shape as the joestechsolutions.com widget's answerToolCalls.
+ *
+ * `sources` is null when no search completed (leave the badges alone), or the
+ * last completed search's sources — possibly [] to clear them.
+ */
+export async function answerToolCalls<S = unknown>(
+  calls: ToolCall[],
+  opts: {
+    isCancelled: (id: string) => boolean;
+    traceId: string | null;
+    currentPage?: string;
+    search?: (fields: SearchFields) => Promise<SearchOutcome<S>>;
+  },
+): Promise<{ responses: ToolResponse[]; sources: S[] | null }> {
+  const search = opts.search ?? ((fields: SearchFields) => runSearchForModel<S>(fields));
+  const responses: ToolResponse[] = [];
+  let sources: S[] | null = null;
+  for (const call of calls) {
+    if (opts.isCancelled(call.id)) continue;
+    let outcome: SearchOutcome<S> = { result: SEARCH_FAILED_FOR_MODEL, sources: [] };
+    if (call.name === 'search_portfolio') {
+      outcome = await search({ query: call.args?.query || '', traceId: opts.traceId, currentPage: opts.currentPage });
+    }
+    // The cancellation typically arrives while the search is in flight.
+    if (opts.isCancelled(call.id)) continue;
+    if (call.name === 'search_portfolio') sources = outcome.sources;
+    responses.push({ id: call.id, name: call.name, response: { result: outcome.result } });
+  }
+  return { responses, sources };
 }
