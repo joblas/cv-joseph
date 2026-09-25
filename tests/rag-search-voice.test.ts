@@ -9,19 +9,31 @@
 // THE DEFECT THIS GUARDS. This handler answered a missing traceId with a 401.
 // voice-token returns traceId: null whenever LANGFUSE_* is unset — which has
 // been production's normal state since the Cloudflare move — so every voice
-// search on BOTH sites 401'd. The widget turned that into "No relevant content
+// search on BOTH sites 401'd, the widget turned that into "No relevant content
 // found.", and the voice agent told callers the site had no details about
-// things it covers at length. Reproduced 2026-09-25 against production: on
-// "can you give me more information about it?" the agent searched, got a 401,
-// and said "I'm not seeing more details on that right now."
+// things it covers at length. Reproduced 2026-09-25 against production.
 //
-// WHY THIS FILE RUNS WITH TRACING OFF. The bug only exists when Langfuse is
-// unconfigured. A test run with LANGFUSE_* set — the state a developer's
-// .env.local is likely to be in — would have passed the whole time. So the
-// keys are deleted before the module loads, and asserted absent.
+// THE SECOND DEFECT, found in review: a FAILED retrieval (a Supabase error or
+// timeout) came back as HTTP 200 "No relevant content found." — which no
+// widget can tell apart from a real empty result, and which the voice prompt
+// treats as licence to say the site doesn't cover something. A failure is now
+// a 503; only a search that ran and matched nothing may say it found nothing.
+//
+// WHY TRACING IS OFF. The first bug only exists when Langfuse is unconfigured;
+// a run with LANGFUSE_* set would have passed the whole time. So the keys are
+// deleted before the module loads, and asserted absent.
+//
+// Review showed an earlier version of this file let three wrong changes
+// through: re-blocking only the cloudyjoe persona (it only ever sent 'jts'),
+// skipping the reasoning step when traceId is missing (its model stub always
+// failed, so reasoning never ran), and changing the empty-result text (it had
+// no empty case). Each now has a case that fails.
 for (const k of ['LANGFUSE_PUBLIC_KEY', 'LANGFUSE_SECRET_KEY', 'LANGFUSE_BASEURL', 'LANGFUSE_HOST']) delete process.env[k]
-process.env.JTS_SUPABASE_URL = 'https://stub.supabase.co'
+process.env.JTS_SUPABASE_URL = 'https://stub-jts.supabase.co'
 process.env.JTS_SUPABASE_ANON_KEY = 'stub-anon'
+// cloudyjoe's corpus AND the rate limiter live on this project.
+process.env.SUPABASE_URL = 'https://stub-cj.supabase.co'
+process.env.SUPABASE_SERVICE_ROLE_KEY = 'stub-service'
 process.env.VOYAGE_API_KEY = 'stub-voyage'
 // Point the model client at a closed port, so that even if the SDK captured a
 // real fetch before the stub below, nothing in this file can reach a network.
@@ -34,75 +46,134 @@ function check(name: string, cond: boolean) {
   if (!cond) { console.error(`  ✗ ${name}`); failed++ }
 }
 
-// Unique text that can only reach `context` by travelling through the real
-// retrieval path: RPC row -> siteChunkToDocument -> rerank -> formatting.
-const MARKER = 'The seventy-five minute session installs private AI'
-const rows = () => Array.from({ length: 8 }, (_, i) => ({
+// Unique text that can only reach `context` by travelling the real retrieval
+// path, and a second marker that can only arrive via the reasoning model.
+const SITE_MARKER = 'The seventy-five minute session installs private AI'
+const CJ_MARKER = 'Joe wrote this case study about his own agent fleet'
+const REASONED = 'REASONED ANSWER from the model'
+const siteRows = () => Array.from({ length: 8 }, (_, i) => ({
   id: `r${i}`, source: 'page', url: 'https://www.joestechsolutions.com/private-ai-setup',
-  title: `Private AI Setup ${i}`, content: `${MARKER} on hardware you own. Detail ${i}. ${'more '.repeat(20)}`,
+  title: `Private AI Setup ${i}`, content: `${SITE_MARKER} on hardware you own. Detail ${i}. ${'more '.repeat(20)}`,
   priority: 1, score: 0.9 - i * 0.01,
 }))
-const VEC = Array.from({ length: 1024 }, () => 0.01)
-const calls: string[] = []
+const cjRows = () => Array.from({ length: 6 }, (_, i) => ({
+  id: i, content: `${CJ_MARKER}. Part ${i}.`, similarity: 0.9 - i * 0.01,
+  metadata: { article_id: 'agent-fleet', section_id: `s${i}`, section_anchor: '', article_slug_en: 'agent-fleet', page_path_en: '/agent-fleet' },
+}))
+
+// Per-case knobs.
+const mode = { site: 'rows' as 'rows' | 'empty' | 'fail', limitOk: true, model: 'fail' as 'fail' | 'answer' }
+const sent: { url: string; body: any }[] = []
 ;(globalThis as any).fetch = async (url: string, init: any) => {
   const u = String(url)
-  calls.push(u)
-  const json = (b: unknown, status = 200) => ({ ok: status < 400, status, json: async () => b, text: async () => JSON.stringify(b) })
+  const body = init?.body ? (() => { try { return JSON.parse(init.body) } catch { return init.body } })() : null
+  sent.push({ url: u, body })
+  const json = (b: unknown, status = 200) => ({ ok: status < 400, status, json: async () => b, text: async () => JSON.stringify(b), headers: new Headers({ 'content-type': 'application/json' }) })
   if (init?.signal?.aborted) { const e: any = new Error('aborted'); e.name = 'AbortError'; throw e }
-  if (u.includes('voyageai.com/v1/embeddings')) return json({ data: [{ embedding: VEC }], usage: { total_tokens: 6 } })
+  if (u.includes('/rpc/check_chat_rate_limit')) return json(mode.limitOk)
+  if (u.includes('voyageai.com/v1/embeddings')) return json({ data: [{ embedding: Array(1024).fill(0.01) }], usage: { total_tokens: 6 } })
   if (u.includes('voyageai.com/v1/rerank')) return json({ data: [0, 1, 2, 3, 4, 5].map((index, r) => ({ index, relevance_score: 0.9 - r * 0.1 })) })
-  if (u.includes('/rest/v1/rpc/')) return json(rows())
-  // The reasoning model. 400 is non-retryable, so the SDK fails at once and the
-  // handler takes its documented fallback: speak the retrieved chunks.
+  if (u.startsWith('https://stub-jts.supabase.co/rest/v1/rpc/')) {
+    if (mode.site === 'fail') return json({ message: 'upstream down' }, 503)
+    return json(mode.site === 'empty' ? [] : siteRows())
+  }
+  if (u.startsWith('https://stub-cj.supabase.co/rest/v1/rpc/')) return json(cjRows())
+  // The reasoning model. 'fail' is a non-retryable 400, so the SDK gives up at
+  // once and the handler speaks the retrieved chunks; 'answer' is a real reply.
+  if (mode.model === 'answer') {
+    return json({ id: 'msg_1', type: 'message', role: 'assistant', model: 'stub', stop_reason: 'end_turn',
+      content: [{ type: 'text', text: REASONED }], usage: { input_tokens: 1, output_tokens: 1 } })
+  }
   return json({ type: 'error', error: { type: 'invalid_request_error', message: 'stub' } }, 400)
 }
 
 check('tracing is genuinely off for this run (production’s state)', !process.env.LANGFUSE_PUBLIC_KEY)
-
 const { default: handler } = await import('../functions/api-src/rag-search.js')
+const reset = () => { mode.site = 'rows'; mode.limitOk = true; mode.model = 'fail'; sent.length = 0 }
+const post = (body: Record<string, unknown>, origin = 'https://www.joestechsolutions.com') =>
+  handler(new Request('https://cloudyjoe.com/api/rag-search', {
+    method: 'POST', headers: { 'Content-Type': 'application/json', Origin: origin }, body: JSON.stringify(body),
+  }))
 
-const post = (body: Record<string, unknown>) => handler(new Request('https://cloudyjoe.com/api/rag-search', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json', Origin: 'https://www.joestechsolutions.com' },
-  body: JSON.stringify(body),
-}))
-
-// --- 1. The exact request the widget sends when voice-token issued no trace ---
+// --- 1. The exact request the JTS widget sends when voice-token issued no trace
 {
+  reset()
   const res = await post({ query: 'what do I get in the private AI setup', traceId: null, currentPage: '/', persona: 'jts' })
   const body: any = await res.json()
-  check('traceId: null is accepted — this is the request that 401d in production', res.status === 200)
-  check('...and the model gets the site’s real content, not the empty fallback',
-    typeof body.context === 'string' && body.context.includes(MARKER))
-  check('...rather than "No relevant content found."', body.context !== 'No relevant content found.')
-  check('...with source badges for the page it drew on', Array.isArray(body.sources) && body.sources.length > 0)
+  check('JTS: traceId null is accepted — the request that 401d in production', res.status === 200)
+  check('JTS: the model gets the site’s real content', typeof body.context === 'string' && body.context.includes(SITE_MARKER))
+  check('JTS: with source badges', Array.isArray(body.sources) && body.sources.length > 0)
 }
-
-// --- 2. traceId omitted entirely --------------------------------------------
 {
+  reset()
   const res = await post({ query: 'private AI setup', currentPage: '/', persona: 'jts' })
+  check('JTS: an omitted traceId is accepted too', res.status === 200)
+}
+
+// --- 2. cloudyjoe.com — the PR fixes both sites, so both are exercised --------
+{
+  reset()
+  const res = await post({ query: 'tell me about the agent fleet', traceId: null, currentPage: '/' }, 'https://cloudyjoe.com')
   const body: any = await res.json()
-  check('an omitted traceId is accepted too', res.status === 200 && String(body.context).includes(MARKER))
+  check('cloudyjoe: traceId null is accepted', res.status === 200)
+  check('cloudyjoe: the model gets its own corpus’ content', typeof body.context === 'string' && body.context.includes(CJ_MARKER))
 }
 
-// --- 3. A real traceId still works exactly as before ------------------------
+// --- 3. The reasoning step actually runs without a trace ---------------------
+// With the model stub failing, every case above takes the raw-chunk fallback,
+// so a change that silently skipped reasoning whenever traceId is missing
+// would pass them all. Here the model answers, and its answer must win.
 {
-  const res = await post({ query: 'private AI setup', traceId: 'trace-123', currentPage: '/', persona: 'jts' })
-  check('a supplied traceId is unaffected', res.status === 200)
+  reset(); mode.model = 'answer'
+  const res = await post({ query: 'what do I get', traceId: null, currentPage: '/', persona: 'jts' })
+  const body: any = await res.json()
+  check('the reasoned answer is used when traceId is null', res.status === 200 && String(body.context).includes(REASONED))
 }
 
-// --- 4. The validation that DOES mean something is preserved -----------------
+// --- 4. A genuinely EMPTY search, and a FAILED one, are told apart ------------
 {
-  const res = await post({ traceId: null, persona: 'jts' })
-  check('a missing query is still rejected (400)', res.status === 400)
+  reset(); mode.site = 'empty'
+  const res = await post({ query: 'restaurant POS', traceId: null, persona: 'jts' })
+  const body: any = await res.json()
+  check('an empty search is 200 "No relevant content found." — the one way to say "not found"',
+    res.status === 200 && body.context === 'No relevant content found.')
+}
+{
+  reset(); mode.site = 'fail'
+  const res = await post({ query: 'private AI setup', traceId: null, persona: 'jts' })
+  const body: any = await res.json()
+  check('a FAILED retrieval is a 503, not a 200 claiming nothing exists', res.status === 503)
+  check('...and says nothing about content', body.context === undefined && body.error === 'search_unavailable')
+}
+
+// --- 5. The real control: a per-IP rate limit ---------------------------------
+{
+  reset(); mode.limitOk = false
+  const res = await post({ query: 'private AI setup', traceId: null, persona: 'jts' })
+  check('over the per-IP limit -> 429', res.status === 429)
+  check('...before any paid work is done', !sent.some((s) => s.url.includes('voyageai.com') || s.url.includes('127.0.0.1:9')))
+}
+
+// --- 6. Input the endpoint must refuse or bound -------------------------------
+{
+  reset()
+  check('a missing query is 400', (await post({ traceId: null, persona: 'jts' })).status === 400)
+  check('a non-string query is 400', (await post({ query: 12345, persona: 'jts' })).status === 400)
+  check('a blank query is 400', (await post({ query: '   ', persona: 'jts' })).status === 400)
+}
+{
+  reset()
+  await post({ query: 'x'.repeat(10_000), traceId: null, persona: 'jts' })
+  const embedded = sent.find((s) => s.url.includes('voyageai.com/v1/embeddings'))?.body?.input?.[0] ?? ''
+  check('a 10,000-character query is capped before it reaches the paid embedding', embedded.length > 0 && embedded.length <= 600)
 }
 {
   const res = await handler(new Request('https://cloudyjoe.com/api/rag-search', { method: 'GET' }))
-  check('a non-POST is still rejected (405)', res.status === 405)
+  check('a non-POST is 405', res.status === 405)
 }
 
-// --- 5. Nothing escaped to the network ---------------------------------------
-check('no request left the stub', calls.every((u) => /stub\.supabase\.co|voyageai\.com|127\.0\.0\.1:9/.test(u)))
+// --- 7. Nothing escaped to the network ---------------------------------------
+check('no request left the stub', sent.every((s) => /stub-(jts|cj)\.supabase\.co|voyageai\.com|127\.0\.0\.1:9/.test(s.url)))
 
 if (failed) { console.error(`\n${failed} check(s) failed`); process.exit(1) }
-console.log('ok — voice search answers with tracing off (traceId null or absent), validation intact')
+console.log('ok — voice search works with tracing off on both sites; failure is 503, empty is 200; limited and bounded')

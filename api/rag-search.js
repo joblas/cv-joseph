@@ -6,6 +6,7 @@ import {
   filterSourcesByResponse, filterSiteSources, detectMentionedArticles, HOME_SOURCE,
 } from './_shared/rag.js'
 import { getSystemPrompt } from './_shared/prompt.js'
+import { checkRateLimit } from './_shared/leads.js'
 
 export const config = {
   runtime: 'edge',
@@ -31,7 +32,7 @@ function getLangfuse() {
 
 // Spoken-answer contract appended to the persona prompt. The identity clause is
 // the persona's own, so each face names itself (see api/_shared/personas.js).
-const voiceOverride = (persona) => `Response for spoken conversation. Max 2-3 sentences. No markdown or links. Natural spoken language. Be precise with context data — never make things up. ${persona.spokenIdentity ?? "You are Joe's AI agent"}: speak about Joe in the THIRD PERSON ("Joe built...", "his project...") — never "I built..." or "my project...".`
+const voiceOverride = (persona) => `Response for spoken conversation. Up to 4-5 sentences, most important first — the voice agent shortens it for a first answer and needs the fuller material when a caller asks for more. No markdown or links. Natural spoken language. Be precise with context data — never make things up, and never pad to reach a length: if the context holds nothing beyond what the question already covers, say that is what the site has. ${persona.spokenIdentity ?? "You are Joe's AI agent"}: speak about Joe in the THIRD PERSON ("Joe built...", "his project...") — never "I built..." or "my project...".`
 
 // The voice model speaks whatever comes back, so the "no markdown" contract
 // is enforced here rather than trusted to the LLM (glm ignores it sometimes).
@@ -152,13 +153,27 @@ export default async function handler(req) {
     //     2026-09-25 against production: the agent searched on exactly the
     //     turns that needed it and was told, every time, that nothing existed.
     //
-    // A real control here would be a per-IP rate limit, not a presence check.
-    if (!query) {
+    // The real control is a per-IP rate limit. This is the same limiter and
+    // the same per-IP counter as /api/chat (check_chat_rate_limit keys on the
+    // IP alone), so one address is capped across both: a voice session
+    // searches a handful of times, and 60 an hour is far past normal use.
+    // Like chat's, it fails open — a limiter outage must not take voice down.
+    if (!(await checkRateLimit(req, 60))) {
+      return new Response(JSON.stringify({ error: 'rate_limited' }), {
+        status: 429,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    }
+
+    if (typeof query !== 'string' || !query.trim()) {
       return new Response(JSON.stringify({ error: 'Missing query' }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' },
       })
     }
+    // A voice query is a short phrase the model wrote. Nothing longer is a
+    // search; it is a payload. chat.js caps messages at 2000; this is tighter.
+    const searchQuery = query.slice(0, 500)
 
     // Create span under existing voice trace if provided
     const langfuse = getLangfuse()
@@ -166,12 +181,29 @@ export default async function handler(req) {
     if (langfuse && traceId) {
       trace = langfuse.trace({ id: traceId })
     }
-    const ragSpan = trace?.span({ name: 'voice-rag', metadata: { query } })
+    const ragSpan = trace?.span({ name: 'voice-rag', metadata: { query: searchQuery } })
 
     const t0 = Date.now()
 
     try {
-      const ragResult = await searchPortfolio(query, ragSpan, client, persona)
+      const ragResult = await searchPortfolio(searchQuery, ragSpan, client, persona)
+
+      // A FAILED retrieval must not be reported as an EMPTY one. searchPortfolio
+      // swallows a Supabase error or timeout, sets degraded=true and returns no
+      // chunks — and this handler used to turn that into a 200 saying "No
+      // relevant content found.", which no widget can tell apart from a real
+      // empty result. The voice prompt treats exactly that string as licence
+      // to tell a caller the site does not cover something. So a failure is a
+      // 503, and only a search that ran and matched nothing ('no_match', where
+      // degraded stays false) may say nothing was found.
+      if (ragResult.degraded) {
+        ragSpan?.end({ metadata: { degraded: true, reason: ragResult.degradedReason } })
+        if (langfuse) await langfuse.flushAsync()
+        return new Response(JSON.stringify({ error: 'search_unavailable' }), {
+          status: 503,
+          headers: { 'Content-Type': 'application/json' },
+        })
+      }
 
       const formattedChunks = ragResult.chunks
         ? formatChunksForContext(ragResult.chunks)
@@ -190,7 +222,7 @@ export default async function handler(req) {
       // Latency budget: skip Claude reasoning if RAG already took >1.5s
       const ragElapsedMs = Date.now() - t0
       const reasonedAnswer = (ragResult.chunks && ragElapsedMs <= 1500)
-        ? await reasonWithClaude(query, formattedChunks, trace, langfuse, persona)
+        ? await reasonWithClaude(searchQuery, formattedChunks, trace, langfuse, persona)
         : null
 
       // Tier 1: Claude + RAG → reasoned answer
@@ -234,11 +266,11 @@ export default async function handler(req) {
       ragSpan?.end({ metadata: { error: err.message } })
       if (langfuse) await langfuse.flushAsync()
 
-      // Return empty context on timeout/error rather than failing
-      return new Response(JSON.stringify({
-        context: 'Search unavailable — answer from your general knowledge.',
-        sources: [],
-      }), {
+      // Was a 200 telling the model to "answer from your general knowledge",
+      // which the voice prompts forbid. A failure is a failure: 503, and the
+      // widget tells the model it couldn't look that up.
+      return new Response(JSON.stringify({ error: 'search_unavailable' }), {
+        status: 503,
         headers: { 'Content-Type': 'application/json' },
       })
     }
