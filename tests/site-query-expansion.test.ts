@@ -144,6 +144,7 @@ for (const name of ['Skate Workshop', 'RenFaire Directory', 'Cbarrgs Music', 'Fi
   check(`case-study list names ${name}`, JTS_CASE_STUDIES.some((p) => p.includes(name)))
   check(`text prompt names ${name}`, (jts.prompt || '').includes(name))
   check(`voice prompt names ${name}`, (jts.voicePrompt || '').includes(name))
+  check(`search tool description names ${name}`, (jts.searchTool.description || '').includes(name))
 }
 // Turnover Agent and Archive Salon USED to be phantoms here, correctly: on
 // 2026-09-20 neither had a case study page, so naming them was an instruction

@@ -9,6 +9,7 @@
 // Loads the cf:prep copy: the source imports the prompts as text modules (a
 // Vite feature) that a bare runner cannot resolve. `npm run test:agent-prompts`
 // runs cf:prep first.
+import { readFileSync } from 'node:fs'
 const { getPersona } = await import('../functions/api-src/_shared/personas.js')
 const jts = getPersona('jts')
 const voice: string = jts.voicePrompt || ''
@@ -35,6 +36,8 @@ for (const [name, p] of [['voice', voice], ['text', text]] as const) {
   check(`${name} prompt states plainly that checkout isn't available`,
     /checkout[^.]{0,80}isn't available/i.test(p))
 }
+check('neither prompt volunteers the internal reason (pricing being reworked)',
+  !/pricing is reworked/i.test(voice) && !/pricing is reworked/i.test(text))
 check('text prompt rule 5 no longer permits booking "through ... the Private AI Setup checkout"',
   !/Private AI Setup checkout/i.test(text))
 
@@ -43,8 +46,18 @@ check('voice brevity cap is no longer absolute ("max 2-3 punchy sentences")',
   !/Responses VERY short: max 2-3 punchy sentences/.test(voice))
 check('voice prompt treats a request for more as a request for depth',
   /request for more is a request for depth/i.test(voice) && /Never answer a request for more with less/.test(voice))
-check('voice prompt forbids claiming it has told the caller everything',
-  /Never tell a caller you've told them everything/.test(voice))
+// An absolute "never say that's everything" would be its own lie when the site
+// truly has nothing more — review found it left the agent only padding or
+// invention. The rule is: search again first; only then may you say so.
+check('voice prompt: a repeat ask gets a fresh search BEFORE any "that\u2019s all"',
+  /search again with different words BEFORE concluding there is nothing more/.test(voice))
+check('voice prompt: an honest exit exists, and padding is forbidden',
+  /that's what the site covers and Joe can go deeper by email/.test(voice) && /never pad or invent/.test(voice))
+// The search step used to cap its answer at 2-3 sentences, starving the voice
+// agent of material exactly when a caller asked for more.
+const ragSearchSrc = readFileSync(new URL('../functions/api-src/rag-search.js', import.meta.url), 'utf8')
+check('the search step no longer caps its answer at 2-3 sentences', !/Max 2-3 sentences/.test(ragSearchSrc))
+check('the search step forbids padding to reach a length', /never pad to reach a length/.test(ragSearchSrc))
 
 // --- "I don't have more details listed on the site at the moment." ------------
 // That line was the prompt's own scripted uncertainty response, delivered after
@@ -63,12 +76,22 @@ check('voice tool rule: a follow-up needs a fresh search',
 // all. The text agent answered "What's up with Joe?" well 6/6 times; the voice
 // agent drew a blank.
 check('voice prompt has an About Joe section', /## About Joe\n/.test(voice))
-for (const fact of ['Forward Deployed Engineer', 'Escondido', 'small businesses']) {
+// Matches the live site ("san diego · working across the us"). An earlier draft
+// said Escondido, which appears nowhere on the site.
+for (const fact of ['Forward Deployed Engineer', 'based in San Diego', 'working across the US', 'small businesses']) {
   check(`voice prompt knows: ${fact}`, voice.includes(fact))
 }
 check('voice and text prompts state the same identity line',
-  /solo Forward Deployed Engineer in Escondido\/San Diego, CA/.test(voice) &&
-  /solo Forward Deployed Engineer in Escondido\/San Diego, CA/.test(text))
+  /solo Forward Deployed Engineer based in San Diego, working across the US/.test(voice) &&
+  /solo Forward Deployed Engineer based in San Diego, working across the US/.test(text))
+check('neither prompt names a location the site does not', !/Escondido/.test(voice) && !/Escondido/.test(text))
+
+// --- Adding two projects must not leave the prompt's own framing wrong -------
+// Review (B2): the text prompt still said "the four projects" over a list of
+// six, and that /portfolio held "all of them" when it lists four.
+check('text prompt carries no stale project count', !/The four projects|none of the four/.test(text))
+check('text prompt no longer claims /portfolio holds every project', !/All of them together: \/portfolio/.test(text))
+check('text prompt sends people to each project\u2019s own page', /Each project's own page is linked above/.test(text))
 
 if (failed) { console.error(`\n${failed} check(s) failed`); process.exit(1) }
 console.log('ok — prompts carry none of the transcript’s failures')
