@@ -48,6 +48,7 @@ jobs:
           npm run test:spoken
           npm run test:voice-search
           npm run test:agent-prompts
+          npm run test:voice-client
       - name: Build (static site + Pages Functions)
         run: |
           npm run cf:prep   # api/ → functions/api-src/ (Workers shims), prompt module
