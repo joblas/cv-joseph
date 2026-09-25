@@ -250,6 +250,11 @@ for (const [slot, why] of [
   ['Oct 28, 6:30 PM', 'beyond the horizon'],
   ['Sep 28 13:30 PM', 'an impossible hour'],
   ['tomorrow evening', 'no time at all'],
+  // The exact formats skip the free-text parser, so they need their own
+  // refusals: an exact time must still be an OPEN one.
+  ['2026-09-28 10:00', 'a wall-clock key outside Joe’s windows'],
+  ['2026-09-28T17:00:00Z', 'an ISO instant outside Joe’s windows (10:00 PDT)'],
+  ['2026-09-28 18:00', 'a wall-clock key for a busy slot'],
 ] as const) {
   resetMode()
   mode.busy = [{ start: '2026-09-29T01:00:00Z', end: '2026-09-29T01:30:00Z' }]
@@ -277,10 +282,14 @@ for (const [status, re] of [
   check(`reserve ${status}: no event, and the visitor is told`, inserts().length === 0 && re.test(out) && !out.startsWith('Booked'))
 }
 {
+  // Non-vacuity: with nothing busy, Mon 6:00 PM IS one of the six offered.
+  resetMode()
+  const offered = await run('check_availability', {})
   resetMode(); mode.reserve = 'slot_taken'
-  const out = await run('book_call', { slot: 'Mon, Sep 28, 6:30 PM PT', email: 'visitor@example.com', code: '123456' })
+  const out = await run('book_call', { slot: 'Mon, Sep 28, 6:00 PM PT', email: 'visitor@example.com', code: '123456' })
   check('someone else took the slot: no event, and fresh times WITHOUT that one',
-    inserts().length === 0 && /Someone else just booked/.test(out) && TIME_RE.test(out) && !out.includes('- Mon, Sep 28, 6:30 PM PT'))
+    offered.includes('- Mon, Sep 28, 6:00 PM PT')
+    && inserts().length === 0 && /Someone else just booked/.test(out) && TIME_RE.test(out) && !out.includes('- Mon, Sep 28, 6:00 PM PT'))
 }
 {
   resetMode(); mode.insert = 'fail'
