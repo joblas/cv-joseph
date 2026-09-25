@@ -67,6 +67,7 @@ const verify = async (jwt: string) => {
 const calls: { url: string; init: any }[] = []
 let tokenStatus = 200, tokenBody: any = { access_token: 'ya29.stub', expires_in: 3600, token_type: 'Bearer' }
 let fbBody: any = null, fbStatus = 200, insertBody: any = null, insertStatus = 200, hang = false
+let getBody: any = null, getStatus = 200
 ;(globalThis as any).fetch = async (url: string, init: any) => {
   calls.push({ url: String(url), init })
   if (hang) return new Promise((_r, rej) => init?.signal?.addEventListener('abort', () => { const e: any = new Error('aborted'); e.name = 'AbortError'; rej(e) }))
@@ -74,6 +75,7 @@ let fbBody: any = null, fbStatus = 200, insertBody: any = null, insertStatus = 2
   if (String(url).startsWith('https://oauth2.googleapis.com/token')) return json(tokenBody, tokenStatus)
   if (String(url).endsWith('/freeBusy')) return json(fbBody, fbStatus)
   if (String(url).includes('/events?')) return json(insertBody, insertStatus)
+  if (String(url).includes('/events/')) return json(getBody, getStatus)
   return json({}, 404)
 }
 const reset = () => { calls.length = 0; G._resetTokenCache(); tokenStatus = 200; tokenBody = { access_token: 'ya29.stub', expires_in: 3600 }; hang = false }
@@ -90,6 +92,8 @@ const reset = () => { calls.length = 0; G._resetTokenCache(); tokenStatus = 200;
   check('grant_type is the JWT-bearer grant', form.get('grant_type') === 'urn:ietf:params:oauth:grant-type:jwt-bearer')
   check('the assertion is a signed JWT that verifies', !!form.get('assertion') && await verify(form.get('assertion')!))
   check('returns the access token', t === 'ya29.stub')
+  const claims = jsonPart(form.get('assertion')!.split('.')[1])
+  check('the token impersonates Joe (JWT sub = the calendar owner)', claims.sub === 'joe@joestechsolutions.com' && claims.iss === process.env.GOOGLE_SA_EMAIL)
   await G.accessToken(1_790_000_000_000 + 30 * 60_000).catch(() => {})
   check('a token is reused while fresh (no second exchange)', calls.length === 1)
   await G.accessToken(1_790_000_000_000 + 3600_000).catch(() => {})
@@ -160,6 +164,67 @@ fbStatus = 200
   check('a failed insert throws', threw)
   insertStatus = 200
 }
+const ev = { startMs: 0, endMs: 1, summary: 's', description: 'd', attendee: { email: 'a@b.co' }, requestId: 'r', eventId: 'abcdef0123456789abcdef0123456789' }
+const insertError = async () => { try { await G.insertEvent(ev); return null } catch (e: any) { return e } }
+{
+  reset(); insertStatus = 200; insertBody = { id: ev.eventId }
+  await G.insertEvent(ev)
+  const body = JSON.parse(calls.find((c) => c.url.includes('/events?'))?.init?.body)
+  check('the event is created with OUR id, so its outcome can always be checked', body.id === ev.eventId)
+}
+{
+  reset(); insertStatus = 409; insertBody = { error: { code: 409 } }
+  const out = await G.insertEvent(ev).catch(() => null)
+  check('409 (that id already exists) means an earlier attempt created it: success', out?.id === ev.eventId && out?.existed === true)
+}
+for (const [status, body, definite, label] of [
+  [403, { error: {} }, true, 'a 403 is a definite refusal'],
+  [400, { error: {} }, true, 'a 400 is a definite refusal'],
+  [503, { error: {} }, false, 'a 503 leaves the outcome UNKNOWN (Google may have created it)'],
+  [500, { error: {} }, false, 'a 500 leaves the outcome unknown'],
+  [200, null, false, 'a 200 whose body has no event id leaves the outcome unknown'],
+] as const) {
+  reset(); insertStatus = status; insertBody = body
+  const err = await insertError()
+  check(label, !!err && err.definite === definite)
+}
+{
+  reset(); hang = true
+  const err = await insertError()
+  check('a timed-out insert is never a definite refusal', !!err && err.definite !== true)
+  insertStatus = 200
+}
+
+// --- 4b. Looking an event up ------------------------------------------------------
+{
+  reset(); getStatus = 200; getBody = { id: ev.eventId, status: 'confirmed', start: { dateTime: '2026-09-29T01:30:00Z' }, end: { dateTime: '2026-09-29T02:00:00Z' } }
+  const out = await G.getEvent(ev.eventId)
+  const req = calls.find((c) => c.url.includes('/events/'))
+  check('getEvent reads the event by id from Joe’s calendar',
+    req?.url === `https://www.googleapis.com/calendar/v3/calendars/joe%40joestechsolutions.com/events/${ev.eventId}` && req?.init?.headers?.Authorization === 'Bearer ya29.stub')
+  check('an existing event comes back with its current times',
+    out.exists === true && out.start === Date.parse('2026-09-29T01:30:00Z') && out.end === Date.parse('2026-09-29T02:00:00Z'))
+}
+for (const [status, body, label] of [
+  [404, { error: {} }, '404 = the event does not exist'],
+  [410, { error: {} }, '410 = the event is gone'],
+  [200, { id: 'x', status: 'cancelled', start: { dateTime: '2026-09-29T01:30:00Z' }, end: { dateTime: '2026-09-29T02:00:00Z' } }, 'a cancelled event counts as not existing'],
+] as const) {
+  reset(); getStatus = status; getBody = body
+  const out = await G.getEvent('x')
+  check(label, out.exists === false)
+}
+for (const [status, body, label] of [
+  [500, { error: {} }, 'a 500 THROWS — "can’t tell" must never read as "gone"'],
+  [403, { error: {} }, 'a 403 throws'],
+  [200, { id: 'x', status: 'confirmed', start: {}, end: {} }, 'an event with no usable times throws'],
+] as const) {
+  reset(); getStatus = status; getBody = body
+  let threw = false
+  try { await G.getEvent('x') } catch { threw = true }
+  check(label, threw)
+}
+getStatus = 200
 
 // --- 5. Every request is bounded --------------------------------------------------
 {
@@ -174,6 +239,20 @@ fbStatus = 200
 
 // --- 6. Config ------------------------------------------------------------------
 check('calendar defaults to joe@joestechsolutions.com', G.calendarId() === 'joe@joestechsolutions.com')
+{
+  // A secondary calendar changes WHICH calendar, never WHO is impersonated:
+  // delegation can only be granted to a real Workspace user.
+  process.env.BOOKING_CALENDAR_ID = 'c_bookings@group.calendar.google.com'
+  reset()
+  await G.accessToken(1_790_000_000_000)
+  const claims = jsonPart(new URLSearchParams(calls[0]?.init?.body).get('assertion')!.split('.')[1])
+  fbBody = { calendars: { 'c_bookings@group.calendar.google.com': { busy: [] } } }
+  await G.freeBusy(0, 1)
+  const fb = JSON.parse(calls.find((c) => c.url.endsWith('/freeBusy'))?.init?.body)
+  check('with a secondary calendar, the JWT still impersonates the owner', claims.sub === 'joe@joestechsolutions.com')
+  check('...and free/busy reads the secondary calendar', fb.items?.[0]?.id === 'c_bookings@group.calendar.google.com')
+  delete process.env.BOOKING_CALENDAR_ID
+}
 check('configured only when both service-account secrets exist', G.googleConfigured() === true)
 {
   const saved = process.env.GOOGLE_SA_PRIVATE_KEY; delete process.env.GOOGLE_SA_PRIVATE_KEY

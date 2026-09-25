@@ -9,7 +9,7 @@ import {
 } from './_shared/rag.js'
 import { getSystemPrompt } from './_shared/prompt.js'
 import { captureLead, checkRateLimit } from './_shared/leads.js'
-import { BOOKING_TOOL_NAMES, bookingContext, bookingTools, runBookingTool } from './_shared/booking.js'
+import { BOOKING_TOOL_NAMES, bookingContext, bookingFallbackText, bookingTools, runBookingTool } from './_shared/booking.js'
 import { CHAT_MODEL, FAST_MODEL, CHAT_MAX_TOKENS, scaleTokens, baseUrlHost, createAnthropicClient } from './_shared/models.js'
 import { voiceProvider } from './_shared/voice-provider.js'
 
@@ -245,6 +245,7 @@ export default async function handler(req) {
         // with booking tools it may call two at once (search + availability).
         let ragResult = null
         let bookingRan = false
+        const bookingResults = []
         const toolResults = []
         for (const block of firstResponse.content.filter(b => b.type === 'tool_use')) {
           let content
@@ -261,6 +262,7 @@ export default async function handler(req) {
           } else if (BOOKING_TOOL_NAMES.includes(block.name)) {
             bookingRan = true
             content = await runBookingTool(block.name, block.input, { sessionId, req, persona })
+            bookingResults.push(content)
           } else if (block.name === PORTFOLIO_TOOL.name && ragResult) {
             content = 'Already searched in this message; answer from that result.'
           } else {
@@ -300,6 +302,9 @@ export default async function handler(req) {
           // retrieval). A booking result must survive it: a call may already
           // be on Joe's calendar, and a reply that doesn't know would mislead.
           fallbackMessages: bookingRan ? messagesWithTool : cleanMessages,
+          // ...and if every attempt fails, the visitor still hears what
+          // happened to their call instead of a generic error.
+          lastResortText: bookingRan ? bookingFallbackText(bookingResults, persona) : null,
           promptVersion,
           persona,
         })
@@ -378,7 +383,7 @@ function streamResponse({
   systemBlocks, messages, tools, ragSources, ragDegraded, ragDegradedReason,
   canary, intentTags, trace, langfuse, lastUserMessage, t0,
   ragUsed, ragMetrics, ragUsage, toolDecisionMs, tdInputTokens, tdOutputTokens,
-  precomputedResponse, fallbackMessages, promptVersion, persona,
+  precomputedResponse, fallbackMessages, promptVersion, persona, lastResortText = null,
 }) {
   const encoder = new TextEncoder()
   let fullOutput = ''
@@ -690,7 +695,7 @@ function streamResponse({
 
         // Last resort: send error message through SSE
         try {
-          const errorText = persona.errorMessage
+          const errorText = lastResortText || persona.errorMessage
           controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text: errorText, replace: true })}\n\n`))
           controller.enqueue(encoder.encode('data: [DONE]\n\n'))
           controller.close()

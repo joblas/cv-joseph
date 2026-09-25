@@ -47,38 +47,63 @@ const NOW = Date.parse('2026-09-25T19:00:00Z') // Fri Sep 25 2026, 12:00 PDT
 const SESSION = '1790362800000-abc1234'
 const req = new Request('https://cloudyjoe.com/api/chat', { method: 'POST', headers: { 'cf-connecting-ip': '203.0.113.9' } })
 
+// The Pages shim hands waitUntil work to the request context; give it one so
+// the owner's notice is captured (and can be awaited) instead of dropped.
+const background: Promise<unknown>[] = []
+;(globalThis as any).__cfCtxStore = { getStore: () => ({ waitUntil: (p: Promise<unknown>) => { background.push(p) } }) }
+const flush = async () => { await Promise.all(background.splice(0)) }
+
 // --- the stubbed network ------------------------------------------------------
-type Call = { url: string; body: any; hasSignal: boolean }
+type Call = { url: string; method: string; body: any; hasSignal: boolean }
 const calls: Call[] = []
+const BOOKING_ID = '11111111-2222-3333-4444-555555555555'
+const EVENT_ID = '11111111222233334444555555555555' // the booking id's hex digits
+type Insert = 'ok' | 'refused' | '5xx' | 'abort' | '409' | 'garbage'
+type Get = 'exists' | 'missing' | 'cancelled' | 'error'
 const mode = {
   busy: [] as { start: string; end: string }[],
   freeBusy: 'ok' as 'ok' | 'http' | 'calendar-error',
-  issue: 'ok' as string, check: 'ok' as string, reserve: 'ok:11111111-2222-3333-4444-555555555555' as string,
-  rpcStatus: 200, rpcHang: false, insert: 'ok' as 'ok' | 'fail', resend: 200,
+  issue: 'ok' as string, check: 'ok' as string, reserve: `ok:${BOOKING_ID}` as string,
+  rpcStatus: 200, rpcHang: false, insert: 'ok' as Insert, resend: 200,
+  get: 'missing' as Get, getTimes: { start: '2026-09-29T01:30:00Z', end: '2026-09-29T02:00:00Z' },
+  candidates: [] as any[], candidatesFail: false,
+  ownerHold: null as null | Promise<void>,
 }
 const resetMode = () => {
   Object.assign(mode, {
-    busy: [], freeBusy: 'ok', issue: 'ok', check: 'ok', reserve: 'ok:11111111-2222-3333-4444-555555555555',
+    busy: [], freeBusy: 'ok', issue: 'ok', check: 'ok', reserve: `ok:${BOOKING_ID}`,
     rpcStatus: 200, rpcHang: false, insert: 'ok', resend: 200,
+    get: 'missing', getTimes: { start: '2026-09-29T01:30:00Z', end: '2026-09-29T02:00:00Z' },
+    candidates: [], candidatesFail: false, ownerHold: null,
   })
   calls.length = 0
+  background.length = 0
 }
 const json = (b: unknown, status = 200) => new Response(JSON.stringify(b), { status, headers: { 'content-type': 'application/json' } })
 ;(globalThis as any).fetch = async (url: string, init: any = {}) => {
   const u = String(url)
   let body: any = init.body
   try { body = JSON.parse(init.body) } catch { /* form-encoded token request */ }
-  calls.push({ url: u, body, hasSignal: init.signal instanceof AbortSignal })
+  calls.push({ url: u, method: init.method || 'GET', body, hasSignal: init.signal instanceof AbortSignal })
   if (u === 'https://oauth2.googleapis.com/token') return json({ access_token: 'tok', expires_in: 3600 })
   if (u === 'https://www.googleapis.com/calendar/v3/freeBusy') {
     if (mode.freeBusy === 'http') return json({ error: { code: 403 } }, 403)
     const id = 'joe@joestechsolutions.com'
     return json({ calendars: { [id]: mode.freeBusy === 'calendar-error' ? { errors: [{ reason: 'notFound' }], busy: [] } : { busy: mode.busy } } })
   }
+  if (u.startsWith('https://www.googleapis.com/calendar/v3/calendars/') && init.method === 'POST') {
+    if (mode.insert === 'abort') { const e: any = new Error('aborted'); e.name = 'AbortError'; throw e }
+    if (mode.insert === 'refused') return json({ error: { code: 400 } }, 400)
+    if (mode.insert === '5xx') return json({ error: { code: 503 } }, 503)
+    if (mode.insert === '409') return json({ error: { code: 409 } }, 409)
+    if (mode.insert === 'garbage') return new Response('<html>oops', { status: 200 })
+    return json({ id: body?.id, htmlLink: 'https://calendar.google.com/event?eid=x', hangoutLink: 'https://meet.google.com/abc-defg-hij' })
+  }
   if (u.startsWith('https://www.googleapis.com/calendar/v3/calendars/')) {
-    return mode.insert === 'ok'
-      ? json({ id: 'evt_1', htmlLink: 'https://calendar.google.com/event?eid=x', hangoutLink: 'https://meet.google.com/abc-defg-hij' })
-      : json({ error: { code: 500 } }, 500)
+    if (mode.get === 'error') return json({ error: { code: 500 } }, 500)
+    if (mode.get === 'missing') return json({ error: { code: 404 } }, 404)
+    return json({ id: u.split('/events/')[1], status: mode.get === 'cancelled' ? 'cancelled' : 'confirmed',
+      start: { dateTime: mode.getTimes.start }, end: { dateTime: mode.getTimes.end } })
   }
   if (u.startsWith('https://stub-cj.supabase.co/rest/v1/rpc/')) {
     if (mode.rpcHang) {
@@ -88,14 +113,21 @@ const json = (b: unknown, status = 200) => new Response(JSON.stringify(b), { sta
     }
     if (mode.rpcStatus !== 200) return json({ message: 'db down' }, mode.rpcStatus)
     const fn = u.split('/rpc/')[1]
-    return json({ booking_issue_code: mode.issue, booking_check_code: mode.check, booking_reserve: mode.reserve, booking_finalize: 'ok' }[fn])
+    if (fn === 'booking_candidates' && mode.candidatesFail) return json({ message: 'db down' }, 500)
+    return json({ booking_issue_code: mode.issue, booking_check_code: mode.check, booking_reserve: mode.reserve,
+      booking_finalize: 'ok', booking_candidates: mode.candidates, booking_sync: 'ok' }[fn])
   }
-  if (u === 'https://api.resend.com/emails') return json(mode.resend === 200 ? { id: 'em_1' } : { message: 'nope' }, mode.resend)
+  if (u === 'https://api.resend.com/emails') {
+    if (mode.ownerHold && JSON.stringify(body?.to) === '["owner@example.test"]') await mode.ownerHold
+    return json(mode.resend === 200 ? { id: 'em_1' } : { message: 'nope' }, mode.resend)
+  }
   throw new Error(`unexpected fetch ${u}`)
 }
 const rpcCalls = (fn: string) => calls.filter((c) => c.url.endsWith(`/rpc/${fn}`))
 const emails = () => calls.filter((c) => c.url === 'https://api.resend.com/emails')
-const inserts = () => calls.filter((c) => c.url.startsWith('https://www.googleapis.com/calendar/v3/calendars/'))
+const inserts = () => calls.filter((c) => c.method === 'POST' && c.url.startsWith('https://www.googleapis.com/calendar/v3/calendars/'))
+const gets = () => calls.filter((c) => c.method === 'GET' && c.url.startsWith('https://www.googleapis.com/calendar/v3/calendars/'))
+const ownerMail = () => emails().find((e) => JSON.stringify(e.body.to) === '["owner@example.test"]')?.body
 
 // An HMAC computed HERE, not by the module, so a wrong hash can't agree with itself.
 async function hmac(message: string) {
@@ -153,6 +185,7 @@ check('configured: the voice agent hands booking to the text chat', /type in thi
   check('the first offer is the first open slot: Sat Sep 26 12:00 PM (24h notice from Fri noon)', times[0] === 'Sat, Sep 26, 12:00 PM PT')
   check('nothing inside the 24 hours’ notice', !times.includes('Sat, Sep 26, 10:00 AM PT') && !times.includes('Sat, Sep 26, 11:30 AM PT'))
   check('a busy slot is never offered', !times.includes('Mon, Sep 28, 6:00 PM PT'))
+  check('offers are spread across at least three days, not bunched on one', new Set(times.map((t: string) => t.split(',').slice(0, 2).join(','))).size >= 3)
   check('the result tells the model what to ask next, not to call another tool', /ask which works, plus their name and email/.test(out) && !/call send_verification_code/i.test(out))
   const fb = calls.find((c) => c.url.endsWith('/freeBusy'))
   check('free/busy is read from now to beyond the 14-day horizon', fb?.body.timeMin === '2026-09-25T19:00:00.000Z' && Date.parse(fb?.body.timeMax) >= NOW + 14 * 86400_000)
@@ -197,6 +230,11 @@ for (const m of ['http', 'calendar-error'] as const) {
   check('rate limited: NO email goes out, and the visitor is told', emails().length === 0 && /no code was sent/.test(out) && out.includes('joe@joestechsolutions.com'))
 }
 {
+  resetMode(); mode.issue = 'rate_limited_global'
+  const out = await run('send_verification_code', { email: 'visitor@example.com' })
+  check('the global daily cap says so — not "in the last hour"', /as many codes as it allows today/.test(out) && !/last hour/.test(out) && emails().length === 0)
+}
+{
   resetMode(); mode.resend = 500
   const out = await run('send_verification_code', { email: 'visitor@example.com' })
   check('the email provider failing is reported, not hidden', /didn't go out/.test(out))
@@ -224,11 +262,22 @@ for (const m of ['http', 'calendar-error'] as const) {
     && ins?.body.conferenceData?.createRequest?.requestId === '11111111-2222-3333-4444-555555555555'
     && ins?.body.start?.dateTime === '2026-09-29T01:30:00.000Z')
   check('Google sends the invite (sendUpdates=all)', /sendUpdates=all/.test(ins?.url || ''))
-  check('the booking is finalised with the event id', fin?.p_id === '11111111-2222-3333-4444-555555555555' && fin?.p_event_id === 'evt_1' && fin?.p_status === 'confirmed')
-  const owner = emails().find((e) => JSON.stringify(e.body.to) === '["owner@example.test"]')?.body
+  check('the event id is derived from the booking id (so its outcome is always checkable)', ins?.body.id === EVENT_ID && /^[0-9a-v]{5,1024}$/.test(ins?.body.id))
+  check('the booking is finalised with the event id', fin?.p_id === BOOKING_ID && fin?.p_event_id === EVENT_ID && fin?.p_status === 'confirmed')
+  await flush()
+  const owner = ownerMail()
   check('Joe is told, and can reply straight to the visitor', !!owner && owner.reply_to === 'visitor@example.com' && owner.subject.includes('Mon, Sep 28, 6:30 PM PT'))
+  check('rows whose truth is in Google are reconciled BEFORE reserving',
+    calls.findIndex((c) => c.url.endsWith('/rpc/booking_candidates')) > calls.findIndex((c) => c.url.endsWith('/rpc/booking_check_code'))
+    && calls.findIndex((c) => c.url.endsWith('/rpc/booking_candidates')) < calls.findIndex((c) => c.url.endsWith('/rpc/booking_reserve')))
   check('the result confirms the booking with its time', out.startsWith('Booked: Mon, Sep 28, 6:30 PM PT'))
   check('the result carries no link — only Google’s invite may', !/https?:\/\//.test(out))
+}
+{
+  resetMode()
+  await run('book_call', { slot: 'Mon, Sep 28, 6:30 PM PT', email: 'visitor@example.com', code: 12345 })
+  check('a code relayed as a NUMBER keeps its leading zero (12345 -> 012345)',
+    rpcCalls('booking_check_code')[0]?.body.p_code_hash === await hmac(`${SESSION}|visitor@example.com|012345`))
 }
 for (const [said, label] of [
   ['September 28 at 6:30pm', 'a looser spelling'],
@@ -292,12 +341,127 @@ for (const [status, re] of [
     && inserts().length === 0 && /Someone else just booked/.test(out) && TIME_RE.test(out) && !out.includes('- Mon, Sep 28, 6:00 PM PT'))
 }
 {
-  resetMode(); mode.insert = 'fail'
+  resetMode(); mode.insert = 'refused'
   const out = await run('book_call', { slot: 'Mon, Sep 28, 6:30 PM PT', email: 'visitor@example.com', code: '123456' })
   const fin = rpcCalls('booking_finalize')[0]?.body
-  check('Google refusing the event RELEASES the slot', fin?.p_status === 'failed' && fin?.p_event_id === null)
+  await flush()
+  check('Google REFUSING the event (a 4xx) releases the slot', fin?.p_status === 'failed' && fin?.p_event_id === null)
   check('...and the visitor hears it was NOT booked', /could NOT be added/.test(out) && !out.startsWith('Booked') && out.includes('joe@joestechsolutions.com'))
-  check('...and Joe gets no "call booked" email', emails().length === 0)
+  check('...and Joe gets no email', emails().length === 0)
+}
+
+// --- 5b. An insert whose outcome is UNKNOWN is never reported as a failure -------
+// A timeout or 5xx may mean Google created the event and emailed the invite.
+const UNKNOWN_RE = /not known yet whether the call was booked/
+for (const ins of ['abort', '5xx', 'garbage'] as const) {
+  resetMode(); mode.insert = ins; mode.get = 'exists'
+  const out = await run('book_call', { slot: 'Mon, Sep 28, 6:30 PM PT', email: 'visitor@example.com', code: '123456' })
+  const fin = rpcCalls('booking_finalize')[0]?.body
+  check(`insert ${ins}, but Google has the event: it is a booking`, out.startsWith('Booked: Mon, Sep 28, 6:30 PM PT') && fin?.p_status === 'confirmed' && fin?.p_event_id === EVENT_ID)
+  check(`insert ${ins}: Google was asked about OUR event id`, gets().some((g) => g.url.endsWith(`/events/${EVENT_ID}`)))
+}
+for (const get of ['missing', 'error'] as const) {
+  resetMode(); mode.insert = 'abort'; mode.get = get
+  const out = await run('book_call', { slot: 'Mon, Sep 28, 6:30 PM PT', email: 'visitor@example.com', code: '123456' })
+  await flush()
+  check(`insert timed out, event ${get} on the check: the visitor is told it is NOT KNOWN yet`,
+    UNKNOWN_RE.test(out) && !out.startsWith('Booked') && !/NOT be added|nothing was booked|could NOT/.test(out) && /inbox/.test(out))
+  check(`...the row is left pending for reconcile (no finalize either way) (${get})`, rpcCalls('booking_finalize').length === 0)
+  check(`...and Joe is asked to check his calendar (${get})`, /may or may not have gone through/.test(ownerMail()?.subject || ''))
+}
+{
+  resetMode(); mode.insert = '409'
+  const out = await run('book_call', { slot: 'Mon, Sep 28, 6:30 PM PT', email: 'visitor@example.com', code: '123456' })
+  check('409 (our id already exists) is a booking, not an error', out.startsWith('Booked:') && rpcCalls('booking_finalize')[0]?.body.p_status === 'confirmed')
+}
+
+// --- 5c. Reconcile: rows follow their Google events ---------------------------------
+{
+  resetMode(); mode.check = 'mismatch'
+  await run('book_call', { slot: 'Mon, Sep 28, 6:30 PM PT', email: 'visitor@example.com', code: '999999' })
+  check('an unverified visitor never triggers reconcile (no Google calls on their behalf)', rpcCalls('booking_candidates').length === 0 && gets().length === 0)
+}
+{
+  resetMode()
+  const cand = rpcCalls
+  mode.candidates = [{ id: 'aaaaaaaa-0000-0000-0000-000000000001', status: 'pending', google_event_id: null, slot_start: '2026-09-29T01:30:00+00:00', slot_end: '2026-09-29T02:00:00+00:00' }]
+  mode.get = 'missing'
+  await run('book_call', { slot: 'Mon, Sep 28, 6:30 PM PT', email: 'visitor@example.com', code: '123456' })
+  const sync = cand('booking_sync')[0]?.body
+  check('the candidates are asked for this email and slot', cand('booking_candidates')[0]?.body.p_email === 'visitor@example.com' && cand('booking_candidates')[0]?.body.p_start === '2026-09-29T01:30:00.000Z')
+  check('a stale pending row is checked by its derived event id', gets().some((g) => g.url.endsWith('/events/aaaaaaaa000000000000000000000001')))
+  check('...and with no event it is marked failed, freeing the slot and the email (review B-1)', sync?.p_id === 'aaaaaaaa-0000-0000-0000-000000000001' && sync?.p_status === 'failed')
+}
+{
+  resetMode()
+  mode.candidates = [{ id: 'aaaaaaaa-0000-0000-0000-000000000002', status: 'pending', google_event_id: null, slot_start: '2026-09-29T01:30:00+00:00', slot_end: '2026-09-29T02:00:00+00:00' }]
+  mode.get = 'exists'
+  await run('book_call', { slot: 'Mon, Sep 28, 7:00 PM PT', email: 'visitor@example.com', code: '123456' })
+  const sync = rpcCalls('booking_sync')[0]?.body
+  check('a stale pending row whose event DOES exist is confirmed with that event id',
+    sync?.p_status === 'confirmed' && sync?.p_event_id === 'aaaaaaaa000000000000000000000002')
+}
+{
+  resetMode()
+  mode.candidates = [{ id: 'bbbbbbbb-0000-0000-0000-000000000003', status: 'confirmed', google_event_id: 'evtjoe', slot_start: '2026-09-29T01:30:00+00:00', slot_end: '2026-09-29T02:00:00+00:00' }]
+  mode.get = 'cancelled'
+  await run('book_call', { slot: 'Mon, Sep 28, 6:30 PM PT', email: 'visitor@example.com', code: '123456' })
+  const sync = rpcCalls('booking_sync')[0]?.body
+  check('a confirmed booking Joe cancelled in Google is marked cancelled (checked by its recorded event id)',
+    gets().some((g) => g.url.endsWith('/events/evtjoe')) && sync?.p_status === 'cancelled')
+}
+{
+  resetMode()
+  mode.candidates = [{ id: 'bbbbbbbb-0000-0000-0000-000000000004', status: 'confirmed', google_event_id: 'evtmoved', slot_start: '2026-09-29T01:30:00+00:00', slot_end: '2026-09-29T02:00:00+00:00' }]
+  mode.get = 'exists'; mode.getTimes = { start: '2026-09-30T02:00:00Z', end: '2026-09-30T02:30:00Z' }
+  await run('book_call', { slot: 'Mon, Sep 28, 6:30 PM PT', email: 'visitor@example.com', code: '123456' })
+  const sync = rpcCalls('booking_sync')[0]?.body
+  check('a booking Joe MOVED follows the event to its new time',
+    sync?.p_status === 'confirmed' && sync?.p_start === '2026-09-30T02:00:00.000Z' && sync?.p_end === '2026-09-30T02:30:00.000Z')
+}
+{
+  resetMode()
+  mode.candidates = [{ id: 'bbbbbbbb-0000-0000-0000-000000000005', status: 'confirmed', google_event_id: 'evtsame', slot_start: '2026-09-29T01:30:00+00:00', slot_end: '2026-09-29T02:00:00+00:00' }]
+  mode.get = 'exists'
+  await run('book_call', { slot: 'Mon, Sep 28, 7:00 PM PT', email: 'visitor@example.com', code: '123456' })
+  check('an unchanged confirmed booking is left alone', rpcCalls('booking_sync').length === 0)
+}
+{
+  resetMode()
+  mode.candidates = [{ id: 'bbbbbbbb-0000-0000-0000-000000000006', status: 'confirmed', google_event_id: 'evtx', slot_start: '2026-09-29T01:30:00+00:00', slot_end: '2026-09-29T02:00:00+00:00' }]
+  mode.get = 'error'
+  const out = await run('book_call', { slot: 'Mon, Sep 28, 7:00 PM PT', email: 'visitor@example.com', code: '123456' })
+  check('a row Google can’t confirm either way is left as it is, and booking carries on', rpcCalls('booking_sync').length === 0 && out.startsWith('Booked:'))
+}
+{
+  resetMode(); mode.candidatesFail = true
+  const out = await run('book_call', { slot: 'Mon, Sep 28, 6:30 PM PT', email: 'visitor@example.com', code: '123456' })
+  check('reconcile failing never blocks a booking', out.startsWith('Booked:') && rpcCalls('booking_reserve').length === 1)
+}
+{
+  resetMode(); mode.reserve = 'in_progress'
+  const out = await run('book_call', { slot: 'Mon, Sep 28, 6:30 PM PT', email: 'visitor@example.com', code: '123456' })
+  check('a booking still in flight for this email is reported as such — not as an existing call', /still being processed/.test(out) && !/already has/.test(out) && inserts().length === 0)
+}
+
+// --- 5d. The owner's notice never delays the visitor -------------------------------
+{
+  resetMode()
+  let release: () => void = () => {}
+  mode.ownerHold = new Promise<void>((r) => { release = r })
+  const out = await run('book_call', { slot: 'Mon, Sep 28, 6:30 PM PT', email: 'visitor@example.com', code: '123456' })
+  check('book_call returns while Joe’s notice is still in flight', out.startsWith('Booked:') && background.length === 1)
+  release(); await flush()
+}
+{
+  resetMode(); mode.resend = 500
+  const logged: string[] = []
+  const realError = console.error
+  console.error = (...a: unknown[]) => { logged.push(a.map(String).join(' ')) }
+  await run('book_call', { slot: 'Mon, Sep 28, 6:30 PM PT', email: 'visitor@example.com', code: '123456' })
+  await flush()
+  console.error = realError
+  check('a refused owner notice is logged, not silently lost', logged.some((l) => /owner notice refused/.test(l)))
 }
 {
   resetMode(); mode.freeBusy = 'http'
@@ -308,6 +472,15 @@ for (const [status, re] of [
   resetMode()
   const out = await B.runBookingTool('book_call', null, { sessionId: SESSION, req, persona: jts, now: NOW })
   check('a null input from the model is refused, not thrown', typeof out === 'string' && inserts().length === 0 && !out.startsWith('Booked'))
+}
+
+// --- 5e. What the visitor sees if the reply itself fails -------------------------------
+{
+  const booked = B.bookingFallbackText(['Booked: Mon, Sep 28, 6:30 PM PT, 30 minutes, for v@example.com. Tell the visitor…'], jts)
+  check('after a booking, the last-resort message still tells the visitor it is booked', booked === 'Your call with Joe is booked: Mon, Sep 28, 6:30 PM PT. Google Calendar is emailing you the invite with the Google Meet link.')
+  const unknown = B.bookingFallbackText(["Google didn't confirm the booking in time, so it is not known yet whether the call was booked. Tell…"], jts)
+  check('after an unknown outcome, it says so and offers email', /couldn't confirm whether your call was booked/.test(unknown || '') && (unknown || '').includes('joe@joestechsolutions.com'))
+  check('otherwise there is nothing special to say', B.bookingFallbackText(['Joe has open call times.'], jts) === null)
 }
 
 // --- 6. Codes ----------------------------------------------------------------------

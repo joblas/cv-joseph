@@ -100,6 +100,7 @@ const json = (b: unknown, status = 200) => new Response(JSON.stringify(b), { sta
   if (u.startsWith('https://stub-cj.supabase.co/rest/v1/voice_rate_limits')) return json([])
   if (u === 'https://oauth2.googleapis.com/token') return json({ access_token: 'tok', expires_in: 3600 })
   if (u === 'https://www.googleapis.com/calendar/v3/freeBusy') return json({ calendars: { 'joe@joestechsolutions.com': { busy: [] } } })
+  if (u.startsWith('https://www.googleapis.com/calendar/v3/calendars/') && init.method === 'POST') return json({ id: body?.id })
   if (u.includes('voyageai.com/v1/embeddings')) return json({ data: [{ embedding: Array(1024).fill(0.01) }], usage: { total_tokens: 6 } })
   if (u.includes('voyageai.com/v1/rerank')) return json({ data: [0, 1, 2, 3, 4, 5].map((index, r) => ({ index, relevance_score: 0.9 - r * 0.1 })) })
   if (u.startsWith('https://stub-jts.supabase.co/rest/v1/rpc/')) return json(siteRows())
@@ -108,6 +109,9 @@ const json = (b: unknown, status = 200) => new Response(JSON.stringify(b), { sta
     rpcs.push({ fn, body })
     if (fn === 'check_chat_rate_limit') return json(true)
     if (fn === 'booking_issue_code') return json('ok')
+    if (fn === 'booking_check_code') return json('ok')
+    if (fn === 'booking_reserve') return json('ok:11111111-2222-3333-4444-555555555555')
+    if (fn === 'booking_finalize') return json('ok')
     return json([])
   }
   if (u.startsWith('https://stub-cj.supabase.co/rest/v1/')) return json([])
@@ -181,6 +185,8 @@ bookingOn(true)
   const results = toolResults(r.streams[0]?.messages)
   check('a second search and an unknown tool are still answered (never left dangling)',
     results.length === 3 && results.map((b: any) => b.tool_use_id).join() === 'tu_a,tu_b,tu_c')
+  check('...the second search reuses the first (no second retrieval)', /Already searched/.test(String(results[1]?.content)) && String(results[0]?.content).includes(SITE_MARKER))
+  check('...and the unknown tool is told it does not exist', /does not exist/.test(String(results[2]?.content)))
 }
 
 // --- 4. The booking tool gets the visitor's session ------------------------------
@@ -208,6 +214,28 @@ bookingOn(true)
   const r = await chat('what is the private AI setup?')
   const fallback = r.streams[r.streams.length - 1]
   check('a search-only fallback still retries WITHOUT retrieval (unchanged behaviour)', r.streams.length === 3 && toolResults(fallback?.messages).length === 0)
+}
+
+// --- 5b. If every attempt to reply fails, a booking is still reported ---------------
+{
+  // Pick a real open slot: ask availability first, take the first label.
+  mode.decision = [{ type: 'tool_use', id: 'tu_avail', name: 'check_availability', input: {} }]
+  const avail = await chat('when can I talk to Joe?')
+  const label = /- (\w{3}, \w{3} \d{1,2}, \d{1,2}:\d{2} [AP]M PT)/.exec(String(toolResults(avail.streams[0]?.messages)[0]?.content))?.[1] || ''
+  mode.decision = [{ type: 'tool_use', id: 'tu_book', name: 'book_call', input: { slot: label, email: 'sam@example.com', code: '123456' } }]
+  mode.streamFailures = 3 // primary, its retry, and the fallback all fail
+  const r = await chat('123456')
+  mode.streamFailures = 0
+  check('the booking really ran (test precondition)', !!label && /^Booked: /.test(String(toolResults(r.streams[0]?.messages)[0]?.content)))
+  check('every reply attempt failed, yet the visitor is told the call is booked, with its time',
+    r.out.includes(`Your call with Joe is booked: ${label}.`) && !r.out.includes('Sorry, something went wrong'))
+}
+{
+  mode.decision = [{ type: 'tool_use', id: 'tu_search', name: 'search_portfolio', input: { query: 'x' } }]
+  mode.streamFailures = 3
+  const r = await chat('what is the private AI setup?')
+  mode.streamFailures = 0
+  check('with no booking, the last resort is still the ordinary error message', r.out.includes('Sorry, something went wrong') && !/booked/.test(r.out))
 }
 
 // --- 6. cloudyjoe never gets booking ------------------------------------------------

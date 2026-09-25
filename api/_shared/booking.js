@@ -24,6 +24,13 @@
 // visitor ("Mon, Sep 28, 6:00 PM PT") and matches it against slots that are
 // open NOW — anything that is not an open slot is refused.
 //
+// GOOGLE IS THE TRUTH. A booking row can lose touch with its event: a finalize
+// that never ran, an insert that timed out (Google may still have created it
+// and emailed the invite), or Joe cancelling / moving the call in Google. So
+// every event id is derived from its booking id, an insert that fails without
+// a definite refusal is never reported as a failure, and before reserving,
+// book_call syncs stale rows and this visitor's rows with their events.
+//
 // TRUST NOTHING THE MODEL SENDS. The model relays what a visitor typed, and a
 // visitor can type anything. So: the slot must be open in freshly read
 // availability; the email must be one THIS session proved it owns (checked in
@@ -42,10 +49,13 @@
 import {
   BOOKING_TZ, HORIZON_DAYS, SLOT_MINUTES, bookingHours, computeSlots, localParts, parseSlot, slotLabel, spreadAcrossDays,
 } from './availability.js'
-import { freeBusy, googleConfigured, insertEvent } from './google-calendar.js'
+import { freeBusy, getEvent, googleConfigured, insertEvent } from './google-calendar.js'
 import { clientIp } from './leads.js'
+import { waitUntil } from '@vercel/functions'
 
 export const BOOKING_TOOL_NAMES = ['check_availability', 'send_verification_code', 'book_call']
+const BOOKED_PREFIX = 'Booked: '
+const BOOKING_UNKNOWN = "Google didn't confirm the booking in time, so it is not known yet whether the call was booked."
 export const RPC_TIMEOUT_MS = 3000
 export const EMAIL_TIMEOUT_MS = 4000
 
@@ -155,9 +165,18 @@ async function hmacHex(secret, message) {
   return [...sig].map((b) => b.toString(16).padStart(2, '0')).join('')
 }
 
-// Visitors type codes as "123 456" or "123-456"; only the digits count.
+// Visitors type codes as "123 456" or "123-456"; only the digits count. A model
+// may relay the code as a NUMBER, which drops a leading zero (012345 -> 12345):
+// put it back, or one code in ten could never match.
+export function normalizeCode(code) {
+  if (typeof code === 'number' && Number.isInteger(code) && code >= 0) return String(code).padStart(6, '0')
+  return String(code ?? '').replace(/\D/g, '')
+}
 export const codeHash = (sessionId, email, code) =>
-  hmacHex(process.env.BOOKING_SECRET, `${sessionId}|${email}|${String(code ?? '').replace(/\D/g, '')}`)
+  hmacHex(process.env.BOOKING_SECRET, `${sessionId}|${email}|${normalizeCode(code)}`)
+
+// Google event ids are base32hex; a UUID's hex digits are a subset of it.
+export const eventIdFor = (bookingId) => String(bookingId).replace(/-/g, '').toLowerCase()
 
 // Uniform over 000000-999999: reject the top of the 32-bit range so the modulo
 // carries no bias.
@@ -175,6 +194,15 @@ async function sendEmail({ from, to, subject, text, replyTo }) {
     body: JSON.stringify({ from, to: [to], subject, text, ...(replyTo ? { reply_to: replyTo } : {}) }),
   }, EMAIL_TIMEOUT_MS)
   return res.ok
+}
+
+// Joe's notice never delays the visitor's reply, and a refusal is logged
+// (sendEmail reports a non-2xx as false, not as a throw).
+function notifyOwner(persona, { subject, text, replyTo }) {
+  if (!process.env.ALERT_EMAIL) return
+  waitUntil(sendEmail({ from: persona.booking.from, to: process.env.ALERT_EMAIL, replyTo, subject, text })
+    .then((ok) => { if (!ok) console.error('[booking] owner notice refused by the email provider') })
+    .catch((err) => console.error('[booking] owner notice failed:', err.message)))
 }
 
 const normEmail = (e) => String(e ?? '').trim().toLowerCase()
@@ -206,6 +234,37 @@ export function findSlot(input, slots) {
     const p = localParts(s.start)
     return p.m === month && p.d === day && p.hh === hh && p.mm === mm
   }) || null
+}
+
+// Before reserving: bring stale and relevant rows in line with Google (see
+// GOOGLE IS THE TRUTH above). Never fatal — a row that can't be checked is
+// left as it is, and the reservation's own rules still apply.
+async function reconcile(email, startMs) {
+  let rows
+  try {
+    rows = await rpc('booking_candidates', { p_email: email, p_start: new Date(startMs).toISOString() })
+  } catch (err) {
+    console.error('[booking] reconcile: candidates failed:', err.message)
+    return
+  }
+  if (!Array.isArray(rows) || !rows.length) return
+  await Promise.all(rows.map(async (row) => {
+    const eventId = row.google_event_id || eventIdFor(row.id)
+    try {
+      const ev = await getEvent(eventId)
+      if (!ev.exists) {
+        await rpc('booking_sync', { p_id: row.id, p_status: row.status === 'pending' ? 'failed' : 'cancelled', p_event_id: null, p_start: null, p_end: null })
+      } else if (row.status === 'pending' || ev.start !== Date.parse(row.slot_start) || ev.end !== Date.parse(row.slot_end)) {
+        // Created after all, or moved by Joe: the row follows the event.
+        await rpc('booking_sync', {
+          p_id: row.id, p_status: 'confirmed', p_event_id: eventId,
+          p_start: new Date(ev.start).toISOString(), p_end: new Date(ev.end).toISOString(),
+        })
+      }
+    } catch (err) {
+      console.error(`[booking] reconcile: ${row.id} left as is:`, err.message)
+    }
+  }))
 }
 
 function offerTimes(slots, lead) {
@@ -250,8 +309,9 @@ export async function runBookingTool(name, input = {}, { sessionId, req, persona
         p_session: sessionId, p_email: email, p_code_hash: await codeHash(sessionId, email, code), p_ip: req ? clientIp(req) : null,
       })
       if (status !== 'ok') {
+        if (status === 'rate_limited_global') return `The booking system has sent as many codes as it allows today, so no code was sent. Tell the visitor, and ${orEmail}.`
         return String(status).startsWith('rate_limited')
-          ? `Too many codes have been requested in the last hour, so no code was sent. Tell the visitor, and ${orEmail}.`
+          ? `Too many codes have been requested recently, so no code was sent. Tell the visitor, and ${orEmail}.`
           : `No code could be sent right now. Tell the visitor, and ${orEmail}.`
       }
       const sent = await sendEmail({
@@ -291,6 +351,10 @@ export async function runBookingTool(name, input = {}, { sessionId, req, persona
         }[verified] || `The code couldn't be checked right now, so the call was NOT booked. Tell the visitor, and ${orEmail}.`
       }
 
+      // A verified visitor: settle any row whose truth is in Google first, so
+      // a lost finalize or a call Joe cancelled can't block this booking.
+      await reconcile(email, slot.start)
+
       const visitorName = String(input.name ?? '').trim().slice(0, 80)
       const topic = String(input.topic ?? '').trim().slice(0, 500)
       const reserved = await rpc('booking_reserve', {
@@ -303,6 +367,7 @@ export async function runBookingTool(name, input = {}, { sessionId, req, persona
             || `Someone else just booked that time and Joe has no other open times. Nothing was booked. Tell the visitor, and ${orEmail}.`
         }
         return {
+          in_progress: "A booking for this email is still being processed, so nothing new was booked. Ask the visitor to check their inbox for Google's invite in the next minute before trying again.",
           already_booked: `This email already has an upcoming call with Joe, so no second one was booked. Tell the visitor, and for anything else ${orEmail}.`,
           daily_cap: `Joe's calendar isn't taking more bookings today, so nothing was booked. Tell the visitor, and ${orEmail}.`,
           not_verified: 'That email is not confirmed in this chat, so nothing was booked. Ask the visitor to confirm their email so a code can be sent.',
@@ -311,36 +376,53 @@ export async function runBookingTool(name, input = {}, { sessionId, req, persona
       const bookingId = reserved.slice(3)
       const who = visitorName || email
 
-      let event
+      const eventId = eventIdFor(bookingId)
+      const event = {
+        startMs: slot.start, endMs: slot.end,
+        summary: `Call with ${who} — Joe's Tech Solutions`,
+        description: `Booked through the chat on joestechsolutions.com.\n\nWith: ${visitorName || '(no name given)'} <${email}>\nAbout: ${topic || '(not given)'}`,
+        attendee: { email, name: visitorName || undefined },
+        requestId: bookingId,
+        eventId,
+      }
+      let created = false
       try {
-        event = await insertEvent({
-          startMs: slot.start, endMs: slot.end,
-          summary: `Call with ${who} — Joe's Tech Solutions`,
-          description: `Booked through the chat on joestechsolutions.com.\n\nWith: ${visitorName || '(no name given)'} <${email}>\nAbout: ${topic || '(not given)'}`,
-          attendee: { email, name: visitorName || undefined },
-          requestId: bookingId,
-        })
+        await insertEvent(event)
+        created = true
       } catch (err) {
         console.error('[booking] calendar insert failed:', err.message)
-        // Release the slot so a booking that does not exist does not hold it.
-        await rpc('booking_finalize', { p_id: bookingId, p_event_id: null, p_status: 'failed' })
-          .catch((e) => console.error('[booking] release failed:', e.message))
-        return `The call could NOT be added to Joe's calendar, so nothing was booked. Say so plainly, and ${orEmail}.`
+        if (err.definite) {
+          // Google refused it: nothing exists. Release the slot. If the
+          // release itself fails, reconcile() settles the row later.
+          await rpc('booking_finalize', { p_id: bookingId, p_event_id: null, p_status: 'failed' })
+            .catch((e) => console.error('[booking] release failed:', e.message))
+          return `The call could NOT be added to Joe's calendar, so nothing was booked. Say so plainly, and ${orEmail}.`
+        }
+        // Outcome unknown: Google may have created it. Ask Google.
+        try { created = (await getEvent(eventId)).exists } catch (e) {
+          console.error('[booking] could not check the event:', e.message)
+        }
+        if (!created) {
+          // Still unknown (a just-created event may not be visible yet). Keep
+          // the row pending — reconcile() settles it against Google later —
+          // and tell the visitor the truth: we don't know yet.
+          notifyOwner(persona, {
+            replyTo: email,
+            subject: `Check your calendar: a booking by ${who} may or may not have gone through`,
+            text: `${visitorName || '(no name)'} <${email}> tried to book ${slotLabel(slot.start)}. Google did not confirm the event in time, so the visitor was told to watch for the invite. Check your calendar around that time.`,
+          })
+          return `${BOOKING_UNKNOWN} Tell the visitor exactly that: it may have gone through; if Google's invite reaches their inbox in the next few minutes they're booked, and if not, ${orEmail}. Do not say it is booked and do not say it failed.`
+        }
       }
-      await rpc('booking_finalize', { p_id: bookingId, p_event_id: event.id, p_status: 'confirmed' })
-        .catch((err) => console.error('[booking] finalize failed after a successful insert:', err.message))
+      await rpc('booking_finalize', { p_id: bookingId, p_event_id: eventId, p_status: 'confirmed' })
+        .catch((err) => console.error('[booking] finalize failed after the event exists (reconcile settles it):', err.message))
 
-      // Best effort: Joe hears about it even if Google's own notice lags.
-      if (process.env.ALERT_EMAIL) {
-        await sendEmail({
-          from: persona.booking.from,
-          to: process.env.ALERT_EMAIL,
-          replyTo: email,
-          subject: `Call booked: ${slotLabel(slot.start)} — ${who}`,
-          text: `${visitorName || '(no name)'} <${email}> booked ${slotLabel(slot.start)} (${SLOT_MINUTES} min) through the site chat.\nAbout: ${topic || '(not given)'}\n\nIt is on your calendar with a Meet link.`,
-        }).catch((err) => console.error('[booking] owner notice failed:', err.message))
-      }
-      return `Booked: ${slotLabel(slot.start)}, ${SLOT_MINUTES} minutes, for ${email}. Tell the visitor it's booked and that Google Calendar is emailing them the invite with the Google Meet link. Do not write a link yourself.`
+      notifyOwner(persona, {
+        replyTo: email,
+        subject: `Call booked: ${slotLabel(slot.start)} — ${who}`,
+        text: `${visitorName || '(no name)'} <${email}> booked ${slotLabel(slot.start)} (${SLOT_MINUTES} min) through the site chat.\nAbout: ${topic || '(not given)'}\n\nIt is on your calendar with a Meet link.`,
+      })
+      return `${BOOKED_PREFIX}${slotLabel(slot.start)}, ${SLOT_MINUTES} minutes, for ${email}. Tell the visitor it's booked and that Google Calendar is emailing them the invite with the Google Meet link. Do not write a link yourself.`
     }
 
     return `Tell the visitor that couldn't be done, and ${orEmail}.`
@@ -348,4 +430,20 @@ export async function runBookingTool(name, input = {}, { sessionId, req, persona
     console.error(`[booking] ${name} failed:`, err.message)
     return `That couldn't be completed right now, and nothing was booked. Tell the visitor, and ${orEmail}.`
   }
+}
+
+// For chat.js's last-resort message: if the reply fails to stream after a
+// booking tool ran, the visitor must still learn what happened to the call
+// rather than see a generic error. Visitor-facing text, not instructions.
+export function bookingFallbackText(results, persona) {
+  const contact = persona?.contactEmail || 'joe@joestechsolutions.com'
+  const booked = results.find((r) => typeof r === 'string' && r.startsWith(BOOKED_PREFIX))
+  if (booked) {
+    const when = booked.slice(BOOKED_PREFIX.length).split(',').slice(0, 3).join(',')
+    return `Your call with Joe is booked: ${when}. Google Calendar is emailing you the invite with the Google Meet link.`
+  }
+  if (results.some((r) => typeof r === 'string' && r.startsWith(BOOKING_UNKNOWN))) {
+    return `I couldn't confirm whether your call was booked. If Google's invite reaches your inbox in the next few minutes, you're booked; if not, email Joe at ${contact}.`
+  }
+  return null
 }

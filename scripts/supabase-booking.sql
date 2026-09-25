@@ -7,13 +7,26 @@
 -- six-digit code (Joe's choice, 2026-09-25). Everything that makes that safe
 -- lives here, in the database, where it holds under concurrency:
 --
---   booking_issue_code   rate-limits code sends (per email, session, IP, and
---                        a global daily cap that protects the sending domain)
+--   booking_issue_code   rate-limits code sends (per email, session and IP
+--                        per hour; per email and IP per day; a global daily
+--                        cap that protects the sending domain)
 --   booking_check_code   verifies a code; 5 wrong guesses kills it
 --   booking_reserve      requires a verified email; one upcoming booking per
 --                        email; a daily cap; and a UNIQUE partial index so two
 --                        visitors can never hold the same slot
 --   booking_finalize     records the Google event, or releases the slot
+--   booking_candidates   rows whose truth lives in Google: stale pending rows,
+--   booking_sync         and live holds on this email or slot. The Worker
+--                        checks each against its event and syncs the row, so
+--                        a lost finalize, an insert whose outcome was unknown,
+--                        or Joe cancelling / moving the event in Google never
+--                        leaves a slot or an email stuck.
+--
+-- CONCURRENCY. Both write paths take ONE global advisory lock for the whole
+-- transaction, so every count-then-insert cap is exact under concurrent
+-- requests. Volume is a handful a day, so serialising costs nothing. (A
+-- per-email lock, the first version, let an IP or the daily cap be exceeded
+-- by two overlapping requests — found in review.)
 --
 -- Codes are never stored in plain text: the Worker sends only
 -- HMAC-SHA256(BOOKING_SECRET, session|email|code).
@@ -25,7 +38,7 @@
 -- Worker uses — can touch any of it. Functions are SECURITY INVOKER with an
 -- empty search_path.
 --
--- Additive and reversible: drop the four functions and two tables.
+-- Additive and reversible: drop the six functions and two tables.
 -- ===========================================================================
 
 create table if not exists public.booking_codes (
@@ -76,15 +89,18 @@ begin
   if p_session is null or p_session = '' or v_email = '' or p_code_hash is null or p_code_hash = '' then
     return 'bad_request';
   end if;
-  -- Serialise per address so two concurrent requests cannot both pass the cap.
-  perform pg_advisory_xact_lock(hashtext('booking-code:' || v_email));
-  if (select count(*) from public.booking_codes where email = v_email and created_at > now() - interval '1 hour') >= 3 then
+  -- Serialise ALL code issuance, so no two requests can both pass a cap.
+  perform pg_advisory_xact_lock(hashtext('booking-code'));
+  if (select count(*) from public.booking_codes where email = v_email and created_at > now() - interval '1 hour') >= 3
+     or (select count(*) from public.booking_codes where email = v_email and created_at > now() - interval '1 day') >= 6 then
     return 'rate_limited_email';
   end if;
   if (select count(*) from public.booking_codes where session_id = p_session and created_at > now() - interval '1 hour') >= 3 then
     return 'rate_limited_session';
   end if;
-  if p_ip is not null and (select count(*) from public.booking_codes where ip = p_ip and created_at > now() - interval '1 hour') >= 5 then
+  if p_ip is not null and (
+       (select count(*) from public.booking_codes where ip = p_ip and created_at > now() - interval '1 hour') >= 5
+    or (select count(*) from public.booking_codes where ip = p_ip and created_at > now() - interval '1 day') >= 12) then
     return 'rate_limited_ip';
   end if;
   -- Protects the sending domain's reputation from a distributed flood.
@@ -148,7 +164,15 @@ begin
   if p_start is null or p_end is null or p_end <= p_start or p_start <= now() then
     return 'bad_slot';
   end if;
-  perform pg_advisory_xact_lock(hashtext('booking-reserve:' || v_email));
+  -- Serialise ALL reservations, so the daily cap is exact under concurrency.
+  perform pg_advisory_xact_lock(hashtext('booking-reserve'));
+  -- A booking for this email may still be mid-flight (reserve -> Google ->
+  -- finalize is bounded well under a minute). Say so, rather than claiming
+  -- a call exists that may never be created.
+  if exists (select 1 from public.bookings
+             where email = v_email and status = 'pending' and created_at > now() - interval '60 seconds') then
+    return 'in_progress';
+  end if;
   if exists (select 1 from public.bookings
              where email = v_email and status in ('pending', 'confirmed') and slot_start > now()) then
     return 'already_booked';
@@ -183,11 +207,62 @@ begin
 end
 $$;
 
+-- ---------------------------------------------------------------------------
+-- Rows whose real state is the Google event, for the Worker to check before
+-- it reserves: pending rows no longer in flight (a finalize that never ran,
+-- or an insert whose outcome was unknown), and live holds on this email or
+-- this slot (Joe may have cancelled or moved the event in Google).
+create or replace function public.booking_candidates(p_email text, p_start timestamptz)
+returns table (id uuid, status text, google_event_id text, slot_start timestamptz, slot_end timestamptz)
+language sql
+set search_path to ''
+as $$
+  select b.id, b.status, b.google_event_id, b.slot_start, b.slot_end
+    from public.bookings b
+   where (b.status = 'pending' and b.created_at < now() - interval '60 seconds')
+      or (b.status = 'confirmed' and b.slot_start > now()
+          and (b.email = lower(trim(p_email)) or b.slot_start = p_start))
+   -- This visitor's own rows first, so unrelated stale rows the Worker could
+   -- not settle can never crowd them out of the limit.
+   order by (b.email = lower(trim(p_email)) or b.slot_start = p_start) desc, b.created_at
+   limit 5
+$$;
+
+-- Bring a live row in line with its Google event: confirmed (optionally at
+-- the event's current time, if Joe moved it), failed (a pending row whose
+-- event never existed) or cancelled (Joe deleted or cancelled it).
+create or replace function public.booking_sync(p_id uuid, p_status text, p_event_id text,
+                                               p_start timestamptz, p_end timestamptz)
+returns text
+language plpgsql
+set search_path to ''
+as $$
+begin
+  if p_status not in ('confirmed', 'failed', 'cancelled') then return 'bad_status'; end if;
+  begin
+    update public.bookings
+       set status = p_status,
+           google_event_id = coalesce(p_event_id, google_event_id),
+           slot_start = coalesce(p_start, slot_start),
+           slot_end = coalesce(p_end, slot_end)
+     where id = p_id and status in ('pending', 'confirmed');
+  exception when unique_violation then
+    -- Moved onto a time another booking holds: leave the row as it was.
+    return 'conflict';
+  end;
+  return case when found then 'ok' else 'not_live' end;
+end
+$$;
+
 revoke all on function public.booking_issue_code(text, text, text, text) from public, anon, authenticated;
 revoke all on function public.booking_check_code(text, text, text) from public, anon, authenticated;
 revoke all on function public.booking_reserve(text, text, text, text, timestamptz, timestamptz) from public, anon, authenticated;
 revoke all on function public.booking_finalize(uuid, text, text) from public, anon, authenticated;
+revoke all on function public.booking_candidates(text, timestamptz) from public, anon, authenticated;
+revoke all on function public.booking_sync(uuid, text, text, timestamptz, timestamptz) from public, anon, authenticated;
 grant execute on function public.booking_issue_code(text, text, text, text) to service_role;
 grant execute on function public.booking_check_code(text, text, text) to service_role;
 grant execute on function public.booking_reserve(text, text, text, text, timestamptz, timestamptz) to service_role;
 grant execute on function public.booking_finalize(uuid, text, text) to service_role;
+grant execute on function public.booking_candidates(text, timestamptz) to service_role;
+grant execute on function public.booking_sync(uuid, text, text, timestamptz, timestamptz) to service_role;

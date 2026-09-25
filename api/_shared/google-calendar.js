@@ -21,7 +21,11 @@
 //   insert:   POST .../calendars/{id}/events?conferenceDataVersion=1&sendUpdates=all
 //             scope calendar.events; Meet via conferenceData.createRequest
 //             {requestId, conferenceSolutionKey:{type:"hangoutsMeet"}} — created
-//             ASYNCHRONOUSLY, so the link may be absent from the response
+//             ASYNCHRONOUSLY, so the link may be absent from the response.
+//             A client-chosen `id` (base32hex, 5-1024 chars) makes the insert
+//             checkable: a repeat is 409, and the event can be fetched by it.
+//   get:      GET .../calendars/{id}/events/{eventId} — a deleted event comes
+//             back with status "cancelled", or 404/410
 //
 // Every request is bounded. A booking turn is in the chat's request path, and
 // an unbounded await there hangs the visitor's reply (learned in #27).
@@ -35,8 +39,15 @@ export const SCOPES = [
 ].join(' ')
 export const GOOGLE_TIMEOUT_MS = 4000
 
+// The Workspace USER the service account impersonates (JWT `sub`), and the
+// calendar it books on — by default that user's primary calendar. Kept apart
+// so pointing BOOKING_CALENDAR_ID at a secondary calendar never breaks the
+// delegation, which only a real user can receive.
+export function calendarOwner() {
+  return process.env.BOOKING_CALENDAR_OWNER || 'joe@joestechsolutions.com'
+}
 export function calendarId() {
-  return process.env.BOOKING_CALENDAR_ID || 'joe@joestechsolutions.com'
+  return process.env.BOOKING_CALENDAR_ID || calendarOwner()
 }
 
 export function googleConfigured() {
@@ -98,7 +109,7 @@ export async function accessToken(now = Date.now()) {
   const assertion = await signJwt({
     email: process.env.GOOGLE_SA_EMAIL,
     key: process.env.GOOGLE_SA_PRIVATE_KEY,
-    sub: calendarId(),
+    sub: calendarOwner(),
     scope: SCOPES,
     now: Math.floor(now / 1000),
   })
@@ -140,12 +151,18 @@ export async function freeBusy(timeMinMs, timeMaxMs) {
 }
 
 // --- create the event ---------------------------------------------------------
-export async function insertEvent({ startMs, endMs, summary, description, attendee, requestId }) {
+// Throws an Error with `definite: true` only when Google REFUSED the event (a
+// 4xx other than 409), so nothing was created. Anything else — a timeout, a
+// 5xx, a network error, a body that won't parse — leaves the outcome unknown:
+// Google may have created it and emailed the invite, so the caller must check
+// with getEvent(eventId) rather than assume it failed.
+export async function insertEvent({ startMs, endMs, summary, description, attendee, requestId, eventId }) {
   const id = encodeURIComponent(calendarId())
   const res = await bounded(`${API}/calendars/${id}/events?conferenceDataVersion=1&sendUpdates=all`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${await accessToken()}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
+      id: eventId,
       summary,
       description,
       start: { dateTime: new Date(startMs).toISOString() },
@@ -155,8 +172,14 @@ export async function insertEvent({ startMs, endMs, summary, description, attend
       reminders: { useDefault: true },
     }),
   })
-  const data = await res.json().catch(() => ({}))
-  if (!res.ok || !data.id) throw new Error(`Google events.insert failed: ${res.status}`)
+  // 409: an event with this id already exists — an earlier attempt created it.
+  if (res.status === 409) return { id: eventId, htmlLink: null, meetLink: null, existed: true }
+  const data = (await res.json().catch(() => null)) || {}
+  if (!res.ok || !data.id) {
+    const err = new Error(`Google events.insert failed: ${res.status}`)
+    err.definite = res.status >= 400 && res.status < 500
+    throw err
+  }
   return {
     id: data.id,
     htmlLink: data.htmlLink || null,
@@ -164,4 +187,22 @@ export async function insertEvent({ startMs, endMs, summary, description, attend
     // own invite email carries the link once it does, so never promise one.
     meetLink: data.hangoutLink || data.conferenceData?.entryPoints?.find((e) => e.entryPointType === 'video')?.uri || null,
   }
+}
+
+// --- look an event up -----------------------------------------------------------
+// { exists: false } when Google says it is gone (404/410) or cancelled;
+// otherwise { exists: true, start, end } in ms. Throws when it can't tell.
+export async function getEvent(eventId) {
+  const cal = encodeURIComponent(calendarId())
+  const res = await bounded(`${API}/calendars/${cal}/events/${encodeURIComponent(eventId)}`, {
+    headers: { Authorization: `Bearer ${await accessToken()}` },
+  })
+  if (res.status === 404 || res.status === 410) return { exists: false }
+  const data = await res.json().catch(() => null)
+  if (!res.ok || !data) throw new Error(`Google events.get failed: ${res.status}`)
+  if (data.status === 'cancelled') return { exists: false }
+  const start = Date.parse(data.start?.dateTime ?? '')
+  const end = Date.parse(data.end?.dateTime ?? '')
+  if (!Number.isFinite(start) || !Number.isFinite(end)) throw new Error('Google events.get returned no usable times')
+  return { exists: true, start, end }
 }
