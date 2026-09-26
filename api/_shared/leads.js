@@ -62,8 +62,16 @@ export function clientIp(req) {
 }
 
 // Fails OPEN: a limiter outage must not take the chat down with it.
+//
+// Bounded, because "fails open" only covered an ERROR. A Supabase call that
+// hangs is neither an error nor an answer, and this runs before every chat
+// message and every voice search — so an unbounded await here would stall the
+// whole agent on both sites. On timeout it fails open like any other outage.
+export const RATE_LIMIT_TIMEOUT_MS = 1500
 export async function checkRateLimit(req, limit = 40) {
   if (!supabaseConfigured()) return true
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), RATE_LIMIT_TIMEOUT_MS)
   try {
     const res = await fetch(`${process.env.SUPABASE_URL}/rest/v1/rpc/check_chat_rate_limit`, {
       method: 'POST',
@@ -73,11 +81,14 @@ export async function checkRateLimit(req, limit = 40) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ p_ip: clientIp(req), p_limit: limit }),
+      signal: controller.signal,
     })
     if (!res.ok) return true
     return (await res.json()) !== false
   } catch {
     return true
+  } finally {
+    clearTimeout(timer)
   }
 }
 
