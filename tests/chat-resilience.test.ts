@@ -38,7 +38,7 @@ function check(name: string, cond: boolean) {
 const JOE = 'joe@joestechsolutions.com'
 const TYPO = 'Email joe@joestsolutions.com and he replies within 24 hours.'
 
-type Plan = { decision: 'text' | 'tool' | 'fail'; decisionText?: string; sources?: boolean; streams: Array<'typo' | 'ok' | 'empty' | 'fail' | { say: string }> }
+type Plan = { decision: 'text' | 'tool' | 'fail'; decisionText?: string; sources?: boolean; recordFails?: 'refused' | 'down'; streams: Array<'typo' | 'ok' | 'empty' | 'fail' | { say: string }> }
 let plan: Plan = { decision: 'tool', streams: ['ok'] }
 const modelCalls: { at: number; body: any }[] = []
 const emails: any[] = []
@@ -78,6 +78,8 @@ const json = (b: unknown, status = 200) => new Response(JSON.stringify(b), { sta
   if (u.startsWith('https://stub-cj.supabase.co/rest/v1/chat_leads')) {
     const method = init.method || 'GET'
     if (method === 'GET') return json([])
+    if (method === 'POST' && plan.recordFails === 'refused') return json({ message: 'stub outage' }, 503)
+    if (method === 'POST' && plan.recordFails === 'down') throw new Error('stub network down')
     leadWrites.push({ method, url: u, body }); order.push(`lead ${method}`)
     return method === 'POST' ? json([{ id: 'lead-1' }], 201) : new Response(null, { status: 204 })
   }
@@ -195,6 +197,15 @@ const ask = [{ role: 'user', content: 'How do I reach Joe?' }]
   const L = await import('../functions/api-src/_shared/leads.js')
   check('a failed request releases the lead at once (no full reply wait)', r.status === 500 && r.ms < 3000 && L.REPLY_WAIT_MS > 3000)
   check('...and the lead is still recorded and Joe still told', leadWrites.some((w) => w.method === 'PATCH' && w.body.notified === true) && emails.some((e) => /^Lead from/.test(e?.subject || '')))
+}
+{
+  const r = await chat([{ role: 'user', content: 'We need a new website. My email is pat@example.com' }], { decision: 'tool', recordFails: 'refused', streams: ['ok'] })
+  check('a lead the database refuses still reaches Joe, and the failure is logged',
+    r.shown === 'Thanks — Joe will be in touch.' && emails.some((e) => /^Lead from/.test(e?.subject || '')) && logged.some((l) => /\[lead\] record failed: HTTP 503/.test(l))
+    && !leadWrites.some((w) => w.method === 'PATCH'))
+  await chat([{ role: 'user', content: 'We need a new website. My email is pat@example.com' }], { decision: 'tool', recordFails: 'down', streams: ['ok'] })
+  check('...and so does one the database cannot be reached for',
+    emails.some((e) => /^Lead from/.test(e?.subject || '')) && logged.some((l) => /\[lead\] record failed: stub network down/.test(l)))
 }
 {
   const L = await import('../functions/api-src/_shared/leads.js')
