@@ -37,7 +37,9 @@
     "test:availability": "npm run cf:prep >/dev/null && tsx tests/availability.test.ts",
     "test:google-calendar": "npm run cf:prep >/dev/null && tsx tests/google-calendar.test.ts",
     "test:booking": "npm run cf:prep >/dev/null && tsx tests/booking.test.ts",
-    "test:chat-booking": "npm run cf:prep >/dev/null && tsx tests/chat-booking.test.ts"
+    "test:chat-booking": "npm run cf:prep >/dev/null && tsx tests/chat-booking.test.ts",
+    "test:lead-handoff": "npm run cf:prep >/dev/null && tsx tests/lead-handoff.test.ts",
+    "test:intent": "npm run cf:prep >/dev/null && tsx tests/intent-classifier.test.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.71.2",
