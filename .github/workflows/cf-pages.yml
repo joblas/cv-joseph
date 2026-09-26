@@ -84,6 +84,8 @@ jobs:
           npm run test:google-calendar
           npm run test:booking
           npm run test:chat-booking
+          npm run test:lead-handoff
+          npm run test:intent
       - name: Build (static site + Pages Functions)
         run: |
           npm run cf:prep   # api/ → functions/api-src/ (Workers shims), prompt module

@@ -114,7 +114,8 @@ export default async function handler(req) {
 
     // Lead capture. Until now a visitor who wanted to hire Joe got a polite
     // answer and nothing else — no record, no notification. Fire-and-forget so
-    // it never delays the reply, and it swallows its own errors.
+    // it never delays the reply, and it swallows its own errors. The visible
+    // history and the model client go with it, for Joe's handoff brief.
     if (!isTrustedEval) {
       waitUntil(captureLead({
         message: lastUserMessage,
@@ -122,6 +123,8 @@ export default async function handler(req) {
         sessionId,
         lang,
         persona,
+        history: messages.map((m) => ({ role: m?.role, content: typeof m?.content === 'string' ? m.content : '' })),
+        client,
       }))
     }
 

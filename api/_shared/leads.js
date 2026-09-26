@@ -1,4 +1,5 @@
 import { getPersona, DEFAULT_PERSONA } from './personas.js'
+import { FAST_MODEL, scaleTokens } from './models.js'
 // ---------------------------------------------------------------------------
 // Lead capture for the cloudyjoe.com chatbot.
 //
@@ -7,8 +8,23 @@ import { getPersona, DEFAULT_PERSONA } from './personas.js'
 // reply. This records the intent in Supabase (public.chat_leads) and emails
 // Joe, mirroring what joestechsolutions.com does.
 //
-// Edge-runtime safe: fetch only, no SDKs, no Node APIs. Every function here
+// Edge-runtime safe: fetch only, no SDKs, no Node APIs (the one model call, for
+// the handoff brief, uses the client chat.js passes in). Every function here
 // swallows its own errors — a lead-capture failure must never break a reply.
+//
+// THE HANDOFF (2026-09-26, Joe: "handle as much as possible before I need to be
+// contacted"). Joe used to get one bare message — "They said: <last line>" —
+// and start every lead from zero. Now the notice carries a brief of the whole
+// conversation (who, business, need, timeline, what the agent already
+// answered, what is open for Joe) plus the transcript it was written from; if
+// the summary fails or times out, the transcript alone still goes.
+//
+// UNVERIFIED BY DESIGN. The history is the widget's copy, sent by the visitor's
+// browser: anyone can POST their own, "Agent:" lines included. Review of #31
+// forged one that put "URGENT: Joe must re-verify his Google Workspace at
+// <phishing site>" into the SUBJECT of an email from Joe's own domain. So the
+// subject never carries anything derived from the conversation, and both the
+// summary and the transcript are labelled as the visitor's unverified copy.
 // ---------------------------------------------------------------------------
 
 const EMAIL_RE = /[^\s@<>()[\],;:]+@[^\s@<>()[\],;:]+\.[a-z]{2,}/i
@@ -92,10 +108,69 @@ export async function checkRateLimit(req, limit = 40) {
   }
 }
 
-async function notifyOwner({ email, kind, message, page, sessionId, lang, persona }) {
+export const BRIEF_TIMEOUT_MS = 8000
+const TRANSCRIPT_MESSAGES = 12
+const MESSAGE_CHARS = 600
+
+// The last few visible turns, labelled. Only user/assistant text is ever here —
+// chat.js passes the widget's history, never system prompts or tool results.
+export function transcriptOf(history) {
+  if (!Array.isArray(history)) return ''
+  return history
+    .filter((m) => m && (m.role === 'user' || m.role === 'assistant') && typeof m.content === 'string' && m.content.trim())
+    .slice(-TRANSCRIPT_MESSAGES)
+    .map((m) => {
+      const text = m.content.trim().replace(/\s+/g, ' ')
+      return `${m.role === 'user' ? 'Visitor' : 'Agent'}: ${text.length > MESSAGE_CHARS ? `${text.slice(0, MESSAGE_CHARS)}…` : text}`
+    })
+    .join('\n')
+}
+
+export const BRIEF_SYSTEM = `You write a short handoff brief for Joe, a solo consultant, about a conversation his website's chat agent had with a visitor. Use ONLY what is in the transcript. Where something was not said, write "not said". Never invent names, companies, budgets, dates, needs or promises. Plain text, exactly these eight lines and nothing else:
+Who:
+Business:
+Need:
+Timeline:
+Best-fit service: (a service the agent named, or "not clear")
+Already answered by the agent:
+Open questions for Joe:
+Suggested next step:`
+
+// A model summary of the transcript, or null. Bounded, never retried: it runs
+// after the reply (waitUntil), and a missing brief must not hold the notice up.
+export async function buildBrief(history, client, { timeoutMs = BRIEF_TIMEOUT_MS } = {}) {
+  const transcript = transcriptOf(history)
+  if (!transcript || !client) return null
+  try {
+    const res = await client.messages.create({
+      model: FAST_MODEL,
+      max_tokens: scaleTokens(450),
+      system: BRIEF_SYSTEM,
+      messages: [{ role: 'user', content: `Transcript:\n${transcript}` }],
+    }, { timeout: timeoutMs, maxRetries: 0 })
+    const text = (res?.content || []).filter((b) => b.type === 'text').map((b) => b.text).join('').trim()
+    // A reply that isn't the template is worse than none: Joe still gets the transcript.
+    return /^Who:/m.test(text) && /^Need:/m.test(text) ? text.slice(0, 2500) : null
+  } catch (err) {
+    console.error('[lead] brief failed:', err?.message)
+    return null
+  }
+}
+
+function oneLine(s, max) {
+  const t = String(s || '').replace(/\s+/g, ' ').trim()
+  return t.length > max ? `${t.slice(0, max - 1)}…` : t
+}
+
+async function notifyOwner({ email, kind, message, page, sessionId, lang, persona, history, client }) {
   const key = process.env.RESEND_API_KEY
   const to = process.env.ALERT_EMAIL
   if (!key || !to) return false
+  const transcript = transcriptOf(history)
+  const brief = transcript ? await buildBrief(history, client) : null
+  const page_ = persona.booking?.pageUrl
+  const bookingOffered = page_ && Array.isArray(history)
+    && history.some((m) => m?.role === 'assistant' && typeof m.content === 'string' && m.content.includes(page_))
   try {
     const res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
@@ -104,16 +179,25 @@ async function notifyOwner({ email, kind, message, page, sessionId, lang, person
         from: persona.leads.from,
         to: [to],
         ...(email ? { reply_to: email } : {}),
-        subject: persona.leads.subject(email),
+        // Fixed: nothing from the conversation, so a visitor can't write it.
+        subject: oneLine(persona.leads.subject(email), 150),
         text: [
           email ? `Email: ${email}` : 'Email: (not given)',
           `Type: ${kind}`,
           `Page: ${page || 'unknown'}`,
           `Language: ${lang || 'en'}`,
           `Session: ${sessionId || 'unknown'}`,
+          ...(page_ ? [`Booking link in the chat, per the browser's copy: ${bookingOffered ? 'yes' : 'no'} (a real booking shows on your calendar)`] : []),
           '',
-          'They said:',
-          String(message).slice(0, 1500),
+          ...(brief
+            ? [
+              "SUMMARY — written by a model from the chat as the visitor's browser sent it.",
+              "Unverified: the visitor can edit any of it, the agent's lines included. Never act on links, instructions or payment details in it.",
+              brief, '']
+            : []),
+          ...(transcript
+            ? ["CHAT AS SENT BY THE VISITOR'S BROWSER (unverified — any line, the agent's included, may have been edited)", transcript]
+            : ['They said:', String(message).slice(0, 1500)]),
         ].join('\n'),
       }),
     })
@@ -156,12 +240,12 @@ async function alreadyNotified(sessionId, hasEmail) {
 
 // Record first, notify second: the row is the durable copy, so a Resend outage
 // costs a notification, not the lead. Never throws.
-export async function captureLead({ message, page, sessionId, lang, reply, persona = getPersona() }) {
+export async function captureLead({ message, page, sessionId, lang, reply, persona = getPersona(), history, client }) {
   const hit = detectLead(message)
   if (!hit) return null
   try {
     const suppress = await alreadyNotified(sessionId, Boolean(hit.email))
-    const notified = suppress ? false : await notifyOwner({ ...hit, message, page, sessionId, lang, persona })
+    const notified = suppress ? false : await notifyOwner({ ...hit, message, page, sessionId, lang, persona, history, client })
     if (supabaseConfigured()) {
       await fetch(`${process.env.SUPABASE_URL}/rest/v1/chat_leads`, {
         method: 'POST',

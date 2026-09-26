@@ -907,28 +907,64 @@ export async function searchPortfolio(query, trace, anthropicClient, persona = g
 // Intent classification (keyword-based, no extra LLM cost)
 // ---------------------------------------------------------------------------
 
+// Prompt-attack phrasing, matched on word boundaries (see classifyIntent).
+const JAILBREAK_RES = [
+  /\bignore (?:all |any )?(?:of )?(?:your |the |my |these |those )?(?:previous|prior|above|earlier|preceding)\b/,
+  // "ignore the rules our old vendor set" is a visitor, not an attack: a bare
+  // "the" never counts — only all/any/every/your.
+  /\bignore (?:all |any |every |your )(?:of )?(?:your |the |these |those )?(?:instructions|rules|guidelines|restrictions)\b/,
+  /\b(?:disregard|forget|override|bypass) (?:(?:all|any|every) (?:of )?(?:your |the |these |those )?|your |(?:the )?(?:previous|prior|above|earlier|system|original) )(?:(?:previous|prior|above|earlier|system|original) )?(?:instructions|rules|prompt|guidelines|restrictions|programming)\b/,
+  // "forget all that, I just need a website" is a visitor too.
+  /\bforget (?:everything|all) (?:you (?:were|have been|know)|(?:that )?(?:above|before this)|your )/,
+  /\b(?:you are now|from now on you are)\b/,
+  /\bpretend (?:you|to be|that you)\b/,
+  /\brole-?play as\b/,
+  /\blet'?s role-?play(?: as\b|:)/,
+  /\bjailbr(?:ea|o)k/,
+  /\b(?:do anything now|dan mode|you are dan|developer mode|god mode)\b/,
+  /\b(?:enable|activate) dan\b/,
+  /\bact as (?:an? )?(?:unrestricted|unfiltered|uncensored|jailbroken|evil|rogue)\b/,
+  // "can you write a system prompt for our bot?" is a prospect.
+  /\b(?:your|tu) (?:(?:complete|full|entire|original|hidden|exact|real) )?(?:system )?prompt\b/,
+  /\b(?:reveal|show|print|repeat|output|dump) (?:me )?(?:the |your )?system prompt\b/,
+  // Instructions and directives are the agent's own; "your rules about
+  // refunds" is a customer question, so rules/orders/objective count only as
+  // a pair ("your rules and instructions", "your objective and orders").
+  /\byour (?:(?:hidden|secret|system|original|initial|internal|real|full|exact|complete|current) )?(?:instructions|directives)\b/,
+  /\byour (?:rules|orders|objective|directives|instructions) and (?:your )?(?:rules|orders|objective|directives|instructions)\b/,
+  /\btus (?:instrucciones|reglas|órdenes)\b/,
+  /\b(?:reveal|show|print|output|dump|display) (?:me )?your (?:(?:hidden|secret|system|full|current|complete|internal) )?(?:configuration|config)\b/,
+  /\b(?:rules|reglas) (?:configured|configuradas)\b/,
+  /\b(?:reveal|show me|print|repeat|output|write|copy|dump) (?:all |me )?(?:everything|all) (?:above|before this|you were (?:told|given))\b/,
+  /\b(?:repeat|print|output|copy) (?:everything|all)(?: of)? (?:the )?(?:above|text above|messages above)\b/,
+  /\beverything above\b/,
+  /\b(?:print|output) (?:all|everything)\b/,
+  /\bshow me your rules\b/,
+  /\breset your (?:instructions|rules|memory|prompt|personality)\b/,
+  /\bjson record\b/,
+  // A new rule set pasted at the top of a message, not "I need new instructions: how do I start?"
+  /^\s*new instructions:|\byour new instructions\b/,
+  /\bignora (?:las |todas las |tus )?instrucciones\b/,
+  /\bignora todo\b/,
+  /\bolvida todo\b/,
+  /\bnueva personalidad\b/,
+  /\bprotocolo de defensa\b/,
+  /\bcuáles son tus instrucciones\b/,
+  /\b(?:muestra|imprime|repite) todo\b/,
+  /\btodo lo anterior\b/,
+]
+
 export function classifyIntent(text) {
   const lower = text.toLowerCase()
   const tags = []
 
-  const jailbreakPatterns = [
-    'ignore previous', 'ignora las instrucciones', 'ignora todo',
-    'pretend', 'roleplay', 'act as', 'you are now',
-    'forget', 'disregard', 'bypass', 'override', 'jailbreak',
-    'dan', 'developer mode', 'evil', 'malicious', 'hackear', 'hacking',
-    'system prompt', 'tu prompt', 'your prompt', 'instructions',
-    'protocolo de defensa', 'olvida todo', 'nueva personalidad',
-    'reset your', 'reveal your', 'show me your rules',
-    'your objective', 'your orders', 'tus órdenes', 'tus reglas',
-    'cuáles son tus instrucciones', 'rules configured', 'reglas configuradas',
-    'print all', 'print everything', 'yaml', 'json record',
-    'dump', 'export', 'serialize', 'reproduce', 'output all',
-    'all of the above', 'todo lo anterior', 'everything above',
-    'repeat everything', 'write all above', 'copy all',
-    'show me everything', 'imprime todo', 'muestra todo lo anterior',
-    'repite todo', 'exporta', 'convierte a',
-  ]
-  if (jailbreakPatterns.some(p => lower.includes(p))) {
+  // Whole words and phrases only. The old list matched substrings, so "dan"
+  // fired on dana@…, "standard", "guidance" and "Jordan", "act as" on "contact
+  // as", "evil" on "medieval" — and every hit emails Joe a JAILBREAK alert
+  // (found 2026-09-26: a real lead, "my email is dana@example.com — can I get a
+  // price?", was reported as an attack). This tag only drives alerts and ops
+  // filters; the agent's own guardrails handle the attacks themselves.
+  if (JAILBREAK_RES.some((re) => re.test(lower))) {
     tags.push('jailbreak-attempt')
   }
 
