@@ -145,7 +145,7 @@ const toolResults = (msgs: any[] = []) => {
   mode.decision = [{ type: 'text', text: 'Hi there.' }]
   const r = await chat('can I book a call with Joe?')
   check('booking unconfigured: the only tool is search_portfolio', JSON.stringify(toolNames(r.decision)) === '["search_portfolio"]')
-  check('booking unconfigured: the agent is told plainly it cannot book', /booking a call through this chat is not available/.test(r.system))
+  check('booking unconfigured: the agent is given Joe’s booking page as a link', /\[Book a call with Joe\]\(https:\/\/calendar\.google\.com\/calendar\/appointments\/schedules\/[\w-]+\)/.test(r.system))
 }
 
 // --- 2. Configured: booking tools, and a single booking call ------------------
@@ -277,7 +277,8 @@ bookingOn(true)
     on.status === 200 && /## Booking a call/.test(on.instruction) && /type in this same chat/.test(on.instruction))
   bookingOn(false)
   const off = await mint()
-  check('voice, booking off: no booking note (so it never promises one)', off.status === 200 && off.instruction.length > 500 && !/Booking a call/.test(off.instruction))
+  check('voice, booking off: callers are sent to the chat for the booking link, and no link is read out',
+    off.status === 200 && off.instruction.length > 500 && /type "book a call" in this same chat/.test(off.instruction) && !/calendar\.google\.com/.test(off.instruction))
   bookingOn(true)
 }
 

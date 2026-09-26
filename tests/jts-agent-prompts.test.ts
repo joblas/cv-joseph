@@ -40,6 +40,11 @@ check('neither prompt volunteers the internal reason (pricing being reworked)',
   !/pricing is reworked/i.test(voice) && !/pricing is reworked/i.test(text))
 check('text prompt rule 5 no longer permits booking "through ... the Private AI Setup checkout"',
   !/Private AI Setup checkout/i.test(text))
+// Rule 5 must allow the booking link the runtime notes give (Joe's Google
+// booking page) and forbid every other booking link. An earlier wording
+// banned all outside links, which would have made the agent refuse to share it.
+check('text prompt rule 5 allows the runtime notes’ booking link, and only that',
+  /any link or scheduling tool your runtime notes do not give you/.test(text) && !/book through any outside link/.test(text))
 
 // --- "Honestly, I've told you everything I know about it right now." ----------
 check('voice brevity cap is no longer absolute ("max 2-3 punchy sentences")',

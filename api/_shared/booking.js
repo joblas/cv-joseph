@@ -43,7 +43,9 @@
 // not happen, never offers a time it could not verify, never invents a link.
 //
 // OFF unless fully configured: the tools are not offered until every secret
-// exists, so an unconfigured deploy behaves exactly as before.
+// exists. Until then, a persona with a `booking.pageUrl` (Joe's Google Calendar
+// booking page, chosen 2026-09-26 because the service-account route is blocked
+// by his organisation's key policy) sends visitors there instead.
 // ---------------------------------------------------------------------------
 
 import {
@@ -118,6 +120,10 @@ export function bookingContext(persona, now = Date.now()) {
   if (!persona?.booking) return ''
   const contact = persona.contactEmail
   if (!bookingConfigured(persona)) {
+    const page = persona.booking.pageUrl
+    if (page) {
+      return `\nCalls: anyone can book a free 30-minute video call with Joe on his booking page: [Book a call with Joe](${page}). When someone wants to talk to Joe, have a call or meeting, or discuss a project, offer that link, written exactly like that. The page shows his open times, and Google sends the invite with a Google Meet link. Never name or promise specific times yourself, and never write any other booking link. Email (${contact}) is always an option too.`
+    }
     return `\nCalls: booking a call through this chat is not available right now. If someone wants to talk to Joe, they email ${contact}.`
   }
   const today = new Intl.DateTimeFormat('en-US', {
@@ -131,9 +137,13 @@ export function bookingContext(persona, now = Date.now()) {
     + ` Say a call is booked only after book_call says "Booked". The invite and Google Meet link come from Google by email — never write a link or a time yourself. Email (${contact}) is always an option too.`
 }
 
-// The voice agent has no booking tools; it hands booking to the text chat.
+// The voice agent has no booking tools and never reads out links; it hands
+// booking to the text chat, which offers the tools or the booking page.
 export function bookingVoiceNote(persona) {
-  if (!bookingConfigured(persona)) return ''
+  if (!bookingConfigured(persona)) {
+    if (!persona?.booking?.pageUrl) return ''
+    return '\n\n## Booking a call\n- Callers can book a free 30-minute video call with Joe. You cannot book it by voice and you never read out links: tell them to type "book a call" in this same chat and the booking link will appear.'
+  }
   return '\n\n## Booking a call\n- You cannot book calls by voice. If the caller wants a call with Joe, tell them to end voice mode and type in this same chat — it can book a free 30-minute call on Joe\'s calendar in a minute.'
 }
 

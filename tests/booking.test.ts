@@ -166,8 +166,19 @@ setEnv()
   resetMode(); delete process.env.BOOKING_SECRET
   const out = await run('check_availability', {})
   check('unconfigured: the tool refuses honestly and touches no network', calls.length === 0 && /isn't available/.test(out) && out.includes('joe@joestechsolutions.com'))
-  check('unconfigured: the JTS agent is told plainly booking is not available', /booking a call through this chat is not available/.test(B.bookingContext(jts, NOW)) && !/Today is/.test(B.bookingContext(jts, NOW)))
-  check('unconfigured: the voice agent is told nothing about booking', B.bookingVoiceNote(jts) === '')
+  // Unconfigured, JTS falls back to Joe's Google Calendar booking page.
+  const PAGE = 'https://calendar.google.com/calendar/appointments/schedules/AcZssZ0St5Nf2TVYjIBDDR2csGc-yrz5lcs8gddMO-xuK8RObl47JBNfZ94ACk_mwC1RgmsZOzX05rE_'
+  const ctx = B.bookingContext(jts, NOW)
+  check('unconfigured: the JTS persona carries Joe’s booking page', jts.booking.pageUrl === PAGE)
+  check('unconfigured: the agent offers the booking page as a markdown link, exactly', ctx.includes(`[Book a call with Joe](${PAGE})`))
+  check('...and never names times or the in-chat tools', /Never name or promise specific times/.test(ctx) && !/check_availability|Today is/.test(ctx))
+  const voice = B.bookingVoiceNote(jts)
+  check('unconfigured: the voice agent sends callers to type "book a call" in the chat', /type "book a call" in this same chat/.test(voice))
+  check('...and never gets the link to read out', !voice.includes('http'))
+  // Without a booking page, booking is plainly unavailable.
+  const noPage = { ...jts, booking: { from: jts.booking.from } }
+  check('no booking page: the agent is told plainly booking is not available', /booking a call through this chat is not available/.test(B.bookingContext(noPage, NOW)) && !/Book a call with Joe/.test(B.bookingContext(noPage, NOW)))
+  check('no booking page: the voice agent is told nothing about booking', B.bookingVoiceNote(noPage) === '')
   setEnv()
 }
 check('cloudyjoe’s runtime notes say nothing about calls', B.bookingContext(cj, NOW) === '' && B.bookingVoiceNote(cj) === '')

@@ -123,9 +123,11 @@ export const PERSONAS = {
       from: 'joestechsolutions.com <leads@subscribe.joestechsolutions.com>',
       subject: (email) => (email ? `Lead from the site chat: ${email}` : 'Someone on the site chat asked for Joe'),
     },
-    // Chat booking (api/_shared/booking.js) — live only once its secrets exist.
+    // Chat booking (api/_shared/booking.js): the in-chat tools go live only once
+    // their secrets exist; until then the agent offers Joe's booking page.
     booking: {
       from: "Joe's Tech Solutions <bookings@subscribe.joestechsolutions.com>",
+      pageUrl: 'https://calendar.google.com/calendar/appointments/schedules/AcZssZ0St5Nf2TVYjIBDDR2csGc-yrz5lcs8gddMO-xuK8RObl47JBNfZ94ACk_mwC1RgmsZOzX05rE_',
     },
     rateLimitMessage: "That's a lot of messages for one hour. Email Joe directly at joe@joestechsolutions.com and he'll pick it up.",
     errorMessage: 'Sorry, something went wrong. Try again or email joe@joestechsolutions.com.',
