@@ -65,6 +65,21 @@ const ORDINARY = [
   'I followed your setup guide and it worked',
   "I keep forgetting to follow up — can an agent handle that?",
   'we need new instructions for our front desk staff',
+  // False alarms review found in the first narrowing of #31.
+  'Forget all that, I just need a simple website',
+  'forget everything I said, can we start over?',
+  "Don't forget all that paperwork we talked about",
+  'We had to ignore the rules our old vendor set up',
+  'Can Joe ignore the instructions in the old manual?',
+  'What would your configuration look like for a 10-person office?',
+  'What are your current rules about refunds?',
+  'Is your full configuration documented?',
+  "Let's roleplay a sales call so I can see how the agent talks",
+  'Can you switch to Dan? He handles our IT',
+  'I need new instructions: how do I start?',
+  'What are your rules on data privacy?',
+  'Can you write a system prompt for our support bot?',
+  'Our IT guy had to override the rules on the firewall',
 ]
 for (const o of ORDINARY) check(`not a false alarm: "${o}"`, !tagged(o))
 

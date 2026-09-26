@@ -910,20 +910,30 @@ export async function searchPortfolio(query, trace, anthropicClient, persona = g
 // Prompt-attack phrasing, matched on word boundaries (see classifyIntent).
 const JAILBREAK_RES = [
   /\bignore (?:all |any )?(?:of )?(?:your |the |my |these |those )?(?:previous|prior|above|earlier|preceding)\b/,
-  /\b(?:disregard|forget|override|bypass) (?:all |any )?(?:of )?(?:your |the |these |those )?(?:previous |prior |above |earlier |system )?(?:instructions|rules|prompt|guidelines|restrictions|programming)\b/,
+  // "ignore the rules our old vendor set" is a visitor, not an attack: a bare
+  // "the" never counts — only all/any/every/your.
+  /\bignore (?:all |any |every |your )(?:of )?(?:your |the |these |those )?(?:instructions|rules|guidelines|restrictions)\b/,
+  /\b(?:disregard|forget|override|bypass) (?:(?:all|any|every) (?:of )?(?:your |the |these |those )?|your |(?:the )?(?:previous|prior|above|earlier|system|original) )(?:(?:previous|prior|above|earlier|system|original) )?(?:instructions|rules|prompt|guidelines|restrictions|programming)\b/,
+  // "forget all that, I just need a website" is a visitor too.
+  /\bforget (?:everything|all) (?:you (?:were|have been|know)|(?:that )?(?:above|before this)|your )/,
   /\b(?:you are now|from now on you are)\b/,
   /\bpretend (?:you|to be|that you)\b/,
   /\brole-?play as\b/,
+  /\blet'?s role-?play(?: as\b|:)/,
   /\bjailbr(?:ea|o)k/,
   /\b(?:do anything now|dan mode|you are dan|developer mode|god mode)\b/,
-  /\b(?:system|your|tu) prompt\b/,
-  /\b(?:your|tus) (?:(?:hidden|secret|system|original|initial|internal|real|full|exact|complete|current) )?(?:instructions|rules|orders|objective|directives|configuration|config|reglas|órdenes|instrucciones)\b/,
-  /\bignore (?:all|any|the|every) (?:of )?(?:your |the |these |those )?(?:instructions|rules|guidelines|restrictions)\b/,
-  /\bforget (?:everything|all) (?:you|that|above|before|i)\b/,
+  /\b(?:enable|activate) dan\b/,
   /\bact as (?:an? )?(?:unrestricted|unfiltered|uncensored|jailbroken|evil|rogue)\b/,
-  /\blet'?s role-?play\b/,
-  /\bnew instructions:/,
-  /\b(?:enable|activate|switch to) dan\b/,
+  // "can you write a system prompt for our bot?" is a prospect.
+  /\b(?:your|tu) (?:(?:complete|full|entire|original|hidden|exact|real) )?(?:system )?prompt\b/,
+  /\b(?:reveal|show|print|repeat|output|dump) (?:me )?(?:the |your )?system prompt\b/,
+  // Instructions and directives are the agent's own; "your rules about
+  // refunds" is a customer question, so rules/orders/objective count only as
+  // a pair ("your rules and instructions", "your objective and orders").
+  /\byour (?:(?:hidden|secret|system|original|initial|internal|real|full|exact|complete|current) )?(?:instructions|directives)\b/,
+  /\byour (?:rules|orders|objective|directives|instructions) and (?:your )?(?:rules|orders|objective|directives|instructions)\b/,
+  /\btus (?:instrucciones|reglas|órdenes)\b/,
+  /\b(?:reveal|show|print|output|dump|display) (?:me )?your (?:(?:hidden|secret|system|full|current|complete|internal) )?(?:configuration|config)\b/,
   /\b(?:rules|reglas) (?:configured|configuradas)\b/,
   /\b(?:reveal|show me|print|repeat|output|write|copy|dump) (?:all |me )?(?:everything|all) (?:above|before this|you were (?:told|given))\b/,
   /\b(?:repeat|print|output|copy) (?:everything|all)(?: of)? (?:the )?(?:above|text above|messages above)\b/,
@@ -932,6 +942,8 @@ const JAILBREAK_RES = [
   /\bshow me your rules\b/,
   /\breset your (?:instructions|rules|memory|prompt|personality)\b/,
   /\bjson record\b/,
+  // A new rule set pasted at the top of a message, not "I need new instructions: how do I start?"
+  /^\s*new instructions:|\byour new instructions\b/,
   /\bignora (?:las |todas las |tus )?instrucciones\b/,
   /\bignora todo\b/,
   /\bolvida todo\b/,
