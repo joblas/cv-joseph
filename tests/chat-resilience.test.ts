@@ -13,8 +13,9 @@
 //    short provider hiccup, retries an EMPTY reply with twice the budget, and
 //    every failure is logged so the next one is diagnosable.
 //
-// Also: lead capture now waits for the agent's reply before writing Joe's
-// brief, so the brief includes the answer and never competes with it.
+// Also: lead capture now records the lead, then waits for the agent's reply
+// before writing Joe's brief, so the brief includes the answer and never
+// competes with it, and a wait cut short still leaves the lead on record.
 for (const k of ['LANGFUSE_PUBLIC_KEY', 'LANGFUSE_SECRET_KEY', 'LANGFUSE_BASEURL', 'LANGFUSE_HOST', 'ANTHROPIC_AUTH_TOKEN', 'PROMPT_REGRESSION_SECRET',
   'GOOGLE_SA_EMAIL', 'GOOGLE_SA_PRIVATE_KEY', 'BOOKING_SECRET', 'CHAT_MAX_TOKENS']) delete process.env[k]
 process.env.ANTHROPIC_BASE_URL = 'http://127.0.0.1:9'
@@ -37,10 +38,12 @@ function check(name: string, cond: boolean) {
 const JOE = 'joe@joestechsolutions.com'
 const TYPO = 'Email joe@joestsolutions.com and he replies within 24 hours.'
 
-type Plan = { decision: 'text' | 'tool'; decisionText?: string; streams: Array<'typo' | 'ok' | 'empty' | 'fail'> }
+type Plan = { decision: 'text' | 'tool' | 'fail'; decisionText?: string; sources?: boolean; streams: Array<'typo' | 'ok' | 'empty' | 'fail' | { say: string }> }
 let plan: Plan = { decision: 'tool', streams: ['ok'] }
 const modelCalls: { at: number; body: any }[] = []
 const emails: any[] = []
+const leadWrites: { method: string; url: string; body: any }[] = []
+const order: string[] = []
 
 const ev = (type: string, data: any) => `event: ${type}\ndata: ${JSON.stringify({ type, ...data })}\n\n`
 const sse = (text: string | null, stop = 'end_turn') => new Response(
@@ -57,9 +60,11 @@ const json = (b: unknown, status = 200) => new Response(JSON.stringify(b), { sta
   try { body = JSON.parse(raw) } catch { /* not JSON */ }
   if (u.startsWith('http://127.0.0.1:9/v1/messages')) {
     modelCalls.push({ at: Date.now(), body })
+    order.push(body?.stream ? 'reply' : 'model')
     const isBrief = typeof body?.system === 'string' && body.system.includes('handoff brief')
     if (isBrief) return json({ id: 'b', type: 'message', role: 'assistant', model: 'stub', stop_reason: 'end_turn', content: [{ type: 'text', text: 'Who: Pat\nNeed: a website\nTimeline: soon' }], usage: { input_tokens: 1, output_tokens: 1 } })
     if (!body?.stream) {
+      if (plan.decision === 'fail') return json({ type: 'error', error: { type: 'invalid_request_error', message: 'stub decision failure' } }, 400)
       // The tool decision: either a plain answer (precomputed path) or a search call.
       if (plan.decision === 'text') return json({ id: 'd', type: 'message', role: 'assistant', model: 'stub', stop_reason: 'end_turn', content: [{ type: 'text', text: plan.decisionText || TYPO }], usage: { input_tokens: 1, output_tokens: 1 } })
       return json({ id: 'd', type: 'message', role: 'assistant', model: 'stub', stop_reason: 'tool_use', content: [{ type: 'tool_use', id: 'tu', name: 'search_portfolio', input: { query: 'x' } }], usage: { input_tokens: 1, output_tokens: 1 } })
@@ -67,10 +72,18 @@ const json = (b: unknown, status = 200) => new Response(JSON.stringify(b), { sta
     const next = plan.streams.shift() || 'ok'
     if (next === 'fail') return json({ type: 'error', error: { type: 'invalid_request_error', message: 'stub failure' } }, 400)
     if (next === 'empty') return sse(null, 'max_tokens')
-    return sse(next === 'typo' ? TYPO : 'Thanks — Joe will be in touch.')
+    return sse(typeof next === 'object' ? next.say : next === 'typo' ? TYPO : 'Thanks — Joe will be in touch.')
   }
   if (u.startsWith('https://stub-cj.supabase.co/rest/v1/rpc/check_chat_rate_limit')) return json(true)
-  if (u.startsWith('https://stub-cj.supabase.co/rest/v1/chat_leads')) return (init.method || 'GET') === 'GET' ? json([]) : new Response(null, { status: 201 })
+  if (u.startsWith('https://stub-cj.supabase.co/rest/v1/chat_leads')) {
+    const method = init.method || 'GET'
+    if (method === 'GET') return json([])
+    leadWrites.push({ method, url: u, body }); order.push(`lead ${method}`)
+    return method === 'POST' ? json([{ id: 'lead-1' }], 201) : new Response(null, { status: 204 })
+  }
+  if (u.startsWith('https://stub-jts.supabase.co/rest/v1/rpc/search_site_chunks') && plan.sources) {
+    return json([{ id: 1, source: 'page', title: 'Contact | Joe’s Tech Solutions', content: 'Email Joe or book a call.', url: 'https://www.joestechsolutions.com/contact', score: 0.8 }])
+  }
   if (u.startsWith('https://stub-cj.supabase.co/') || u.startsWith('https://stub-jts.supabase.co/')) return json([])
   if (u.includes('voyageai.com')) return json({ data: [] })
   if (u === 'https://api.resend.com/emails') { emails.push(body); return json({ id: 'e' }) }
@@ -85,20 +98,24 @@ console.error = (...a: unknown[]) => { logged.push(a.map(String).join(' ')) }
 
 const { default: handler } = await import('../functions/api-src/chat.js')
 async function chat(messages: any[], p: Plan) {
-  plan = p; modelCalls.length = 0; emails.length = 0; logged.length = 0; background.length = 0
+  plan = p; modelCalls.length = 0; emails.length = 0; logged.length = 0; background.length = 0; leadWrites.length = 0; order.length = 0
+  const t = Date.now()
   const res = await handler(new Request('https://cloudyjoe.com/api/chat', {
     method: 'POST', headers: { 'Content-Type': 'application/json', Origin: 'https://www.joestechsolutions.com', 'cf-connecting-ip': '203.0.113.6' },
     body: JSON.stringify({ persona: 'jts', messages, lang: 'en', sessionId: `s-${Math.random()}`, currentPage: '/' }),
   }))
   const out = await res.text()
   await Promise.all(background)
+  const ms = Date.now() - t
   // What the widget shows: stream deltas, with a replace event swapping the whole answer.
   let shown = ''
   for (const line of out.split('\n')) {
     if (!line.startsWith('data: ') || line.includes('[DONE]')) continue
     try { const d = JSON.parse(line.slice(6)); if (typeof d.text === 'string') shown = d.replace ? d.text : shown + d.text } catch { /* not JSON */ }
   }
-  return { out, shown, streams: modelCalls.filter((c) => c.body?.stream) }
+  // SSE events in order, "[DONE]" included, for checks on where an event falls.
+  const events = out.split('\n\n').filter(Boolean)
+  return { out, shown, events, ms, status: res.status, streams: modelCalls.filter((c) => c.body?.stream) }
 }
 const ask = [{ role: 'user', content: 'How do I reach Joe?' }]
 
@@ -114,6 +131,22 @@ const ask = [{ role: 'user', content: 'How do I reach Joe?' }]
 {
   const r = await chat(ask, { decision: 'tool', streams: ['fail', 'fail', 'typo'] })
   check('fallback reply: corrected too', r.shown.includes(JOE) && !r.shown.includes('joestsolutions') && /streaming_fallback/.test(r.out))
+}
+{
+  const r = await chat(ask, { decision: 'tool', sources: true, streams: ['typo'] })
+  const at = (re: RegExp) => r.events.findIndex((e) => re.test(e))
+  const fix = at(/"replace":true/)
+  check('the correction comes after the source badges (a replace renders with the sources received so far)',
+    at(/^event: rag-sources/) >= 0 && fix > at(/^event: rag-sources/) && r.events[fix + 1] === 'data: [DONE]')
+}
+{
+  const said = 'joe@joestechsolution.com'
+  const r = await chat([{ role: 'user', content: `I’m Joe too — my email is ${said}. What’s yours?` }], { decision: 'tool', streams: [{ say: `Noted: ${said}. Joe is at ${JOE}.` }] })
+  check('an address the visitor typed is theirs: never "corrected", however close', r.shown === `Noted: ${said}. Joe is at ${JOE}.` && !r.out.includes('"replace":true'))
+  const earlier = await chat([
+    { role: 'user', content: `Write to me at ${said}` }, { role: 'assistant', content: 'Will do.' }, { role: 'user', content: 'What address did I give you?' },
+  ], { decision: 'tool', streams: [{ say: `You gave ${said}.` }] })
+  check('...including one typed earlier in the conversation', earlier.shown === `You gave ${said}.`)
 }
 {
   const r = await chat(ask, { decision: 'tool', streams: ['ok'] })
@@ -148,12 +181,26 @@ const ask = [{ role: 'user', content: 'How do I reach Joe?' }]
   check('the brief is written only after the reply (never alongside it)', briefAt > streamAt && streamAt >= 0)
   check('...and Joe’s transcript includes the agent’s answer to the lead message', !!mail && mail.text.includes('Agent: Thanks — Joe will be in touch.'))
   check('...ahead of the notice being sent at all', r.shown === 'Thanks — Joe will be in touch.')
+  const post = leadWrites.find((w) => w.method === 'POST')
+  const patch = leadWrites.find((w) => w.method === 'PATCH')
+  check('the lead is recorded before the wait (a cut-short wait still leaves it on record)',
+    !!post && post.body.notified === false && order.indexOf('lead POST') < order.indexOf('reply'))
+  check('...and updated afterwards with the notice and the agent’s answer',
+    !!patch && /chat_leads\?id=eq\.lead-1/.test(patch.url) && patch.body.notified === true && patch.body.assistant_reply === 'Thanks — Joe will be in touch.')
+}
+{
+  // The handler itself fails (here the tool decision): no reply will ever come,
+  // so the brief must not sit out the whole wait for one.
+  const r = await chat([{ role: 'user', content: 'We need a new website. My email is pat@example.com' }], { decision: 'fail', streams: [] })
+  const L = await import('../functions/api-src/_shared/leads.js')
+  check('a failed request releases the lead at once (no full reply wait)', r.status === 500 && r.ms < 3000 && L.REPLY_WAIT_MS > 3000)
+  check('...and the lead is still recorded and Joe still told', leadWrites.some((w) => w.method === 'PATCH' && w.body.notified === true) && emails.some((e) => /^Lead from/.test(e?.subject || '')))
 }
 {
   const L = await import('../functions/api-src/_shared/leads.js')
-  check('the wait for the reply is bounded', L.REPLY_WAIT_MS > 0 && L.REPLY_WAIT_MS <= 60_000)
+  check('the wait for the reply ends well inside the ~30s a worker may run after its response', L.REPLY_WAIT_MS > 0 && L.REPLY_WAIT_MS <= 25_000)
 }
 
 console.error = realError
 if (failed) { console.error(`${failed} check(s) failed`); process.exit(1) }
-console.log('ok — the contact address is right on every path; a failed reply gets a real retry; the brief waits for the answer')
+console.log('ok — the contact address is right on every path and the visitor’s own is never touched; a failed reply gets a real retry; the lead is recorded, then the brief waits for the answer')

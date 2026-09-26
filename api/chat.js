@@ -12,7 +12,7 @@ import { captureLead, checkRateLimit } from './_shared/leads.js'
 import { BOOKING_TOOL_NAMES, bookingContext, bookingFallbackText, bookingTools, runBookingTool } from './_shared/booking.js'
 import { CHAT_MODEL, FAST_MODEL, CHAT_MAX_TOKENS, scaleTokens, baseUrlHost, createAnthropicClient } from './_shared/models.js'
 import { voiceProvider } from './_shared/voice-provider.js'
-import { fixContactEmail } from './_shared/contact-email.js'
+import { fixContactEmail, visitorAddresses } from './_shared/contact-email.js'
 
 // A failed reply stream is retried once, then a plain fallback runs. The first
 // version paused 500ms and ran the fallback immediately, so a model-provider
@@ -411,6 +411,8 @@ function streamResponse({
   onReplyDone = () => {},
 }) {
   let replyForLead = null
+  // Addresses the visitor typed are theirs: the contact-address fix never touches them.
+  const visitorsOwn = visitorAddresses(messages)
   const encoder = new TextEncoder()
   let fullOutput = ''
   let leakDetected = false
@@ -445,7 +447,7 @@ function streamResponse({
         if (precomputedResponse) {
           // Drip precomputed text through the stream
           const textBlocks = precomputedResponse.content.filter(b => b.type === 'text')
-          const precomputedText = fixContactEmail(textBlocks.map(b => b.text).join(''), persona.contactEmail)
+          const precomputedText = fixContactEmail(textBlocks.map(b => b.text).join(''), persona.contactEmail, visitorsOwn)
           if (!precomputedText) {
             throw new Error(`empty precomputed output (stop_reason=${precomputedResponse.stop_reason})`)
           }
@@ -586,13 +588,15 @@ function streamResponse({
           if (lastStreamError) throw lastStreamError // propagate to outer catch for fallback
         }
 
-        // A misspelled contact address is corrected in place (contact-email.js);
-        // both widgets render a replace event as the whole answer.
+        // A misspelled contact address is corrected in place (contact-email.js).
+        // Both widgets render a replace event as the whole answer, badging it
+        // with the sources received so far, so it is sent after rag-sources.
+        let corrected = null
         if (!leakDetected) {
-          const fixed = fixContactEmail(fullOutput, persona.contactEmail)
+          const fixed = fixContactEmail(fullOutput, persona.contactEmail, visitorsOwn)
           if (fixed !== fullOutput) {
             fullOutput = fixed
-            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text: fixed, replace: true })}\n\n`))
+            corrected = fixed
           }
           replyForLead = fullOutput
         }
@@ -666,6 +670,9 @@ function streamResponse({
           if (finalSources.length > 0) {
             controller.enqueue(encoder.encode(`event: rag-sources\ndata: ${JSON.stringify(finalSources)}\n\n`))
           }
+          if (corrected) {
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text: corrected, replace: true })}\n\n`))
+          }
 
           if (langfuse) waitUntil(langfuse.flushAsync())
           controller.enqueue(encoder.encode('data: [DONE]\n\n'))
@@ -723,7 +730,7 @@ function streamResponse({
 
             // Same guard as the main stream: no text at all is a failure, not a reply.
             if (!fallbackOutput) throw new Error('empty fallback output')
-            const fixedFallback = fixContactEmail(fallbackOutput, persona.contactEmail)
+            const fixedFallback = fixContactEmail(fallbackOutput, persona.contactEmail, visitorsOwn)
             if (fixedFallback !== fallbackOutput) {
               controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text: fixedFallback, replace: true })}\n\n`))
             }
