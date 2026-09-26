@@ -39,7 +39,9 @@
     "test:booking": "npm run cf:prep >/dev/null && tsx tests/booking.test.ts",
     "test:chat-booking": "npm run cf:prep >/dev/null && tsx tests/chat-booking.test.ts",
     "test:lead-handoff": "npm run cf:prep >/dev/null && tsx tests/lead-handoff.test.ts",
-    "test:intent": "npm run cf:prep >/dev/null && tsx tests/intent-classifier.test.ts"
+    "test:intent": "npm run cf:prep >/dev/null && tsx tests/intent-classifier.test.ts",
+    "test:contact-email": "npm run cf:prep >/dev/null && tsx tests/contact-email.test.ts",
+    "test:chat-resilience": "npm run cf:prep >/dev/null && tsx tests/chat-resilience.test.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.71.2",

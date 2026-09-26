@@ -83,8 +83,10 @@ const reply = (text: string) => json({ id: 'msg', type: 'message', role: 'assist
   }
   if (u.startsWith('https://stub-cj.supabase.co/rest/v1/chat_leads')) {
     if ((init.method || 'GET') === 'GET') return json(mode.priorNotified)
+    // Recorded first (POST, id returned), then updated with the outcome (PATCH).
+    if (init.method === 'PATCH') { Object.assign(leadRows[leadRows.length - 1] ?? {}, body); return new Response(null, { status: 204 }) }
     leadRows.push(body)
-    return new Response(null, { status: 201 })
+    return json([{ id: `lead-${leadRows.length}` }], 201)
   }
   if (u.startsWith('https://stub-cj.supabase.co/rest/v1/rpc/check_chat_rate_limit')) return json(true)
   if (u.startsWith('https://stub-cj.supabase.co/rest/v1/')) return json([])

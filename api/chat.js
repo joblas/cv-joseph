@@ -12,6 +12,18 @@ import { captureLead, checkRateLimit } from './_shared/leads.js'
 import { BOOKING_TOOL_NAMES, bookingContext, bookingFallbackText, bookingTools, runBookingTool } from './_shared/booking.js'
 import { CHAT_MODEL, FAST_MODEL, CHAT_MAX_TOKENS, scaleTokens, baseUrlHost, createAnthropicClient } from './_shared/models.js'
 import { voiceProvider } from './_shared/voice-provider.js'
+import { fixContactEmail, visitorAddresses } from './_shared/contact-email.js'
+
+// A failed reply stream is retried once, then a plain fallback runs. The first
+// version paused 500ms and ran the fallback immediately, so a model-provider
+// hiccup lasting a couple of seconds sank all three attempts inside a second —
+// seen 2026-09-26 in a simulation: the visitor got "Sorry, something went
+// wrong". Each wait is now long enough to ride out a short rate limit, and a
+// reply that came back EMPTY (a thinking model spending its whole budget) is
+// retried with twice the budget.
+const STREAM_RETRY_DELAY_MS = 1500
+const FALLBACK_DELAY_MS = 1000
+const emptyOutput = (err) => /^empty (?:output|fallback output)/.test(String(err?.message || ''))
 
 const client = createAnthropicClient()
 
@@ -48,6 +60,10 @@ export default async function handler(req) {
 
   const langfuse = getLangfuse()
   let trace = null
+  // Resolved with the agent's final reply text (or null) when the reply ends,
+  // so the lead brief can wait for it instead of racing it for the model.
+  let resolveReply = () => {}
+  const replyDone = new Promise((resolve) => { resolveReply = resolve })
 
   try {
     let body
@@ -125,6 +141,7 @@ export default async function handler(req) {
         persona,
         history: messages.map((m) => ({ role: m?.role, content: typeof m?.content === 'string' ? m.content : '' })),
         client,
+        replyDone,
       }))
     }
 
@@ -310,6 +327,7 @@ export default async function handler(req) {
           lastResortText: bookingRan ? bookingFallbackText(bookingResults, persona) : null,
           promptVersion,
           persona,
+          onReplyDone: resolveReply,
         })
       }
 
@@ -340,6 +358,7 @@ export default async function handler(req) {
         lang,
         promptVersion,
         persona,
+        onReplyDone: resolveReply,
       })
     }
 
@@ -366,8 +385,10 @@ export default async function handler(req) {
       lang,
       promptVersion,
       persona,
+      onReplyDone: resolveReply,
     })
   } catch (error) {
+    resolveReply(null)
     console.error('Chat API error:', error)
     trace?.update({ metadata: { error: error.message } })
     if (langfuse) waitUntil(langfuse.flushAsync())
@@ -387,7 +408,11 @@ function streamResponse({
   canary, intentTags, trace, langfuse, lastUserMessage, t0,
   ragUsed, ragMetrics, ragUsage, toolDecisionMs, tdInputTokens, tdOutputTokens,
   precomputedResponse, fallbackMessages, promptVersion, persona, lastResortText = null,
+  onReplyDone = () => {},
 }) {
+  let replyForLead = null
+  // Addresses the visitor typed are theirs: the contact-address fix never touches them.
+  const visitorsOwn = visitorAddresses(messages)
   const encoder = new TextEncoder()
   let fullOutput = ''
   let leakDetected = false
@@ -422,7 +447,7 @@ function streamResponse({
         if (precomputedResponse) {
           // Drip precomputed text through the stream
           const textBlocks = precomputedResponse.content.filter(b => b.type === 'text')
-          const precomputedText = textBlocks.map(b => b.text).join('')
+          const precomputedText = fixContactEmail(textBlocks.map(b => b.text).join(''), persona.contactEmail, visitorsOwn)
           if (!precomputedText) {
             throw new Error(`empty precomputed output (stop_reason=${precomputedResponse.stop_reason})`)
           }
@@ -482,7 +507,7 @@ function streamResponse({
               // Create fresh stream for each attempt
               const activeStream = attempt === 0 ? stream : client.messages.stream({
                 model: CHAT_MODEL,
-                max_tokens: CHAT_MAX_TOKENS,
+                max_tokens: emptyOutput(lastStreamError) ? CHAT_MAX_TOKENS * 2 : CHAT_MAX_TOKENS,
                 system: systemBlocks,
                 messages,
               })
@@ -541,6 +566,8 @@ function streamResponse({
               break // Success — exit retry loop
             } catch (streamErr) {
               lastStreamError = streamErr
+              // Logged so the next failure is diagnosable from the Pages logs.
+              console.error(`[chat] reply stream attempt ${attempt + 1} failed: ${streamErr?.constructor?.name || 'Error'}: ${String(streamErr?.message || '').slice(0, 200)}`)
               const retryTag = attempt < MAX_RETRIES ? 'retrying' : 'exhausted'
               trace?.update({
                 tags: [...intentTags, `stream-error:${retryTag}`],
@@ -552,13 +579,26 @@ function streamResponse({
               })
 
               if (attempt < MAX_RETRIES) {
-                await new Promise(r => setTimeout(r, 500)) // brief pause before retry
+                await new Promise(r => setTimeout(r, STREAM_RETRY_DELAY_MS))
                 controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text: '', replace: true })}\n\n`))
               }
             }
           }
 
           if (lastStreamError) throw lastStreamError // propagate to outer catch for fallback
+        }
+
+        // A misspelled contact address is corrected in place (contact-email.js).
+        // Both widgets render a replace event as the whole answer, badging it
+        // with the sources received so far, so it is sent after rag-sources.
+        let corrected = null
+        if (!leakDetected) {
+          const fixed = fixContactEmail(fullOutput, persona.contactEmail, visitorsOwn)
+          if (fixed !== fullOutput) {
+            fullOutput = fixed
+            corrected = fixed
+          }
+          replyForLead = fullOutput
         }
 
         if (!leakDetected) {
@@ -630,6 +670,9 @@ function streamResponse({
           if (finalSources.length > 0) {
             controller.enqueue(encoder.encode(`event: rag-sources\ndata: ${JSON.stringify(finalSources)}\n\n`))
           }
+          if (corrected) {
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text: corrected, replace: true })}\n\n`))
+          }
 
           if (langfuse) waitUntil(langfuse.flushAsync())
           controller.enqueue(encoder.encode('data: [DONE]\n\n'))
@@ -641,10 +684,12 @@ function streamResponse({
 
         // Graceful degradation: retry without RAG context (just system prompt)
         if (fallbackMessages && !fullOutput) {
+          console.error(`[chat] reply failed, running the fallback: ${String(error?.message || '').slice(0, 200)}`)
+          await new Promise(r => setTimeout(r, FALLBACK_DELAY_MS))
           try {
             const fallbackStream = client.messages.stream({
               model: CHAT_MODEL,
-              max_tokens: CHAT_MAX_TOKENS,
+              max_tokens: emptyOutput(error) ? CHAT_MAX_TOKENS * 2 : CHAT_MAX_TOKENS,
               system: systemBlocks,
               messages: fallbackMessages,
             })
@@ -685,6 +730,11 @@ function streamResponse({
 
             // Same guard as the main stream: no text at all is a failure, not a reply.
             if (!fallbackOutput) throw new Error('empty fallback output')
+            const fixedFallback = fixContactEmail(fallbackOutput, persona.contactEmail, visitorsOwn)
+            if (fixedFallback !== fallbackOutput) {
+              controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text: fixedFallback, replace: true })}\n\n`))
+            }
+            replyForLead = fixedFallback
 
             controller.enqueue(encoder.encode('data: [DONE]\n\n'))
             controller.close()
@@ -692,6 +742,7 @@ function streamResponse({
             return
           } catch (fallbackErr) {
             // fall through to the last-resort error message
+            console.error(`[chat] fallback failed too: ${String(fallbackErr?.message || '').slice(0, 200)}`)
             trace?.update({ metadata: { fallbackError: fallbackErr?.message } })
           }
         }
@@ -706,6 +757,8 @@ function streamResponse({
           controller.error(error)
         }
         if (langfuse) waitUntil(langfuse.flushAsync())
+      } finally {
+        onReplyDone(replyForLead)
       }
     },
   })

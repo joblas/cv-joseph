@@ -1,4 +1,5 @@
 import { getPersona, DEFAULT_PERSONA } from './personas.js'
+import { boundedFetch } from './bounded-fetch.js'
 import { FAST_MODEL, scaleTokens } from './models.js'
 // ---------------------------------------------------------------------------
 // Lead capture for the cloudyjoe.com chatbot.
@@ -109,6 +110,21 @@ export async function checkRateLimit(req, limit = 40) {
 }
 
 export const BRIEF_TIMEOUT_MS = 8000
+// Each lead-table call. Joe's notice waits on them, so a stalled database must
+// cost seconds, not the notice.
+export const LEADS_DB_TIMEOUT_MS = 5000
+// How long lead capture waits for the agent's reply to the lead message before
+// writing the brief. Waiting means the brief sees the agent's answer, and its
+// model call never runs alongside the reply (a simulation on 2026-09-26 saw a
+// reply fail while other calls shared the model provider).
+// Bounded well inside the ~30s a worker may run after its response ends.
+export const REPLY_WAIT_MS = 20000
+
+function within(promise, ms) {
+  let timer
+  return Promise.race([promise, new Promise((resolve) => { timer = setTimeout(() => resolve(null), ms) })])
+    .finally(() => clearTimeout(timer))
+}
 const TRANSCRIPT_MESSAGES = 12
 const MESSAGE_CHARS = 600
 
@@ -222,12 +238,12 @@ async function alreadyNotified(sessionId, hasEmail) {
       created_at: `gte.${since}`,
       limit: '5',
     })
-    const res = await fetch(`${process.env.SUPABASE_URL}/rest/v1/chat_leads?${q}`, {
+    const res = await boundedFetch(`${process.env.SUPABASE_URL}/rest/v1/chat_leads?${q}`, {
       headers: {
         apikey: process.env.SUPABASE_SERVICE_ROLE_KEY,
         Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
       },
-    })
+    }, LEADS_DB_TIMEOUT_MS)
     if (!res.ok) return false
     const prior = await res.json()
     if (!Array.isArray(prior) || prior.length === 0) return false
@@ -238,38 +254,72 @@ async function alreadyNotified(sessionId, hasEmail) {
   }
 }
 
-// Record first, notify second: the row is the durable copy, so a Resend outage
-// costs a notification, not the lead. Never throws.
-export async function captureLead({ message, page, sessionId, lang, reply, persona = getPersona(), history, client }) {
+function serviceHeaders() {
+  return {
+    apikey: process.env.SUPABASE_SERVICE_ROLE_KEY,
+    Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+    'Content-Type': 'application/json',
+  }
+}
+
+// The lead row's id, or null when it could not be written. A failed write must
+// not cost Joe the notification, so this never throws.
+async function recordLead(row) {
+  if (!supabaseConfigured()) return null
+  try {
+    const res = await boundedFetch(`${process.env.SUPABASE_URL}/rest/v1/chat_leads?select=id`, {
+      method: 'POST',
+      headers: { ...serviceHeaders(), Prefer: 'return=representation' },
+      body: JSON.stringify(row),
+    }, LEADS_DB_TIMEOUT_MS)
+    if (!res.ok) {
+      console.error(`[lead] record failed: HTTP ${res.status}`)
+      return null
+    }
+    const rows = await res.json().catch(() => null)
+    return Array.isArray(rows) ? rows[0]?.id ?? null : null
+  } catch (err) {
+    console.error('[lead] record failed:', err?.message)
+    return null
+  }
+}
+
+// Record first, then wait and notify: the row is the durable copy, written
+// before the wait for the reply, so a Resend outage — or the worker stopping
+// mid-wait — costs a notification, not the lead. Never throws.
+export async function captureLead({ message, page, sessionId, lang, reply, persona = getPersona(), history, client, replyDone }) {
   const hit = detectLead(message)
   if (!hit) return null
   try {
+    const rowId = await recordLead({
+      session_id: sessionId ?? null,
+      email: hit.email,
+      kind: hit.kind,
+      visitor_message: String(message).slice(0, 4000),
+      assistant_reply: reply ? String(reply).slice(0, 4000) : null,
+      // Shared table: non-default personas store the full site URL so their
+      // leads stay distinguishable from cloudyjoe's bare paths.
+      page: persona.id === DEFAULT_PERSONA || typeof page !== 'string' || !page.trim() || /^https?:\/\//i.test(page)
+        ? page ?? null
+        : `${persona.site}${page.startsWith('/') ? '' : '/'}${page}`,
+      lang: lang ?? null,
+      notified: false,
+    })
+    if (replyDone) {
+      const agentReply = await within(replyDone, REPLY_WAIT_MS)
+      if (typeof agentReply === 'string' && agentReply) {
+        reply = agentReply
+        history = [...(Array.isArray(history) ? history : []), { role: 'assistant', content: agentReply }]
+      }
+    }
     const suppress = await alreadyNotified(sessionId, Boolean(hit.email))
     const notified = suppress ? false : await notifyOwner({ ...hit, message, page, sessionId, lang, persona, history, client })
-    if (supabaseConfigured()) {
-      await fetch(`${process.env.SUPABASE_URL}/rest/v1/chat_leads`, {
-        method: 'POST',
-        headers: {
-          apikey: process.env.SUPABASE_SERVICE_ROLE_KEY,
-          Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
-          'Content-Type': 'application/json',
-          Prefer: 'return=minimal',
-        },
-        body: JSON.stringify({
-          session_id: sessionId ?? null,
-          email: hit.email,
-          kind: hit.kind,
-          visitor_message: String(message).slice(0, 4000),
-          assistant_reply: reply ? String(reply).slice(0, 4000) : null,
-          // Shared table: non-default personas store the full site URL so their
-          // leads stay distinguishable from cloudyjoe's bare paths.
-          page: persona.id === DEFAULT_PERSONA || typeof page !== 'string' || !page.trim() || /^https?:\/\//i.test(page)
-            ? page ?? null
-            : `${persona.site}${page.startsWith('/') ? '' : '/'}${page}`,
-          lang: lang ?? null,
-          notified,
-        }),
-      })
+    if (rowId) {
+      await boundedFetch(`${process.env.SUPABASE_URL}/rest/v1/chat_leads?id=eq.${encodeURIComponent(rowId)}`, {
+        method: 'PATCH',
+        headers: { ...serviceHeaders(), Prefer: 'return=minimal' },
+        body: JSON.stringify({ assistant_reply: reply ? String(reply).slice(0, 4000) : null, notified }),
+      }, LEADS_DB_TIMEOUT_MS)
     }
     return { ...hit, notified }
   } catch (err) {
