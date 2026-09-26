@@ -278,7 +278,7 @@ bookingOn(true)
   bookingOn(false)
   const off = await mint()
   check('voice, booking off: callers are sent to the chat for the booking link, and no link is read out',
-    off.status === 200 && off.instruction.length > 500 && /type "book a call" in this same chat/.test(off.instruction) && !/calendar\.google\.com/.test(off.instruction))
+    off.status === 200 && off.instruction.length > 500 && /end voice mode and type "book a call" in this same chat/.test(off.instruction) && !/calendar\.google\.com/.test(off.instruction))
   bookingOn(true)
 }
 

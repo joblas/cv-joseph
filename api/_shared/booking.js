@@ -142,7 +142,7 @@ export function bookingContext(persona, now = Date.now()) {
 export function bookingVoiceNote(persona) {
   if (!bookingConfigured(persona)) {
     if (!persona?.booking?.pageUrl) return ''
-    return '\n\n## Booking a call\n- Callers can book a free 30-minute video call with Joe. You cannot book it by voice and you never read out links: tell them to type "book a call" in this same chat and the booking link will appear.'
+    return '\n\n## Booking a call\n- Callers can book a free 30-minute video call with Joe. You cannot book it by voice and you never read out links: tell them to end voice mode and type "book a call" in this same chat, and the booking link will appear.'
   }
   return '\n\n## Booking a call\n- You cannot book calls by voice. If the caller wants a call with Joe, tell them to end voice mode and type in this same chat — it can book a free 30-minute call on Joe\'s calendar in a minute.'
 }
@@ -288,7 +288,12 @@ function offerTimes(slots, lead) {
 export async function runBookingTool(name, input = {}, { sessionId, req, persona, now = Date.now() } = {}) {
   const contact = persona?.contactEmail || 'joe@joestechsolutions.com'
   const orEmail = `offer email instead: ${contact}`
-  if (!bookingConfigured(persona)) return `Tell the visitor booking isn't available right now, and ${orEmail}.`
+  if (!bookingConfigured(persona)) {
+    const page = persona?.booking?.pageUrl
+    return page
+      ? `Booking happens on Joe's booking page. Offer it: [Book a call with Joe](${page}).`
+      : `Tell the visitor booking isn't available right now, and ${orEmail}.`
+  }
   // The session scopes every code; the widget's id is ~25 characters.
   if (typeof sessionId !== 'string' || !sessionId || sessionId.length > 100) {
     return `Tell the visitor booking needs the chat to be reloaded first, or ${orEmail}.`
