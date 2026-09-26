@@ -109,6 +109,17 @@ export async function checkRateLimit(req, limit = 40) {
 }
 
 export const BRIEF_TIMEOUT_MS = 8000
+// How long lead capture waits for the agent's reply to the lead message before
+// writing the brief. Waiting means the brief sees the agent's answer, and its
+// model call never runs alongside the reply (a simulation on 2026-09-26 saw a
+// reply fail while other calls shared the model provider).
+export const REPLY_WAIT_MS = 45000
+
+function within(promise, ms) {
+  let timer
+  return Promise.race([promise, new Promise((resolve) => { timer = setTimeout(() => resolve(null), ms) })])
+    .finally(() => clearTimeout(timer))
+}
 const TRANSCRIPT_MESSAGES = 12
 const MESSAGE_CHARS = 600
 
@@ -240,10 +251,17 @@ async function alreadyNotified(sessionId, hasEmail) {
 
 // Record first, notify second: the row is the durable copy, so a Resend outage
 // costs a notification, not the lead. Never throws.
-export async function captureLead({ message, page, sessionId, lang, reply, persona = getPersona(), history, client }) {
+export async function captureLead({ message, page, sessionId, lang, reply, persona = getPersona(), history, client, replyDone }) {
   const hit = detectLead(message)
   if (!hit) return null
   try {
+    if (replyDone) {
+      const agentReply = await within(replyDone, REPLY_WAIT_MS)
+      if (typeof agentReply === 'string' && agentReply) {
+        reply = agentReply
+        history = [...(Array.isArray(history) ? history : []), { role: 'assistant', content: agentReply }]
+      }
+    }
     const suppress = await alreadyNotified(sessionId, Boolean(hit.email))
     const notified = suppress ? false : await notifyOwner({ ...hit, message, page, sessionId, lang, persona, history, client })
     if (supabaseConfigured()) {

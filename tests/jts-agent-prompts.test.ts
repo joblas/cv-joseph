@@ -65,6 +65,22 @@ check('never phone, address, password, login or payment details',
   /Never ask for a phone number, address, password, account login or payment details/.test(text))
 check('never a guessed price, date or commitment', /Never guess a price, a date or a commitment/.test(text))
 
+// --- The agent names the site's four offers (MatrAIx simulation, 2026-09-26) ----
+// The prompt still sold "the Operations retainer" and "Custom Build", linked
+// /services anchors that no longer exist, called the audit "the Local
+// Visibility Sprint", and told the text agent that profile upkeep was NOT
+// available — while the site sells it as Google Maps Growth (and the voice
+// agent said so). The site's own copy (src/lib/doors.ts) is the source.
+for (const [name, p] of [['text', text], ['voice', voice]] as const) {
+  check(`${name} prompt: no "Operations retainer"`, !/Operations retainer|Operations \(monthly retainer\)/.test(p))
+  check(`${name} prompt: the site's offer names`, /How you show up on Google/.test(p) && /An agent of your own/.test(p) && /Get a tool built/.test(p))
+}
+check('text prompt: no dead /services anchors', !/\/services#/.test(text))
+check('text prompt: the audit is not called the Local Visibility Sprint', !/Local Visibility Sprint/.test(text))
+check('text prompt: never denies Google Maps Growth, which the site sells', !/is NOT available and nobody's profile is being run/.test(text) && !/Never say or imply that an agent runs a client's Google Business Profile/.test(text))
+check('text prompt: Maps Growth described as the site describes it (a person approves each one)', /Google Maps Growth: an agent drafts every review reply, Q&A answer and post in the owner's voice, a person approves each one/.test(text))
+check('text prompt: each offer links its real page', ['/visibility-audit', '/google-maps-growth', '/agent-system', '/private-ai-setup', '/build'].every((pg) => text.includes(`Page: ${pg}`) || text.includes(`Pages: ${pg}`) || text.includes(`, ${pg}`)))
+
 // --- "Honestly, I've told you everything I know about it right now." ----------
 check('voice brevity cap is no longer absolute ("max 2-3 punchy sentences")',
   !/Responses VERY short: max 2-3 punchy sentences/.test(voice))

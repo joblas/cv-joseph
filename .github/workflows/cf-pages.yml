@@ -86,6 +86,8 @@ jobs:
           npm run test:chat-booking
           npm run test:lead-handoff
           npm run test:intent
+          npm run test:contact-email
+          npm run test:chat-resilience
       - name: Build (static site + Pages Functions)
         run: |
           npm run cf:prep   # api/ → functions/api-src/ (Workers shims), prompt module
