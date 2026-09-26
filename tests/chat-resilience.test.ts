@@ -38,7 +38,7 @@ function check(name: string, cond: boolean) {
 const JOE = 'joe@joestechsolutions.com'
 const TYPO = 'Email joe@joestsolutions.com and he replies within 24 hours.'
 
-type Plan = { decision: 'text' | 'tool' | 'fail'; decisionText?: string; sources?: boolean; recordFails?: 'refused' | 'down'; streams: Array<'typo' | 'ok' | 'empty' | 'fail' | { say: string }> }
+type Plan = { decision: 'text' | 'tool' | 'fail'; decisionText?: string; sources?: boolean; recordFails?: 'refused' | 'down' | 'hang'; streams: Array<'typo' | 'ok' | 'empty' | 'fail' | { say: string }> }
 let plan: Plan = { decision: 'tool', streams: ['ok'] }
 const modelCalls: { at: number; body: any }[] = []
 const emails: any[] = []
@@ -80,6 +80,8 @@ const json = (b: unknown, status = 200) => new Response(JSON.stringify(b), { sta
     if (method === 'GET') return json([])
     if (method === 'POST' && plan.recordFails === 'refused') return json({ message: 'stub outage' }, 503)
     if (method === 'POST' && plan.recordFails === 'down') throw new Error('stub network down')
+    // A stalled database: answers only by honouring the caller's abort.
+    if (method === 'POST' && plan.recordFails === 'hang') return new Promise((_, reject) => init.signal?.addEventListener('abort', () => reject(new Error('stub stalled, aborted'))))
     leadWrites.push({ method, url: u, body }); order.push(`lead ${method}`)
     return method === 'POST' ? json([{ id: 'lead-1' }], 201) : new Response(null, { status: 204 })
   }
@@ -149,6 +151,12 @@ const ask = [{ role: 'user', content: 'How do I reach Joe?' }]
     { role: 'user', content: `Write to me at ${said}` }, { role: 'assistant', content: 'Will do.' }, { role: 'user', content: 'What address did I give you?' },
   ], { decision: 'tool', streams: [{ say: `You gave ${said}.` }] })
   check('...including one typed earlier in the conversation', earlier.shown === `You gave ${said}.`)
+  // The echo most likely comes as a plain answer with no search (the precomputed
+  // path), and the fallback must behave the same.
+  const plain = await chat([{ role: 'user', content: `My email is ${said}` }], { decision: 'text', decisionText: `Thanks — I have ${said}.`, streams: [] })
+  check('...on a plain answer with no search too', plain.shown === `Thanks — I have ${said}.` && !plain.out.includes(JOE))
+  const viaFallback = await chat([{ role: 'user', content: `My email is ${said}` }], { decision: 'tool', streams: ['fail', 'fail', { say: `Thanks — I have ${said}.` }] })
+  check('...and on the fallback reply', viaFallback.shown === `Thanks — I have ${said}.` && /streaming_fallback/.test(viaFallback.out) && !viaFallback.out.includes(JOE))
 }
 {
   const r = await chat(ask, { decision: 'tool', streams: ['ok'] })
@@ -206,6 +214,10 @@ const ask = [{ role: 'user', content: 'How do I reach Joe?' }]
   await chat([{ role: 'user', content: 'We need a new website. My email is pat@example.com' }], { decision: 'tool', recordFails: 'down', streams: ['ok'] })
   check('...and so does one the database cannot be reached for',
     emails.some((e) => /^Lead from/.test(e?.subject || '')) && logged.some((l) => /\[lead\] record failed: stub network down/.test(l)))
+  const L = await import('../functions/api-src/_shared/leads.js')
+  const stalled = await chat([{ role: 'user', content: 'We need a new website. My email is pat@example.com' }], { decision: 'tool', recordFails: 'hang', streams: ['ok'] })
+  check('...and a stalled database costs seconds, not the notice',
+    emails.some((e) => /^Lead from/.test(e?.subject || '')) && stalled.ms < L.LEADS_DB_TIMEOUT_MS + 3000 && L.LEADS_DB_TIMEOUT_MS <= 8000)
 }
 {
   const L = await import('../functions/api-src/_shared/leads.js')

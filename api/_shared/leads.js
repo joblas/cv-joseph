@@ -1,4 +1,5 @@
 import { getPersona, DEFAULT_PERSONA } from './personas.js'
+import { boundedFetch } from './bounded-fetch.js'
 import { FAST_MODEL, scaleTokens } from './models.js'
 // ---------------------------------------------------------------------------
 // Lead capture for the cloudyjoe.com chatbot.
@@ -109,6 +110,9 @@ export async function checkRateLimit(req, limit = 40) {
 }
 
 export const BRIEF_TIMEOUT_MS = 8000
+// Each lead-table call. Joe's notice waits on them, so a stalled database must
+// cost seconds, not the notice.
+export const LEADS_DB_TIMEOUT_MS = 5000
 // How long lead capture waits for the agent's reply to the lead message before
 // writing the brief. Waiting means the brief sees the agent's answer, and its
 // model call never runs alongside the reply (a simulation on 2026-09-26 saw a
@@ -234,12 +238,12 @@ async function alreadyNotified(sessionId, hasEmail) {
       created_at: `gte.${since}`,
       limit: '5',
     })
-    const res = await fetch(`${process.env.SUPABASE_URL}/rest/v1/chat_leads?${q}`, {
+    const res = await boundedFetch(`${process.env.SUPABASE_URL}/rest/v1/chat_leads?${q}`, {
       headers: {
         apikey: process.env.SUPABASE_SERVICE_ROLE_KEY,
         Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
       },
-    })
+    }, LEADS_DB_TIMEOUT_MS)
     if (!res.ok) return false
     const prior = await res.json()
     if (!Array.isArray(prior) || prior.length === 0) return false
@@ -263,11 +267,11 @@ function serviceHeaders() {
 async function recordLead(row) {
   if (!supabaseConfigured()) return null
   try {
-    const res = await fetch(`${process.env.SUPABASE_URL}/rest/v1/chat_leads?select=id`, {
+    const res = await boundedFetch(`${process.env.SUPABASE_URL}/rest/v1/chat_leads?select=id`, {
       method: 'POST',
       headers: { ...serviceHeaders(), Prefer: 'return=representation' },
       body: JSON.stringify(row),
-    })
+    }, LEADS_DB_TIMEOUT_MS)
     if (!res.ok) {
       console.error(`[lead] record failed: HTTP ${res.status}`)
       return null
@@ -311,11 +315,11 @@ export async function captureLead({ message, page, sessionId, lang, reply, perso
     const suppress = await alreadyNotified(sessionId, Boolean(hit.email))
     const notified = suppress ? false : await notifyOwner({ ...hit, message, page, sessionId, lang, persona, history, client })
     if (rowId) {
-      await fetch(`${process.env.SUPABASE_URL}/rest/v1/chat_leads?id=eq.${encodeURIComponent(rowId)}`, {
+      await boundedFetch(`${process.env.SUPABASE_URL}/rest/v1/chat_leads?id=eq.${encodeURIComponent(rowId)}`, {
         method: 'PATCH',
         headers: { ...serviceHeaders(), Prefer: 'return=minimal' },
         body: JSON.stringify({ assistant_reply: reply ? String(reply).slice(0, 4000) : null, notified }),
-      })
+      }, LEADS_DB_TIMEOUT_MS)
     }
     return { ...hit, notified }
   } catch (err) {
