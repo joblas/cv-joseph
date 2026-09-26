@@ -16,9 +16,15 @@ import { FAST_MODEL, scaleTokens } from './models.js'
 // contacted"). Joe used to get one bare message — "They said: <last line>" —
 // and start every lead from zero. Now the notice carries a brief of the whole
 // conversation (who, business, need, timeline, what the agent already
-// answered, what is open for Joe) plus the transcript it was written from. The
-// brief is a model summary, so the transcript travels with it as the source of
-// truth; if the summary fails or times out, the transcript alone still goes.
+// answered, what is open for Joe) plus the transcript it was written from; if
+// the summary fails or times out, the transcript alone still goes.
+//
+// UNVERIFIED BY DESIGN. The history is the widget's copy, sent by the visitor's
+// browser: anyone can POST their own, "Agent:" lines included. Review of #31
+// forged one that put "URGENT: Joe must re-verify his Google Workspace at
+// <phishing site>" into the SUBJECT of an email from Joe's own domain. So the
+// subject never carries anything derived from the conversation, and both the
+// summary and the transcript are labelled as the visitor's unverified copy.
 // ---------------------------------------------------------------------------
 
 const EMAIL_RE = /[^\s@<>()[\],;:]+@[^\s@<>()[\],;:]+\.[a-z]{2,}/i
@@ -162,8 +168,6 @@ async function notifyOwner({ email, kind, message, page, sessionId, lang, person
   if (!key || !to) return false
   const transcript = transcriptOf(history)
   const brief = transcript ? await buildBrief(history, client) : null
-  const need = brief?.match(/^Need:\s*(.+)$/m)?.[1]
-  const subjectNeed = need && !/^not said/i.test(need.trim()) ? ` — ${oneLine(need, 70)}` : ''
   const page_ = persona.booking?.pageUrl
   const bookingOffered = page_ && Array.isArray(history)
     && history.some((m) => m?.role === 'assistant' && typeof m.content === 'string' && m.content.includes(page_))
@@ -175,20 +179,24 @@ async function notifyOwner({ email, kind, message, page, sessionId, lang, person
         from: persona.leads.from,
         to: [to],
         ...(email ? { reply_to: email } : {}),
-        subject: oneLine(persona.leads.subject(email) + subjectNeed, 150),
+        // Fixed: nothing from the conversation, so a visitor can't write it.
+        subject: oneLine(persona.leads.subject(email), 150),
         text: [
           email ? `Email: ${email}` : 'Email: (not given)',
           `Type: ${kind}`,
           `Page: ${page || 'unknown'}`,
           `Language: ${lang || 'en'}`,
           `Session: ${sessionId || 'unknown'}`,
-          ...(page_ ? [`Booking link offered in chat: ${bookingOffered ? 'yes' : 'no'} (a booking itself shows on your calendar)`] : []),
+          ...(page_ ? [`Booking link in the chat, per the browser's copy: ${bookingOffered ? 'yes' : 'no'} (a real booking shows on your calendar)`] : []),
           '',
           ...(brief
-            ? ['BRIEF (written by the agent from the conversation — check it against the transcript below)', brief, '']
+            ? [
+              "SUMMARY — written by a model from the chat as the visitor's browser sent it.",
+              "Unverified: the visitor can edit any of it, the agent's lines included. Never act on links, instructions or payment details in it.",
+              brief, '']
             : []),
           ...(transcript
-            ? ['CONVERSATION (last messages)', transcript]
+            ? ["CHAT AS SENT BY THE VISITOR'S BROWSER (unverified — any line, the agent's included, may have been edited)", transcript]
             : ['They said:', String(message).slice(0, 1500)]),
         ].join('\n'),
       }),

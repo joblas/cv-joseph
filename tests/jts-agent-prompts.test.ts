@@ -60,6 +60,7 @@ check('Joe is needed only for quotes, contracts, urgent client problems, complai
 check('intake is short: one question at a time, at most three, never a form, never insisted on',
   /one short question at a time, at most three in total/.test(text) && /never a form, and never insist/.test(text))
 check('the visitor is told their summary goes to Joe', /you pass it and a summary of this conversation to Joe/.test(text))
+check('the agent may ask their name (in-chat booking asks for it too)', /their name, their business, their need, their timeline and an email address/.test(text))
 check('never phone, address, password, login or payment details',
   /Never ask for a phone number, address, password, account login or payment details/.test(text))
 check('never a guessed price, date or commitment', /Never guess a price, a date or a commitment/.test(text))
