@@ -266,7 +266,7 @@ export default async function handler(req) {
       ragSpan?.end({ metadata: { error: err.message } })
       if (langfuse) await langfuse.flushAsync()
 
-      // Was a 200 telling the model to "answer from your general knowledge",
+      // Was a 200 telling the model to answer from memory,
       // which the voice prompts forbid. A failure is a failure: 503, and the
       // widget tells the model it couldn't look that up.
       return new Response(JSON.stringify({ error: 'search_unavailable' }), {
