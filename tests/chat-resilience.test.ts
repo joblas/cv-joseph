@@ -50,7 +50,7 @@ const TYPO = 'Email joe@joestsolutions.com and he replies within 24 hours.'
 type Plan = {
   decision: 'text' | 'tool' | 'fail' | 'hang' | 'flaky'; decisionText?: string; sources?: boolean
   recordFails?: 'refused' | 'down' | 'hang'; dbStall?: 'get' | 'patch'; resend?: 'fail' | 'hang'
-  streams: Array<'typo' | 'ok' | 'empty' | 'fail' | 'stall' | 'stallAfterText' | { say: string }>
+  streams: Array<'typo' | 'ok' | 'empty' | 'fail' | 'stall' | 'stallAfterText' | 'trickle' | { say: string }>
 }
 let plan: Plan = { decision: 'tool', streams: ['ok'] }
 const modelCalls: { at: number; body: any }[] = []
@@ -103,6 +103,22 @@ const mailAttempts: any[] = []
     if (next === 'empty') return sse(null, 'max_tokens')
     const start = ev('message_start', { message: { id: 'm', type: 'message', role: 'assistant', model: 'stub', content: [], stop_reason: null, usage: { input_tokens: 1, output_tokens: 0 } } })
     if (next === 'stall') return stalledBody(init.signal, start)
+    if (next === 'trickle') {
+      // A healthy long answer: a word every 100ms for ~1.2s, four times the idle limit.
+      const words = 'This answer arrives slowly but steadily and must never be cut off.'.split(' ')
+      return new Response(new ReadableStream({
+        async start(c) {
+          const put = (x: string) => c.enqueue(new TextEncoder().encode(x))
+          put(start + ev('content_block_start', { index: 0, content_block: { type: 'text', text: '' } }))
+          for (const [i, w] of words.entries()) {
+            await new Promise((r) => setTimeout(r, 100))
+            put(ev('content_block_delta', { index: 0, delta: { type: 'text_delta', text: (i ? ' ' : '') + w } }))
+          }
+          put(ev('content_block_stop', { index: 0 }) + ev('message_delta', { delta: { stop_reason: 'end_turn' }, usage: { output_tokens: 5 } }) + ev('message_stop', {}))
+          c.close()
+        },
+      }), { headers: { 'content-type': 'text/event-stream' } })
+    }
     if (next === 'stallAfterText') {
       return stalledBody(init.signal, start + ev('content_block_start', { index: 0, content_block: { type: 'text', text: '' } }) + ev('content_block_delta', { index: 0, delta: { type: 'text_delta', text: 'Half an ans' } }))
     }
@@ -155,10 +171,12 @@ async function within<T>(promise: Promise<T>, label: string, ms = 20_000): Promi
 async function chat(messages: any[], p: Plan) {
   plan = p; modelCalls.length = 0; emails.length = 0; mailAttempts.length = 0; logged.length = 0; background.length = 0; leadWrites.length = 0; order.length = 0
   const t = Date.now()
-  const res = await handler(new Request('https://cloudyjoe.com/api/chat', {
+  // The handler awaits the tool decision before it returns a response at all.
+  const started = await within(handler(new Request('https://cloudyjoe.com/api/chat', {
     method: 'POST', headers: { 'Content-Type': 'application/json', Origin: 'https://www.joestechsolutions.com', 'cf-connecting-ip': '203.0.113.6' },
     body: JSON.stringify({ persona: 'jts', messages, lang: 'en', sessionId: `s-${Math.random()}`, currentPage: '/' }),
-  }))
+  })), 'the reply to the visitor (no response started)')
+  const res: Response = started === HUNG ? new Response('') : started
   const text = await within(res.text(), 'the reply to the visitor')
   const out = text === HUNG ? '' : text
   await within(Promise.all(background), 'the background work (lead capture, alerts)')
@@ -303,6 +321,9 @@ const ask = [{ role: 'user', content: 'How do I reach Joe?' }]
   const quiet = await chat(ask, { decision: 'tool', streams: ['stall', 'ok'] })
   check('a reply stream that goes quiet is abandoned and retried; the visitor gets the answer',
     quiet.shown === OK && quiet.streams.length === 2 && logged.some((l) => /stream stalled: no data for 300ms/.test(l)))
+  const slow = await chat(ask, { decision: 'tool', streams: ['trickle'] })
+  check('a long answer that keeps arriving is never cut off (the limit is on silence, not length)',
+    slow.shown === 'This answer arrives slowly but steadily and must never be cut off.' && slow.streams.length === 1 && slow.ms >= 1000)
   const half = await chat(ask, { decision: 'tool', streams: ['stallAfterText', 'ok'] })
   check('...and one that stops mid-answer is cleared before the retry answers', half.shown === OK && half.out.includes('Half an ans'))
   const dead = await chat(ask, { decision: 'tool', streams: ['stall', 'stall', 'stall'] })
