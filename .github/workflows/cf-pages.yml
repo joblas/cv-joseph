@@ -19,6 +19,8 @@ jobs:
   # drops. Both run against a throwaway Postgres service — never a project.
   booking-sql:
     runs-on: ubuntu-latest
+    # A hung step fails in minutes, not after GitHub's 6-hour default.
+    timeout-minutes: 10
     services:
       postgres:
         image: postgres:16-alpine
@@ -47,6 +49,8 @@ jobs:
 
   build-deploy:
     runs-on: ubuntu-latest
+    # A hung step fails in minutes, not after GitHub's 6-hour default.
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -88,6 +92,7 @@ jobs:
           npm run test:intent
           npm run test:contact-email
           npm run test:chat-resilience
+          npm run test:messages
       - name: Build (static site + Pages Functions)
         run: |
           npm run cf:prep   # api/ → functions/api-src/ (Workers shims), prompt module

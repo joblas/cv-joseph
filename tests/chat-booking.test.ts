@@ -55,7 +55,7 @@ const siteRows = () => Array.from({ length: 6 }, (_, i) => ({
 }))
 
 // What the tool-decision call returns this case, and how many streamed calls fail.
-const mode = { decision: [] as any[], streamFailures: 0 }
+const mode = { decision: [] as any[], streamFailures: 0, decisionFails: false }
 const modelCalls: any[] = []
 const geminiTokenBodies: any[] = []
 const rpcs: { fn: string; body: any }[] = []
@@ -80,6 +80,7 @@ const json = (b: unknown, status = 200) => new Response(JSON.stringify(b), { sta
     modelCalls.push(body)
     if (!body.stream) {
       // The tool decision, or any other non-streaming call (reranking etc.).
+      if (body.tools && mode.decisionFails) return json({ type: 'error', error: { type: 'invalid_request_error', message: 'stub decision failure' } }, 400)
       if (body.tools) {
         return json({ id: 'msg_d', type: 'message', role: 'assistant', model: 'stub',
           stop_reason: mode.decision.some((b) => b.type === 'tool_use') ? 'tool_use' : 'end_turn',
@@ -280,6 +281,19 @@ bookingOn(true)
   check('voice, booking off: callers are sent to the chat for the booking link, and no link is read out',
     off.status === 200 && off.instruction.length > 500 && /end voice mode and type "book a call" in this same chat/.test(off.instruction) && !/calendar\.google\.com/.test(off.instruction))
   bookingOn(true)
+}
+
+{
+  // Review of #33: a failed tool decision with booking configured. The plain
+  // answer has no tools, so it must not run the in-chat booking flow in words.
+  bookingOn(true)
+  mode.decisionFails = true
+  const r = await chat('can I book a call with Joe tomorrow?')
+  mode.decisionFails = false
+  const streamSystem = (r.streams[0]?.system || []).map((b: any) => b.text).join('\n')
+  check('booking on, decision failed: the answer is told to offer no times and claim no booking, and points to the booking page',
+    r.streams.length >= 1 && !r.streams[0].tools && /Do not offer, check or promise any call times, and never say a call is booked/.test(streamSystem)
+    && /\[Book a call with Joe\]\(https:\/\/calendar\.google\.com\//.test(streamSystem))
 }
 
 if (failed) { console.error(`${failed} check(s) failed`); process.exit(1) }

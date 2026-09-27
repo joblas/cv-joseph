@@ -113,6 +113,8 @@ export const BRIEF_TIMEOUT_MS = 8000
 // Each lead-table call. Joe's notice waits on them, so a stalled database must
 // cost seconds, not the notice.
 export const LEADS_DB_TIMEOUT_MS = 5000
+// The notice email itself.
+export const RESEND_TIMEOUT_MS = 8000
 // How long lead capture waits for the agent's reply to the lead message before
 // writing the brief. Waiting means the brief sees the agent's answer, and its
 // model call never runs alongside the reply (a simulation on 2026-09-26 saw a
@@ -188,7 +190,7 @@ async function notifyOwner({ email, kind, message, page, sessionId, lang, person
   const bookingOffered = page_ && Array.isArray(history)
     && history.some((m) => m?.role === 'assistant' && typeof m.content === 'string' && m.content.includes(page_))
   try {
-    const res = await fetch('https://api.resend.com/emails', {
+    const res = await boundedFetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -216,9 +218,12 @@ async function notifyOwner({ email, kind, message, page, sessionId, lang, person
             : ['They said:', String(message).slice(0, 1500)]),
         ].join('\n'),
       }),
-    })
+    }, RESEND_TIMEOUT_MS)
+    // Logged: a notice that silently fails is a lead Joe never hears about.
+    if (!res.ok) console.error(`[lead] notice failed: HTTP ${res.status} ${(await res.text()).slice(0, 200)}`)
     return res.ok
-  } catch {
+  } catch (err) {
+    console.error('[lead] notice failed:', err?.message)
     return false
   }
 }
