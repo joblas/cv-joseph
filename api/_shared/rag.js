@@ -4,6 +4,7 @@
 
 import { FAST_MODEL, scaleTokens } from './models.js'
 import { getPersona } from './personas.js'
+import { boundedFetch } from './bounded-fetch.js'
 
 // ---------------------------------------------------------------------------
 // Cost tracking per span
@@ -989,31 +990,37 @@ function escapeHtml(s) {
 export async function sendJailbreakAlert(userMessage) {
   if (!process.env.RESEND_API_KEY || !process.env.ALERT_EMAIL) return
 
-  await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      from: 'Cloudy-Joe Agent <alerts@subscribe.joestechsolutions.com>',
-      to: process.env.ALERT_EMAIL,
-      subject: '🚨 JAILBREAK ATTEMPT - cloudyjoe.com',
-      html: `
-        <h2>🚨 Jailbreak Attempt Detected</h2>
-        <p><strong>Time:</strong> ${new Date().toISOString()}</p>
-        <p><strong>User message:</strong></p>
-        <blockquote style="background: #f5f5f5; padding: 15px; border-left: 4px solid #e74c3c;">
-          ${escapeHtml(userMessage.slice(0, 500))}${userMessage.length > 500 ? '...' : ''}
-        </blockquote>
-        <p style="margin-top: 20px;">
-          <a href="https://cloud.langfuse.com" style="background: #e74c3c; color: #fff; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
-            View in Langfuse
-          </a>
-        </p>
-      `,
-    }),
-  })
+  // Runs in the background (waitUntil): bounded, and it must never throw.
+  try {
+    const res = await boundedFetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from: 'Cloudy-Joe Agent <alerts@subscribe.joestechsolutions.com>',
+        to: process.env.ALERT_EMAIL,
+        subject: '🚨 JAILBREAK ATTEMPT - cloudyjoe.com',
+        html: `
+          <h2>🚨 Jailbreak Attempt Detected</h2>
+          <p><strong>Time:</strong> ${new Date().toISOString()}</p>
+          <p><strong>User message:</strong></p>
+          <blockquote style="background: #f5f5f5; padding: 15px; border-left: 4px solid #e74c3c;">
+            ${escapeHtml(userMessage.slice(0, 500))}${userMessage.length > 500 ? '...' : ''}
+          </blockquote>
+          <p style="margin-top: 20px;">
+            <a href="https://cloud.langfuse.com" style="background: #e74c3c; color: #fff; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
+              View in Langfuse
+            </a>
+          </p>
+        `,
+      }),
+    }, 8000)
+    if (!res.ok) console.error(`[alert] jailbreak alert failed: HTTP ${res.status}`)
+  } catch (err) {
+    console.error('[alert] jailbreak alert failed:', err?.message)
+  }
 }
 
 // ---------------------------------------------------------------------------

@@ -13,6 +13,7 @@ import { BOOKING_TOOL_NAMES, bookingContext, bookingFallbackText, bookingTools, 
 import { CHAT_MODEL, FAST_MODEL, CHAT_MAX_TOKENS, scaleTokens, baseUrlHost, createAnthropicClient } from './_shared/models.js'
 import { voiceProvider } from './_shared/voice-provider.js'
 import { fixContactEmail, visitorAddresses } from './_shared/contact-email.js'
+import { normalizeMessages } from './_shared/messages.js'
 
 // A failed reply stream is retried once, then a plain fallback runs. The first
 // version paused 500ms and ran the fallback immediately, so a model-provider
@@ -24,6 +25,63 @@ import { fixContactEmail, visitorAddresses } from './_shared/contact-email.js'
 const STREAM_RETRY_DELAY_MS = 1500
 const FALLBACK_DELAY_MS = 1000
 const emptyOutput = (err) => /^empty (?:output|fallback output)/.test(String(err?.message || ''))
+
+// Model-call limits (2026-09-27). They exist for a provider that stops
+// answering without failing: nothing throws, so without them the retry and the
+// fallback never run and the visitor watches the typing dots. Measured on the
+// live agent (MatrAIx run r5, 22 replies): first text after 10.5s median and
+// 24s at worst, the longest reply done at 37s, so every limit sits well above
+// a healthy reply. Env overrides are for tests.
+const limitMs = (name, fallback) => Number(process.env[name]) > 0 ? Number(process.env[name]) : fallback
+// The tool decision. Past it the reply is written without tools.
+export const decisionTimeoutMs = () => limitMs('CHAT_DECISION_TIMEOUT_MS', 25000)
+// Longest silence a reply stream may keep, the wait for its first event included.
+export const streamIdleMs = () => limitMs('CHAT_STREAM_IDLE_MS', 45000)
+// No retry or fallback starts with less than MIN_ATTEMPT_MS of this left (from
+// the request's arrival): a late attempt would be cut off mid-thought anyway,
+// so the visitor gets the error message instead of another wait.
+export const replyDeadlineMs = () => limitMs('CHAT_REPLY_DEADLINE_MS', 75000)
+const MIN_ATTEMPT_MS = 20000
+
+// The tool decision, retried once after a quick server-side failure (rate
+// limit, overload, 5xx) but never after its time limit: a second slow try would
+// only double the wait, and without it the reply is still written, just
+// without tools.
+async function decideTools(params) {
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return await client.messages.create(params, { timeout: decisionTimeoutMs(), maxRetries: 0 })
+    } catch (err) {
+      const retryable = typeof err?.status === 'number' && (err.status === 408 || err.status === 429 || err.status >= 500)
+      if (attempt > 0 || !retryable) throw err
+      console.error(`[chat] tool decision failed (HTTP ${err.status}), retrying once`)
+      await new Promise((r) => setTimeout(r, STREAM_RETRY_DELAY_MS))
+    }
+  }
+}
+
+// A reply stream that goes quiet for `ms` is aborted and fails like any other
+// attempt, so the retry, the fallback and the error message still run.
+async function* untilStalled(stream, ms) {
+  let stalled = false
+  let timer
+  const arm = () => {
+    clearTimeout(timer)
+    timer = setTimeout(() => { stalled = true; stream.abort() }, ms)
+  }
+  arm()
+  try {
+    for await (const event of stream) {
+      arm()
+      yield event
+    }
+  } catch (err) {
+    throw stalled ? new Error(`stream stalled: no data for ${ms}ms`) : err
+  } finally {
+    clearTimeout(timer)
+  }
+  if (stalled) throw new Error(`stream stalled: no data for ${ms}ms`)
+}
 
 const client = createAnthropicClient()
 
@@ -76,10 +134,12 @@ export default async function handler(req) {
       })
     }
 
-    const { messages, lang, sessionId, currentPage } = body || {}
+    const { messages: sentMessages, lang, sessionId, currentPage } = body || {}
     const persona = resolvePersona(body, req)
+    // Valid for the model, or null for a request no widget sends (messages.js).
+    const messages = normalizeMessages(sentMessages)
 
-    if (!Array.isArray(messages) || messages.length === 0) {
+    if (!messages) {
       return new Response(JSON.stringify({ error: 'Missing or invalid messages array' }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' },
@@ -87,7 +147,7 @@ export default async function handler(req) {
     }
 
     // Input length validation
-    const bodySize = JSON.stringify({ messages, lang, sessionId, currentPage }).length
+    const bodySize = JSON.stringify({ messages: sentMessages, lang, sessionId, currentPage }).length
     if (bodySize > 50000) {
       return new Response(JSON.stringify({ error: 'Request too large' }), {
         status: 400,
@@ -232,19 +292,31 @@ export default async function handler(req) {
     // Booking tools appear only when every booking secret is set (booking.js).
     const tools = [...(ragEnabled ? [portfolioTool(persona)] : []), ...bookingTools(persona)]
 
+    // First call: let the model decide whether it needs a tool (non-streaming).
+    // It runs before every reply, so it must never be why a visitor gets an
+    // error: it is bounded, and when it fails the reply is written without
+    // tools by the plain stream below, which has its own retry and fallback.
+    let firstResponse = null
+    let decisionFailed = false
+    const toolDecisionSpan = tools.length ? trace?.span({ name: 'tool_decision' }) : null
+    const td0 = Date.now()
     if (tools.length) {
-      // First call: let Claude decide if it needs a tool (non-streaming)
-      const toolDecisionSpan = trace?.span({ name: 'tool_decision' })
-      const td0 = Date.now()
+      try {
+        firstResponse = await decideTools({
+          model: CHAT_MODEL,
+          max_tokens: scaleTokens(300),
+          system: systemBlocks,
+          messages: cleanMessages,
+          tools,
+        })
+      } catch (err) {
+        decisionFailed = true
+        console.error(`[chat] tool decision failed, answering without tools: ${err?.constructor?.name || 'Error'}: ${String(err?.message || '').slice(0, 200)}`)
+        toolDecisionSpan?.end({ metadata: { error: err?.message } })
+      }
+    }
 
-      const firstResponse = await client.messages.create({
-        model: CHAT_MODEL,
-        max_tokens: scaleTokens(300),
-        system: systemBlocks,
-        messages: cleanMessages,
-        tools,
-      })
-
+    if (firstResponse) {
       const toolDecisionMs = Date.now() - td0
       const tdInputTokens = firstResponse.usage?.input_tokens || 0
       const tdOutputTokens = firstResponse.usage?.output_tokens || 0
@@ -362,14 +434,14 @@ export default async function handler(req) {
       })
     }
 
-    // RAG not enabled — direct streaming (original behavior)
+    // No tools, or the tool decision failed: a plain stream (original behavior)
     return streamResponse({
       systemBlocks,
       messages: cleanMessages,
       tools: null,
       ragSources: [],
-      ragDegraded: false,
-      ragDegradedReason: null,
+      ragDegraded: decisionFailed,
+      ragDegradedReason: decisionFailed ? 'tool_decision_failed' : null,
       canary,
       intentTags,
       trace,
@@ -411,6 +483,10 @@ function streamResponse({
   onReplyDone = () => {},
 }) {
   let replyForLead = null
+  // The whole reply, retries and fallback included, answers inside the deadline.
+  const deadline = t0 + replyDeadlineMs()
+  const timeLeft = () => deadline - Date.now()
+  const attemptIdleMs = () => Math.min(streamIdleMs(), Math.max(MIN_ATTEMPT_MS, timeLeft()))
   // Addresses the visitor typed are theirs: the contact-address fix never touches them.
   const visitorsOwn = visitorAddresses(messages)
   const encoder = new TextEncoder()
@@ -502,6 +578,11 @@ function streamResponse({
           let lastStreamError = null
 
           for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+            // A retry that cannot finish in time only delays the error message.
+            if (attempt > 0 && timeLeft() < MIN_ATTEMPT_MS) {
+              console.error('[chat] reply deadline reached, skipping the retry')
+              break
+            }
             fullOutput = ''
             try {
               // Create fresh stream for each attempt
@@ -512,7 +593,7 @@ function streamResponse({
                 messages,
               })
 
-              for await (const event of activeStream) {
+              for await (const event of untilStalled(activeStream, attemptIdleMs())) {
                 if (leakDetected) break
 
                 if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
@@ -683,7 +764,11 @@ function streamResponse({
         trace?.update({ tags: [...intentTags, 'rag:fallback'], metadata: { streamingError: error.message } })
 
         // Graceful degradation: retry without RAG context (just system prompt)
-        if (fallbackMessages && !fullOutput) {
+        const fallbackInTime = timeLeft() >= FALLBACK_DELAY_MS + MIN_ATTEMPT_MS
+        if (fallbackMessages && !fullOutput && !fallbackInTime) {
+          console.error('[chat] reply deadline reached, skipping the fallback')
+        }
+        if (fallbackMessages && !fullOutput && fallbackInTime) {
           console.error(`[chat] reply failed, running the fallback: ${String(error?.message || '').slice(0, 200)}`)
           await new Promise(r => setTimeout(r, FALLBACK_DELAY_MS))
           try {
@@ -700,7 +785,7 @@ function streamResponse({
             let fallbackOutput = ''
             let fallbackLeakDetected = false
 
-            for await (const event of fallbackStream) {
+            for await (const event of untilStalled(fallbackStream, attemptIdleMs())) {
               if (fallbackLeakDetected) break
 
               if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {

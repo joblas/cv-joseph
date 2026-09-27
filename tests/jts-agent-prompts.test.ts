@@ -133,5 +133,11 @@ check('text prompt carries no stale project count', !/The four projects|none of 
 check('text prompt no longer claims /portfolio holds every project', !/All of them together: \/portfolio/.test(text))
 check('text prompt sends people to each project\u2019s own page', /Each project's own page is linked above/.test(text))
 
+// MatrAIx run r5 (2026-09-27): visitors who opened with "what does it cost / how
+// long" got "quoted per project" and a call link, and nothing to move on with;
+// one heard "a Hermes agent" with no word of what that is.
+check('text prompt: a price question still moves forward (scoping questions, never a guessed number)',
+  /Asked for a price or a timeline:/.test(text) && /never guess a number or a range/.test(text) && /never answered with only a pointer to a call/.test(text))
+check('text prompt: product names come with what they do', /never name a product or tool \(a Hermes agent/.test(text))
 if (failed) { console.error(`\n${failed} check(s) failed`); process.exit(1) }
 console.log('ok — prompts carry none of the transcript’s failures')
