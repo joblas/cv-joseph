@@ -48,7 +48,7 @@ const JOE = 'joe@joestechsolutions.com'
 const TYPO = 'Email joe@joestsolutions.com and he replies within 24 hours.'
 
 type Plan = {
-  decision: 'text' | 'tool' | 'fail' | 'hang' | 'flaky'; decisionText?: string; sources?: boolean
+  decision: 'text' | 'tool' | 'fail' | 'hang' | 'flaky' | 'overloaded' | 'slowOverload'; decisionText?: string; sources?: boolean
   recordFails?: 'refused' | 'down' | 'hang'; dbStall?: 'get' | 'patch'; resend?: 'fail' | 'hang'
   streams: Array<'typo' | 'ok' | 'empty' | 'fail' | 'stall' | 'stallAfterText' | 'trickle' | { say: string }>
 }
@@ -90,6 +90,11 @@ const mailAttempts: any[] = []
     if (!body?.stream) {
       if (plan.decision === 'fail') return json({ type: 'error', error: { type: 'invalid_request_error', message: 'stub decision failure' } }, 400)
       if (plan.decision === 'hang') return stalledCall(init.signal)
+      if (plan.decision === 'overloaded') return json({ type: 'error', error: { type: 'overloaded_error', message: 'stub overloaded' } }, 529)
+      if (plan.decision === 'slowOverload') {
+        await new Promise((r) => setTimeout(r, 400))
+        return json({ type: 'error', error: { type: 'overloaded_error', message: 'stub overloaded, slowly' } }, 529)
+      }
       if (plan.decision === 'flaky') {
         plan.decision = 'tool' // overloaded once, then fine
         return json({ type: 'error', error: { type: 'overloaded_error', message: 'stub overloaded' } }, 529)
@@ -326,6 +331,13 @@ const ask = [{ role: 'user', content: 'How do I reach Joe?' }]
     slow.shown === 'This answer arrives slowly but steadily and must never be cut off.' && slow.streams.length === 1 && slow.ms >= 1000)
   const half = await chat(ask, { decision: 'tool', streams: ['stallAfterText', 'ok'] })
   check('...and one that stops mid-answer is cleared before the retry answers', half.shown === OK && half.out.includes('Half an ans'))
+  // Late in the deadline the silence limit shrinks to the time left (never
+  // below the minimum attempt): the error message comes when the deadline says.
+  Object.assign(process.env, { CHAT_STREAM_IDLE_MS: '3000', CHAT_MIN_ATTEMPT_MS: '200', CHAT_REPLY_DEADLINE_MS: '1000' })
+  const shrunk = await chat(ask, { decision: 'tool', streams: ['stall', 'ok', 'ok'] })
+  process.env.CHAT_STREAM_IDLE_MS = '300'; delete process.env.CHAT_MIN_ATTEMPT_MS; delete process.env.CHAT_REPLY_DEADLINE_MS
+  const waited = Number(logged.join('\n').match(/stream stalled: no data for (\d+)ms/)?.[1])
+  check('the silence limit shrinks to the time left before the deadline', waited > 0 && waited <= 1000 && shrunk.shown === ERROR && shrunk.streams.length === 1)
   const dead = await chat(ask, { decision: 'tool', streams: ['stall', 'stall', 'stall'] })
   check('when every attempt stalls, the visitor gets the error message, not an endless wait',
     dead.shown === ERROR && dead.streams.length === 3 && dead.ms < 8000)
@@ -348,6 +360,31 @@ const ask = [{ role: 'user', content: 'How do I reach Joe?' }]
   const flaky = await chat(ask, { decision: 'flaky', streams: ['ok'] })
   check('...but an overloaded one is retried once, and the search still runs',
     decisions() === 2 && flaky.shown === OK && !/tool_decision_failed/.test(flaky.out) && logged.some((l) => /tool decision failed \(HTTP 529\), retrying once/.test(l)))
+  const down = await chat(ask, { decision: 'overloaded', streams: ['ok'] })
+  check('...once only: a decision that keeps failing gets exactly two tries, then the answer without tools', decisions() === 2 && down.shown === OK && /tool_decision_failed/.test(down.out))
+  process.env.CHAT_DECISION_TIMEOUT_MS = '1000'; process.env.CHAT_DECISION_QUICK_MS = '200'
+  const slowFail = await chat(ask, { decision: 'slowOverload', streams: ['ok'] })
+  process.env.CHAT_DECISION_TIMEOUT_MS = '300'; delete process.env.CHAT_DECISION_QUICK_MS
+  check('...and a SLOW failure is not retried (a second slow try only doubles the wait)', decisions() === 1 && slowFail.shown === OK)
+  const plainFallback = await chat(ask, { decision: 'fail', streams: ['fail', 'fail', 'ok'] })
+  check('the plain answer after a failed decision has the fallback too (a third try)', plainFallback.shown === OK && plainFallback.streams.length === 3)
+  const sys = (r: { streams: { body: any }[] }) => (r.streams[0]?.body?.system || []).map((b: any) => b.text).join('\n')
+  check('...and is told this reply has no tools, so it claims no search it did not run',
+    /Runtime note for this reply only: the site search and every other tool are unavailable/.test(sys(noDecision))
+    && !/Runtime note for this reply only/.test(sys(quiet)))
+}
+
+{
+  // The production limits, against the live agent's measured replies (MatrAIx
+  // r5: first text 24s at worst, the longest reply done at 37s): every limit
+  // must clear a healthy reply with room to spare.
+  const C = await import('../functions/api-src/chat.js')
+  const saved = { ...process.env }
+  for (const k of ['CHAT_DECISION_TIMEOUT_MS', 'CHAT_STREAM_IDLE_MS', 'CHAT_REPLY_DEADLINE_MS']) delete process.env[k]
+  const [decision, idle, deadline] = [C.decisionTimeoutMs(), C.streamIdleMs(), C.replyDeadlineMs()]
+  Object.assign(process.env, saved)
+  check('production limits clear a healthy reply: decision ≥ 1.5× the slowest first word, silence ≥ that too, deadline past the longest reply',
+    decision >= 36_000 && idle >= 36_000 && deadline >= 60_000 && deadline > idle)
 }
 
 // --- 5. The history the model gets is always one it accepts ------------------------------

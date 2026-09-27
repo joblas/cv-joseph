@@ -137,7 +137,9 @@ check('text prompt sends people to each project\u2019s own page', /Each project'
 // long" got "quoted per project" and a call link, and nothing to move on with;
 // one heard "a Hermes agent" with no word of what that is.
 check('text prompt: a price question still moves forward (scoping questions, never a guessed number)',
-  /Asked for a price or a timeline:/.test(text) && /never guess a number or a range/.test(text) && /never answered with only a pointer to a call/.test(text))
+  /Asked for a price or a timeline:/.test(text) && /never guess a number or a range/.test(text) && /never answered with only a pointer to a call/.test(text)
+  // ...and it stays inside the intake rule: one question at a time, three in all.
+  && /the single most useful thing that quote depends on/.test(text) && /counts toward the three questions above/.test(text))
 check('text prompt: product names come with what they do', /never name a product or tool \(a Hermes agent/.test(text))
 if (failed) { console.error(`\n${failed} check(s) failed`); process.exit(1) }
 console.log('ok — prompts carry none of the transcript’s failures')

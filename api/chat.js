@@ -33,31 +33,48 @@ const emptyOutput = (err) => /^empty (?:output|fallback output)/.test(String(err
 // 24s at worst, the longest reply done at 37s, so every limit sits well above
 // a healthy reply. Env overrides are for tests.
 const limitMs = (name, fallback) => Number(process.env[name]) > 0 ? Number(process.env[name]) : fallback
-// The tool decision. Past it the reply is written without tools.
-export const decisionTimeoutMs = () => limitMs('CHAT_DECISION_TIMEOUT_MS', 25000)
+// The tool decision. Past it the reply is written without tools. On the plain
+// path a healthy decision IS the wait before the first word (24s worst in r5),
+// so this sits well above it: cutting a healthy one costs a second wait for a
+// worse answer.
+export const decisionTimeoutMs = () => limitMs('CHAT_DECISION_TIMEOUT_MS', 40000)
+// A failure faster than this is a blip worth one more try; a slow one is not.
+const quickFailureMs = () => limitMs('CHAT_DECISION_QUICK_MS', 5000)
 // Longest silence a reply stream may keep, the wait for its first event included.
 export const streamIdleMs = () => limitMs('CHAT_STREAM_IDLE_MS', 45000)
-// No retry or fallback starts with less than MIN_ATTEMPT_MS of this left (from
+// No retry or fallback starts with less than minAttemptMs() of this left (from
 // the request's arrival): a late attempt would be cut off mid-thought anyway,
 // so the visitor gets the error message instead of another wait.
 export const replyDeadlineMs = () => limitMs('CHAT_REPLY_DEADLINE_MS', 75000)
-const MIN_ATTEMPT_MS = 20000
+const minAttemptMs = () => limitMs('CHAT_MIN_ATTEMPT_MS', 20000)
 
-// The tool decision, retried once after a quick server-side failure (rate
-// limit, overload, 5xx) but never after its time limit: a second slow try would
-// only double the wait, and without it the reply is still written, just
-// without tools.
+// The tool decision, retried once after a QUICK server-side failure (rate
+// limit, overload, 5xx), never after a slow one or its time limit: a second
+// slow try would only double the wait, and without it the reply is still
+// written, just without tools.
 async function decideTools(params) {
   for (let attempt = 0; ; attempt++) {
+    const started = Date.now()
     try {
       return await client.messages.create(params, { timeout: decisionTimeoutMs(), maxRetries: 0 })
     } catch (err) {
-      const retryable = typeof err?.status === 'number' && (err.status === 408 || err.status === 429 || err.status >= 500)
+      const quick = Date.now() - started < quickFailureMs()
+      const retryable = quick && typeof err?.status === 'number' && (err.status === 408 || err.status === 429 || err.status >= 500)
       if (attempt > 0 || !retryable) throw err
       console.error(`[chat] tool decision failed (HTTP ${err.status}), retrying once`)
       await new Promise((r) => setTimeout(r, STREAM_RETRY_DELAY_MS))
     }
   }
+}
+
+// This reply is written without tools: say so in a runtime note.
+function toolsUnavailableNote(persona) {
+  const page = persona.booking?.pageUrl
+  return '\nRuntime note for this reply only: the site search and every other tool are unavailable right now. '
+    + 'Answer from what this prompt already tells you; if the answer needs more than that, say the site does not cover it here and offer to pass the question to Joe. '
+    + (bookingTools(persona).length
+      ? `Do not offer, check or promise any call times, and never say a call is booked; for a call, offer ${page ? `Joe's booking page: [Book a call with Joe](${page}), or ` : ''}email ${persona.contactEmail}.`
+      : '')
 }
 
 // A reply stream that goes quiet for `ms` is aborted and fails like any other
@@ -80,6 +97,8 @@ async function* untilStalled(stream, ms) {
   } finally {
     clearTimeout(timer)
   }
+  // The SDK rejects the iterator on abort today; if a version ever ended it
+  // quietly instead, a cut-off reply must still not pass as a whole one.
   if (stalled) throw new Error(`stream stalled: no data for ${ms}ms`)
 }
 
@@ -295,7 +314,7 @@ export default async function handler(req) {
     // First call: let the model decide whether it needs a tool (non-streaming).
     // It runs before every reply, so it must never be why a visitor gets an
     // error: it is bounded, and when it fails the reply is written without
-    // tools by the plain stream below, which has its own retry and fallback.
+    // tools by the plain stream below (retry and fallback included).
     let firstResponse = null
     let decisionFailed = false
     const toolDecisionSpan = tools.length ? trace?.span({ name: 'tool_decision' }) : null
@@ -434,9 +453,12 @@ export default async function handler(req) {
       })
     }
 
-    // No tools, or the tool decision failed: a plain stream (original behavior)
+    // No tools, or the tool decision failed: a plain stream (original behavior).
+    // After a failed decision the runtime notes may still describe tools this
+    // reply does not have (search; in-chat booking once configured), so a note
+    // says they are off: no claimed search, no offered or "booked" times.
     return streamResponse({
-      systemBlocks,
+      systemBlocks: decisionFailed ? [...systemBlocks, { type: 'text', text: toolsUnavailableNote(persona) }] : systemBlocks,
       messages: cleanMessages,
       tools: null,
       ragSources: [],
@@ -457,6 +479,8 @@ export default async function handler(req) {
       lang,
       promptVersion,
       persona,
+      // Same messages again after a longer pause: a third try inside the deadline.
+      fallbackMessages: cleanMessages,
       onReplyDone: resolveReply,
     })
   } catch (error) {
@@ -486,7 +510,7 @@ function streamResponse({
   // The whole reply, retries and fallback included, answers inside the deadline.
   const deadline = t0 + replyDeadlineMs()
   const timeLeft = () => deadline - Date.now()
-  const attemptIdleMs = () => Math.min(streamIdleMs(), Math.max(MIN_ATTEMPT_MS, timeLeft()))
+  const attemptIdleMs = () => Math.min(streamIdleMs(), Math.max(minAttemptMs(), timeLeft()))
   // Addresses the visitor typed are theirs: the contact-address fix never touches them.
   const visitorsOwn = visitorAddresses(messages)
   const encoder = new TextEncoder()
@@ -579,7 +603,7 @@ function streamResponse({
 
           for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
             // A retry that cannot finish in time only delays the error message.
-            if (attempt > 0 && timeLeft() < MIN_ATTEMPT_MS) {
+            if (attempt > 0 && timeLeft() < minAttemptMs()) {
               console.error('[chat] reply deadline reached, skipping the retry')
               break
             }
@@ -764,7 +788,7 @@ function streamResponse({
         trace?.update({ tags: [...intentTags, 'rag:fallback'], metadata: { streamingError: error.message } })
 
         // Graceful degradation: retry without RAG context (just system prompt)
-        const fallbackInTime = timeLeft() >= FALLBACK_DELAY_MS + MIN_ATTEMPT_MS
+        const fallbackInTime = timeLeft() >= FALLBACK_DELAY_MS + minAttemptMs()
         if (fallbackMessages && !fullOutput && !fallbackInTime) {
           console.error('[chat] reply deadline reached, skipping the fallback')
         }
