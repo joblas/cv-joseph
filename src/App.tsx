@@ -1410,7 +1410,9 @@ function App() {
   const t = translations
   const hydrated = useHydrated()
   useHeroStyles()
-  const { displayText: roleText, roleIndex } = useTypewriterRotation(t.greetingRoles)
+  // roleIndex still highlights the active role pill; the typewriter text is no
+  // longer rendered now that the h1 carries the fixed headline.
+  const { roleIndex } = useTypewriterRotation(t.greetingRoles)
 
 
   const seoData = seo
@@ -1475,14 +1477,13 @@ function App() {
               <p className="text-lg text-muted-foreground mb-2">
                 {"Hi, I'm"} <Link to={'/about'} className="text-gradient-theme font-semibold hover:opacity-80 transition-opacity">@joe</Link>,
               </p>
-              <h1 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mb-4 leading-tight">
-                <span className="text-gradient-theme">{hydrated ? roleText : t.greetingRoles[0]}</span>
+              <h1 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mb-3 leading-tight">
+                <span className="text-gradient-theme">{t.headline}</span>
                 {hydrated && <span className="inline-block w-[3px] h-[0.85em] bg-primary ml-1 rounded-sm translate-y-[2px]" style={{ animation: 'blink 1s step-end infinite' }} />}
-                <br />
-                {t.greeting} <BeamPill>self-healing</BeamPill>
-                <br />
-                {t.role}
               </h1>
+              <p className="text-lg md:text-xl text-muted-foreground mb-4">
+                {t.greeting} <BeamPill>self-healing</BeamPill> {t.role}
+              </p>
 
               <div className="flex flex-wrap justify-center md:justify-start gap-3">
                 {t.greetingRoles.map((role, i) => (

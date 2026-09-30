@@ -8,6 +8,10 @@ const _seoEn = {
 export const seo = _seoEn;
 
 const _translationsEn = {
+  // The single primary headline, matching Joe's resumes so a recruiter who
+  // arrives from the resume header reads the same line twice.
+  headline: 'Autonomous Systems Operations & Integration Leader',
+  // Tagline pieces, rendered beneath the headline (not part of it).
   greeting: 'who builds',
   greetingRoles: ['Autonomous Systems Operations & Integration Leader', 'AI Systems Builder', 'Autonomous Systems Veteran'],
   email: 'blasj408@gmail.com',
@@ -79,7 +83,7 @@ const _translationsEn = {
   },
   summary: {
     title: 'Professional Summary',
-    p1: 'Forward deployed engineer building',
+    p1: 'Operations and integration leader building',
     p1Highlight: 'the AI systems that run small businesses',
     p1End:
       ". Founder of Joe's Tech Solutions — custom software, AI agents, automation, and private AI, built on the same stack I run my own company on. That stack is Hermes: one orchestrator (Lurkr as CTO), executive skills, VPs, 40+ scheduled automations, Ollama Cloud models pinned per job. Ship full-stack apps: React, React Native, Next.js, TypeScript, Python.",
