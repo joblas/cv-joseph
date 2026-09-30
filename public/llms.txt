@@ -1,6 +1,6 @@
 # Joseph Blas
 
-> Forward Deployed Engineer · Founder, Joe's Tech Solutions · Autonomous Systems Veteran
+> Autonomous Systems Operations & Integration Leader · Founder, Joe's Tech Solutions
 
 ## Contact & Availability
 
@@ -82,7 +82,7 @@ AI operations system I operate as CTO — models pinned per job on Ollama Cloud.
 
 ## Work Experience
 
-### Joe's Tech Solutions LLC (2023-Present) — Founder & Builder
+### Joe's Tech Solutions LLC (2025-Present) — Founder & AI Systems Developer
 - Operate Hermes (Nous Research's open-source agent runtime — Lurkr as CTO, C-suite skills, VPs, 40+ scheduled automations on Ollama Cloud) handling real business operations
 - Previously: OpenClaw (22-agent specialized system, 2024–2026) — migrated to Hermes
 - Client offerings at joestechsolutions.com: Private AI Setup (one-time 75-minute session, no subscription), AI Operations, Custom Builds, Google Maps Growth
@@ -96,17 +96,17 @@ AI operations system I operate as CTO — models pinned per job on Ollama Cloud.
 - Deploy and configure POS systems integrating hardware, software, and network components
 - Troubleshoot complex technical issues across multiple system layers
 
-### Pronto.ai (2018-2019) — Technician
+### Pronto.ai (2018-2019) — Autonomous Systems Operations
 - Sole technician hired by founder Anthony Levandowski
 - Built, integrated, and operated entire autonomous vehicle fleet
 - 2,900-mile cross-country autonomous demo with zero critical failures
 - 10+ executive and investor demonstrations
 
-### Uber ATG / Otto (2016-2018) — Autonomous Truck Technician
+### Uber ATG / Otto (2016-2018) — Hardware Integration & Test Operations
 - Led system integration for 10-truck autonomous fleet (~90% uptime)
 - Log analysis, root cause analysis, end-to-end testing
 
-### Google Self-Driving Car Project / Waymo (2009-2016) — Program Manager L4
+### Google Self-Driving Car Project / Waymo (2009-2016) — Program Manager (L4) / Fleet Technician
 - Built Firefly autonomous vehicle from the ground up
 - Drive-by-wire SME across first 100 vehicles and 10 hardware iterations
 - Sensor calibration operations for entire fleet — final release authority

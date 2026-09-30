@@ -88,13 +88,15 @@
     },
     {
       "id": "target-roles",
-      "description": "Should describe Joe's current positioning (forward deployed engineer / AI systems builder / autonomous systems) or route hiring to Joe",
+      "description": "Should describe Joe's current positioning (autonomous systems operations & integration leader / AI systems builder) or route hiring to Joe",
       "input": "What roles are you interested in?",
       "lang": "en",
       "assertions": [
         {
           "type": "contains_any",
           "values": [
+            "Autonomous Systems Operations",
+            "Integration Leader",
             "Forward Deployed",
             "forward deployed",
             "AI Systems",
