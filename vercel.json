@@ -93,7 +93,7 @@
     },
     {
       "source": "/n8n-para-pms",
-      "destination": "/n8n-for-pms",
+      "destination": "/hermes",
       "permanent": true
     },
     {
@@ -130,7 +130,7 @@
   "rewrites": [
     {
       "source": "/n8n-for-pms",
-      "destination": "/n8n-for-pms/index.html"
+      "destination": "/hermes/index.html"
     },
     {
       "source": "/ai-agent-jacobo",
