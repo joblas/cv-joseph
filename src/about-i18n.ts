@@ -51,8 +51,6 @@ const _en = {
     communityHeading: 'Community',
     community: [
       { title: 'I automated my job search with AI agents (516+ upvotes)', platform: 'Reddit r/SideProject', href: 'https://www.reddit.com/r/SideProject/comments/1rw1lg4/' },
-      { title: 'How I Built an AI Agent That Handled 90% of Customer Requests', platform: 'Dev.to', href: 'https://dev.to/joblas/how-i-built-an-ai-agent-that-handled-90-of-customer-requests-without-human-intervention-4pci' },
-      { title: 'I Built a Multi-Agent Job Search System with Claude Code', platform: 'Dev.to', href: 'https://dev.to/joblas/i-built-a-multi-agent-job-search-system-with-claude-code-631-evaluations-12-modes-2cd0' },
     ],
     faqHeading: 'Frequently Asked Questions',
     faq: [

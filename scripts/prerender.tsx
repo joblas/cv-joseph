@@ -173,7 +173,6 @@ const aboutJsonLd = {
       'https://www.linkedin.com/in/joseph-blas',
       'https://github.com/joblas',
       'https://x.com/joblas',
-      'https://dev.to/joblas',
       'https://joblas.substack.com',
       'https://contentdigest.cloudyjoe.com',
       'https://www.youtube.com/@joblas',
