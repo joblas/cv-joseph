@@ -150,16 +150,14 @@ interface ArticleFooterProps {
 
 const FOOTER_CONTENT = {
   role: 'AI Developer · Autonomous Systems Builder · Multi-Agent AI Systems Builder',
-  bio: 'Built and sold a 16-year business in 2025. Now bringing that same systems thinking to enterprise AI.',
-  fellowAt: 'Teaching Fellow at',
+  bio: "Founder of Joe's Tech Solutions. Previously 10 years in autonomous vehicle systems at Google, Uber, and Otto — now building the AI systems that run small businesses.",
   copyright: 'All rights reserved.',
 } as const
 
 export function ArticleFooter({ utmCampaign }: ArticleFooterProps) {
   const f = FOOTER_CONTENT
-  const fellowUrl = `https://maven.com/marily-nika/ai-pm-bootcamp?utm_source=joblas&utm_medium=casestudy&utm_campaign=${utmCampaign}`
   return (
-    <footer className="mt-16 pt-8 border-t border-border">
+    <footer id={`footer-${utmCampaign}`} className="mt-16 pt-8 border-t border-border">
       <div className="flex items-start gap-3 mb-6">
         <img
           src="/foto-avatar-sm.webp"
@@ -172,15 +170,6 @@ export function ArticleFooter({ utmCampaign }: ArticleFooterProps) {
           <p className="font-medium text-foreground">Joseph Blas</p>
           <p className="text-sm text-muted-foreground">
             {f.role}
-            {' · '}{f.fellowAt}{' '}
-            <a
-              href={fellowUrl}
-              target="_blank"
-              rel="noopener noreferrer nofollow"
-              className="text-primary hover:underline"
-            >
-              AI Product Academy
-            </a>
           </p>
         </div>
       </div>

@@ -164,11 +164,7 @@ const aboutJsonLd = {
       { '@type': 'EducationalOccupationalCredential', name: 'Airtable Admin Certification', recognizedBy: { '@type': 'Organization', name: 'Airtable' }, url: 'https://verify.skilljar.com/c/u3r8kgn5wdit' },
       { '@type': 'EducationalOccupationalCredential', name: 'Make Advanced', recognizedBy: { '@type': 'Organization', name: 'Make Academy' }, url: 'https://www.credly.com/badges/d27b8174-ef20-46bd-9d81-ee05e9c349e8' },
     ],
-    alumniOf: [
-      { '@type': 'EducationalOrganization', name: 'Maven - AI Product Management Bootcamp' },
-      { '@type': 'EducationalOrganization', name: 'BIGSEO - Master en Inteligencia Artificial' },
-      { '@type': 'EducationalOrganization', name: 'ETSI - Universidad de Sevilla' },
-    ],
+    alumniOf: [],
     founder: {
       '@type': 'Organization',
       name: 'Joseph Blas',
@@ -190,14 +186,6 @@ const aboutJsonLd = {
       'https://www.wikidata.org/wiki/Q138710224',
       'https://www.facebook.com/joblas/',
     ],
-    subjectOf: {
-      '@type': 'NewsArticle',
-      headline: 'Going shopping: A quick fix for the phone',
-      publisher: { '@type': 'NewsMediaOrganization', name: 'Diario de Sevilla' },
-      datePublished: '2014-06-19',
-      url: 'https://www.diariodesevilla.es/vivirensevilla/Salir-compras-solucion-expres-telefono_0_817718799.html',
-    },
-    address: { '@type': 'PostalAddress', addressLocality: 'Sevilla', addressCountry: 'ES' },
   },
 };
 

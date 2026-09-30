@@ -47,10 +47,10 @@ const _en = {
     intro: {
       hook: 'How many hours a week do you spend on work that has nothing to do with product?',
       body: 'I tracked mine. It was twenty. Some weeks, thirty. Sprint reports that take a full day. Feedback scattered across five tools that I had to read, classify, and turn into tickets one by one. Status updates typed from scratch every Monday.',
-      punchline: 'I wasn\'t a product manager. I was a very expensive data router. Moving information between tools that should have been talking to each other. I spent 170 hours a month on this at my own company before I automated all of it. Both workflows are free, importable as JSON, and run on n8n Cloud\'s free tier. No infrastructure, no permission from engineering. Today I\'ll show you how to build them in an afternoon.',
+      punchline: 'I wasn\'t a product manager. I was a very expensive data router. Moving information between tools that should have been talking to each other. I spent 170 hours a month on this before I automated all of it. Both workflows are free, importable as JSON, and run on n8n Cloud\'s free tier. No infrastructure, no permission from engineering. Today I\'ll show you how to build them in an afternoon.',
     },
     previewCta: {
-      text: 'This is a preview of what I teach as a Teaching Fellow at <a>Marily Nika\'s AI PM Bootcamp</a>. The full course covers how to build AI products end-to-end — from discovery to production. Both workflows below are real: I use them weekly at my own company.',
+      text: 'Both workflows below are real and in use. They cover how to take a manual, human-routed process and rebuild it as an automated pipeline — the same approach I use running operations for my own business.',
     },
     timeSinks: {
       heading: 'The 5 PM Time Sinks (20-30 hours/week)',
@@ -152,7 +152,7 @@ const _en = {
     },
     bootcampCta: {
       heading: 'Want to go deeper into AI Product Management?',
-      body: 'What you just read is a fraction of what I cover at Marily Nika\'s AI PM Bootcamp. The full program takes you from "I want to use AI" to "I\'m shipping AI products" — with real projects, not theory. It\'s where I trained, and I now teach there as a Fellow.',
+      body: 'What you just read is a fraction of the work behind these workflows. The same pattern applies at any scale: find the manual handoff, map the states, automate the routing, then measure what it saved.',
       cta: 'Join the next cohort',
     },
     getStarted: {
@@ -162,7 +162,7 @@ const _en = {
         { num: 2, text: 'Pick your most boring Friday task' },
         { num: 3, text: 'Build one workflow this week' },
       ],
-      bonusStep: 'Want to learn AI Product Management end-to-end? Check out the <a>AI PM Bootcamp by Dr. Marily Nika</a> — where I trained and now teach as a Fellow.',
+      bonusStep: 'Both workflows are free and importable as JSON. Take them, adapt them, and ship something that removes a manual step from your week.',
       quote: 'The first automation is the hardest. The second takes half the time.',
     },
     lessons: {
@@ -233,7 +233,6 @@ const _en = {
     },
     footer: {
       role: 'AI Developer · Autonomous Systems Builder',
-      fellowAt: 'Teaching Fellow at',
       fellowLink: 'AI Product Academy',
       copyright: 'All rights reserved.',
     },
