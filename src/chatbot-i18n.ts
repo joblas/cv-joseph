@@ -104,7 +104,7 @@ export default async function handler(req, res) {
         },
         agenticObservability: {
           heading: 'Agentic Observability',
-          body: 'Agentic observability means tracing every autonomous decision in an AI pipeline, not just what went in and what came out.\n\nStandard LLM observability tracks what went in and what came out. I track every decision the system makes on its own.\n\nWhen a user asks about <a href="/articles/archive-beta-loop" class="text-primary underline underline-offset-2 hover:text-primary/80">Archive</a>, Langfuse captures 6 generation observations: Claude choosing to search (Sonnet, 200ms), the embedding (OpenAI, 200 tokens), retrieval (pgvector, 10 chunks), Haiku reranking the top 5 (50 tokens out), the final response (Sonnet, 800ms), and quality scoring (Haiku, 0ms added). Each observation carries model ID, real token counts, and calculated cost.\n\nA custom ops dashboard aggregates all of this: conversations, costs per span, RAG accuracy, security funnel, eval pass rates, voice analytics, prompt versions, and system health.',
+          body: 'Agentic observability means tracing every autonomous decision in an AI pipeline, not just what went in and what came out.\n\nStandard LLM observability tracks what went in and what came out. I track every decision the system makes on its own.\n\nWhen a user asks about <a href="/archive-beta-loop" class="text-primary underline underline-offset-2 hover:text-primary/80">Archive</a>, Langfuse captures 6 generation observations: Claude choosing to search (Sonnet, 200ms), the embedding (OpenAI, 200 tokens), retrieval (pgvector, 10 chunks), Haiku reranking the top 5 (50 tokens out), the final response (Sonnet, 800ms), and quality scoring (Haiku, 0ms added). Each observation carries model ID, real token counts, and calculated cost.\n\nA custom ops dashboard aggregates all of this: conversations, costs per span, RAG accuracy, security funnel, eval pass rates, voice analytics, prompt versions, and system health.',
         },
         howItWasBuilt: {
           heading: 'How It Was Built: The MMA Loop',
@@ -162,7 +162,7 @@ export default async function handler(req, res) {
           },
           callout: 'Every failure mode was discovered in production, traced in Langfuse, and converted into an eval.',
           recursivityCallout: 'Meta: this very article is indexed in the chatbot\'s RAG. Ask it "how does your RAG work?" — it will answer using RAG to explain RAG.',
-          indexedArticles: 'The chatbot can answer about the <a href="/hermes" class="text-primary underline underline-offset-2 hover:text-primary/80">OpenClaw → Hermes migration</a>, <a href="/career-ops-system" class="text-primary underline underline-offset-2 hover:text-primary/80">Career-Ops</a>, and <a href="/articles/archive-beta-loop" class="text-primary underline underline-offset-2 hover:text-primary/80">the Archive beta loop</a> — just ask.',
+          indexedArticles: 'The chatbot can answer about the <a href="/hermes" class="text-primary underline underline-offset-2 hover:text-primary/80">OpenClaw → Hermes migration</a>, <a href="/career-ops-system" class="text-primary underline underline-offset-2 hover:text-primary/80">Career-Ops</a>, and <a href="/archive-beta-loop" class="text-primary underline underline-offset-2 hover:text-primary/80">the Archive beta loop</a> — just ask.',
         },
         defense: {
           heading: '6-Layer Defense',
