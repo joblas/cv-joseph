@@ -356,7 +356,7 @@ const _translationsEn = {
           },
         ],
         soldWith: 'Case Study: Client Texts Become Shipped Features',
-        caseStudyUrl: '/articles/archive-beta-loop',
+        caseStudyUrl: '/archive-beta-loop',
       },
       webSeo: {
         title: 'Production Applications',
