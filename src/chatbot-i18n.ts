@@ -162,7 +162,7 @@ export default async function handler(req, res) {
           },
           callout: 'Every failure mode was discovered in production, traced in Langfuse, and converted into an eval.',
           recursivityCallout: 'Meta: this very article is indexed in the chatbot\'s RAG. Ask it "how does your RAG work?" — it will answer using RAG to explain RAG.',
-          indexedArticles: 'The chatbot can answer about the <a href="/hermes" class="text-primary underline underline-offset-2 hover:text-primary/80">OpenClaw → Hermes migration</a>, <a href="/career-ops-system" class="text-primary underline underline-offset-2 hover:text-primary/80">Career-Ops</a>, and <a href="/n8n-for-pms" class="text-primary underline underline-offset-2 hover:text-primary/80">n8n for PMs</a> — just ask.',
+          indexedArticles: 'The chatbot can answer about the <a href="/hermes" class="text-primary underline underline-offset-2 hover:text-primary/80">OpenClaw → Hermes migration</a>, <a href="/career-ops-system" class="text-primary underline underline-offset-2 hover:text-primary/80">Career-Ops</a>, and <a href="/articles/archive-beta-loop" class="text-primary underline underline-offset-2 hover:text-primary/80">the Archive beta loop</a> — just ask.',
         },
         defense: {
           heading: '6-Layer Defense',

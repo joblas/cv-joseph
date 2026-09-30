@@ -184,9 +184,6 @@ Interactive CV with AI chatbot, voice mode, RAG pipeline, and multi-layer defens
 ### The Self-Healing Chatbot
 Production LLMOps system powering this portfolio's AI chat. Features 6-layer defense with canary token injection and fingerprint detection. 71 automated evals with CI gate enforcement and trace-to-eval closed loop. Cost: <$0.005 per conversation on $0 infrastructure. Batch eval pipeline uses Sonnet to score intent, quality, safety, and jailbreak resistance. Alerts via Resend.
 
-### n8n for Product Managers
-Guide to workflow automation with n8n for non-technical product managers.
-
 ### The Turnover Agent
 Case study: a Telegram-first LLM ops agent for a short-term-rental manager — 32 tools, iCal turnover detection, escalation ladders, triple watchdogs.
 
