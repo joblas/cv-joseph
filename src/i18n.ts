@@ -1,15 +1,19 @@
 const _seoEn = {
   title:
-    'Joseph Blas | Forward Deployed Engineer · Founder, Joe\'s Tech Solutions · Autonomous Systems Veteran',
+    'Joseph Blas | Autonomous Systems Operations & Integration Leader · Founder, Joe\'s Tech Solutions',
   description:
-    'Forward Deployed Engineer and founder of Joe\'s Tech Solutions — custom software, AI agents, automation, and private AI for small businesses, built on the same stack he runs his own company on. Helped build the self-driving car industry, from Google\'s founding 100,000-mile milestone to a Guinness World Record for the first commercial self-driving truck delivery. Now runs Hermes: one orchestrator, 40+ scheduled automations, Ollama Cloud models pinned per job.',
+    'Autonomous systems operations and integration leader, and founder of Joe\'s Tech Solutions — custom software, AI agents, automation, and private AI for small businesses, built on the same stack he runs his own company on. Helped build the self-driving car industry, from Google\'s founding 100,000-mile milestone to a Guinness World Record for the first commercial self-driving truck delivery. Now runs Hermes: one orchestrator, 40+ scheduled automations, Ollama Cloud models pinned per job.',
 };
 
 export const seo = _seoEn;
 
 const _translationsEn = {
+  // The single primary headline, matching Joe's resumes so a recruiter who
+  // arrives from the resume header reads the same line twice.
+  headline: 'Autonomous Systems Operations & Integration Leader',
+  // Tagline pieces, rendered beneath the headline (not part of it).
   greeting: 'who builds',
-  greetingRoles: ['Forward Deployed Engineer', 'AI Systems Builder', 'Autonomous Systems Veteran'],
+  greetingRoles: ['Autonomous Systems Operations & Integration Leader', 'AI Systems Builder', 'Autonomous Systems Veteran'],
   email: 'blasj408@gmail.com',
   role: 'autonomous & AI systems.',
   story: {
@@ -48,7 +52,7 @@ const _translationsEn = {
   taglines: [] as readonly string[],
   location: 'Escondido, CA · San Diego',
   roles: [
-    'Forward Deployed Engineer',
+    'Autonomous Systems Operations & Integration Leader',
     'AI Systems Builder',
     'Autonomous Systems Veteran',
   ],
@@ -79,7 +83,7 @@ const _translationsEn = {
   },
   summary: {
     title: 'Professional Summary',
-    p1: 'Forward deployed engineer building',
+    p1: 'Operations and integration leader building',
     p1Highlight: 'the AI systems that run small businesses',
     p1End:
       ". Founder of Joe's Tech Solutions — custom software, AI agents, automation, and private AI, built on the same stack I run my own company on. That stack is Hermes: one orchestrator (Lurkr as CTO), executive skills, VPs, 40+ scheduled automations, Ollama Cloud models pinned per job. Ship full-stack apps: React, React Native, Next.js, TypeScript, Python.",
@@ -269,8 +273,8 @@ const _translationsEn = {
     santifer: {
       company: "Joe's Tech Solutions LLC",
       location: 'San Diego, CA',
-      role: 'Founder and Builder',
-      period: '2023 - Present · AI / Software',
+      role: 'Founder & AI Systems Developer',
+      period: '2025 - Present · AI / Software',
       caseStudyUrl: '/hermes',
       caseStudyLabel: 'Case Study: OpenClaw → Hermes Migration',
       exit: 'Real AI For Real Businesses',
@@ -410,7 +414,7 @@ const _translationsEn = {
     google: {
       company: 'Google Self-Driving Car Project (Waymo)',
       location: 'Mountain View, CA',
-      role: 'Program Manager L4 / Operations & Sensor Readiness Lead',
+      role: 'Program Manager (L4) / Fleet Technician',
       period: '2009 - 2016 · Autonomous Vehicles',
       desc: [
         'Owned full sensor-suite readiness — cameras, IMUs, three LiDAR variants, radar — as final gate before vehicles hit public or private roads.',
@@ -435,7 +439,7 @@ const _translationsEn = {
     uberAtg: {
       company: 'Uber ATG (Otto)',
       location: 'San Francisco, CA',
-      role: 'Autonomous Truck Technician / Operations Lead',
+      role: 'Hardware Integration & Test Operations',
       period: '2016 - 2018 · Autonomous Vehicles',
       desc: [
         "Helped execute the world's first commercial delivery by a self-driving truck — a Guinness World Record driverless Budweiser haul across Colorado (Oct 2016).",
@@ -457,7 +461,7 @@ const _translationsEn = {
     pronto: {
       company: 'Pronto.ai',
       location: 'San Francisco, CA',
-      role: 'Autonomous Vehicle Technician / Operations',
+      role: 'Autonomous Systems Operations',
       period: '2018 - 2019 · Autonomous Vehicles',
       desc: [
         'Original sub-10-person team. Sole technician — owned end-to-end fleet integration, validation, and test campaign execution under rapid iteration.',
