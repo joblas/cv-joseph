@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo, useReducer, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'motion/react'
-import { Mail, ExternalLink, Briefcase, GraduationCap, Award, Wrench, Users, Globe, Bot, Zap, Cloud, Layers, Layout, BadgeCheck, FolderGit2, Sparkles, Download, Github, Cog, FileSearch, Plug, Shield, FileText, GitBranch, GitFork, Star, Terminal, Lock, Network, Image, Timer, SkipForward, ThumbsUp, MessageCircle, Share2, ChevronRight, List, ArrowUp, Newspaper, Flag, Cpu, Trophy, Rocket, Car, MapPin, Smartphone, Server, Mic, Search, DollarSign, Workflow, GraduationCap as GradCap } from 'lucide-react'
+import { Mail, ExternalLink, Briefcase, GraduationCap, Award, Wrench, Users, Globe, Bot, Zap, Cloud, Layers, Layout, BadgeCheck, FolderGit2, Sparkles, Download, Github, Shield, FileText, GitBranch, GitFork, Star, Terminal, Lock, Network, Image, Timer, SkipForward, ThumbsUp, MessageCircle, Share2, ChevronRight, List, ArrowUp, Newspaper, Flag, Cpu, Trophy, Rocket, Car, MapPin, Smartphone, Server, Mic, Search, DollarSign, Workflow } from 'lucide-react'
 import { translations, seo } from './i18n'
 import { useHomeSeo } from './articles/use-article-seo'
 import { getTechIcon } from './tech-icons'
@@ -1602,25 +1602,25 @@ function App() {
             </div>
           </AnimatedSection>
 
-          {/* Santifer iRepair - Bento Grid */}
+          {/* Project showcase - Bento Grid */}
           <AnimatedSection delay={0.1}>
             <div className="mb-12">
               <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mb-2">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl overflow-hidden bg-[#888] shrink-0">
-                    <img src="/foto-avatar-sm.webp" alt={t.experience.santifer.company} className="w-full h-full object-cover" width={40} height={40} loading="lazy" decoding="async" />
+                    <img src="/foto-avatar-sm.webp" alt={t.experience.jts.company} className="w-full h-full object-cover" width={40} height={40} loading="lazy" decoding="async" />
                   </div>
-                  <h3 className="font-display text-2xl font-bold">{t.experience.santifer.company}</h3>
+                  <h3 className="font-display text-2xl font-bold">{t.experience.jts.company}</h3>
                 </div>
                 <a href="https://joestechsolutions.com" target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline flex items-center gap-1">
                   joestechsolutions.com
                 </a>
-                <span className="text-sm text-muted-foreground">{t.experience.santifer.location}</span>
+                <span className="text-sm text-muted-foreground">{t.experience.jts.location}</span>
               </div>
-              <p className="text-primary font-medium mb-1">{t.experience.santifer.role}</p>
-              <p className="text-sm text-muted-foreground mb-4">{t.experience.santifer.period}</p>
+              <p className="text-primary font-medium mb-1">{t.experience.jts.role}</p>
+              <p className="text-sm text-muted-foreground mb-4">{t.experience.jts.period}</p>
               <ul className="text-sm text-muted-foreground space-y-1 mb-6">
-                {t.experience.santifer.highlights.map((h, i) => (
+                {t.experience.jts.highlights.map((h, i) => (
                   <li key={i} className="flex items-start gap-2">
                     <span className="text-primary mt-1">•</span>
                     <span>{h}</span>
@@ -1630,9 +1630,9 @@ function App() {
 
               {/* Trusted By - Corporate Logos */}
               <div className="pt-4 border-t border-border/50">
-                <p className="text-xs text-muted-foreground/60 uppercase tracking-wider mb-4">{t.experience.santifer.trustedBy.label}</p>
+                <p className="text-xs text-muted-foreground/60 uppercase tracking-wider mb-4">{t.experience.jts.trustedBy.label}</p>
                 <div className="flex flex-wrap items-center gap-x-6 gap-y-3 md:gap-x-8">
-                  {t.experience.santifer.trustedBy.logos.map((logo, i) => (
+                  {t.experience.jts.trustedBy.logos.map((logo, i) => (
                     <div key={i} className="flex items-center gap-2 hover:opacity-90 transition-opacity duration-200">
                       {'src' in logo ? (
                         <img src={logo.src} alt={logo.name} className="h-5 w-auto shrink-0 invert opacity-60 hover:opacity-80 dark:invert-0 dark:opacity-70 dark:hover:opacity-90" loading="lazy" width={20} height={20} />
@@ -1646,8 +1646,8 @@ function App() {
               </div>
 
               {/* Deep dive CTA */}
-              <Link to={t.experience.santifer.caseStudyUrl} className="inline-flex items-center gap-2 mt-6 text-sm font-medium text-primary hover:text-primary/80 transition-colors duration-200 group/cta">
-                <span className="px-4 py-2 rounded-lg bg-primary/10 border border-primary/30 group-hover/cta:bg-primary/20 group-hover/cta:border-primary/50 transition-all duration-200">{t.experience.santifer.caseStudyLabel}</span>
+              <Link to={t.experience.jts.caseStudyUrl} className="inline-flex items-center gap-2 mt-6 text-sm font-medium text-primary hover:text-primary/80 transition-colors duration-200 group/cta">
+                <span className="px-4 py-2 rounded-lg bg-primary/10 border border-primary/30 group-hover/cta:bg-primary/20 group-hover/cta:border-primary/50 transition-all duration-200">{t.experience.jts.caseStudyLabel}</span>
               </Link>
             </div>
           </AnimatedSection>
@@ -1661,12 +1661,12 @@ function App() {
                     <div className="w-12 h-12 rounded-xl overflow-hidden bg-black flex items-center justify-center shrink-0 p-1.5">
                         <img src="/logo-hermes.png" alt="Hermes" className="w-full h-full object-contain" width={48} height={48} loading="lazy" decoding="async" />
                     </div>
-                    <span className="badge px-3 py-1 bg-gold/20 text-gold">{t.experience.santifer.businessOS.badge}</span>
+                    <span className="badge px-3 py-1 bg-gold/20 text-gold">{t.experience.jts.businessOS.badge}</span>
                   </div>
-                  <h4 className="font-display text-2xl font-bold mb-4">{t.experience.santifer.businessOS.title}</h4>
-                  <p className="text-muted-foreground mb-6">{t.experience.santifer.businessOS.desc}</p>
+                  <h4 className="font-display text-2xl font-bold mb-4">{t.experience.jts.businessOS.title}</h4>
+                  <p className="text-muted-foreground mb-6">{t.experience.jts.businessOS.desc}</p>
                   <ul className="text-sm text-muted-foreground space-y-2">
-                    {t.experience.santifer.businessOS.modules.map((item, i) => {
+                    {t.experience.jts.businessOS.modules.map((item, i) => {
                       const icons: Record<string, React.ReactNode> = {
                         split: <GitBranch className="w-4 h-4" />,
                         mail: <Mail className="w-4 h-4" />,
@@ -1683,13 +1683,13 @@ function App() {
                       )
                     })}
                   </ul>
-                  <Link to={t.experience.santifer.caseStudyUrl} className="inline-flex items-center gap-2 mt-auto pt-6 text-sm font-medium text-gold hover:text-gold/80 transition-colors duration-200 group/cta">
-                    <span className="px-4 py-2 rounded-lg bg-gold/10 border border-gold/30 group-hover/cta:bg-gold/20 group-hover/cta:border-gold/50 transition-all duration-200">{t.experience.santifer.businessOS.footer}</span>
+                  <Link to={t.experience.jts.caseStudyUrl} className="inline-flex items-center gap-2 mt-auto pt-6 text-sm font-medium text-gold hover:text-gold/80 transition-colors duration-200 group/cta">
+                    <span className="px-4 py-2 rounded-lg bg-gold/10 border border-gold/30 group-hover/cta:bg-gold/20 group-hover/cta:border-gold/50 transition-all duration-200">{t.experience.jts.businessOS.footer}</span>
                     <ChevronRight className="w-4 h-4 group-hover/cta:translate-x-0.5 transition-transform duration-200" />
                   </Link>
                 </div>
                 <div className="grid grid-cols-3 lg:flex lg:flex-col gap-2 lg:gap-3 mt-4 lg:mt-0">
-                  {t.experience.santifer.businessOS.metrics.map((metric, i) => (
+                  {t.experience.jts.businessOS.metrics.map((metric, i) => (
                     <div key={i} className="text-center p-2 lg:p-4 rounded-xl bg-background/50 border border-gold/20">
                       <div className="font-display text-lg lg:text-2xl font-bold text-gold">{metric.value}</div>
                       <div className="text-[10px] lg:text-xs text-muted-foreground leading-tight">{metric.label}</div>
@@ -1706,21 +1706,21 @@ function App() {
             <AnimatedSection delay={0.15} className="col-span-2 row-span-2">
               <div className="h-full p-6 rounded-2xl bg-gradient-to-br from-primary/10 to-accent/10 border border-primary/20 hover:border-primary/40 transition-colors duration-200 group flex flex-col">
                 <div className="flex items-start justify-between mb-4">
-                  <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center">
-                    <Bot className="w-6 h-6 text-primary" />
+                  <div className="w-12 h-12 rounded-xl overflow-hidden bg-white flex items-center justify-center shrink-0">
+                    <img src="/archive/archive-icon.png" alt="Archive" className="w-full h-full object-contain" width={48} height={48} loading="lazy" decoding="async" />
                   </div>
-                  <span className="badge px-3 py-1 bg-primary/10 text-primary">{t.experience.santifer.jacobo.badge}</span>
+                  <span className="badge px-3 py-1 bg-primary/10 text-primary">{t.experience.jts.archive.badge}</span>
                 </div>
-                <h4 className="font-display text-xl font-bold mb-2 group-hover:text-primary transition-colors">{t.experience.santifer.jacobo.title}</h4>
-                <p className="text-muted-foreground text-sm mb-4">{t.experience.santifer.jacobo.desc}</p>
+                <h4 className="font-display text-xl font-bold mb-2 group-hover:text-primary transition-colors">{t.experience.jts.archive.title}</h4>
+                <p className="text-muted-foreground text-sm mb-4">{t.experience.jts.archive.desc}</p>
                 <ul className="text-sm text-muted-foreground space-y-2">
-                  {t.experience.santifer.jacobo.items.map((item, i) => {
+                  {t.experience.jts.archive.items.map((item, i) => {
                     const icons: Record<string, React.ReactNode> = {
-                      shield: <Shield className="w-4 h-4" />,
-                      cog: <Cog className="w-4 h-4" />,
-                      fileSearch: <FileSearch className="w-4 h-4" />,
-                      plug: <Plug className="w-4 h-4" />,
-                      graduationCap: <GradCap className="w-4 h-4" />
+                      smartphone: <Smartphone className="w-4 h-4" />,
+                      cloud: <Cloud className="w-4 h-4" />,
+                      lock: <Lock className="w-4 h-4" />,
+                      timer: <Timer className="w-4 h-4" />,
+                      zap: <Zap className="w-4 h-4" />
                     }
                     return (
                       <li key={i} className="flex items-start gap-2">
@@ -1730,8 +1730,8 @@ function App() {
                     )
                   })}
                 </ul>
-                {t.experience.santifer.jacobo.soldWith && <a href={t.experience.santifer.jacobo.caseStudyUrl || undefined} target={t.experience.santifer.jacobo.caseStudyUrl ? "_blank" : undefined} rel={t.experience.santifer.jacobo.caseStudyUrl ? "noopener noreferrer" : undefined} className="inline-flex items-center gap-2 mt-auto pt-4 text-sm font-medium text-primary hover:text-primary/80 transition-colors duration-200 group/cta">
-                  <span className="px-4 py-2 rounded-lg bg-primary/10 border border-primary/30 group-hover/cta:bg-primary/20 group-hover/cta:border-primary/50 transition-all duration-200">{t.experience.santifer.jacobo.soldWith}</span>
+                {t.experience.jts.archive.soldWith && <a href={t.experience.jts.archive.caseStudyUrl || undefined} target={t.experience.jts.archive.caseStudyUrl ? "_blank" : undefined} rel={t.experience.jts.archive.caseStudyUrl ? "noopener noreferrer" : undefined} className="inline-flex items-center gap-2 mt-auto pt-4 text-sm font-medium text-primary hover:text-primary/80 transition-colors duration-200 group/cta">
+                  <span className="px-4 py-2 rounded-lg bg-primary/10 border border-primary/30 group-hover/cta:bg-primary/20 group-hover/cta:border-primary/50 transition-all duration-200">{t.experience.jts.archive.soldWith}</span>
                   <ChevronRight className="w-4 h-4 group-hover/cta:translate-x-0.5 transition-transform duration-200" />
                 </a>}
               </div>
@@ -1744,12 +1744,12 @@ function App() {
                   <div className="w-12 h-12 rounded-xl bg-accent/20 flex items-center justify-center">
                     <Layout className="w-6 h-6 text-accent" />
                   </div>
-                  <span className="badge px-3 py-1 bg-accent/10 text-accent">{t.experience.santifer.webSeo.badge}</span>
+                  <span className="badge px-3 py-1 bg-accent/10 text-accent">{t.experience.jts.webSeo.badge}</span>
                 </div>
-                <h4 className="font-display text-xl font-bold mb-2 group-hover:text-accent transition-colors">{t.experience.santifer.webSeo.title}</h4>
-                <p className="text-muted-foreground text-sm mb-4">{t.experience.santifer.webSeo.desc}</p>
+                <h4 className="font-display text-xl font-bold mb-2 group-hover:text-accent transition-colors">{t.experience.jts.webSeo.title}</h4>
+                <p className="text-muted-foreground text-sm mb-4">{t.experience.jts.webSeo.desc}</p>
                 <ul className="text-sm text-muted-foreground space-y-2">
-                  {t.experience.santifer.webSeo.items.map((item, i) => {
+                  {t.experience.jts.webSeo.items.map((item, i) => {
                     const icons: Record<string, React.ReactNode> = {
                       smartphone: <Smartphone className="w-4 h-4" />,
                       image: <Image className="w-4 h-4" />,
@@ -1764,8 +1764,8 @@ function App() {
                     )
                   })}
                 </ul>
-                {t.experience.santifer.webSeo.codeAvailable && <a href={t.experience.santifer.webSeo.caseStudyUrl || undefined} target={t.experience.santifer.webSeo.caseStudyUrl ? "_blank" : undefined} rel={t.experience.santifer.webSeo.caseStudyUrl ? "noopener noreferrer" : undefined} className="inline-flex items-center gap-2 mt-auto pt-4 text-sm font-medium text-accent hover:text-accent/80 transition-colors duration-200 group/cta">
-                  <span className="px-4 py-2 rounded-lg bg-accent/10 border border-accent/30 group-hover/cta:bg-accent/20 group-hover/cta:border-accent/50 transition-all duration-200">{t.experience.santifer.webSeo.codeAvailable}</span>
+                {t.experience.jts.webSeo.codeAvailable && <a href={t.experience.jts.webSeo.caseStudyUrl || undefined} target={t.experience.jts.webSeo.caseStudyUrl ? "_blank" : undefined} rel={t.experience.jts.webSeo.caseStudyUrl ? "noopener noreferrer" : undefined} className="inline-flex items-center gap-2 mt-auto pt-4 text-sm font-medium text-accent hover:text-accent/80 transition-colors duration-200 group/cta">
+                  <span className="px-4 py-2 rounded-lg bg-accent/10 border border-accent/30 group-hover/cta:bg-accent/20 group-hover/cta:border-accent/50 transition-all duration-200">{t.experience.jts.webSeo.codeAvailable}</span>
                   <ChevronRight className="w-4 h-4 group-hover/cta:translate-x-0.5 transition-transform duration-200" />
                 </a>}
               </div>
@@ -1776,20 +1776,20 @@ function App() {
               <div className="h-full p-5 rounded-2xl bg-gradient-to-r from-success/10 to-success/5 border border-success/30 hover:border-success/50 transition-colors duration-200">
                 <div className="flex items-center gap-3 mb-2">
                   <Zap className="w-5 h-5 text-success" />
-                  <span className="font-display font-bold text-success">{t.experience.santifer.exit}</span>
+                  <span className="font-display font-bold text-success">{t.experience.jts.exit}</span>
                 </div>
-                <p className="text-sm text-muted-foreground">{t.experience.santifer.exitDesc}</p>
+                <p className="text-sm text-muted-foreground">{t.experience.jts.exitDesc}</p>
               </div>
             </AnimatedSection>
 
             {/* ERP card */}
             <AnimatedSection delay={0.3}>
-              <Link to={t.experience.santifer.erp.caseStudyUrl || '/'} className="block h-full p-5 rounded-2xl bg-card border border-border hover:border-primary/30 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/5 transition-all duration-200 flex flex-col group/card">
+              <Link to={t.experience.jts.erp.caseStudyUrl || '/'} className="block h-full p-5 rounded-2xl bg-card border border-border hover:border-primary/30 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/5 transition-all duration-200 flex flex-col group/card">
                 <GitBranch className="w-5 h-5 text-primary mb-3" />
-                <p className="font-medium text-sm mb-1">{t.experience.santifer.erp.title}</p>
-                <p className="text-sm text-muted-foreground">{t.experience.santifer.erp.desc}</p>
+                <p className="font-medium text-sm mb-1">{t.experience.jts.erp.title}</p>
+                <p className="text-sm text-muted-foreground">{t.experience.jts.erp.desc}</p>
                 <div className="flex items-center justify-between mt-auto pt-3">
-                  <span className="text-xs font-medium text-primary">{t.experience.santifer.erp.metric}</span>
+                  <span className="text-xs font-medium text-primary">{t.experience.jts.erp.metric}</span>
                   <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/0 group-hover/card:text-primary group-hover/card:translate-x-0.5 transition-all duration-200" />
                 </div>
               </Link>
@@ -1797,12 +1797,12 @@ function App() {
 
             {/* GPTs card */}
             <AnimatedSection delay={0.35}>
-              <a href={t.experience.santifer.gpts.caseStudyUrl || undefined} target={t.experience.santifer.gpts.caseStudyUrl ? "_blank" : undefined} rel={t.experience.santifer.gpts.caseStudyUrl ? "noopener noreferrer" : undefined} className="block h-full p-5 rounded-2xl bg-card border border-border hover:border-primary/30 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/5 transition-all duration-200 flex flex-col group/card">
+              <a href={t.experience.jts.gpts.caseStudyUrl || undefined} target={t.experience.jts.gpts.caseStudyUrl ? "_blank" : undefined} rel={t.experience.jts.gpts.caseStudyUrl ? "noopener noreferrer" : undefined} className="block h-full p-5 rounded-2xl bg-card border border-border hover:border-primary/30 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/5 transition-all duration-200 flex flex-col group/card">
                 <Bot className="w-5 h-5 text-accent mb-3" />
-                <p className="font-medium text-sm mb-1">{t.experience.santifer.gpts.title}</p>
-                <p className="text-sm text-muted-foreground">{t.experience.santifer.gpts.desc}</p>
+                <p className="font-medium text-sm mb-1">{t.experience.jts.gpts.title}</p>
+                <p className="text-sm text-muted-foreground">{t.experience.jts.gpts.desc}</p>
                 <div className="flex items-center justify-between mt-auto pt-3">
-                  <span className="text-xs font-medium text-primary">{t.experience.santifer.gpts.metric}</span>
+                  <span className="text-xs font-medium text-primary">{t.experience.jts.gpts.metric}</span>
                   <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/0 group-hover/card:text-primary group-hover/card:translate-x-0.5 transition-all duration-200" />
                 </div>
               </a>
@@ -1810,12 +1810,12 @@ function App() {
 
             {/* Reservas card */}
             <AnimatedSection delay={0.4}>
-              <a href={t.experience.santifer.reservas.caseStudyUrl || undefined} target={t.experience.santifer.reservas.caseStudyUrl ? "_blank" : undefined} rel={t.experience.santifer.reservas.caseStudyUrl ? "noopener noreferrer" : undefined} className="block h-full p-5 rounded-2xl bg-card border border-border hover:border-primary/30 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/5 transition-all duration-200 flex flex-col group/card">
+              <a href={t.experience.jts.reservas.caseStudyUrl || undefined} target={t.experience.jts.reservas.caseStudyUrl ? "_blank" : undefined} rel={t.experience.jts.reservas.caseStudyUrl ? "noopener noreferrer" : undefined} className="block h-full p-5 rounded-2xl bg-card border border-border hover:border-primary/30 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/5 transition-all duration-200 flex flex-col group/card">
                 <Timer className="w-5 h-5 text-primary mb-3" />
-                <p className="font-medium text-sm mb-1">{t.experience.santifer.reservas.title}</p>
-                <p className="text-sm text-muted-foreground">{t.experience.santifer.reservas.desc}</p>
+                <p className="font-medium text-sm mb-1">{t.experience.jts.reservas.title}</p>
+                <p className="text-sm text-muted-foreground">{t.experience.jts.reservas.desc}</p>
                 <div className="flex items-center justify-between mt-auto pt-3">
-                  <span className="text-xs font-medium text-accent">{t.experience.santifer.reservas.metric}</span>
+                  <span className="text-xs font-medium text-accent">{t.experience.jts.reservas.metric}</span>
                   <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/0 group-hover/card:text-primary group-hover/card:translate-x-0.5 transition-all duration-200" />
                 </div>
               </a>
@@ -1823,12 +1823,12 @@ function App() {
 
             {/* CRM card */}
             <AnimatedSection delay={0.45}>
-              <a href={t.experience.santifer.crm.caseStudyUrl || undefined} target={t.experience.santifer.crm.caseStudyUrl ? "_blank" : undefined} rel={t.experience.santifer.crm.caseStudyUrl ? "noopener noreferrer" : undefined} className="block h-full p-5 rounded-2xl bg-card border border-border hover:border-primary/30 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/5 transition-all duration-200 flex flex-col group/card">
+              <a href={t.experience.jts.crm.caseStudyUrl || undefined} target={t.experience.jts.crm.caseStudyUrl ? "_blank" : undefined} rel={t.experience.jts.crm.caseStudyUrl ? "noopener noreferrer" : undefined} className="block h-full p-5 rounded-2xl bg-card border border-border hover:border-primary/30 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/5 transition-all duration-200 flex flex-col group/card">
                 <Users className="w-5 h-5 text-accent mb-3" />
-                <p className="font-medium text-sm mb-1">{t.experience.santifer.crm.title}</p>
-                <p className="text-sm text-muted-foreground">{t.experience.santifer.crm.desc}</p>
+                <p className="font-medium text-sm mb-1">{t.experience.jts.crm.title}</p>
+                <p className="text-sm text-muted-foreground">{t.experience.jts.crm.desc}</p>
                 <div className="flex items-center justify-between mt-auto pt-3">
-                  <span className="text-xs font-medium text-primary">{t.experience.santifer.crm.metric}</span>
+                  <span className="text-xs font-medium text-primary">{t.experience.jts.crm.metric}</span>
                   <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/0 group-hover/card:text-primary group-hover/card:translate-x-0.5 transition-all duration-200" />
                 </div>
               </a>
@@ -1836,12 +1836,12 @@ function App() {
 
             {/* GenAI Marketing card */}
             <AnimatedSection delay={0.5}>
-              <a href={t.experience.santifer.genAI.caseStudyUrl || undefined} target={t.experience.santifer.genAI.caseStudyUrl ? "_blank" : undefined} rel={t.experience.santifer.genAI.caseStudyUrl ? "noopener noreferrer" : undefined} className="block h-full p-5 rounded-2xl bg-card border border-border hover:border-primary/30 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/5 transition-all duration-200 flex flex-col group/card">
+              <a href={t.experience.jts.genAI.caseStudyUrl || undefined} target={t.experience.jts.genAI.caseStudyUrl ? "_blank" : undefined} rel={t.experience.jts.genAI.caseStudyUrl ? "noopener noreferrer" : undefined} className="block h-full p-5 rounded-2xl bg-card border border-border hover:border-primary/30 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/5 transition-all duration-200 flex flex-col group/card">
                 <Sparkles className="w-5 h-5 text-primary mb-3" />
-                <p className="font-medium text-sm mb-1">{t.experience.santifer.genAI.title}</p>
-                <p className="text-sm text-muted-foreground">{t.experience.santifer.genAI.desc}</p>
+                <p className="font-medium text-sm mb-1">{t.experience.jts.genAI.title}</p>
+                <p className="text-sm text-muted-foreground">{t.experience.jts.genAI.desc}</p>
                 <div className="flex items-center justify-between mt-auto pt-3">
-                  <span className="text-xs font-medium text-accent">{t.experience.santifer.genAI.metric}</span>
+                  <span className="text-xs font-medium text-accent">{t.experience.jts.genAI.metric}</span>
                   <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/0 group-hover/card:text-primary group-hover/card:translate-x-0.5 transition-all duration-200" />
                 </div>
               </a>

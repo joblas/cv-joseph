@@ -134,7 +134,7 @@
     {
       "id": "multi-return-topic",
       "description": "Bot returns to previous topic correctly",
-      "input": "Going back to Jacobo, how many customers does it serve?",
+      "input": "Going back to Archive, what is the beta loop and how fast does it ship?",
       "lang": "en",
       "conversation": [
         {

@@ -276,7 +276,7 @@ export default function CareerOps() {
           <DiagramZoom
             src="/career-ops/pdf-wave-cover.webp"
             hdSrc="/career-ops/pdf-wave-cover.webp"
-            alt={'Cover letter for Wave: gradient header, Jacobo as voice + WhatsApp proof point, links to case studies and dashboard'}
+            alt={'Cover letter for Wave: gradient header, voice + WhatsApp proof point, links to case studies and dashboard'}
             caption={'Personalized cover letter'}
             width={700} height={900}
           />

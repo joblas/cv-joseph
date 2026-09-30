@@ -445,7 +445,7 @@ export default function SelfHealingChatbot() {
           <figure>
             <img
               src="/chatbot/voice-mode-ui.webp"
-              alt={'Voice mode: animated VoiceOrb, 1:45 timer, source badges linking to AI Agent Jacobo and Business OS'}
+              alt={'Voice mode: animated VoiceOrb, 1:45 timer, source badges linking to case studies and Business OS'}
               className="rounded-2xl w-full"
               width={390}
               height={560}
@@ -458,7 +458,7 @@ export default function SelfHealingChatbot() {
           <figure>
             <img
               src="/chatbot/text-mode-ui.webp"
-              alt={'Text mode: response about Jacobo with source badges, microphone button to switch to voice'}
+              alt={'Text mode: response with source badges, microphone button to switch to voice'}
               className="rounded-2xl w-full"
               width={390}
               height={560}

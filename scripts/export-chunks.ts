@@ -109,7 +109,7 @@ async function loadI18nSources(): Promise<I18nSource[]> {
     const modulePath = resolve(root, article.i18nFile)
     try {
       const mod = await import(modulePath)
-      // Find the *Content export that is an object (e.g. jacoboContent, chatbotContent)
+      // Find the *Content export that is an object (e.g. archiveContent, chatbotContent)
       const contentKey = Object.keys(mod).find(k => k.endsWith('Content') && typeof mod[k] === 'object' && mod[k] !== null)
       if (!contentKey) {
         console.warn(`  ⚠ ${article.id}: no *Content export found in ${article.i18nFile}, skipping`)
