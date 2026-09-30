@@ -92,7 +92,12 @@ AI operations system I operate as CTO — models pinned per job on Ollama Cloud.
 - Published the JTS Prompt Library — 33 prompts across ops, sales, content, coding, and research (free PDF at joestechsolutions.com/prompt-library)
 - Built The Skate Workshop — React Native app for Olympic coach (19-table Supabase backend, push notifications, live on iOS via TestFlight, Android builds rolling)
 
-### OvationCXM (2023-Present) — Field Service Technician
+### Quadient (May 2025 - Present) — Field Service Technician
+- Install, maintain, and repair mailing and shipping systems, including postage meters and folder inserters, at customer sites across a North County territory
+- Diagnose electro-mechanical and software faults on site and document each service call and resolution
+- Act as the customer's technical point of contact from installation through ongoing service
+
+### OvationCXM (2023-2025) — Field Service Technician
 - Deploy and configure POS systems integrating hardware, software, and network components
 - Troubleshoot complex technical issues across multiple system layers
 
