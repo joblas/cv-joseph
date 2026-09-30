@@ -270,7 +270,7 @@ const _translationsEn = {
   },
   experience: {
     title: 'Work Experience',
-    santifer: {
+    jts: {
       company: "Joe's Tech Solutions LLC",
       location: 'San Diego, CA',
       role: 'Founder & AI Systems Developer',
@@ -329,34 +329,34 @@ const _translationsEn = {
         ],
         footer: 'Case Study: OpenClaw → Hermes Migration',
       },
-      jacobo: {
-        title: 'Private AI Solutions',
-        badge: '100% local',
-        desc: 'Private AI solutions for SMBs. Self-hosted open source LLMs, client data never leaves their servers.',
+      archive: {
+        title: 'Archive — Mobile App',
+        badge: 'iOS · Android · In Beta',
+        desc: 'Luxury-editorial hair-color formula capture app for a real salon. Expo Router + Supabase, shipping to iOS and Android.',
         items: [
           {
-            icon: 'shield',
-            text: 'Ollama + Open WebUI: full chat interface with local models',
+            icon: 'smartphone',
+            text: 'Expo Router + React Native, TypeScript end to end, design-system first',
           },
           {
-            icon: 'cog',
-            text: 'Local automation workflows: AI-powered business process automation',
+            icon: 'cloud',
+            text: 'Supabase-first with optimistic writes — capture commits and navigates instantly',
           },
           {
-            icon: 'fileSearch',
-            text: 'Local RAG: embeddings over client documents',
+            icon: 'lock',
+            text: 'RLS on every table keyed to auth.uid(); multi-stylist-ready schema',
           },
           {
-            icon: 'plug',
-            text: 'Integration with existing systems (CRM, email, etc.)',
+            icon: 'timer',
+            text: 'Designed to keep formula capture under 30 seconds',
           },
           {
-            icon: 'graduationCap',
-            text: 'Client team training for adoption',
+            icon: 'zap',
+            text: 'Over-the-air beta loop: a client text becomes a shipped fix, median 13.8 minutes',
           },
         ],
-        soldWith: '',
-        caseStudyUrl: '',
+        soldWith: 'Case Study: Client Texts Become Shipped Features',
+        caseStudyUrl: '/articles/archive-beta-loop',
       },
       webSeo: {
         title: 'Production Applications',

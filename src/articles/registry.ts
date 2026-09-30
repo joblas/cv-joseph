@@ -44,59 +44,6 @@ export interface ArticleConfig {
 
 export const articleRegistry: ArticleConfig[] = [
   {
-    id: 'n8n-for-pms',
-    slug: 'n8n-for-pms',
-    title: 'n8n for PMs',
-    seo: {
-      title: 'n8n for PMs: Cheat Sheet + Free AI Templates | Joseph Blas',
-      description: 'n8n cheat sheet for Product Managers: automate sprint reports and classify feedback with AI. 2 free importable workflow templates. Step-by-step tutorial.',
-    },
-    sectionLabels: {
-      'time-sinks': 'Time Sinks',
-      'workflow-1': 'Workflow 1',
-      'workflow-2': 'Workflow 2',
-      'the-pattern': 'The Pattern',
-      'get-started': 'Get Started',
-      'lessons': 'Lessons',
-      'faq': 'FAQ',
-      'import': 'Import',
-      'resources': 'Resources',
-    },
-    type: 'collab',
-    ragReady: true,
-    i18nFile: 'src/n8n-i18n.ts',
-    ogImage: 'https://cloudyjoe.com/workflows/n8n-ai-feedback-classification-workflow.webp',
-    heroImage: 'https://cloudyjoe.com/workflows/n8n-sprint-report-automation-workflow.webp',
-    component: () => import('../N8nForPMs.tsx'),
-    seoMeta: {
-      datePublished: '2026-02-24',
-      dateModified: '2026-04-07',
-      keywords: ['n8n', 'n8n tutorial', 'n8n templates', 'n8n AI', 'n8n workflow', 'n8n automation', 'n8n cheat sheet', 'product manager', 'AI workflow automation', 'sprint report automation', 'feedback classification AI', 'no-code automation', 'n8n for product managers', 'workflow templates free'],
-      articleType: 'TechArticle',
-      articleTags: 'n8n,product manager,automation,AI,workflow,no-code',
-      images: ['https://cloudyjoe.com/workflows/n8n-sprint-report-automation-workflow.webp', 'https://cloudyjoe.com/workflows/n8n-ai-feedback-classification-workflow.webp'],
-      about: [
-        { '@type': 'SoftwareApplication', name: 'n8n', url: 'https://n8n.io', applicationCategory: 'Workflow Automation' },
-        { '@type': 'Thing', name: 'Product Management Automation' },
-      ],
-      extra: { proficiencyLevel: 'Beginner', dependencies: 'n8n Cloud (free tier), Airtable, Slack' },
-      isBasedOn: {
-        '@type': 'Course',
-        name: 'Masterclass: n8n for PMs',
-        provider: { '@type': 'Organization', name: 'Maven', url: 'https://maven.com' },
-        url: 'https://maven.com/p/52fc7d/masterclass-n8n-for-p-ms',
-      },
-      citation: [
-        { '@type': 'WebPage', name: 'Asana Anatomy of Work Index 2025', url: 'https://asana.com/work-index' },
-        { '@type': 'WebPage', name: 'n8n Documentation', url: 'https://docs.n8n.io' },
-      ],
-      mentions: [
-        { '@type': 'SoftwareApplication', name: 'n8n', url: 'https://n8n.io' },
-        { '@type': 'SoftwareApplication', name: 'Airtable', url: 'https://airtable.com' },
-      ],
-    },
-  },
-  {
     id: 'self-healing-chatbot',
     slug: 'self-healing-chatbot',
     title: 'The Self-Healing Chatbot',
@@ -140,7 +87,6 @@ export const articleRegistry: ArticleConfig[] = [
       ],
       extra: { proficiencyLevel: 'Expert', dependencies: 'Claude, Langfuse, Supabase, Vercel, OpenAI, Resend, GitHub Actions' },
       citation: [
-        { '@type': 'SocialMediaPosting', name: 'Han hackeado a mi chatbot — LinkedIn post (300+ reactions)', url: 'https://www.linkedin.com/feed/update/urn:li:activity:7421984735024816128/' },
         { '@type': 'WebPage', name: 'OWASP Top 10 for LLM Applications', url: 'https://owasp.org/www-project-top-10-for-large-language-model-applications/' },
         { '@type': 'TechArticle', name: 'Anthropic Tool Use Documentation', url: 'https://docs.anthropic.com/en/docs/build-with-claude/tool-use' },
       ],

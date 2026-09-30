@@ -9,12 +9,12 @@ GitHub: https://github.com/joblas
 
 /* THANKS */
 AI Pair: Claude Code (Anthropic)
-Portfolio Template: github.com/santifer/cv-santiago
+Portfolio Template (credited): github.com/santifer/cv-santiago
 
 /* SITE */
 Stack: React 19, TypeScript, Vite, Tailwind CSS, Motion
-AI: Claude API (claude-sonnet-4-6), streaming via Vercel Edge
-Hosting: Vercel
+AI: Claude API (claude-sonnet-4-6), streamed from edge functions
+Hosting: Cloudflare Pages
 Standards: llms.txt, security.txt, JSON-LD, Open Graph
 
 /* CRAFT */

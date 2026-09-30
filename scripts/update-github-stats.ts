@@ -29,7 +29,7 @@ const BADGE_REPOS: BadgeConfig[] = [
 // Repos with stars/forks in i18n.ts project cards
 const I18N_REPOS = [
   { owner: 'joblas', repo: 'career-ops', label: 'career-ops (i18n)' },
-  { owner: 'joblas', repo: 'cv-joseph', label: 'cv-santiago (i18n)' },
+  { owner: 'joblas', repo: 'cv-joseph', label: 'cv-joseph (i18n)' },
   { owner: 'joblas', repo: 'claude-pulse', label: 'claude-pulse (i18n)' },
 ]
 

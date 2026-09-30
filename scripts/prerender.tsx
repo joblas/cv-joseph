@@ -26,7 +26,6 @@ import { buildArticleJsonLd } from '../src/articles/json-ld.ts';
 import AboutPage from '../src/AboutPage.tsx';
 import { aboutContent } from '../src/about-i18n.ts';
 import { seo } from '../src/i18n.ts';
-import { n8nContent } from '../src/n8n-i18n.ts';
 import { chatbotContent } from '../src/chatbot-i18n.ts';
 import { careerOpsContent } from '../src/career-ops-i18n.ts';
 import { openclawContent } from '../src/openclaw-i18n.ts';
@@ -37,7 +36,6 @@ import { skateWorkshopLoopContent } from '../src/skate-workshop-loop-i18n.ts';
 
 // Map article id → i18n content for JSON-LD generation
 const i18nMap: Record<string, { header: { h1: string }; nav: { breadcrumbHome: string; breadcrumbCurrent: string }; faq: { items: readonly { q: string; a: string }[] } }> = {
-  'n8n-for-pms': n8nContent,
   'self-healing-chatbot': chatbotContent,
   'career-ops': careerOpsContent,
   'hermes': openclawContent,
@@ -164,11 +162,7 @@ const aboutJsonLd = {
       { '@type': 'EducationalOccupationalCredential', name: 'Airtable Admin Certification', recognizedBy: { '@type': 'Organization', name: 'Airtable' }, url: 'https://verify.skilljar.com/c/u3r8kgn5wdit' },
       { '@type': 'EducationalOccupationalCredential', name: 'Make Advanced', recognizedBy: { '@type': 'Organization', name: 'Make Academy' }, url: 'https://www.credly.com/badges/d27b8174-ef20-46bd-9d81-ee05e9c349e8' },
     ],
-    alumniOf: [
-      { '@type': 'EducationalOrganization', name: 'Maven - AI Product Management Bootcamp' },
-      { '@type': 'EducationalOrganization', name: 'BIGSEO - Master en Inteligencia Artificial' },
-      { '@type': 'EducationalOrganization', name: 'ETSI - Universidad de Sevilla' },
-    ],
+    alumniOf: [],
     founder: {
       '@type': 'Organization',
       name: 'Joseph Blas',
@@ -179,7 +173,6 @@ const aboutJsonLd = {
       'https://www.linkedin.com/in/joseph-blas',
       'https://github.com/joblas',
       'https://x.com/joblas',
-      'https://dev.to/joblas',
       'https://joblas.substack.com',
       'https://contentdigest.cloudyjoe.com',
       'https://www.youtube.com/@joblas',
@@ -190,14 +183,6 @@ const aboutJsonLd = {
       'https://www.wikidata.org/wiki/Q138710224',
       'https://www.facebook.com/joblas/',
     ],
-    subjectOf: {
-      '@type': 'NewsArticle',
-      headline: 'Going shopping: A quick fix for the phone',
-      publisher: { '@type': 'NewsMediaOrganization', name: 'Diario de Sevilla' },
-      datePublished: '2014-06-19',
-      url: 'https://www.diariodesevilla.es/vivirensevilla/Salir-compras-solucion-expres-telefono_0_817718799.html',
-    },
-    address: { '@type': 'PostalAddress', addressLocality: 'Sevilla', addressCountry: 'ES' },
   },
 };
 

@@ -21,7 +21,6 @@ const AUTH = Buffer.from(`${LANGFUSE_PUBLIC_KEY}:${LANGFUSE_SECRET_KEY}`).toStri
 // Maps keywords to articles that SHOULD be found when those keywords appear.
 // This is the "ground truth" that the RAG should discover.
 const ARTICLE_KEYWORDS: Record<string, string[]> = {
-  'n8n-for-pms':          ['n8n', 'workflow', 'automation', 'template', 'product manager'],
   'self-healing-chatbot': ['chatbot', 'rag', 'langfuse', 'evals', 'jailbreak', 'prompt', 'defense', 'scoring'],
   'career-ops':           ['career', 'open-source', 'fork', 'job search', 'resume'],
   'hermes':               ['hermes', 'openclaw', 'lurkr', 'agents', 'migration', 'delegation', 'ollama'],
