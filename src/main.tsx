@@ -1,7 +1,6 @@
 import { StrictMode, lazy, Suspense, useState, useEffect, useRef, Component, type ReactNode, type ComponentType } from 'react'
 import { hydrateRoot, createRoot } from 'react-dom/client'
 import { BrowserRouter, Routes, Route, useLocation, Link } from 'react-router-dom'
-import { Analytics } from '@vercel/analytics/react'
 import './index.css'
 import App from './App.tsx'
 import GlobalNav from './GlobalNav.tsx'
@@ -177,7 +176,6 @@ const app = (
       </PageTransition>
       <GlobalChat />
       <GlobalMusic />
-      <Analytics />
     </BrowserRouter>
   </StrictMode>
 )
