@@ -125,6 +125,16 @@
       "source": "/:path+/",
       "destination": "/:path+",
       "permanent": true
+    },
+    {
+      "source": "/joblas-portfolio",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/joblas-portfolio-founder",
+      "destination": "/",
+      "permanent": false
     }
   ],
   "rewrites": [
@@ -143,14 +153,6 @@
     {
       "source": "/programmatic-seo",
       "destination": "/hermes/index.html"
-    },
-    {
-      "source": "/joblas-portfolio",
-      "destination": "/joblas-portfolio/index.html"
-    },
-    {
-      "source": "/joblas-portfolio-founder",
-      "destination": "/joblas-portfolio-founder/index.html"
     },
     {
       "source": "/self-healing-chatbot",
