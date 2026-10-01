@@ -30,7 +30,7 @@ const content = {
           'Anthropic (Claude): procesa los mensajes del chatbot para generar respuestas.',
           'OpenAI (Realtime API): procesa el audio del modo voz para la conversacion en tiempo real.',
           'Langfuse: almacena trazas anonimizadas de conversaciones para observabilidad y mejora de calidad.',
-          'Vercel: aloja el sitio web y recopila analiticas anonimas de uso.',
+          'Cloudflare: aloja el sitio web y sirve sus paginas.',
         ],
       },
       {
@@ -76,7 +76,7 @@ const content = {
           'Anthropic (Claude): processes chatbot messages to generate responses.',
           'OpenAI (Realtime API): processes voice mode audio for real-time conversation.',
           'Langfuse: stores anonymized conversation traces for observability and quality improvement.',
-          'Vercel: hosts the website and collects anonymous usage analytics.',
+          'Cloudflare: hosts the website and serves its pages.',
         ],
       },
       {

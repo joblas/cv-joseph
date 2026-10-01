@@ -170,7 +170,7 @@ const _translationsEn = {
           'AWS',
           'GCP',
           'CI/CD',
-          'Vercel',
+          'Cloudflare',
         ],
       },
       {
@@ -212,7 +212,7 @@ const _translationsEn = {
         badge: 'This Portfolio',
         badgeBuilding: '',
         desc: 'Interactive CV with AI chatbot, agentic RAG, voice mode, Langfuse observability, and multi-layer defense. SSR prerender, bilingual i18n.',
-        tech: ['React 19', 'TypeScript', 'Tailwind', 'Vite', 'Claude API', 'Vercel'],
+        tech: ['React 19', 'TypeScript', 'Tailwind', 'Vite', 'Claude API', 'Cloudflare Pages'],
         link: 'github.com/joblas/cv-joseph',
       },
       {

@@ -84,7 +84,7 @@ export default async function handler(req, res) {
           body: 'The system has 5 layers. Each was added when the previous one revealed a problem it couldn\'t solve alone.',
           layers: [
             { title: 'Frontend', detail: 'React 19 + FloatingChat widget with streaming, quick prompts, and contact CTA.' },
-            { title: 'Edge Function', detail: 'Vercel edge runtime — api/chat.js with system prompt, Langfuse tracing, and waitUntil scoring.' },
+            { title: 'Edge Function', detail: 'Cloudflare Pages Function — api/chat.js with system prompt, Langfuse tracing, and waitUntil scoring.' },
             { title: 'RAG Pipeline', detail: 'Embed (OpenAI) → hybrid search (pgvector + BM25) → rerank (Haiku) → generate (Sonnet).' },
             { title: 'Observability', detail: 'Agentic observability via Langfuse. Every autonomous decision traced as a generation with model and real token usage.' },
             { title: 'Quality Loops', detail: 'CI gate (71 tests), adversarial red team, prompt regression, trace-to-eval.' },
@@ -116,7 +116,7 @@ export default async function handler(req, res) {
               subtitle: 'Measure before you optimize',
               items: [
                 { label: 'Cost tracking per span', detail: 'Every trace broken down: generation, embedding, reranking, scoring. You know exactly where each cent goes.' },
-                { label: 'Online scoring with Haiku', detail: 'Haiku evaluates quality and safety on every response via waitUntil() — 0ms latency added to the user. waitUntil() is a Vercel edge runtime API that executes code after sending the response: scoring happens in background without the user waiting.' },
+                { label: 'Online scoring with Haiku', detail: 'Haiku evaluates quality and safety on every response via waitUntil() — 0ms latency added to the user. waitUntil() is an edge-runtime API that executes code after sending the response: scoring happens in the background without the user waiting. The source imports it from @vercel/functions; the build rewrites that import to Cloudflare\'s ctx.waitUntil(), so the code is portable across edge runtimes.' },
                 { label: 'CI gate', detail: '71 tests on every push. If one fails, deploy is blocked. Nothing reaches production without passing the full suite.' },
               ],
             },
@@ -272,14 +272,14 @@ Production
               ['CI gate (71 tests)', 'Haiku + API', '71 × ~500 tokens', '~$0.02/push'],
             ],
           },
-          callout: 'Infrastructure: $0. Everything on free tiers (Vercel, Supabase, Langfuse).',
+          callout: 'Infrastructure: $0. Everything on free tiers (Cloudflare, Supabase, Langfuse).',
         },
         stack: {
           heading: 'Tech Stack',
           items: [
             { name: 'React 19', role: 'Frontend + FloatingChat widget' },
             { name: 'Vite', role: 'Build + dev server' },
-            { name: 'Vercel', role: 'Edge functions + hosting' },
+            { name: 'Cloudflare Pages', role: 'Edge functions + hosting' },
             { name: 'Claude Sonnet', role: 'Main generation + tool_use' },
             { name: 'Claude Haiku', role: 'Reranking + scoring + evals' },
             { name: 'OpenAI', role: 'Embeddings (text-embedding-3-small)' },
@@ -336,15 +336,15 @@ Production
         items: [
           {
             q: 'Is this production-grade or just a demo?',
-            a: 'It is real production, not a demo. The chatbot has been active since January 26, 2026, serving daily organic traffic from portfolio visitors, recruiters, and hiring managers. Every conversation is traced in Langfuse with full observability: input tokens, output tokens, latency per span, cost breakdown, and quality scores. A CI gate running 71 automated tests blocks any deployment where a single test fails — the same quality bar you would expect from a production SaaS service. The 6-layer security defense catches real jailbreak attempts, with email alerts firing within seconds of detection. Uptime has been continuous since launch with zero outages, running on Vercel\'s edge network. You can verify this right now by opening the chat widget on this page.',
+            a: 'It is real production, not a demo. The chatbot has been active since January 26, 2026, serving daily organic traffic from portfolio visitors, recruiters, and hiring managers. Every conversation is traced in Langfuse with full observability: input tokens, output tokens, latency per span, cost breakdown, and quality scores. A CI gate running 71 automated tests blocks any deployment where a single test fails — the same quality bar you would expect from a production SaaS service. The 6-layer security defense catches real jailbreak attempts, with email alerts firing within seconds of detection. Uptime has been continuous since launch with zero outages, running on Cloudflare\'s edge network. You can verify this right now by opening the chat widget on this page.',
           },
           {
             q: 'How much did it cost to build?',
-            a: '$0 in infrastructure. Vercel\'s free tier handles hosting and serverless functions. Supabase free tier provides the Postgres database for RAG embeddings and conversation history. Langfuse free tier covers all observability, tracing, and evaluation scoring. For LLM costs, each conversation breaks down roughly as follows: embedding the query via OpenAI text-embedding-3-small costs under $0.0001, Cohere reranking adds about $0.0003 per search, Claude Sonnet handles generation at approximately $0.003 per conversation turn, and Haiku runs the safety and quality scoring at under $0.0002 per evaluation. Total per conversation: less than $0.005. Voice mode adds OpenAI Realtime API costs at roughly $0.06 per minute of audio. Development took about three weeks of evenings and weekends — one person, no team, no budget.',
+            a: '$0 in infrastructure. Cloudflare Pages\' free tier handles hosting and edge functions. Supabase free tier provides the Postgres database for RAG embeddings and conversation history. Langfuse free tier covers all observability, tracing, and evaluation scoring. For LLM costs, each conversation breaks down roughly as follows: embedding the query via OpenAI text-embedding-3-small costs under $0.0001, Cohere reranking adds about $0.0003 per search, Claude Sonnet handles generation at approximately $0.003 per conversation turn, and Haiku runs the safety and quality scoring at under $0.0002 per evaluation. Total per conversation: less than $0.005. Voice mode adds OpenAI Realtime API costs at roughly $0.06 per minute of audio. Development took about three weeks of evenings and weekends — one person, no team, no budget.',
           },
           {
             q: 'Why Claude and not GPT-4 or Gemini?',
-            a: 'Claude offers clean native tool_use for agentic RAG decisions without wrapper libraries, SSE streaming that works directly with the Vercel edge runtime without additional dependencies, and Sonnet\'s quality-to-cost ratio is the best available for conversational generation at approximately $0.003 per turn. Haiku handles all background scoring and reranking at under $0.0004 per evaluation — unbeatable for high-volume automated quality checks running on every single response. That said, the architecture is deliberately model-agnostic. The system prompt, RAG pipeline, scoring logic, and defense layers are all provider-independent. Switching from Claude to GPT-4 or Gemini requires changing the model identifier in one configuration variable. The evals would need recalibration since different models have different output patterns, but the infrastructure stays identical.',
+            a: 'Claude offers clean native tool_use for agentic RAG decisions without wrapper libraries, SSE streaming that works directly on the edge runtime without additional dependencies, and Sonnet\'s quality-to-cost ratio is the best available for conversational generation at approximately $0.003 per turn. Haiku handles all background scoring and reranking at under $0.0004 per evaluation — unbeatable for high-volume automated quality checks running on every single response. That said, the architecture is deliberately model-agnostic. The system prompt, RAG pipeline, scoring logic, and defense layers are all provider-independent. Switching from Claude to GPT-4 or Gemini requires changing the model identifier in one configuration variable. The evals would need recalibration since different models have different output patterns, but the infrastructure stays identical.',
           },
           {
             q: 'Can I replicate this for my portfolio?',
