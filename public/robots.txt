@@ -1,7 +1,7 @@
 # Most bots crawl. The best ones read llms.txt → /llms.txt
 #
 # Built by Joseph Blas — blasj408@gmail.com
-# Stack: React 19 · Claude API · Vercel Edge · voice mode
+# Stack: React 19 · Claude API · Cloudflare Pages · voice mode
 
 User-agent: *
 Allow: /

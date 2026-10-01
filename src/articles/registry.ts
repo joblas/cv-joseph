@@ -85,7 +85,7 @@ export const articleRegistry: ArticleConfig[] = [
         { '@type': 'Thing', name: 'LLMOps' },
         { '@type': 'Thing', name: 'Retrieval-Augmented Generation' },
       ],
-      extra: { proficiencyLevel: 'Expert', dependencies: 'Claude, Langfuse, Supabase, Vercel, OpenAI, Resend, GitHub Actions' },
+      extra: { proficiencyLevel: 'Expert', dependencies: 'Claude, Langfuse, Supabase, Cloudflare, OpenAI, Resend, GitHub Actions' },
       citation: [
         { '@type': 'WebPage', name: 'OWASP Top 10 for LLM Applications', url: 'https://owasp.org/www-project-top-10-for-large-language-model-applications/' },
         { '@type': 'TechArticle', name: 'Anthropic Tool Use Documentation', url: 'https://docs.anthropic.com/en/docs/build-with-claude/tool-use' },
@@ -95,7 +95,7 @@ export const articleRegistry: ArticleConfig[] = [
         { '@type': 'SoftwareApplication', name: 'Supabase', url: 'https://supabase.com' },
         { '@type': 'SoftwareApplication', name: 'OpenAI Realtime API', url: 'https://platform.openai.com' },
         { '@type': 'SoftwareApplication', name: 'Claude Code', url: 'https://claude.ai' },
-        { '@type': 'SoftwareApplication', name: 'Vercel', url: 'https://vercel.com' },
+        { '@type': 'SoftwareApplication', name: 'Cloudflare', url: 'https://cloudflare.com' },
       ],
     },
   },
