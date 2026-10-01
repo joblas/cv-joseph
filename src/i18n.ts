@@ -465,7 +465,7 @@ const _translationsEn = {
       period: '2018 - 2019 · Autonomous Vehicles',
       desc: [
         'Original sub-10-person team. Sole technician — owned end-to-end fleet integration, validation, and test campaign execution under rapid iteration.',
-        'Drove the 2,900-mile San Francisco → New York autonomous demo with zero critical failures and zero hands on the wheel.',
+        'Supported the 2,900-mile San Francisco → New York autonomous demo with zero critical failures and zero hands on the wheel.',
         'Conducted 30+ executive and investor demonstrations as primary field-to-engineering liaison.',
       ],
       tesauro: {
