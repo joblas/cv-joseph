@@ -173,8 +173,6 @@ const aboutJsonLd = {
       'https://www.linkedin.com/in/joseph-blas',
       'https://github.com/joblas',
       'https://x.com/joblas',
-      'https://joblas.substack.com',
-      'https://contentdigest.cloudyjoe.com',
       'https://www.youtube.com/@joblas',
       'https://stackoverflow.com/users/32541743',
       'https://orcid.org/0009-0006-2192-7210',
@@ -270,7 +268,7 @@ function buildArticlePageHtml(
     .replace(/<meta name="twitter:title" content="[^"]*" \/>/, `<meta name="twitter:title" content="${esc(articleSeo.title)}" />`)
     .replace(/<meta name="twitter:description" content="[^"]*" \/>/, `<meta name="twitter:description" content="${esc(articleSeo.description)}" />`)
     // OG image — replace with article-specific image if configured
-    .replace(/<meta property="og:image" content="[^"]*" \/>/, `<meta property="og:image" content="${esc(config.ogImage || 'https://cloudyjoe.com/og-image.webp')}" />`)
+    .replace(/<meta property="og:image" content="[^"]*" \/>/, `<meta property="og:image" content="${esc(config.ogImage || 'https://cloudyjoe.com/og-joseph-blas.webp')}" />`)
     .replace(/<meta property="og:image:alt" content="[^"]*" \/>/, `<meta property="og:image:alt" content="${esc(articleSeo.title)}" />`)
     .replace(/<meta name="twitter:image" content="[^"]*" \/>/, config.ogImage ? `<meta name="twitter:image" content="${esc(config.ogImage)}" />` : '');
 

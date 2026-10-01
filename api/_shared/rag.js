@@ -670,7 +670,6 @@ export function filterSiteSources(sources, responseText) {
 //   text alone (no retrieval), so a passing mention of "Hermes" in an answer
 //   about another project does not attach the Hermes badge.
 export const ARTICLE_KEYWORDS = {
-  'n8n-for-pms':          ['n8n', 'nodemation'],
   'self-healing-chatbot': ['self-healing', 'this chat', 'closed-loop', 'langfuse', 'evals'],
   'career-ops':           ['career-ops', 'career ops'],
   'hermes':               ['hermes', 'openclaw', 'lurkr'],
@@ -681,7 +680,6 @@ export const ARTICLE_KEYWORDS = {
 }
 
 export const ARTICLE_DETECT_KEYWORDS = {
-  'n8n-for-pms':          ['n8n', 'nodemation'],
   'self-healing-chatbot': ['self-healing chatbot', 'this chat', 'langfuse trac', 'agentic rag', 'stack behind me'],
   'career-ops':           ['career-ops', 'career ops'],
   'hermes':               ['hermes migration', 'openclaw', 'lurkr', '22-agent', '22 agents'],
@@ -708,7 +706,6 @@ export function filterSourcesByResponse(sources, responseText) {
 // Static article routes — used to generate badges from keywords regardless of RAG
 // (single-language site: the ES path is the same route)
 export const ARTICLE_ROUTES = {
-  'n8n-for-pms':          { page_path_es: '/n8n-for-pms', page_path_en: '/n8n-for-pms' },
   'self-healing-chatbot': { page_path_es: '/self-healing-chatbot', page_path_en: '/self-healing-chatbot' },
   'career-ops':           { page_path_es: '/career-ops-system', page_path_en: '/career-ops-system' },
   'hermes':               { page_path_es: '/hermes', page_path_en: '/hermes' },

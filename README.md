@@ -275,7 +275,6 @@ chatbot-prompt.txt           # System prompt (fallback, prod uses Langfuse)
 | OpenClaw → Hermes Migration | `/hermes` | case-study |
 | Self-Healing Chatbot | `/self-healing-chatbot` | case-study |
 | Career-Ops | `/career-ops-system` | case-study |
-| n8n for PMs | `/n8n-for-pms` | collab |
 | The Turnover Agent | `/turnover-agent` | case-study |
 | The Archive Beta Loop | `/archive-beta-loop` | case-study |
 | The Cbarrgs Agent | `/cbarrgs-agent` | case-study |
