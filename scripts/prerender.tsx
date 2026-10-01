@@ -24,6 +24,7 @@ import GlobalNav from '../src/GlobalNav.tsx';
 import { articleRegistry, type ArticleConfig } from '../src/articles/registry.ts';
 import { buildArticleJsonLd } from '../src/articles/json-ld.ts';
 import AboutPage from '../src/AboutPage.tsx';
+import PrivacyPolicy from '../src/PrivacyPolicy.tsx';
 import { aboutContent } from '../src/about-i18n.ts';
 import { seo } from '../src/i18n.ts';
 import { chatbotContent } from '../src/chatbot-i18n.ts';
@@ -230,6 +231,47 @@ aboutPage = aboutPage.replace(
 );
 
 // ---------------------------------------------------------------------------
+// Privacy page — linked from the site footer, so it must actually exist.
+// PrivacyPolicy is client-rendered and sets its own <title> + noindex in a
+// useEffect, so this prerenders the markup only: the app bundle still runs and
+// applies the title/noindex on load, but the page now returns HTTP 200 with real
+// content instead of falling through to the 404 page. It is deliberately NOT
+// added to the sitemap (noindex).
+// ---------------------------------------------------------------------------
+let privacyRenderedHtml: string;
+try {
+  privacyRenderedHtml = stripReactSSRTags(renderToString(
+    <StaticRouter location="/privacy">
+      <GlobalNav />
+      <div>
+        <Suspense fallback={null}>
+          <Routes>
+            <Route path="/privacy" element={<PrivacyPolicy />} />
+          </Routes>
+        </Suspense>
+      </div>
+    </StaticRouter>
+  ));
+} catch (err) {
+  console.error('[prerender] SSR failed for privacy, falling back to empty root:', err);
+  privacyRenderedHtml = '';
+}
+
+const privacyPage = indexHtml
+  .replace('<div id="root"></div>', `<div id="root">${privacyRenderedHtml}</div>`)
+  .replace(/<title>[^<]*<\/title>/, '<title>Privacy Policy | cloudyjoe.com</title>')
+  .replace(/<meta name="description" content="[^"]*" \/>/, '<meta name="description" content="How cloudyjoe.com handles data: no tracking cookies, no analytics, contact details for requests." />')
+  .replace(/<link rel="canonical" href="[^"]*" \/>/, '<link rel="canonical" href="https://cloudyjoe.com/privacy" />')
+  .replace(/<meta property="og:url" content="[^"]*" \/>/, '<meta property="og:url" content="https://cloudyjoe.com/privacy" />')
+  .replace(/<meta property="og:title" content="[^"]*" \/>/, '<meta property="og:title" content="Privacy Policy | cloudyjoe.com" />')
+  .replace(/<meta name="twitter:url" content="[^"]*" \/>/, '<meta name="twitter:url" content="https://cloudyjoe.com/privacy" />');
+
+// noindex — this page should not be in search results
+const privacyWithNoindex = privacyPage.includes('name="robots"')
+  ? privacyPage.replace(/<meta name="robots" content="[^"]*" \/>/, '<meta name="robots" content="noindex, nofollow" />')
+  : privacyPage.replace('</head>', '<meta name="robots" content="noindex, nofollow" /></head>');
+
+// ---------------------------------------------------------------------------
 // Article pages — build from registry
 // ---------------------------------------------------------------------------
 interface ArticlePage {
@@ -370,6 +412,9 @@ async function inlineCriticalCSS() {
 
   // About page
   await writePage(aboutPage, resolve(distDir, aboutSlug, 'index.html'), `${aboutSlug}: dist/${aboutSlug}/index.html created`);
+
+  // Privacy page (linked from the footer; was 404ing because nothing built it)
+  await writePage(privacyWithNoindex, resolve(distDir, 'privacy', 'index.html'), 'privacy: dist/privacy/index.html created');
 
   // Article pages
   for (const { slug, html } of articlePages) {
