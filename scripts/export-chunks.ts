@@ -17,6 +17,8 @@ import { readFileSync } from 'node:fs'
 import { resolve, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { articleRegistry } from '../src/articles/registry.ts'
+// The work list every agent prompt is composed from (api/_shared/work.js).
+import { workFactCards, FACT_CARDS_ID } from '../api/_shared/work.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const root = resolve(__dirname, '..')
@@ -33,7 +35,9 @@ interface ChunkMetadata {
   section_anchor: string
   page_path: string
   source_file: string
-  format: 'i18n' | 'markdown' | 'plaintext'
+  format: 'i18n' | 'markdown' | 'plaintext' | 'facts'
+  /** Fact cards only: the cloudyjoe article whose badge the card shows (api/_shared/rag.js extractSources). */
+  badge_article_id?: string
 }
 
 interface Chunk {
@@ -340,8 +344,38 @@ function parseMarkdown(content: string, articleId: string, sourceFile: string): 
   return chunks
 }
 
-// Expose for future use
+// Expose for future use (neither parser runs today: llms.txt is not indexed)
 void parseMarkdown
+void parsePlaintext
+
+// ---------------------------------------------------------------------------
+// Parser 4: work fact cards (api/_shared/work.js)
+// ---------------------------------------------------------------------------
+//
+// One chunk per work item, plus one credits card, so retrieval holds the same
+// facts the prompts do (the 2026-10-02 Shopify miss: the fact was in no
+// prompt and no indexed article). They export to scripts/chunks/work-facts.json
+// under one article_id, which keeps ingest-rag.ts's per-file hash and its
+// delete-then-insert self-contained. Nothing here writes to the database: the
+// cards reach production only when someone runs `npm run rag:sync` by hand.
+
+interface FactCard { id: string; content: string; badgeArticleId: string | null }
+
+export function factCardChunks(): Chunk[] {
+  return (workFactCards() as FactCard[]).map((card) => ({
+    content: card.content,
+    metadata: {
+      article_id: FACT_CARDS_ID as string,
+      article_slug: '',
+      section_id: card.id,
+      section_anchor: '',
+      page_path: '',
+      source_file: 'api/_shared/work.js',
+      format: 'facts' as const,
+      ...(card.badgeArticleId ? { badge_article_id: card.badgeArticleId } : {}),
+    },
+  }))
+}
 
 // ---------------------------------------------------------------------------
 // Main
@@ -380,7 +414,13 @@ async function main() {
     totalChunks += chunks.length
   }
 
+  const cards = factCardChunks()
+  writeFileSync(resolve(CHUNKS_DIR, `${FACT_CARDS_ID}.json`), JSON.stringify(cards, null, 2))
+  console.log(`  ✓ ${FACT_CARDS_ID} → ${cards.length} fact cards (api/_shared/work.js)`)
+  totalChunks += cards.length
+
   console.log(`\n✅ Total: ${totalChunks} chunks exported to scripts/chunks/`)
 }
 
-main()
+// Importable without side effects (tests read factCardChunks); runs as a script.
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) main()
