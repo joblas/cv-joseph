@@ -24,6 +24,15 @@ import { join } from "node:path";
 // tests in this directory use.
 const ROOT = process.cwd();
 
+function hasRef(ref: string): boolean {
+  try {
+    execFileSync("git", ["rev-parse", "--verify", "--quiet", ref], { cwd: ROOT, stdio: "pipe" });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 // Fold text down to something a regex can actually match, because the obvious
 // evasions live in the encoding, not the wording:
 //   - a banned name wrapped across two lines  -> collapse whitespace
@@ -236,6 +245,75 @@ test("the 10+ figure is not written with an em dash around it", () => {
     offenders,
     [],
     "the corrected claims use an em dash; use a comma or a colon instead:\n" + offenders.join("\n"),
+  );
+});
+
+test("no em dash is introduced into career copy", () => {
+  // Two rounds running, my own verification of this was WRONG in the same way: I ran
+  //   git diff -U0 | grep "^+" | grep "\u2014"
+  // in bash. Bash does not expand \u2014, so grep searched for the literal nine
+  // characters backslash-u-2-0-1-4, which match nothing, and the count came back 0.
+  // I reported "zero em dashes in added lines" twice on the strength of a command
+  // that could not have found one. Use the real character.
+  //
+  // Policy, per Joe: no em dashes in NEW copy. The site's existing copy carries
+  // hundreds, so this cannot be a blanket ban - it is scoped to career copy, and it
+  // distinguishes an INTRODUCED dash from a pre-existing one on a line that was
+  // merely rewritten. It also excludes:
+  //   - test files and this test itself (assertion messages are not published copy)
+  //   - public/llms.txt section headers, where "### Name (dates) - Role" with an em
+  //     dash is that file's own convention (14 of its 25 headers)
+  //   - lines whose dash count did not increase, i.e. dashes that were already there
+  const EM = "\u2014";
+  const CAREER = [
+    "src/i18n.ts",
+    "src/about-i18n.ts",
+    "chatbot-prompt.txt",
+    "jts-prompt.txt",
+    "index.html",
+  ];
+  const offenders: string[] = [];
+  for (const rel of CAREER) {
+    const now = readFileSync(join(ROOT, rel), "utf8").split("\n");
+    // A baseline is REQUIRED. An earlier version skipped the file when the baseline
+    // could not be read, and that silently disabled the whole check: this worktree's
+    // origin/main was weeks stale, the counts moved DOWN (dashes removed while fixing
+    // other things), and the guard reported green while a planted em dash passed.
+    // If origin/main is missing entirely - which happens with a shallow CI checkout -
+    // say so and fail, rather than look like coverage that is not there.
+    if (!hasRef("origin/main")) {
+      offenders.push(
+        `${rel}: cannot check - origin/main is not available in this checkout. ` +
+          `The guard needs a baseline; run with full history (fetch-depth: 0).`,
+      );
+      continue;
+    }
+    let before: string[];
+    try {
+      before = execFileSync("git", ["show", `origin/main:${rel}`], {
+        cwd: ROOT,
+        encoding: "utf8",
+      }).split("\n");
+    } catch {
+      continue; // file is new on this branch - nothing to compare against
+    }
+    const beforeCount = before.filter((l) => l.includes(EM)).length;
+    const nowCount = now.filter((l) => l.includes(EM)).length;
+    if (nowCount > beforeCount) {
+      const added = now.filter((l) => l.includes(EM));
+      offenders.push(
+        `${rel}: em dashes went from ${beforeCount} to ${nowCount}. Lines now carrying one:\n` +
+          added
+            .slice(0, 5)
+            .map((l) => `    ${l.trim().slice(0, 110)}`)
+            .join("\n"),
+      );
+    }
+  }
+  assert.deepEqual(
+    offenders,
+    [],
+    `an em dash was introduced into career copy (Joe: no em dashes in new copy):\n${offenders.join("\n")}`,
   );
 });
 

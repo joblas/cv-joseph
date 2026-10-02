@@ -52,7 +52,13 @@ jobs:
     # A hung step fails in minutes, not after GitHub's 6-hour default.
     timeout-minutes: 20
     steps:
+      # Full history: tests/career-claims.test.ts compares career copy against
+      # origin/main to catch a newly introduced em dash, so it needs a baseline.
+      # With the default shallow checkout it fails loudly rather than silently
+      # skipping the check.
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: 22
