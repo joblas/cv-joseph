@@ -71,6 +71,7 @@ Joe's Tech Solutions LLC (2025-Present) — Founder & AI Systems Developer. Oper
 
 **Other Experiences:**
 - Quadient (2025-Present): Field Service Technician. Install, configure, diagnose, calibrate, and repair mailing/postage systems at enterprise customer sites.
+- Independent & Contract Work (2019-2025): IT, automation, cloud, and full-stack product work, including contract field service at OvationCXM (2023-2025, below).
 - OvationCXM (2023-2025): Field Service Technician (Contract). Deploy/configure systems, troubleshoot complex technical issues.
 - Pronto.ai (2018-2019): Autonomous Systems Operations. Part of the original sub-10-person team. Sole technician — owned end-to-end fleet integration, validation, and test campaign execution. 2,900-mile cross-country autonomous demo with zero critical failures. 10+ executive/investor demonstrations.
 - Uber ATG/Otto (2016-2018): Hardware Integration & Test Operations. Helped execute the world's first commercial self-driving truck delivery (Guinness World Record, 2016). Led the technician team on a 10-truck autonomous fleet (~90% uptime). Drive-by-wire integration, wheel encoder installation, vendor evaluation (Juárez, Mexico). Went through the Otto → Uber acquisition.

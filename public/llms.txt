@@ -97,6 +97,11 @@ AI operations system I operate as CTO — models pinned per job on Ollama Cloud.
 - Diagnose electro-mechanical and software faults on site and document each service call and resolution
 - Act as the customer's technical point of contact from installation through ongoing service
 
+### Independent & Contract Work (2019-2025) — IT, Automation & Cloud
+- IT, Linux, cloud, automation, and full-stack product work, including APIs, databases, and deployment tooling
+- Includes contract field service at OvationCXM (2023-2025), detailed below
+- Hands-on hardware work throughout, which made the move into AI systems a continuation rather than a restart
+
 ### OvationCXM (2023-2025) — Field Service Technician
 - Deploy and configure POS systems integrating hardware, software, and network components
 - Troubleshoot complex technical issues across multiple system layers
