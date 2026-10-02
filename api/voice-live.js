@@ -11,8 +11,11 @@
 //
 // Not an open proxy: the token must carry this server's signature
 // (voice-ticket.js), and the upstream is fixed to Google's constrained Live
-// endpoint. Frames are passed through untouched, never parsed: a voice session
-// is thousands of audio frames.
+// endpoint. The socket Google answers with is handed straight back to the
+// browser, so the Workers runtime pipes the frames itself and no code here runs
+// per frame. A voice session is thousands of audio frames: a JavaScript pipe
+// could exhaust the 10ms of CPU Workers Free allows per request, and on this
+// compatibility date it would receive Google's binary frames as Blobs.
 /* global WebSocketPair -- a Cloudflare Workers runtime global */
 import { verifyVoiceTicket } from './_shared/voice-ticket.js'
 
@@ -34,49 +37,32 @@ export function closeWith(ws, code, reason = '') {
   }
 }
 
-function pipe(from, to) {
-  from.addEventListener('message', (e) => {
-    try {
-      to.send(e.data)
-    } catch {
-      // the other side is gone; its close event ends this one
-    }
-  })
-  from.addEventListener('close', (e) => closeWith(to, e.code, e.reason))
-  from.addEventListener('error', () => closeWith(to, 1011, 'voice connection error'))
-}
-
 export default async function handler(req) {
   if ((req.headers.get('upgrade') || '').toLowerCase() !== 'websocket') {
     return new Response('Expected a WebSocket upgrade', { status: 426 })
   }
-  const [client, server] = Object.values(new WebSocketPair())
-  server.accept()
-  // Failures still complete the handshake, then close with a reason the
+  // A failure still completes the handshake, then closes with a reason the
   // widget can show; a refused handshake would reach it as a bare 1006.
-  const answer = () => new Response(null, { status: 101, webSocket: client })
+  const refuse = (code, reason) => {
+    const [client, server] = Object.values(new WebSocketPair())
+    server.accept()
+    closeWith(server, code, reason)
+    return new Response(null, { status: 101, webSocket: client })
+  }
 
   const token = await verifyVoiceTicket(new URL(req.url).searchParams.get('access_token') || '')
-  if (!token) {
-    closeWith(server, 1008, 'invalid voice ticket')
-    return answer()
-  }
-  let upstream = null
+  if (!token) return refuse(1008, 'invalid voice ticket')
+  let res
   try {
-    const res = await fetch(`${GOOGLE_LIVE}?access_token=${encodeURIComponent(token)}`, { headers: { Upgrade: 'websocket' } })
-    upstream = res.webSocket
-    if (!upstream) {
-      console.error(`[voice] relay: Google refused the connection (HTTP ${res.status})`)
-      closeWith(server, 1011, `the voice service refused the connection (HTTP ${res.status})`)
-      return answer()
-    }
+    res = await fetch(`${GOOGLE_LIVE}?access_token=${encodeURIComponent(token)}`, { headers: { Upgrade: 'websocket' } })
   } catch (err) {
     console.error('[voice] relay: Google unreachable:', err?.message)
-    closeWith(server, 1011, 'the voice service is unreachable')
-    return answer()
+    return refuse(1011, 'the voice service is unreachable')
   }
-  upstream.accept()
-  pipe(server, upstream)
-  pipe(upstream, server)
-  return answer()
+  if (!res.webSocket) {
+    console.error(`[voice] relay: Google refused the connection (HTTP ${res.status})`)
+    return refuse(1011, `the voice service refused the connection (HTTP ${res.status})`)
+  }
+  // Never accepted here: returning it unaccepted is what makes the runtime pipe it.
+  return new Response(null, { status: 101, webSocket: res.webSocket })
 }

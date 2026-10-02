@@ -56,8 +56,8 @@ async function withFakeResponse<T>(fn: () => Promise<T>): Promise<T> {
   try { return await fn(); } finally { (globalThis as any).Response = RealResponse; }
 }
 
-// Google's side of the upstream connection, as the relay's fetch would get it.
-let google: FakeSocket | null = null;
+// Google's upstream connection, as the relay's fetch would get it.
+let handedBack: FakeSocket | null = null; // the end of Google's connection the relay's fetch receives
 let upstreamCalls: { url: string; upgrade: string | null }[] = [];
 let upstreamMode: "ok" | "refused" | "down" = "ok";
 const realFetch = globalThis.fetch;
@@ -68,7 +68,7 @@ const realFetch = globalThis.fetch;
     if (upstreamMode === "down") throw new Error("connect ECONNREFUSED");
     if (upstreamMode === "refused") return { status: 502, webSocket: null };
     const [relaySide, googleSide] = pair();
-    google = googleSide;
+    handedBack = relaySide;
     googleSide.accept();
     return { status: 101, webSocket: relaySide };
   }
@@ -84,11 +84,10 @@ const { GOOGLE_LIVE } = await import("../functions/api-src/voice-live.js");
 const voiceToken = (await import("../functions/api-src/voice-token.js")).default;
 
 async function connect(ticket: string | null, headers: Record<string, string> = { Upgrade: "websocket" }) {
-  google = null; upstreamCalls = [];
+  handedBack = null; upstreamCalls = [];
   const url = `https://cloudyjoe.com/api/voice-live${ticket === null ? "" : `?access_token=${encodeURIComponent(ticket)}`}`;
   const res: any = await withFakeResponse(() => relay(new RealRequest(url, { headers })));
   const browser: FakeSocket | null = res.webSocket || null;
-  browser?.accept();
   return { res, browser };
 }
 const RealRequest = globalThis.Request;
@@ -147,29 +146,15 @@ test("an unsigned ticket is closed with a reason the widget can show, and Google
   assert.equal(upstreamCalls.length, 0);
 });
 
-test("a signed ticket opens Google's constrained Live endpoint with the token, and frames pass both ways untouched", async () => {
+test("a signed ticket opens Google's constrained Live endpoint, and Google's socket is handed back unaccepted, so the runtime pipes the frames", async () => {
   const { res, browser } = await connect(await signVoiceTicket("auth_tokens/abc123"));
   assert.equal(res.status, 101);
   assert.equal(upstreamCalls.length, 1);
   assert.equal(upstreamCalls[0].url, `${GOOGLE_LIVE}?access_token=${encodeURIComponent("auth_tokens/abc123")}`);
   assert.equal(upstreamCalls[0].upgrade, "websocket");
-  browser!.send('{"setup":{"model":"m"}}');
-  const audio = new Uint8Array([1, 2, 3]).buffer;
-  browser!.send(audio);
-  assert.deepEqual(google!.received, ['{"setup":{"model":"m"}}', audio]);
-  const reply = new TextEncoder().encode('{"setupComplete":{}}').buffer;
-  google!.send(reply);
-  assert.deepEqual(browser!.received, [reply]);
-});
-
-test("Google closing passes its code and reason through; the visitor closing closes Google", async () => {
-  let c = await connect(await signVoiceTicket("auth_tokens/abc123"));
-  google!.close(1007, "Request contains an invalid argument.");
-  assert.deepEqual(c.browser!.closed, { code: 1007, reason: "Request contains an invalid argument." });
-
-  c = await connect(await signVoiceTicket("auth_tokens/abc123"));
-  c.browser!.close(1000, "bye");
-  assert.deepEqual(google!.closed, { code: 1000, reason: "bye" });
+  assert.equal(browser, handedBack, "the browser gets Google's own socket");
+  assert.equal(handedBack!.accepted, false, "accepting it would make every frame this code's work");
+  assert.deepEqual(Object.keys(handedBack!.listeners), [], "no code runs per frame");
 });
 
 test("close codes a socket may not send are mapped; long reasons are cut to 123 bytes", async () => {
