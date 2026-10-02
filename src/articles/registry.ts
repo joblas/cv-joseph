@@ -159,7 +159,7 @@ export const articleRegistry: ArticleConfig[] = [
     title: 'OpenClaw → Hermes Migration',
     seo: {
       title: 'I Retired a 22-Agent AI System. Here\'s Why. | Joseph Blas',
-      description: 'Case study: how I migrated OpenClaw (22 specialized agents, 4 directors, 1 CTO) to Hermes (composable workers behind C-suite + VPs, 40+ scheduled automations). The lesson: design for composability, not specialization.',
+      description: 'Case study: how I migrated my setup on the open-source OpenClaw runtime (22 specialized agents, 4 directors, 1 CTO) to Hermes (composable workers behind C-suite + VPs, 40+ scheduled automations). The lesson: design for composability, not specialization.',
     },
     sectionLabels: {
       'org-chart': 'Org Chart',

@@ -115,10 +115,13 @@ export const WORK_ITEMS = [
     voiceAvoid: ['Next.js'],
     expand: {
       // A musician self-describing is enough; "artist" or "band" alone is not
-      // ("Is Joe an artist?", "sensor bands"): it needs a site, store or work word.
+      // ("Is Joe an artist?", "sensor bands"). An artist or DJ needs a site,
+      // store or music word nearby. A band needs a site, store or music word
+      // too, never only a work word: "his work with sensor bands" and "a band
+      // of sensors he built for calibration" are AV questions.
       when: anyOf(
         /\b(?:musicians?|rappers?|singers?|songwriters?|record labels?)\b/,
-        near('artists?|bands?|djs?', 'sites?|websites?|web ?pages?|landing pages?|stores?|shops?|merch\\w*|streaming|releases?|smart ?links?|clients?|work(?:s|ed)? with|built for|build(?:s|ing)? for'),
+        near('artists?|djs?|bands?', 'sites?|websites?|web ?pages?|landing pages?|stores?|shops?|merch\\w*|music|songs?|albums?|tracks?|streaming|spotify|releases?|smart ?links?'),
       ),
       terms: ['Cbarrgs', 'musician', 'website'],
     },
@@ -129,7 +132,9 @@ export const WORK_ITEMS = [
     kind: 'client work',
     verdict: 'INCLUDE_WITH_CARE',
     line: "Joe set up the artist Cbarrgs's Shopify merch storefront at shopify.cbarrgs.com (t-shirts, a pin and a sticker pack, on Shopify's Dawn theme) and wired it into cbarrgs.com through the cart icon, the menu, a merch carousel and a Visit Store button. So if someone asks whether Joe can set up a Shopify merch store, for example for a musician selling t-shirts and stickers, the answer is yes: he has set up this one. Anything beyond it, such as a custom theme or a custom-built store, is scoped per project.",
-    short: "Joe set up the artist Cbarrgs's Shopify merch store at shopify.cbarrgs.com, selling t-shirts, a pin and a sticker pack, and wired it into cbarrgs.com. So yes, he has set up a Shopify merch store for a musician; anything beyond that is scoped per project.",
+    // "with", not "selling": stock changes (on 2026-10-02 the pin and the
+    // sticker pack were sold out), the catalogue does not.
+    short: "Joe set up the artist Cbarrgs's Shopify merch store at shopify.cbarrgs.com, with t-shirts, a pin and a sticker pack, and wired it into cbarrgs.com. So yes, he has set up a Shopify merch store for a musician; anything beyond that is scoped per project.",
     avoid: ['any sales, order or revenue figure', 'a custom Shopify theme or app'],
     pages: { cloudyjoe: '/cbarrgs-agent', jts: '/portfolio/cbarrgs' },
     urls: ['https://shopify.cbarrgs.com/'],
@@ -140,10 +145,11 @@ export const WORK_ITEMS = [
       // ("is it in the store yet?"), a kind of business ("a coffee shop"). It
       // counts only with an e-commerce cue: online/web/merch store, building
       // one ("set up a store"), a store for a musician or brand, selling online.
+      // Not a feature named after a store ("a store locator", "shop hours").
       when: anyOf(
         /\b(?:shopify|merch(?:andise)?|e-?commerce|storefronts?|web ?shop|t-?shirts?|tees|stickers?|hoodies?)\b/,
         /\b(?:online|web|internet|merch|e-?commerce)\s+(?:stores?|shops?)\b/,
-        /\b(?:build|make|set up|setup|create|launch|start)\s+(?:me\s+|us\s+|him\s+|her\s+|them\s+)?(?:a|an|my|our|his|her|their)\s+(?:(?:online|web|small|simple|little)\s+)?(?:stores?|shops?)\b/,
+        /\b(?:build|make|set up|setup|create|launch|start)\s+(?:me\s+|us\s+|him\s+|her\s+|them\s+)?(?:a|an|my|our|his|her|their)\s+(?:(?:online|web|small|simple|little)\s+)?(?:stores?|shops?)\b(?!\s+(?:locators?|finders?|hours|maps?|lookups?|search))/,
         /\b(?:stores?|shops?)\s+(?:for\s+(?:a\s+|an\s+|my\s+|our\s+|his\s+|her\s+|their\s+)?(?:musicians?|bands?|artists?|brands?|creators?)|to sell|that sells|selling)\b/,
         /\bsell(?:s|ing)?\b[^.?!]{0,40}\bonline\b/,
       ),
@@ -212,8 +218,13 @@ export const WORK_ITEMS = [
     asked: ['Has Joe built an app for a salon or a beauty business?', 'Can he build an inventory app with barcode scanning?'],
     voiceAvoid: ['on the App Store'],
     expand: {
-      // Not bare "hair" or "beauty" ("the beauty of composable agents").
-      when: /\b(?:salons?|hair ?(?:salons?|stylists?|colou?r\w*|dressers?|studios?)|hairdressers?|colou?rists?|stylists?|barbers?|barbershops?|beauty (?:salons?|shops?|studios?|business\w*|brands?|industry)|colou?r formulas?|barcodes?)\b/i,
+      // Not bare "hair" or "beauty" ("the beauty of composable agents"), and
+      // not a bare trade ("Is Joe a stylist?"): a stylist, colorist or barber
+      // counts only next to an app, tool or business word.
+      when: anyOf(
+        /\b(?:salons?|hair ?(?:salons?|stylists?|colou?r\w*|dressers?|studios?)|hairdressers?|barbershops?|beauty (?:salons?|shops?|studios?|business\w*|brands?|industry)|colou?r formulas?|barcodes?)\b/i,
+        near('stylists?|colou?rists?|barbers?', 'apps?|software|tools?|inventory|formulas?|bookings?|clients?|business\\w*|shops?|built|build\\w*'),
+      ),
       terms: ['Archive', 'salon', 'formula'],
     },
   },
@@ -250,9 +261,13 @@ export const WORK_ITEMS = [
     asked: ['Has Joe built a mobile app?', 'Can he build a coaching app with video feedback?'],
     voiceAvoid: ['Olympic coach', 'live on the App Store'],
     expand: {
-      // Not bare "coach" ("is he coachable?", "does he coach his team?") or
-      // "tricks" ("tricks for prompt engineering").
-      when: /\b(?:skate\w*|(?:coaching|sports?|athletes?|training|fitness) apps?|athletes?|video feedback)\b/i,
+      // Not bare "coach" ("is he coachable?", "does he coach his team?"),
+      // "tricks" ("tricks for prompt engineering") or "athletes" ("how many
+      // athletes did the self-driving car team have?").
+      when: anyOf(
+        /\b(?:skate\w*|(?:coaching|sports?|athletes?|training|fitness) apps?|video feedback)\b/i,
+        near('athletes?', 'apps?|clips?|videos?|coach\\w*|homework|feedback'),
+      ),
       terms: ['skate', 'coach', 'athlete'],
     },
   },
@@ -338,7 +353,8 @@ export const WORK_ITEMS = [
     pages: {},
     urls: ['https://cloudyjoe.com/', 'https://www.joestechsolutions.com/'],
     asked: ['How does this chat work?', 'Can Joe build me an AI assistant for my website?'],
-    expand: { when: /\b(?:chat ?bots?|this chat|voice agent|site assistant|ai assistant for (?:my|a) (?:site|website))\b/i, terms: ['chat', 'voice', 'agent'] },
+    // No retrieval bridge: the indexed articles already use the visitor's own
+    // words ("chatbot", "voice agent"), so added terms would only dilute them.
   },
   {
     id: 'cloudyjoe-site',
@@ -374,8 +390,10 @@ export const WORK_ITEMS = [
     verdict: 'INCLUDE_WITH_CARE',
     line: 'Before Hermes, Joe ran a larger multi-agent setup on the open-source OpenClaw agent runtime, then consolidated it into the leaner Hermes setup. His write-up is a postmortem on why fewer, composable agents worked better than many specialized ones.',
     short: 'Before Hermes, Joe ran a larger multi-agent setup on the open-source OpenClaw runtime and cut it down to a leaner one; his write-up explains why fewer, composable agents worked better.',
-    avoid: ['that Joe built OpenClaw', 'built from scratch'],
-    voiceAvoid: ['that Joe built OpenClaw'],
+    // The migration article says it caused no downtime; that is unconfirmed
+    // (an open question for Joe, with the years and agent counts).
+    avoid: ['that Joe built OpenClaw', 'built from scratch', 'zero downtime'],
+    voiceAvoid: ['that Joe built OpenClaw', 'zero downtime'],
     pages: { cloudyjoe: '/hermes' },
     urls: ['https://cloudyjoe.com/hermes/'],
     article: 'hermes',
@@ -580,14 +598,22 @@ export function composeTextPrompt(base, personaId) {
 // Retrieval bridge for the cloudyjoe corpus
 // ---------------------------------------------------------------------------
 //
-// The cloudyjoe search ranks by 0.7 x embedding similarity + 0.3 x a keyword
-// match (websearch_to_tsquery, AND semantics). A visitor's words ("a store for
-// a musician selling t-shirts") rarely share a token with the case study that
-// answers them ("Cbarrgs", "merch"), so the keyword leg scores 0 and the
-// question rests on the embedding alone. This appends the item's own
-// vocabulary: as plain words for the embedding, and as OR alternatives for the
-// keyword leg, so the visitor's words keep their AND match and the added terms
-// only ever widen it. Append-only: the visitor's words stay in front.
+// The cloudyjoe search ranks by 0.7 x embedding similarity + 0.3 x ts_rank of
+// websearch_to_tsquery(query_text). A visitor's words ("a store for a musician
+// selling t-shirts") rarely share a token with the case study that answers
+// them ("Cbarrgs", "merch"), so the question rests on the embedding. This
+// appends the item's own vocabulary for the EMBEDDING only.
+//
+// The keyword leg must get the visitor's words unchanged. Appending the terms
+// there as OR alternatives ("... or Cbarrgs or merch") does not "only widen"
+// the match: an OR at the top of the tsquery makes Postgres rank with
+// calc_rank_or, which averages over every query item, so a row that matches
+// all of the visitor's words loses most of its keyword score (postgres:16,
+// 2026-10-02: on the incident question, the Shopify fact card's keyword
+// contribution fell from 0.2995 to 0.0223 of its 0.3 weight). Rows
+// near rag.js's 0.3 floor then drop out. scripts/rag-keyword-rank.test.sql
+// pins that, and tests/agent-knowledge.test.ts pins that rag.js sends the
+// original words. Append-only: the visitor's words stay in front.
 export function expandWorkQuery(query) {
   const q = String(query ?? '').trim()
   const matched = []
@@ -603,13 +629,7 @@ export function expandWorkQuery(query) {
       }
     }
   }
-  if (!terms.length) return { semantic: q, keyword: q, matched, terms }
-  return {
-    semantic: `${q} ${terms.join(' ')}`,
-    keyword: `${q} or ${terms.map((t) => (/\s/.test(t) ? `"${t}"` : t)).join(' or ')}`,
-    matched,
-    terms,
-  }
+  return { semantic: terms.length ? `${q} ${terms.join(' ')}` : q, matched, terms }
 }
 
 // ---------------------------------------------------------------------------
@@ -623,10 +643,12 @@ export function expandWorkQuery(query) {
 export const FACT_CARDS_ID = 'work-facts'
 
 // Lines of a card that guide the model and retrieval but must never be spoken:
-// the retrieval phrasings, the wording rule and the provenance line. The voice
+// the retrieval phrasings, the wording rule, the provenance line and the links. The voice
 // search's raw-chunk fallback (rag.js formatChunksForContext, spoken mode)
 // drops exactly these; the embedded text and the reasoning model keep them.
-export const FACT_CARD_GUIDE_PREFIXES = ['Answers questions like:', 'Wording rule:', 'Source: curated fact card']
+// The links line ('Page:' / 'Links:') goes too: toSpokenText strips the URLs
+// and would leave the bare labels to be read out.
+export const FACT_CARD_GUIDE_PREFIXES = ['Answers questions like:', 'Wording rule:', 'Source: curated fact card', 'Page:', 'Links:']
 
 export function workFactCards() {
   const cards = workItemsFor('cloudyjoe').map((item) => ({

@@ -41,6 +41,8 @@ function check(name: string, cond: boolean) {
   if (!cond) { console.error(`  ✗ ${name}`); failed++ }
 }
 const read = (rel: string) => readFileSync(new URL(`../${rel}`, import.meta.url), 'utf8')
+// A work item field is a string or { cloudyjoe, jts } (work.js pick()).
+const pick = (v: any, id: string): string => (v && typeof v === 'object' ? v[id] ?? v.cloudyjoe : v) ?? ''
 
 const PERSONAS = ['cloudyjoe', 'jts'] as const
 type PersonaId = typeof PERSONAS[number]
@@ -129,7 +131,7 @@ const VOICE_GUARDS: Record<string, string[]> = {
   'cbarrgs-site': ['Next.js'],
   'archive-salon-app': ['on the App Store'],
   'skate-workshop-app': ['live on the App Store', 'Olympic coach'],
-  'openclaw-migration': ['that Joe built OpenClaw'],
+  'openclaw-migration': ['that Joe built OpenClaw', 'zero downtime'],
   'hermes-back-office': ['that Joe wrote the Hermes runtime'],
   'remote-hermes-install': ["the client's name"],
   'jts-company': ['three live client deployments'],
@@ -159,7 +161,9 @@ const NAMING: Record<string, Record<PersonaId, boolean>> = {
   Van: { cloudyjoe: false, jts: false },
 }
 check('CLIENT_NAMING matches the naming spec', JSON.stringify(work.CLIENT_NAMING) === JSON.stringify(NAMING))
-const word = (w: string) => new RegExp(`\\b${w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`)
+// Case-insensitive with letter boundaries, so a name inside a lowercase URL
+// slug ("nick-cleaning-assistant", "/van-setup-guide.html") counts as naming.
+const word = (w: string) => new RegExp(`(?<![A-Za-z])${w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![A-Za-z])`, 'i')
 // Everything a persona's model is handed: the composed prompts, the search
 // tool's schema strings and no-result text, and (cloudyjoe) the fact cards,
 // whose `asked` phrasings appear in no prompt.
@@ -180,7 +184,9 @@ for (const s of namingSurfaces) {
 // Names that are never public on either persona (unlisted pages, prospects, people).
 for (const s of namingSurfaces) {
   for (const n of ['Zach', 'ZW Home', 'Ryan Adams', 'Anouk', 'Ciphrix', 'H Brothers', 'Autobody', 'Precision Welding', 'Carlos']) {
-    check(`${s.label} never names ${n}`, !s.text.includes(n))
+    // Each part too, so "ryan-adams" or "zw-home" in a slug counts.
+    const hit = word(n).test(s.text) || n.split(' ').length > 1 && word(n.replace(/ /g, '-')).test(s.text)
+    check(`${s.label} never names ${n}`, !hit)
   }
 }
 // JTS: no day job, no Career-Ops, no first names.
@@ -196,8 +202,32 @@ for (const id of PERSONAS) {
   for (const x of EXCLUDED) check(`${id} work list never lists ${x}`, !blocks.toLowerCase().includes(x.toLowerCase()))
 }
 check("work.js copy has no em dash (Joe's rule for new copy)", !read('api/_shared/work.js').includes('—'))
+// An item's own copy never says what its own wording rule forbids (the Archive
+// line once could say "iOS and Android" next to a note banning exactly that).
+// Literal phrases only: a leading "that " is dropped ("that Joe built
+// OpenClaw" -> "Joe built OpenClaw"); descriptive rules ("any traffic figure")
+// never match literally and are covered by BANNED below.
+for (const item of work.WORK_ITEMS) {
+  const copy = PERSONAS.flatMap((id) => [pick(item.name, id), pick(item.line, id), pick(item.short, id)]).join('\n').toLowerCase()
+  for (const a of item.avoid || []) {
+    const phrase = a.replace(/^that\s+/i, '').toLowerCase()
+    // A negated mention ("not on the App Store") states the rule, not the claim.
+    const asserted = [...copy.matchAll(new RegExp(phrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'))]
+      .filter((m) => !/\b(?:not|never|no|nor)\s+$/.test(copy.slice(Math.max(0, m.index! - 8), m.index)))
+    check(`${item.id}'s own copy never says its banned "${phrase}"`, asserted.length === 0)
+  }
+}
 
 // --- (ii) the Shopify / Cbarrgs merch fact, both personas, both modes -------------
+// The store's catalogue, not its stock: on 2026-10-02 the pin and the sticker
+// pack were sold out, so the spoken line says "with", never "selling".
+{
+  const shopItem = work.WORK_ITEMS.find((i: any) => i.id === 'cbarrgs-shop')
+  for (const id of PERSONAS) {
+    // The spoken line only: the text line's "a musician selling t-shirts" is the visitor's case.
+    check(`cbarrgs-shop (${id} voice) does not say the store is selling its items today`, !/\b(?:selling|sells|in stock)\b/i.test(pick(shopItem?.short, id)))
+  }
+}
 for (const c of consumers) {
   for (const fact of ['Shopify', 'shopify.cbarrgs.com', 't-shirts', 'sticker', 'Cbarrgs', 'set up']) {
     check(`${c.id} ${c.mode} knows the merch store: "${fact}"`, c.text.includes(fact))
@@ -236,9 +266,18 @@ for (const c of consumers) {
 // those notes (work.avoidNote) are removed before scanning composed text.
 const BANNED: [RegExp, string][] = [
   [/twilio/i, 'Twilio (the Turnover Agent messages cleaners Telegram-first; no Twilio on the runtime path)'],
-  [/\b33 (?:outbound )?(?:sms|texts)\b|outbound sms to cleaners|plain sms (?:for|to|through)/i, 'the 33-SMS figure / plain SMS to cleaners'],
+  [/\b33 (?:outbound )?(?:sms|texts)\b|outbound sms to cleaners|plain sms (?:for|to|through)|cleaners get (?:ordinary |plain )?text messages/i, 'the 33-SMS figure / plain SMS to cleaners'],
   [/career[- ]?ops\s*(?:—|–|-|:)\s*ai job[- ]search pipeline/i, "Career-Ops listed as Joe's own project"],
-  [/\b(?:joe|he|i)\s+(?:first\s+)?built\s+openclaw\b|built and operated openclaw|openclaw[^.\n]{0,60}\b(?:i|he|joe) built\b|systems i built from scratch/i, '"built OpenClaw" (he ran a setup on the open-source OpenClaw runtime)'],
+  // Who wrote what (audit #0 Career-Ops, #1 Hermes, #6 OpenClaw), with any
+  // verb of authorship, in either order. Joe ran a setup on the open-source
+  // OpenClaw runtime, configures Nous Research's Hermes runtime and runs a fork
+  // of santifer's Career-Ops; he wrote none of the three.
+  [/\b(?:joe|joseph|he|i)\s+(?:(?:first|originally|personally|single-handedly|himself|myself)\s+)?(?:built|created|wrote|authored|developed|coded|made)\s+(?:(?:the|his|my|an?)\s+)?(?:open[- ]source\s+)?(?:openclaw|hermes(?:[- ]agent)?(?:\s+runtime)?\s+(?:himself|myself|from scratch)|hermes(?:[- ]agent)?\s+runtime|hermes-agent|hermes\b(?!\s+(?:back office|setup|install|agent setup|agent for|agent on))|career[- ]?ops)/i,
+    'authorship of OpenClaw, the Hermes runtime or Career-Ops (Joe runs them; he did not write them)'],
+  [/\b(?:openclaw|hermes(?:[- ]agent)? runtime|hermes-agent|career[- ]?ops)\b[^.\n]{0,60}\b(?:i|he|joe|joseph)\s+(?:(?:first|originally|personally)\s+)?(?:built|created|wrote|authored|developed|coded)\b|built and operated openclaw|systems i built from scratch/i,
+    'authorship of OpenClaw, the Hermes runtime or Career-Ops, claim after the name'],
+  [/\b(?:tool|system|pipeline|platform|runtime|framework)\s+(?:that\s+)?(?:i|he|joe|joseph)\s+(?:built|created|wrote|authored|developed|coded)\b/i,
+    '"the tool / system / pipeline I built" (the phrasing that claimed Career-Ops; write "I run", "I configured", or name the item)'],
   [/cbarrgs[^\n]{0,200}?next\.?js|next\.?js[^\n]{0,200}?cbarrgs/i, 'cbarrgs.com as Next.js (it is Vite + React)'],
   [/\d+(?:\.\d+)?k monthly (?:spotify )?listeners|monthly spotify listeners/i, 'the Spotify listener figure'],
   [/android builds rolling|live on ios|olympic-level|olympic (?:skateboarding )?coach\b|400\+ trick|multiplayer sessions|19-table/i, 'Skate Workshop overclaims (TestFlight beta only, no Android release, 140 tricks)'],
@@ -250,12 +289,12 @@ const BANNED: [RegExp, string][] = [
   [/openclaw development/i, '"OpenClaw development" (he ran a setup on the open-source OpenClaw runtime; he did not develop it)'],
   [/516\+? upvotes|250\+ upvotes|74% of evaluated offers|score distribution/i, "santifer's Career-Ops results and Reddit posts presented as Joe's"],
   [/\bAI Operations\b|\bCustom Builds?\b|Operations retainer|\/services#/, 'retired JTS offers'],
-  [/agentic observability with langfuse|every autonomous pipeline decision traced|custom operations dashboard|openai realtime/i, 'Langfuse / OpenAI Realtime self-description (production has neither)'],
+  [/agentic observability with langfuse|every autonomous pipeline decision traced|custom operations dashboard|openai[^\n]{0,20}\(?realtime/i, 'Langfuse / OpenAI Realtime self-description (production has neither)'],
   [/github\.com\/joblas\/mempalace/i, 'the MemPalace link (404; MemPalace is not his)'],
   [/deepseek-v4-flash/i, 'the retired deepseek-v4-flash model'],
   [/dall-e[^\n]{0,80}\bproduction\b|production ai image generation|dall-e[^\n]{0,40}live web application/i, 'DALL-E as a production app (a 2023 tutorial demo)'],
-  [/lurkr \((?:me|himself)\)/i, '"Lurkr (me)" (Lurkr is Joe\'s orchestrator agent)'],
-  [/crm automation, invoicing|email routing, crm automation/i, 'CRM automation and invoicing (records show neither)'],
+  [/lurkr \((?:me|himself)\)|\bi operate as cto\b/i, '"Lurkr (me)" (Lurkr is Joe\'s orchestrator agent)'],
+  [/crm automation, invoicing|email routing, crm automation|invoicing and payments/i, 'CRM automation and invoicing (records show neither)'],
   [/local-first on his own hardware|all self-hosted/i, '"local-first" / "all self-hosted" (models run mostly on Ollama Cloud)'],
   [/\b(?:three|3) live client deployments/i, '"three live client deployments" (three active builds, one in beta)'],
   [/production web and mobile (?:apps|applications)/i, 'production mobile apps (every mobile app is TestFlight beta)'],
@@ -311,6 +350,94 @@ for (const { label, text } of scanned) {
     check(`${label}: "nothing leaves" is scoped: "${s.trim().slice(0, 80)}"`, /local install|whisper walkie|this app|transcrib/i.test(s))
   }
 }
+// OpenClaw is the open-source runtime; the 22 agents were Joe's setup ON it.
+// A sentence that ties OpenClaw to the 22 agents must say so (or the sentence
+// before it must): "OpenClaw (22-agent system, 2024-2026)" and "OpenClaw
+// worked. It was 22 specialized agents" both pass the authorship bans and
+// both say OpenClaw is the 22-agent system. registry.ts carries the article's
+// SEO description, so it is scanned here too.
+const AGENTS_22 = /\b22[- ](?:specialized |specialised )?agents?\b|\b22-agent\b/i
+const ON_RUNTIME = /runtime|\bran\b[^.!?\n]{0,80}\bon\b/i
+for (const { label, text } of [...scanned, { label: 'src/articles/registry.ts', text: read('src/articles/registry.ts') }]) {
+  // The window is the sentence and the one before it on the same line (one
+  // field, one paragraph): an h1 under a kicker that names OpenClaw is not a claim.
+  for (const line of text.split('\n')) {
+    const sentences = line.split(/(?<=[.!?])\s+/)
+    sentences.forEach((sentence, i) => {
+      if (!AGENTS_22.test(sentence)) return
+      const window = [sentences[i - 1] || '', sentence]
+      if (!window.some((x) => /openclaw/i.test(x))) return
+      check(`${label}: OpenClaw's 22 agents are scoped as a setup on the runtime: "${sentence.trim().slice(0, 90)}"`, window.some((x) => ON_RUNTIME.test(x)))
+    })
+  }
+}
+// Money stays out of agent knowledge (prices, fees, pro-bono terms): Joe sets
+// those per conversation, and the client-pricing stance is not public.
+{
+  const MONEY = /\$\s?\d|\bpro[- ]bono\b|\bfree until\b|\bper month\b|\/mo\b|\busd\b/i
+  for (const { label, text } of [
+    ...consumers.map((c) => ({ label: `${c.id} ${c.mode} (composed)`, text: c.text })),
+    ...PERSONAS.map((id) => ({ label: `${id} work blocks`, text: work.workTextBlock(id) + '\n' + work.workVoiceBlock(id) })),
+    ...PERSONAS.map((id) => {
+      const t = persona(id).searchTool
+      return { label: `${id} search tool`, text: [t.description, t.voiceDescription, t.noResults, t.voiceRule].join('\n') }
+    }),
+    { label: 'fact cards', text: factCardChunks().map((c: any) => c.content).join('\n') },
+  ]) {
+    const m = text.match(MONEY)
+    check(`${label}: no money, price or pro-bono detail${m ? ` (found "${m[0]}")` : ''}`, !m)
+  }
+}
+// The Self-Healing Chatbot article is an EXCLUDE item (santifer's history and
+// numbers in Joe's first person). Its fate (ragReady, production rows) is
+// Joe's call, but no prompt and no llms.txt entry may point at it.
+for (const { label, text } of [
+  { label: 'chatbot-prompt.txt', text: read('chatbot-prompt.txt') },
+  { label: 'jts-prompt.txt', text: read('jts-prompt.txt') },
+  { label: 'public/llms.txt', text: read('public/llms.txt') },
+  ...consumers.map((c) => ({ label: `${c.id} ${c.mode} (composed)`, text: c.text })),
+]) {
+  check(`${label}: never lists the Self-Healing Chatbot`, !/self-healing chatbot/i.test(text))
+}
+// llms.txt: a section ABOUT Cbarrgs never calls it Next.js, even split across
+// lines (the one-line BANNED pattern cannot see "Stack: Next.js" on the next line).
+{
+  const llms = read('public/llms.txt')
+  const sections = llms.split(/^(?=#{2,3} )/m)
+  for (const sec of sections.filter((x) => /^#{2,3} [^\n]*cbarrgs/i.test(x))) {
+    check(`llms.txt "${sec.split('\n')[0]}" never says Next.js`, !/next\.?js/i.test(sec))
+  }
+  // Credit where it is due, where a reader meets the item: a section headed by
+  // Hermes or Whisper Walkie, and every non-heading line naming Whisper Walkie
+  // or OpenClaw.
+  for (const sec of sections.filter((x) => /^#{2,3} (?:Key Achievement: )?Hermes\b/.test(x))) {
+    check(`llms.txt "${sec.split('\n')[0]}" credits Nous Research`, /Nous Research/.test(sec))
+  }
+  for (const sec of sections.filter((x) => /^#{2,3} Whisper Walkie/.test(x))) {
+    check(`llms.txt "${sec.split('\n')[0]}" credits the Whisper models and faster-whisper`, /Whisper models/.test(sec) && /faster-whisper/.test(sec))
+  }
+  for (const line of llms.split('\n').filter((l) => !/^#/.test(l))) {
+    if (/whisper walkie/i.test(line)) check(`llms.txt Whisper Walkie line credits faster-whisper: "${line.slice(0, 70)}"`, /faster-whisper/.test(line))
+    if (/openclaw/i.test(line)) check(`llms.txt OpenClaw line says it is a runtime he ran a setup on: "${line.slice(0, 70)}"`, /runtime/i.test(line))
+  }
+}
+{
+  const about = read('src/about-i18n.ts').split('\n')
+  const card = (name: string) => about.find((l) => l.includes(`name: '${name}'`)) || ''
+  check('About: the Whisper Walkie card credits the Whisper models and faster-whisper', /Whisper models/.test(card('Whisper Walkie')) && /faster-whisper/.test(card('Whisper Walkie')))
+  check('About: the Hermes card credits Nous Research', /Nous Research/.test(card('Hermes')))
+  check('About: the "What is Hermes?" answer credits Nous Research', /Nous Research/.test(about.find((l) => l.includes("q: 'What is Hermes?'")) || ''))
+  check('About: the bio\'s "That stack is Hermes" credits Nous Research', /Nous Research/.test(about.find((l) => l.includes('That stack is Hermes')) || ''))
+  for (const line of about.filter((l) => /openclaw/i.test(l))) {
+    check(`About: OpenClaw line says it is a runtime he ran a setup on: "${line.trim().slice(0, 70)}"`, /runtime/i.test(line))
+  }
+}
+// Career-Ops screenshots are santifer's: every caption on the page says so.
+{
+  const captions = [...read('src/CareerOps.tsx').matchAll(/caption=\{'((?:[^'\\]|\\.)*)'\}/g)].map((m) => m[1])
+  check(`CareerOps.tsx has its screenshot captions (found ${captions.length})`, captions.length >= 7)
+  for (const c of captions) check(`CareerOps.tsx caption credits santifer: "${c.slice(0, 60)}"`, /santifer/.test(c))
+}
 // The Career-Ops material santifer (the upstream template author) wrote before
 // the 2026-04-07 fork stays credited or gone: his own score distribution and
 // first-person callout, his Reddit posts under Joe's "Community", the
@@ -327,6 +454,8 @@ for (const { label, text } of scanned) {
   for (const rel of ['src/articles/registry.ts', 'src/about-i18n.ts', 'src/CareerOps.tsx', 'src/career-ops-i18n.ts']) {
     check(`${rel}: no santifer Reddit post presented as Joe's`, !/reddit\.com\/r\/(?:SideProject|ClaudeAI)\/comments\/(?:1rw1lg4|1sd2f37)/.test(read(rel)))
   }
+  check("CareerOps.tsx no longer renders santifer's score distribution and callout as the page's results",
+    !/scoring\.distribution|scoring\.callout/.test(read('src/CareerOps.tsx')))
   check("CareerOps.tsx: the hero screenshot is credited to santifer, not captioned as Joe's 516 offers",
     !/516 evaluated offers/.test(read('src/CareerOps.tsx')) && /santifer/.test(read('src/CareerOps.tsx')))
 }
@@ -369,6 +498,8 @@ for (const id of PERSONAS) {
   check(`${id} voice instructions carry the no-result rule`, voiceInstructions(p).includes(work.NO_RESULT_RULE.voice))
   check(`${id} voice tool rule lets an empty search fall back to the work list`,
     /When a search finds nothing on point, answer from the "Joe's work" list if it covers the question, never adding to it/.test(p.searchTool.voiceRule))
+  check(`${id} voice tool rule no longer says "answer ONLY from its result" (it contradicts the fallback)`,
+    !/answer ONLY from (?:its|the) result/i.test(p.searchTool.voiceRule) && !/answer ONLY from (?:its|the) result/i.test(voiceInstructions(p)))
   check(`${id} text prompt carries the no-result rule`, p.prompt.includes(work.NO_RESULT_RULE.text))
   check(`${id} text noResults points at the work list, inside its lines`,
     p.searchTool.noResults.includes(`"${work.WORK_TEXT_HEADING}" list`) && /staying inside its lines/.test(p.searchTool.noResults))
@@ -382,6 +513,8 @@ check('cloudyjoe text fallback line checks the work list first',
   /If search_portfolio finds nothing on point, answer from the work list above/.test(read('chatbot-prompt.txt')))
 
 // --- (v) retrieval: the cloudyjoe query bridge ---------------------------------------
+// The bridge feeds the EMBEDDING only. The keyword leg keeps the visitor's
+// words (see the wiring checks and scripts/rag-keyword-rank.test.sql).
 const MUST_MAP: [string, string][] = [
   ['Can he do a Shopify store?', 'Cbarrgs'],
   ['Can Joe build a store for a musician selling t-shirts and stickers?', 'Cbarrgs'],
@@ -389,25 +522,32 @@ const MUST_MAP: [string, string][] = [
   ['does he do e-commerce', 'Cbarrgs'],
   ['can he set up an online shop for my band', 'Cbarrgs'],
   ['can it text my cleaners when a guest checks out', 'turnover'],
-  ['vacation rental turnovers', 'turnover'],
+  ['vacation rental turnovers', 'cleaner'],
+  ['Airbnb cleaning automation', 'turnover'],
+  ['VRBO turnovers', 'cleaner'],
   ['has he built anything for a hair salon', 'Archive'],
-  ['a coaching app for skaters', 'skate'],
+  ['an inventory app for colorists', 'Archive'],
+  ['a coaching app for skaters', 'athlete'],
+  ['an app where athletes upload clips for their coach', 'skate'],
   // Only the explicit Shopify trigger matches these two.
   ['Does he know Shopify?', 'Cbarrgs'],
   ['any shopify experience', 'Cbarrgs'],
   ['Can Joe build websites for musicians?', 'Cbarrgs'],
+  // The artist / band / DJ branch, which needs a site, store or music word.
+  ['Can Joe build a website for my band?', 'Cbarrgs'],
+  ['does he make sites for DJs', 'Cbarrgs'],
+  ['Has he worked with artists on their websites?', 'Cbarrgs'],
   ['Has Joe built a directory site?', 'RenFaire'],
 ]
 for (const [q, term] of MUST_MAP) {
   const e = rag.expandDocumentsQuery(q)
-  check(`expands "${q}" toward ${term}`, e.keyword.includes(term) && e.semantic.includes(term))
-  check(`  ...keeps the visitor's words in front`, e.keyword.startsWith(q) && e.semantic.startsWith(q))
-  // websearch_to_tsquery: the visitor's words stay ANDed; added terms are OR alternatives.
-  check(`  ...adds terms as OR alternatives for the keyword leg`, e.keyword.slice(q.length).startsWith(' or '))
+  check(`expands "${q}" toward ${term}`, e.semantic.includes(term) && e.terms.includes(term))
+  check(`  ...keeps the visitor's words in front`, e.semantic.startsWith(q))
+  check(`  ...offers no keyword form (the keyword leg gets the original)`, !('keyword' in e))
 }
 for (const q of ['when will it be on the App Store', 'how do you store my data', 'is it on the Play Store', 'what is his background', 'hello']) {
   const e = rag.expandDocumentsQuery(q)
-  check(`leaves "${q}" alone`, e.keyword === q && e.semantic === q)
+  check(`leaves "${q}" alone`, e.semantic === q && e.terms.length === 0)
 }
 // Ordinary recruiter and visitor questions that share a common word with a
 // work item ("clean", "host", "coach", "directory", "artist", "the store") must
@@ -424,6 +564,7 @@ const LEAVE_ALONE: [string, string][] = [
   ['Is he coachable?', 'skate-workshop-app'],
   ['Does he coach his team?', 'skate-workshop-app'],
   ['tricks for prompt engineering', 'skate-workshop-app'],
+  ['How many athletes did the self-driving car team have?', 'skate-workshop-app'],
   ['Does he know Active Directory?', 'renfaire-guide'],
   ['GitHub directory of projects', 'renfaire-guide'],
   ['Is the skate app in the store yet?', 'cbarrgs-shop'],
@@ -432,42 +573,101 @@ const LEAVE_ALONE: [string, string][] = [
   ['coffee shop', 'cbarrgs-shop'],
   ['repair shop', 'cbarrgs-shop'],
   ['Can he build a site for a coffee shop?', 'cbarrgs-shop'],
+  ['Can he build a store locator?', 'cbarrgs-shop'],
+  ['Can he make a shop finder for my city?', 'cbarrgs-shop'],
+  ['Can he build a store hours page?', 'cbarrgs-shop'],
   ['Is Joe an artist?', 'cbarrgs-site'],
   ['What kind of music does Joe like?', 'cbarrgs-site'],
   ['sensor bands', 'cbarrgs-site'],
+  ['Tell me about his work with sensor bands and calibration', 'cbarrgs-site'],
+  ['a band of sensors he built for calibration', 'cbarrgs-site'],
   ['the beauty of composable agents', 'archive-salon-app'],
+  ['Is Joe a stylist?', 'archive-salon-app'],
+  ['Is Joe a colorist?', 'archive-salon-app'],
 ]
 for (const [q, id] of LEAVE_ALONE) {
   const e = work.expandWorkQuery(q)
   check(`"${q}" does not pull in ${id}${e.matched.includes(id) ? ` (adds: ${e.terms.join(', ')})` : ''}`, !e.matched.includes(id))
 }
-check('expansion is safe on empty input', rag.expandDocumentsQuery('').keyword === '' && rag.expandDocumentsQuery(undefined).keyword === '')
+// No bridge on chatbot questions: the indexed articles already use those
+// words, so added terms would only dilute them.
+for (const q of ['self-healing chatbot', 'chatbot prompt injection defense', 'How does this chat work?', 'Can Joe build a voice agent?']) {
+  const e = work.expandWorkQuery(q)
+  check(`"${q}" is left alone (got: ${e.matched.join(', ') || 'none'})`, e.terms.length === 0)
+}
+check('no work item has a bridge on the agent backend', !work.WORK_ITEMS.find((i: any) => i.id === 'agent-backend')?.expand)
+check('expansion is safe on empty input', rag.expandDocumentsQuery('').semantic === '' && rag.expandDocumentsQuery(undefined).semantic === '')
 
-// The bridge is wired into the real search, both legs: the embedding gets the
-// semantic form, hybrid_search and keyword_search get the keyword form.
+// The bridge is wired into the real search: the embedding gets the semantic
+// form; hybrid_search's query_text and keyword_search get the visitor's own
+// words. The fixture shared with scripts/rag-keyword-rank.test.sql (which
+// checks what Postgres ranks) must match what the code sends, so changing the
+// code without the fixture, or the fixture without passing the SQL test, fails.
+function parseCsv(text: string): string[][] {
+  const rows: string[][] = []
+  let row: string[] = [], field = '', quoted = false
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i]
+    if (quoted) {
+      if (ch === '"' && text[i + 1] === '"') { field += '"'; i++ }
+      else if (ch === '"') quoted = false
+      else field += ch
+    } else if (ch === '"') quoted = true
+    else if (ch === ',') { row.push(field); field = '' }
+    else if (ch === '\n') { row.push(field); rows.push(row); row = []; field = '' }
+    else if (ch !== '\r') field += ch
+  }
+  if (field || row.length) { row.push(field); rows.push(row) }
+  return rows
+}
 {
+  const [header, ...fixture] = parseCsv(read('tests/fixtures/rag-keyword-leg.csv'))
+  check('keyword-leg fixture has the columns the SQL test reads', JSON.stringify(header) === JSON.stringify(['query', 'sent', 'bridge_terms', 'doc']))
+  check(`keyword-leg fixture has at least 5 questions (got ${fixture.length})`, fixture.length >= 5)
   const realFetch = globalThis.fetch
   const calls: { url: string; body: any }[] = []
+  let keywordReplies: string[] = []
   globalThis.fetch = (async (url: any, init: any) => {
     const body = init?.body ? JSON.parse(init.body) : null
     calls.push({ url: String(url), body })
     if (String(url).includes('voyageai.com')) {
       return new Response(JSON.stringify({ data: [{ embedding: new Array(512).fill(0.01) }], usage: { total_tokens: 5 } }), { status: 200 })
     }
+    if (String(url).includes('/rpc/keyword_search')) return new Response(keywordReplies.shift() ?? '[]', { status: 200 })
     return new Response('[]', { status: 200 })
   }) as typeof fetch
   try {
-    delete process.env.VOYAGE_API_KEY
-    await rag.searchPortfolio('Can he do a Shopify store?', null, null, persona('cloudyjoe'))
-    const kw = calls.find((c) => c.url.includes('/rpc/keyword_search'))
-    check('keyword mode: keyword_search gets the expanded query', !!kw && /or Cbarrgs/.test(kw.body?.query_text || ''))
-    calls.length = 0
     process.env.VOYAGE_API_KEY = 'stub-voyage'
-    await rag.searchPortfolio('a store for a musician selling t-shirts', null, null, persona('cloudyjoe'))
-    const emb = calls.find((c) => c.url.includes('voyageai.com'))
-    const hy = calls.find((c) => c.url.includes('/rpc/hybrid_search'))
-    check('hybrid mode: the embedding sees the added terms', !!emb && /Cbarrgs/.test(emb.body?.input || ''))
-    check('hybrid mode: hybrid_search gets the OR-expanded keyword query', !!hy && /or Cbarrgs/.test(hy.body?.query_text || ''))
+    for (const [query, sent, bridgeTerms] of fixture) {
+      calls.length = 0
+      await rag.searchPortfolio(query, null, null, persona('cloudyjoe'))
+      const e = work.expandWorkQuery(query)
+      const emb = calls.find((c) => c.url.includes('voyageai.com'))
+      const hy = calls.find((c) => c.url.includes('/rpc/hybrid_search'))
+      check(`fixture "${query}": the bridge fires and its terms match the fixture`, e.terms.length > 0 && e.terms.join(' ') === bridgeTerms)
+      check(`fixture "${query}": hybrid_search gets exactly the fixture's query_text`, !!hy && hy.body?.query_text === sent)
+      check(`fixture "${query}": that query_text is the visitor's own words`, sent === query)
+      check(`fixture "${query}": the embedding sees the added terms`, !!emb && emb.body?.input === e.semantic && emb.body.input !== query)
+    }
+    delete process.env.VOYAGE_API_KEY
+    // Keyword-only mode: the visitor's words first; the bridge only when no row
+    // shares a single word with them.
+    calls.length = 0
+    keywordReplies = [JSON.stringify([{ id: 1, content: 'a row', metadata: { article_id: 'hermes', section_id: 'x' }, similarity: 0.1 }])]
+    await rag.searchPortfolio('Can he do a Shopify store?', null, null, persona('cloudyjoe'))
+    let kw = calls.filter((c) => c.url.includes('/rpc/keyword_search'))
+    check('keyword mode: keyword_search gets the visitor\'s words', kw.length === 1 && kw[0].body?.query_text === 'Can he do a Shopify store?')
+    calls.length = 0
+    keywordReplies = ['[]', '[]']
+    await rag.searchPortfolio('Can he do a Shopify store?', null, null, persona('cloudyjoe'))
+    kw = calls.filter((c) => c.url.includes('/rpc/keyword_search'))
+    check('keyword mode: an empty result retries once with the bridge terms',
+      kw.length === 2 && kw[0].body?.query_text === 'Can he do a Shopify store?' && kw[1].body?.query_text === work.expandWorkQuery('Can he do a Shopify store?').semantic)
+    calls.length = 0
+    keywordReplies = ['[]']
+    await rag.searchPortfolio('what is his background', null, null, persona('cloudyjoe'))
+    kw = calls.filter((c) => c.url.includes('/rpc/keyword_search'))
+    check('keyword mode: no retry when the bridge has nothing to add', kw.length === 1)
   } finally {
     globalThis.fetch = realFetch
     delete process.env.VOYAGE_API_KEY
@@ -499,6 +699,12 @@ check('expansion is safe on empty input', rag.expandDocumentsQuery('').keyword =
   const spoken = rag.formatChunksForContext([turnover], { spoken: true })
   check('the model still sees a card\'s wording rule and phrasings', /Wording rule:/.test(forModel) && /Answers questions like:/.test(forModel))
   check('the spoken form drops them, and the provenance line', !/Wording rule:|Answers questions like:|Source: curated fact card/.test(spoken) && /Telegram-first/.test(spoken))
+  // The links line goes too: the spoken path strips URLs and would read the bare labels.
+  const shopSpoken = rag.formatChunksForContext([shop], { spoken: true })
+  check('the spoken form drops the links line', /Page: https:/.test(rag.formatChunksForContext([shop])) && !/^\s*(?:Page|Links):/m.test(shopSpoken) && !/https?:\/\//.test(shopSpoken.replace(/^---.*$/m, '')))
+  // The ingest's Haiku summary reads a chunk's first 500 chars, which for a
+  // card can include its "Do not say or imply" line; cards skip the summary.
+  check('ingest skips the contextual summary for fact cards', /articleId === FACT_CARDS_ID\s*\?\s*splitChunks\.map\(c => c\.content\)/.test(read('scripts/ingest-rag.ts')))
   const article = { content: 'Answers questions like: a sentence in an article.', metadata: { article_id: 'hermes', section_id: 'intro' } }
   check('the spoken form leaves article chunks untouched', rag.formatChunksForContext([article], { spoken: true }).includes('Answers questions like: a sentence'))
 }

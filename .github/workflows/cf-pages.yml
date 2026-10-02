@@ -17,6 +17,8 @@ jobs:
   # The booking migration's own tests. supabase-booking.test.sql rolls back;
   # supabase-booking.race.sql works in a scratch database it creates and
   # drops. Both run against a throwaway Postgres service — never a project.
+  # The same service also checks the RAG keyword leg's ranking
+  # (rag-keyword-rank.test.sql, a temp table inside a rolled-back transaction).
   booking-sql:
     runs-on: ubuntu-latest
     # A hung step fails in minutes, not after GitHub's 6-hour default.
@@ -46,6 +48,15 @@ jobs:
           grep -qE 'NOTICE:  booking SQL: all checks passed$' battery.log
           psql -v ON_ERROR_STOP=1 -f scripts/supabase-booking.race.sql 2>&1 | tee race.log
           grep -qx 'booking race: all checks passed' race.log
+      - name: RAG keyword-leg ranking
+        # The query_text rag.js sends to hybrid_search must never rank a row
+        # that matches every word of the question below the question itself
+        # (tests/fixtures/rag-keyword-leg.csv; agent-knowledge pins the CSV to
+        # the code). Run from the repo root: \copy reads the CSV relative to it.
+        shell: bash
+        run: |
+          psql -v ON_ERROR_STOP=1 -f scripts/rag-keyword-rank.test.sql 2>&1 | tee rank.log
+          grep -qE 'NOTICE:  rag keyword leg: all checks passed \([0-9]+ questions\)$' rank.log
 
   build-deploy:
     runs-on: ubuntu-latest

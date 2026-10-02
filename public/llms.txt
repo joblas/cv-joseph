@@ -37,7 +37,7 @@ AI operations system Joe runs for his own business, with models pinned per job o
 - **Memory:** MemPalace, a third-party memory tool (semantic search, knowledge graph), persistent across sessions
 - **Skills:** Reusable patterns for recurring workflows
 - **Cron Jobs:** Daily/weekly jobs (morning brief, evening plan, content draft, security sweep, weekly model bakeoff)
-- **Migration:** Retired 22-agent OpenClaw system in 2026 — case study covers the migration
+- **Migration:** Retired the 22-agent setup he ran on the open-source OpenClaw runtime in 2026; the case study covers the migration
 
 ## Key Achievement: Google Self-Driving Car (Firefly)
 

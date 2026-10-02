@@ -312,13 +312,26 @@ export function expandSiteQuery(query) {
 }
 
 // The cloudyjoe corpus has the same blind spot from the other side: a visitor
-// asks for "a store for a musician selling t-shirts", the case study says
-// "Cbarrgs" and "merch", and the keyword leg of hybrid_search scores 0. The
-// bridge lives with the facts it points at (api/_shared/work.js, each item's
-// `expand`): the embedding gets the added words, and the keyword leg gets them
-// as OR alternatives, so the visitor's own AND match is kept and only widened.
+// asks for "a store for a musician selling t-shirts" and the case study says
+// "Cbarrgs" and "merch". The bridge lives with the facts it points at
+// (api/_shared/work.js, each item's `expand`). Only the EMBEDDING gets the
+// added words. hybrid_search's keyword leg gets the visitor's words unchanged:
+// appended OR terms switch ts_rank to its OR formula, which cuts a full
+// match's keyword score several-fold (see expandWorkQuery).
 export function expandDocumentsQuery(query) {
   return expandWorkQuery(query)
+}
+
+// Keyword-only retrieval (no embedding provider): the visitor's words first.
+// keyword_search already falls back from an AND match to any single word, so
+// the bridge terms are tried only when no row shares even one word with the
+// question; tried first, they would always find their own item's rows and the
+// visitor's own any-word fallback would never run.
+async function keywordSearchWithBridge(query, expanded) {
+  const first = await searchDocumentsByKeyword(query)
+  if (first.chunks.length || !expanded?.terms.length) return first
+  const second = await searchDocumentsByKeyword(expanded.semantic)
+  return { ...second, latencyMs: first.latencyMs + second.latencyMs, bridged: true }
 }
 
 // The RPC gets the EXPANDED query; boostNamedPages gets the ORIGINAL one.
@@ -792,7 +805,7 @@ export async function searchPortfolio(query, trace, anthropicClient, persona = g
     mode: persona.rag.kind === 'site_chunks' ? 'site' : hasEmbeddings(persona) ? 'hybrid' : 'keyword',
   }
 
-  // The cloudyjoe corpus searches with the work bridge applied (see
+  // The cloudyjoe corpus embeds with the work bridge applied (see
   // expandDocumentsQuery); the site corpus expands inside siteChunkSearch.
   const expanded = result.mode === 'site' ? null : expandDocumentsQuery(query)
   if (expanded?.matched.length) result.expandedFor = expanded.matched
@@ -826,8 +839,8 @@ export async function searchPortfolio(query, trace, anthropicClient, persona = g
     const searchResult = result.mode === 'site'
       ? await siteChunkSearch(query, persona)
       : result.mode === 'hybrid'
-        ? await searchDocuments(expanded.keyword, embedding)
-        : await searchDocumentsByKeyword(expanded.keyword)
+        ? await searchDocuments(query, embedding)
+        : await keywordSearchWithBridge(query, expanded)
     result.metrics.retrievalMs = searchResult.latencyMs
     // The site path embeds inside siteChunkSearch (its own budget), so its
     // usage surfaces here rather than in the `hybrid` block above.
