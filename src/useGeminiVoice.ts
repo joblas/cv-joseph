@@ -33,7 +33,7 @@ const INPUT_RATE = 16000;
 const OUTPUT_RATE = 24000;
 // A live session normally answers setup within a second or two; a socket still
 // silent at this point is treated as failed (and the relay falls back once).
-const CONNECT_TIMEOUT_MS = 15000;
+const CONNECT_TIMEOUT_MS = 20000;
 
 function base64ToInt16(b64: string): Int16Array {
   const binary = atob(b64);
@@ -406,6 +406,7 @@ export function useGeminiVoice() {
         ws.onopen = () => { ws.send(JSON.stringify({ setup: { model } })); };
         ws.onmessage = async (ev) => {
           const raw = typeof ev.data === 'string' ? ev.data : await (ev.data as Blob).text();
+          if (wsRef.current !== ws) return; // replaced by the fallback while this frame was read
           let msg: Record<string, unknown>;
           try {
             msg = JSON.parse(raw) as Record<string, unknown>;

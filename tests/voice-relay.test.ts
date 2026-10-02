@@ -210,3 +210,13 @@ test("the router passes the relay's handshake through as-is (re-wrapping would d
   const foreign: any = await call("https://evil.example");
   assert.equal(foreign.status, 403);
 });
+
+// --- the page may open the relay ---------------------------------------------------
+test("the security policy allows the relay on both hosts the site is served from", async () => {
+  const { readFileSync } = await import("node:fs");
+  const config = JSON.parse(readFileSync("vercel.json", "utf8"));
+  const csp = config.headers.flatMap((h: any) => h.headers).find((h: any) => h.key === "Content-Security-Policy").value as string;
+  const sources = csp.split(";").map((d) => d.trim()).find((d) => d.startsWith("connect-src"))!.split(/\s+/);
+  // www serves the site too, and /api/voice-token builds the relay address from the page's host
+  for (const host of ["wss://cloudyjoe.com", "wss://www.cloudyjoe.com"]) assert.ok(sources.includes(host), `connect-src lacks ${host}`);
+});

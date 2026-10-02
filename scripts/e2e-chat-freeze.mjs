@@ -6,7 +6,7 @@
 // an older server without heartbeats is slow. Nothing reaches production.
 //
 // Manual, not in CI (it needs a browser and a built site). Run it against a
-// built site served locally, for either widget:
+// built site served locally, or a live one, for either widget:
 //   cloudyjoe.com:       npm run build && npx vite preview --port 4001
 //     node scripts/e2e-chat-freeze.mjs http://localhost:4001/ http://localhost:4001/api/chat "Open chat with Cloudy-Joe Agent" "Type your question..."
 //   joestechsolutions.com (that repo): next build && next start -p 3999
@@ -62,7 +62,13 @@ function throwawayCert() {
 const fake = secure ? https.createServer(throwawayCert(), handler) : http.createServer(handler);
 await new Promise((r) => fake.listen(4100, "127.0.0.1", r));
 
-const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || undefined, headless: true });
+// Private Network Access off: the fake server is on 127.0.0.1, and Chrome blocks a
+// public page (a live site) from reaching it; a page served from localhost is not blocked.
+const browser = await chromium.launch({
+  executablePath: process.env.CHROMIUM_PATH || undefined,
+  headless: true,
+  args: ["--disable-features=BlockInsecurePrivateNetworkRequests,PrivateNetworkAccessSendPreflights,PrivateNetworkAccessRespectPreflightResults,LocalNetworkAccessChecks"],
+});
 let failed = 0;
 const check = (name, ok, detail = "") => { console.log(`${ok ? "  ok" : "  ✗"} ${name}${!ok && detail ? ` — ${detail}` : ""}`); if (!ok) failed++; };
 
