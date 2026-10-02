@@ -5,7 +5,7 @@
 ## Contact & Availability
 
 - **Location:** Escondido / San Diego, CA
-- **Now:** Founder of Joe's Tech Solutions — forward deployed engineer building custom software, AI agents, automation, and private AI for small businesses (business inquiries: joe@joestechsolutions.com)
+- **Now:** Founder of Joe's Tech Solutions — AI systems developer building custom software, AI agents, automation, and private AI for small businesses (business inquiries: joe@joestechsolutions.com)
 - **Email:** blasj408@gmail.com
 - **Website:** https://cloudyjoe.com
 - **Entity Home / About**: https://cloudyjoe.com/about
@@ -15,7 +15,7 @@
 
 ## Professional Summary
 
-Forward deployed engineer and founder of Joe's Tech Solutions: custom software, AI agents, automation, and private AI for small businesses, built on the same stack he runs his own company on — three live client deployments. Runs Hermes as a multi-agent AI team: Lurkr (me) as CTO, with executive skills (Chief of Staff, CFO, COO, CMO), VPs for Engineering, Infrastructure, and Product, and 40+ scheduled automations with models pinned per job on Ollama Cloud. Ship full-stack applications using React/React Native, TypeScript, Python, and PostgreSQL. Use AI coding assistants daily as core development tools.
+AI systems developer and founder of Joe's Tech Solutions: custom software, AI agents, automation, and private AI for small businesses, built on the same stack he runs his own company on — three live client deployments. Runs Hermes as a multi-agent AI team: Lurkr (me) as CTO, with executive skills (Chief of Staff, CFO, COO, CMO), VPs for Engineering, Infrastructure, and Product, and 40+ scheduled automations with models pinned per job on Ollama Cloud. Ship full-stack applications using React/React Native, TypeScript, Python, and PostgreSQL. Use AI coding assistants daily as core development tools.
 
 Previously: built and operated OpenClaw (22 specialized agents, 2024–2026) — migrated to Hermes after learning composability beats specialization. The migration postmortem is the OpenClaw → Hermes case study on this site.
 

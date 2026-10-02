@@ -186,37 +186,89 @@ test("the 10+ figure is not written with an em dash around it", () => {
   );
 });
 
-test("Google Maps Growth and the visibility audit are not sold anywhere", () => {
-  // Joe, 2026-10-01: "definitely going to be a product and service that I want to
-  // offer once it's actually vetted and proven that it works." Until then it is
-  // off every surface that sells work: the page, the agent prompts and llms.txt.
+test("Google Business Profile work is not sold under any name", () => {
+  // Joe, 2026-10-01: it is "definitely going to be a product and service that I want
+  // to offer once it's actually vetted and proven that it works." Until then it is
+  // off every surface that sells work.
   //
-  // The offer was pulled once before (2026-09-17) and came back on 09-19 under a
-  // new name, so this pins BOTH names rather than just the current one.
+  // Pinning the two known names is not enough, and that is not hypothetical: the
+  // offer was pulled once (2026-09-17) and came back two days later RENAMED, so the
+  // next rename would sail past a name-only guard. This detects the OFFER by what it
+  // does instead — an agent running a business's Google listing — so renaming it
+  // does not defeat the check.
   //
-  // Not a violation: the historical blog post recording the pull, and internal
-  // tooling (scripts/visibility-audit, scripts/gbp-ops) which runs no client work.
-  const ALLOWED = [
-    "/src/content/blog/killed-my-google-maps-growth-page.ts",
-    "/src/lib/doors.ts", // holds only the explanatory comment about the reversal
-  ];
-  const SELLS = /Google Maps Growth|visibility audit/i;
+  // Two false negatives found by an independent review and reproduced here:
+  //   1. A markdown '* ' bullet was skipped because '*'-prefixed lines were treated
+  //      as code comments. chatbot-prompt.txt and llms.txt both use markdown bullets.
+  //   2. A renamed offer ("Business Profile Growth") passed, because the regex was
+  //      an exact-name match — the exact failure mode this guard exists to stop.
+  // Both are covered below and both are proven by mutation in the PR.
+  const NAMES = /Google Maps Growth|visibility audit/i;
+  // The service, described rather than named.
+  const DESCRIBES =
+    /(google\s+)?(business\s+)?(profile|listing)[^.]{0,80}\b(agent|run|runs|running|manage|manages|managed|post|posts|posting|reply|replies|review|reviews|weekly|upkeep|fresh|month|monthly|subscri)/i;
+  const DESCRIBES_REVERSED =
+    /\b(agent|runs|running|manages|managed|posts|posting|replies|answering|keeping|keeps)\b[^.]{0,80}(google\s+)?(business\s+)?(profile|listing)/i;
+  const OFFERISH = /offer|sell|sells|service|monthly|subscription|growth|audit|plan|sign up|available/i;
+
+  // The historical blog post recording the pull is not an offer, and internal
+  // tooling (scripts/visibility-audit, scripts/gbp-ops) runs no client work.
+  const ALLOWED = ["/src/content/blog/"];
   const offenders: string[] = [];
+
   for (const { file, text } of readAll()) {
-    if (ALLOWED.some((a) => file.endsWith(a))) continue;
-    if (file.includes("/scripts/")) continue;
-    for (const line of text.split("\n")) {
-      // Skip comment lines: prose explaining the removal is not an offer.
+    if (ALLOWED.some((a) => file.includes(a))) continue;
+    if (file.includes("/scripts/") || file.includes("/tests/")) continue;
+    // Strip code comments only where the syntax actually has them. Markdown and
+    // .txt files use '#' and '*' as bullets, which are content, not comments —
+    // skipping them is what let a planted '*' bullet through.
+    const isCode = /\.(ts|tsx|js|mjs|cjs)$/.test(file);
+    for (const raw of text.split("\n")) {
+      const line = isCode ? raw.replace(/\/\/.*$/, "") : raw;
       const t = line.trim();
-      if (t.startsWith("//") || t.startsWith("*") || t.startsWith("#") || t.startsWith("/*")) continue;
-      if (SELLS.test(line) && /offer|sell|service|Growth|audit/i.test(line)) {
-        offenders.push(`${file}: ${t.slice(0, 80)}`);
+      if (!t) continue;
+      if (isCode && (t.startsWith("*") || t.startsWith("/*"))) continue;
+      if (t.startsWith("#") && !NAMES.test(t) && !DESCRIBES.test(t) && !DESCRIBES_REVERSED.test(t)) continue;
+      const named = NAMES.test(line);
+      const described = (DESCRIBES.test(line) || DESCRIBES_REVERSED.test(line)) && OFFERISH.test(line);
+      if ((named || described) && OFFERISH.test(line)) {
+        offenders.push(`${file}: ${t.slice(0, 90)}`);
       }
     }
   }
   assert.deepEqual(
     offenders,
     [],
-    "these files still sell the pulled offer:\n" + offenders.join("\n"),
+    "these files still sell Google Business Profile work (offer pulled 2026-10-01; it returns only once vetted and proven):\n" +
+      offenders.join("\n"),
+  );
+});
+
+test("the resume-facing surfaces do not title him Forward Deployed Engineer", () => {
+  // The resumes say "Founder & AI Systems Developer". "Forward Deployed Engineer"
+  // appeared in several places and was cut from the hero, but an independent review
+  // found it surviving on the rendered About page (src/about-i18n.ts) and in the
+  // chatbot and llms.txt — so the title was removed in one place and left in three.
+  // This pins the surfaces a recruiter reads.
+  //
+  // Exempt: jts-prompt.txt and api/_shared/personas.js, which describe the JTS
+  // business to its own clients ("a solo Forward Deployed Engineer based in San
+  // Diego"). That is an agency descriptor, not his resume, and changing it is a
+  // separate positioning decision rather than a fidelity fix.
+  const FDE = /forward deployed engineer/i;
+  const EXEMPT = ["/jts-prompt.txt", "/api/_shared/personas.js"];
+  const offenders: string[] = [];
+  for (const { file, text } of readAll()) {
+    if (file.includes("/tests/")) continue;
+    if (EXEMPT.some((e) => file.endsWith(e))) continue;
+    for (const line of text.split("\n")) {
+      if (FDE.test(line)) offenders.push(`${file}: ${line.trim().slice(0, 90)}`);
+    }
+  }
+  assert.deepEqual(
+    offenders,
+    [],
+    "these resume-facing files still title him Forward Deployed Engineer (the resumes say Founder & AI Systems Developer):\n" +
+      offenders.join("\n"),
   );
 });
