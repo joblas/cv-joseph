@@ -33,20 +33,48 @@ const ROOT = process.cwd();
 // Applied to every guard below, not just some of them: an earlier version flattened
 // only its description regex, so the name list still missed a two-line wrap and the
 // commit message said otherwise.
-const ZERO_WIDTH = /[\u200b\u200c\u200d\u2060\ufeff\u00ad\u180e]/g;
+// Soft hyphen and zero-width characters need OPPOSITE treatments, which is why a
+// single rule failed both:
+//   - a soft hyphen sits INSIDE a word  -> "Visi\u00adbility" must become
+//     "Visibility", so it is DELETED. Spacing it gives "Visi bility" and the name
+//     never matches.
+//   - a zero-width char sits BETWEEN words -> "Visibility\u200bSprint" must become
+//     "Visibility Sprint", so it becomes a SPACE. Deleting it joins the words into
+//     "VisibilitySprint" and the name never matches either.
+// Both were live misses, each demonstrated with a planted file that shipped green.
+const SOFT_HYPHEN = /[\u00ad]/g;
+const ZERO_WIDTH = /[\u200b\u200c\u200d\u2060\ufeff\u180e]/g;
 const SPACEY = /[\u00a0\u1680\u2000-\u200a\u202f\u205f\u3000]/g;
+
+function safeCp(n: number): string {
+  if (!Number.isFinite(n) || n < 0 || n > 0x10ffff) return "";
+  try {
+    return String.fromCodePoint(n);
+  } catch {
+    return "";
+  }
+}
+
 function flat(input: string): string {
-  return input
-    // Zero-width characters become a SPACE, not nothing. Deleting them joins the
-    // words instead of separating them — "Visibility\u200bSprint" would fold to
-    // "VisibilitySprint" and slip past a ban on "Visibility Sprint", which is worse
-    // than not folding at all. A space preserves the boundary either way.
-    .replace(/&nbsp;/gi, " ")
-    .replace(/&#8203;|&zwnj;|&zwj;|&#x200b;/gi, " ")
-    .replace(ZERO_WIDTH, " ")
-    .replace(SPACEY, " ")
-    .replace(/\s+/g, " ")
-    .trim();
+  return (
+    input
+      // Named entities first...
+      .replace(/&(nbsp|thinsp|ensp|emsp|zwnj|zwj|shy);/gi, (m) => {
+        const k = m.toLowerCase().replace(/[&;]/g, "");
+        if (k === "shy") return ""; // soft hyphen: delete, it splits a word
+        return " "; // the rest are separators or spaces
+      })
+      // ...then numeric ones, decoded to the real character so the passes below
+      // handle them uniformly. &#160; and &#xA0; are NBSP and render as a space;
+      // only the literal &nbsp; was handled before, so both slipped through.
+      .replace(/&#x([0-9a-f]{1,6});/gi, (_, h: string) => safeCp(parseInt(h, 16)))
+      .replace(/&#(\d{1,7});/g, (_, d: string) => safeCp(Number(d)))
+      .replace(SOFT_HYPHEN, "")
+      .replace(ZERO_WIDTH, " ")
+      .replace(SPACEY, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+  );
 }
 
 function walk(dir: string, out: string[] = []): string[] {
@@ -216,52 +244,51 @@ test("Google Business Profile work appears nowhere, under any name", () => {
   // want to offer once it's actually vetted and proven that it works." Until then
   // it is gone from every surface that sells work.
   //
-  // This is deliberately a BAN on the subject, not a detector for an offer.
-  // Two rounds of review defeated the detector versions, each time by mutation:
-  //   1. exact names only        -> a renamed offer passed
+  // This is a BAN on the subject, not a detector for an offer. Four review rounds
+  // defeated the detector versions, each time by mutation:
+  //   1. exact names only         -> a renamed offer passed
   //   2. behaviour + keyword list -> a priced offer with no keyword passed
   //   3. per-line matching        -> an offer wrapped across two lines passed
-  // A detector has to guess how the next person will word it. After the offer was
-  // already pulled once (2026-09-17) and returned renamed two days later, guessing
-  // again is the wrong shape for this check.
+  //   4. raw-text matching        -> a banned name wrapped across lines passed
+  // A detector has to guess how the next writer will word it, and this offer was
+  // already pulled once (2026-09-17) and came back renamed two days later. So the
+  // check bans the subject instead of guessing its phrasing.
   //
-  // So: NO file sells or describes running a client's Google Business Profile, and
-  // the old offer names do not come back. Legitimate mentions have been removed
-  // from the site and the prompts, so the clean state is that the subject simply
-  // does not appear. Whole-text matching, so line wrapping cannot hide it.
-  //
-  // If a genuine, non-offer mention is ever needed, add its exact allowed string to
-  // ALLOWED — that makes the exception explicit and reviewable, which is the point.
-  //
-  // KNOWN LIMIT, stated so nobody trusts this further than it goes: a description
-  // that never names Google, the profile or the listing is undetectable here. Ten
-  // mutations were run against this guard; nine are caught. The tenth —
-  // "**Local Reputation Care** — an AI keeps your storefront reviews and weekly
-  // updates handled." — describes the service with no banned term, and no pattern
-  // can flag it without also flagging legitimate copy about other work. That case is
-  // covered by the behavioural evals (evals/datasets/jts-persona.json) and by human
-  // review, not by this file. This guard is a backstop for the wording we have
-  // actually seen, not a semantic classifier.
   // WHAT THIS CATCHES
-  //   - every name the offer has ever carried, including its previous ones
-  //   - the service described by its real nouns: Google + profile/listing/reviews,
-  //     in either order and across a line wrap
-  //   - all of that after folding NBSP, zero-width characters and HTML entities,
-  //     because "Google\u00a0Maps\u00a0Growth" renders as a space and is not one,
-  //     and "Visibility\u200bSprint" is invisible. Four review rounds found these
-  //     one at a time; folding is applied once, to every check.
+  //   - every name the offer has carried, including earlier ones ("Google Maps
+  //     Growth", "Visibility Sprint", "Google My Business")
+  //   - the service described by its real nouns: Google within 60 characters of
+  //     profile/profile(s) or listing/listing(s) or review(s), in EITHER order.
+  //     Both branches carry both plurals, because a reverse-order check that only
+  //     listed the singular "profile|listing" let "reviews on Google" through.
+  //   - all of it after one `flat()` pass, applied to every check rather than only
+  //     some. It folds the encodings that render as ordinary spaces but are not:
+  //     NBSP, narrow/thin spaces, zero-width characters, and HTML entities in
+  //     named (incl. numeric &[#]160;) and hex (&#xA0;) form.
+  //   - across line wraps and inside code comments. A comment ships and gets read;
+  //     api/_shared/rag.js already carried a dead offer slug in one.
   //
-  // WHAT THIS DOES NOT CATCH, stated plainly rather than implied by a green check:
-  // a paraphrase that uses none of those nouns. "An AI keeps your storefront reviews
-  // and weekly updates handled" describes the pulled service and matches nothing
-  // here, because flagging it would mean flagging any sentence about local marketing.
-  // Three review rounds each produced a new wording for this offer; a regex cannot
-  // win that race, and pretending otherwise is how the last three versions failed.
+  // Soft hyphen and zero-width characters need OPPOSITE treatment, which is why a
+  // single rule missed both: a soft hyphen sits INSIDE a word, so it is deleted
+  // ("Visi\u00adbility" -> "Visibility"), while a zero-width character sits BETWEEN
+  // words, so it becomes a space ("Visibility\u200bSprint" -> "Visibility Sprint").
+  // Spacing the first or deleting the second breaks the match instead of fixing it.
   //
-  // The durable guarantee is behavioural, not lexical: the agent prompts no longer
-  // offer it and evals/datasets/jts-persona.json now requires the chatbot to refuse,
-  // which is the surface a customer actually talks to. This guard is the cheap
-  // backstop for the wording we have seen, and it is honest about being only that.
+  // WHAT THIS DOES NOT CATCH
+  // A paraphrase using none of those nouns. "An AI keeps your storefront reviews and
+  // weekly updates handled" describes the pulled service and matches nothing here,
+  // because flagging it would mean flagging any sentence about local marketing. Of 21
+  // mutations run against this guard, 20 are caught; that one is not, and no regex
+  // fixes it. Four rounds each produced a fresh wording for this offer - a lexical
+  // guard cannot win that race, and pretending otherwise is what produced the earlier
+  // versions' bugs.
+  //
+  // The durable guarantee is behavioural, not lexical: the prompts no longer offer it
+  // and evals/datasets/jts-persona.json requires the chatbot to refuse - which is the
+  // surface a customer actually talks to. This is the cheap backstop.
+  //
+  // If a genuine, non-offer mention is ever needed, add its exact string to ALLOWED
+  // below, so the exception is explicit and reviewable.
   const BANNED = new RegExp(
     [
       "Google Maps Growth",
@@ -280,7 +307,7 @@ test("Google Business Profile work appears nowhere, under any name", () => {
   );
   // The service by its nouns: Google near profile/listing/reviews, either order.
   const SERVICE =
-    /google[^.]{0,40}?\b(?:profile|listing|reviews?)\b|\b(?:profile|listing)\b[^.]{0,40}?google/i;
+    /google[^.]{0,60}?\b(?:profiles?|listings?|reviews?)\b|\b(?:profiles?|listings?|reviews?)\b[^.]{0,60}?google/i;
 
   // The historical blog post that records the pull is not an offer, and internal
   // tooling (scripts/visibility-audit, scripts/gbp-ops) runs no client work.
