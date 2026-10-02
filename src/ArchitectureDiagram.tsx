@@ -20,7 +20,7 @@ export default function ArchitectureDiagram() {
     feedback: 'Feedback',
     reviews: 'Reviews',
     kwr: 'Auto KWR',
-    gbp: 'GBP Posts',
+    posts: 'Posts',
     content: 'Content',
     gpt: 'Custom GPT',
     automations: '50+ Native Airtable Automations',
@@ -97,7 +97,7 @@ export default function ArchitectureDiagram() {
         {/* CRM → Feedback, Reviews */}
         <line x1={colL} y1={coreY + 58} x2={colL - 25} y2={sat1Y} stroke="#3b82f6" strokeWidth="1" strokeDasharray="3 4" opacity="0.2" />
         <line x1={colL} y1={coreY + 58} x2={cx} y2={sat1Y} stroke="#3b82f6" strokeWidth="1" strokeDasharray="3 4" opacity="0.2" />
-        {/* CMS → KWR, GBP, Content */}
+        {/* CMS → KWR, Posts, Content */}
         <line x1={cx} y1={cmsY + 55} x2={colL - 25} y2={sat2Y} stroke="#d97706" strokeWidth="1" strokeDasharray="3 4" opacity="0.2" />
         <line x1={cx} y1={cmsY + 55} x2={cx} y2={sat2Y} stroke="#d97706" strokeWidth="1" strokeDasharray="3 4" opacity="0.2" />
         <line x1={cx} y1={cmsY + 55} x2={colR + 25} y2={sat2Y} stroke="#d97706" strokeWidth="1" strokeDasharray="3 4" opacity="0.2" />
@@ -159,7 +159,7 @@ export default function ArchitectureDiagram() {
         {/* ═══ ROW 5b: SATELLITES ═══ */}
         {[
           { x: colL - 25, label: l.kwr },
-          { x: cx, label: l.gbp },
+          { x: cx, label: l.posts },
           { x: colR + 25, label: l.content },
         ].map((n) => (
           <g key={n.label}>

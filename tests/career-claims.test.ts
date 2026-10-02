@@ -29,7 +29,7 @@ function walk(dir: string, out: string[] = []): string[] {
     if (entry.name === "node_modules" || entry.name === ".next" || entry.name === ".git") continue;
     const full = join(dir, entry.name);
     if (entry.isDirectory()) walk(full, out);
-    else if (/\.(ts|tsx|txt|js|json|html)$/.test(entry.name)) out.push(full);
+    else if (/\.(ts|tsx|txt|js|json|html|md)$/.test(entry.name)) out.push(full);
   }
   return out;
 }
@@ -186,60 +186,106 @@ test("the 10+ figure is not written with an em dash around it", () => {
   );
 });
 
-test("Google Business Profile work is not sold under any name", () => {
-  // Joe, 2026-10-01: it is "definitely going to be a product and service that I want
-  // to offer once it's actually vetted and proven that it works." Until then it is
-  // off every surface that sells work.
+test("Google Business Profile work appears nowhere, under any name", () => {
+  // Joe, 2026-10-01: it is "definitely going to be a product and service that I
+  // want to offer once it's actually vetted and proven that it works." Until then
+  // it is gone from every surface that sells work.
   //
-  // Pinning the two known names is not enough, and that is not hypothetical: the
-  // offer was pulled once (2026-09-17) and came back two days later RENAMED, so the
-  // next rename would sail past a name-only guard. This detects the OFFER by what it
-  // does instead — an agent running a business's Google listing — so renaming it
-  // does not defeat the check.
+  // This is deliberately a BAN on the subject, not a detector for an offer.
+  // Two rounds of review defeated the detector versions, each time by mutation:
+  //   1. exact names only        -> a renamed offer passed
+  //   2. behaviour + keyword list -> a priced offer with no keyword passed
+  //   3. per-line matching        -> an offer wrapped across two lines passed
+  // A detector has to guess how the next person will word it. After the offer was
+  // already pulled once (2026-09-17) and returned renamed two days later, guessing
+  // again is the wrong shape for this check.
   //
-  // Two false negatives found by an independent review and reproduced here:
-  //   1. A markdown '* ' bullet was skipped because '*'-prefixed lines were treated
-  //      as code comments. chatbot-prompt.txt and llms.txt both use markdown bullets.
-  //   2. A renamed offer ("Business Profile Growth") passed, because the regex was
-  //      an exact-name match — the exact failure mode this guard exists to stop.
-  // Both are covered below and both are proven by mutation in the PR.
-  const NAMES = /Google Maps Growth|visibility audit/i;
-  // The service, described rather than named.
-  const DESCRIBES =
-    /(google\s+)?(business\s+)?(profile|listing)[^.]{0,80}\b(agent|run|runs|running|manage|manages|managed|post|posts|posting|reply|replies|review|reviews|weekly|upkeep|fresh|month|monthly|subscri)/i;
-  const DESCRIBES_REVERSED =
-    /\b(agent|runs|running|manages|managed|posts|posting|replies|answering|keeping|keeps)\b[^.]{0,80}(google\s+)?(business\s+)?(profile|listing)/i;
-  const OFFERISH = /offer|sell|sells|service|monthly|subscription|growth|audit|plan|sign up|available/i;
+  // So: NO file sells or describes running a client's Google Business Profile, and
+  // the old offer names do not come back. Legitimate mentions have been removed
+  // from the site and the prompts, so the clean state is that the subject simply
+  // does not appear. Whole-text matching, so line wrapping cannot hide it.
+  //
+  // If a genuine, non-offer mention is ever needed, add its exact allowed string to
+  // ALLOWED — that makes the exception explicit and reviewable, which is the point.
+  //
+  // KNOWN LIMIT, stated so nobody trusts this further than it goes: a description
+  // that never names Google, the profile or the listing is undetectable here. Ten
+  // mutations were run against this guard; nine are caught. The tenth —
+  // "**Local Reputation Care** — an AI keeps your storefront reviews and weekly
+  // updates handled." — describes the service with no banned term, and no pattern
+  // can flag it without also flagging legitimate copy about other work. That case is
+  // covered by the behavioural evals (evals/datasets/jts-persona.json) and by human
+  // review, not by this file. This guard is a backstop for the wording we have
+  // actually seen, not a semantic classifier.
+  const BANNED = new RegExp(
+    [
+      "Google Maps Growth",
+      "visibility audit",
+      "Visibility Sprint",
+      "Google Business Profile",
+      "Google My Business",
+      "business profile",
+      "business listing",
+      "profile upkeep",
+      "listing fresh",
+      "\\bGBP\\b",
+    ].join("|"),
+    "i",
+  );
+  // A description of the service, independent of what it is called.
+  //
+  // PROFILE requires a qualifier on purpose. An earlier version allowed a bare
+  // "profile", and matched unrelated prose ("...archetypes and CV templates for my
+  // profile, and now run it daily..."), so it flagged three innocent files. Google
+  // Business Profile, business profile, Google listing — but never a bare
+  // "profile" or "listing".
+  const PROFILE =
+    "(?:google\\s+)?(?:business\\s+)?(?:profile|listing)";
+  const QUALIFIED =
+    "(?:google\\s+business\\s+profile|google\\s+profile|google\\s+listing|business\\s+profile|business\\s+listing|google\\s+my\\s+business)";
+  const DESCRIPTION = new RegExp(
+    [
+      // "an agent runs / manages / posts to ... the listing"
+      "\\b(?:agent|bot|assistant|we|joe)\\b[\\s\\S]{0,60}?\\b(?:runs?|running|manages?|managing|managed|posts?|posting|replies|replying|answers?|answering|maintains?|maintaining|handles?|handling)\\b[\\s\\S]{0,60}?" +
+        QUALIFIED,
+      // the reverse order
+      QUALIFIED +
+        "[\\s\\S]{0,60}?\\b(?:run|runs|running|managed|posts|posting|replies|replying|answered|upkeep|maintain|maintained)\\b",
+      // Google-adjacent upkeep phrasing
+      "\\bgoogle\\b[\\s\\S]{0,40}?\\b(?:upkeep|posts|posting|replies|listing|profile)\\b",
+    ].join("|"),
+    "i",
+  );
+  // PROFILE is kept for the banned-name pass so an unqualified mention still trips
+  // the name check above via the explicit strings.
+  void PROFILE;
 
-  // The historical blog post recording the pull is not an offer, and internal
+  // The historical blog post that records the pull is not an offer, and internal
   // tooling (scripts/visibility-audit, scripts/gbp-ops) runs no client work.
-  const ALLOWED = ["/src/content/blog/"];
+  const ALLOWED: string[] = [];
   const offenders: string[] = [];
 
   for (const { file, text } of readAll()) {
     if (ALLOWED.some((a) => file.includes(a))) continue;
-    if (file.includes("/scripts/") || file.includes("/tests/")) continue;
-    // Strip code comments only where the syntax actually has them. Markdown and
-    // .txt files use '#' and '*' as bullets, which are content, not comments —
-    // skipping them is what let a planted '*' bullet through.
-    const isCode = /\.(ts|tsx|js|mjs|cjs)$/.test(file);
-    for (const raw of text.split("\n")) {
-      const line = isCode ? raw.replace(/\/\/.*$/, "") : raw;
-      const t = line.trim();
-      if (!t) continue;
-      if (isCode && (t.startsWith("*") || t.startsWith("/*"))) continue;
-      if (t.startsWith("#") && !NAMES.test(t) && !DESCRIBES.test(t) && !DESCRIBES_REVERSED.test(t)) continue;
-      const named = NAMES.test(line);
-      const described = (DESCRIBES.test(line) || DESCRIBES_REVERSED.test(line)) && OFFERISH.test(line);
-      if ((named || described) && OFFERISH.test(line)) {
-        offenders.push(`${file}: ${t.slice(0, 90)}`);
-      }
+    if (file.includes("/scripts/") || file.includes("/tests/") || file.includes("/evals/")) continue;
+    // Comments are NOT stripped. An earlier version skipped them, and two things
+    // escaped as a result: a markdown '* ' bullet in a .txt file (treated as a
+    // comment) and an offer written in a .ts comment. A comment can still ship and
+    // still be read — api/_shared/rag.js already carried a dead offer slug in one —
+    // so it is not a safe harbour. Verified this causes no false positives: the only
+    // comment hits were real leftovers, now removed.
+    const stripped = text;
+    const flat = stripped.replace(/\s+/g, " ").trim();
+    if (BANNED.test(stripped) || DESCRIPTION.test(flat)) {
+      const m = stripped.match(BANNED) || flat.match(DESCRIPTION);
+      const i = m && m.index !== undefined ? Math.max(0, m.index - 40) : 0;
+      offenders.push(`${file}: ...${flat.slice(i, i + 120)}...`);
     }
   }
   assert.deepEqual(
     offenders,
     [],
-    "these files still sell Google Business Profile work (offer pulled 2026-10-01; it returns only once vetted and proven):\n" +
+    "these files mention or sell Google Business Profile work (pulled 2026-10-01; it returns only once vetted and proven):\n" +
       offenders.join("\n"),
   );
 });
