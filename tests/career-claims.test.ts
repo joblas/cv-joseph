@@ -24,12 +24,37 @@ import { join } from "node:path";
 // tests in this directory use.
 const ROOT = process.cwd();
 
+// Fold text down to something a regex can actually match, because the obvious
+// evasions live in the encoding, not the wording:
+//   - a banned name wrapped across two lines  -> collapse whitespace
+//   - "Google Maps Growth" (NBSP)     -> renders as a space, is not one
+//   - "Visibility​Sprint" (zero-width)     -> invisible
+//   - "Google&nbsp;Maps&nbsp;Growth" (entity)   -> renders as a space in HTML
+// Applied to every guard below, not just some of them: an earlier version flattened
+// only its description regex, so the name list still missed a two-line wrap and the
+// commit message said otherwise.
+const ZERO_WIDTH = /[\u200b\u200c\u200d\u2060\ufeff\u00ad\u180e]/g;
+const SPACEY = /[\u00a0\u1680\u2000-\u200a\u202f\u205f\u3000]/g;
+function flat(input: string): string {
+  return input
+    // Zero-width characters become a SPACE, not nothing. Deleting them joins the
+    // words instead of separating them — "Visibility\u200bSprint" would fold to
+    // "VisibilitySprint" and slip past a ban on "Visibility Sprint", which is worse
+    // than not folding at all. A space preserves the boundary either way.
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&#8203;|&zwnj;|&zwj;|&#x200b;/gi, " ")
+    .replace(ZERO_WIDTH, " ")
+    .replace(SPACEY, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 function walk(dir: string, out: string[] = []): string[] {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
     if (entry.name === "node_modules" || entry.name === ".next" || entry.name === ".git") continue;
     const full = join(dir, entry.name);
     if (entry.isDirectory()) walk(full, out);
-    else if (/\.(ts|tsx|txt|js|json|html|md)$/.test(entry.name)) out.push(full);
+    else if (/\.(ts|tsx|txt|js|json|html|md|svg)$/.test(entry.name)) out.push(full);
   }
   return out;
 }
@@ -217,6 +242,26 @@ test("Google Business Profile work appears nowhere, under any name", () => {
   // covered by the behavioural evals (evals/datasets/jts-persona.json) and by human
   // review, not by this file. This guard is a backstop for the wording we have
   // actually seen, not a semantic classifier.
+  // WHAT THIS CATCHES
+  //   - every name the offer has ever carried, including its previous ones
+  //   - the service described by its real nouns: Google + profile/listing/reviews,
+  //     in either order and across a line wrap
+  //   - all of that after folding NBSP, zero-width characters and HTML entities,
+  //     because "Google\u00a0Maps\u00a0Growth" renders as a space and is not one,
+  //     and "Visibility\u200bSprint" is invisible. Four review rounds found these
+  //     one at a time; folding is applied once, to every check.
+  //
+  // WHAT THIS DOES NOT CATCH, stated plainly rather than implied by a green check:
+  // a paraphrase that uses none of those nouns. "An AI keeps your storefront reviews
+  // and weekly updates handled" describes the pulled service and matches nothing
+  // here, because flagging it would mean flagging any sentence about local marketing.
+  // Three review rounds each produced a new wording for this offer; a regex cannot
+  // win that race, and pretending otherwise is how the last three versions failed.
+  //
+  // The durable guarantee is behavioural, not lexical: the agent prompts no longer
+  // offer it and evals/datasets/jts-persona.json now requires the chatbot to refuse,
+  // which is the surface a customer actually talks to. This guard is the cheap
+  // backstop for the wording we have seen, and it is honest about being only that.
   const BANNED = new RegExp(
     [
       "Google Maps Growth",
@@ -229,36 +274,13 @@ test("Google Business Profile work appears nowhere, under any name", () => {
       "profile upkeep",
       "listing fresh",
       "\\bGBP\\b",
+      "\\bGMB\\b",
     ].join("|"),
     "i",
   );
-  // A description of the service, independent of what it is called.
-  //
-  // PROFILE requires a qualifier on purpose. An earlier version allowed a bare
-  // "profile", and matched unrelated prose ("...archetypes and CV templates for my
-  // profile, and now run it daily..."), so it flagged three innocent files. Google
-  // Business Profile, business profile, Google listing — but never a bare
-  // "profile" or "listing".
-  const PROFILE =
-    "(?:google\\s+)?(?:business\\s+)?(?:profile|listing)";
-  const QUALIFIED =
-    "(?:google\\s+business\\s+profile|google\\s+profile|google\\s+listing|business\\s+profile|business\\s+listing|google\\s+my\\s+business)";
-  const DESCRIPTION = new RegExp(
-    [
-      // "an agent runs / manages / posts to ... the listing"
-      "\\b(?:agent|bot|assistant|we|joe)\\b[\\s\\S]{0,60}?\\b(?:runs?|running|manages?|managing|managed|posts?|posting|replies|replying|answers?|answering|maintains?|maintaining|handles?|handling)\\b[\\s\\S]{0,60}?" +
-        QUALIFIED,
-      // the reverse order
-      QUALIFIED +
-        "[\\s\\S]{0,60}?\\b(?:run|runs|running|managed|posts|posting|replies|replying|answered|upkeep|maintain|maintained)\\b",
-      // Google-adjacent upkeep phrasing
-      "\\bgoogle\\b[\\s\\S]{0,40}?\\b(?:upkeep|posts|posting|replies|listing|profile)\\b",
-    ].join("|"),
-    "i",
-  );
-  // PROFILE is kept for the banned-name pass so an unqualified mention still trips
-  // the name check above via the explicit strings.
-  void PROFILE;
+  // The service by its nouns: Google near profile/listing/reviews, either order.
+  const SERVICE =
+    /google[^.]{0,40}?\b(?:profile|listing|reviews?)\b|\b(?:profile|listing)\b[^.]{0,40}?google/i;
 
   // The historical blog post that records the pull is not an offer, and internal
   // tooling (scripts/visibility-audit, scripts/gbp-ops) runs no client work.
@@ -268,18 +290,13 @@ test("Google Business Profile work appears nowhere, under any name", () => {
   for (const { file, text } of readAll()) {
     if (ALLOWED.some((a) => file.includes(a))) continue;
     if (file.includes("/scripts/") || file.includes("/tests/") || file.includes("/evals/")) continue;
-    // Comments are NOT stripped. An earlier version skipped them, and two things
-    // escaped as a result: a markdown '* ' bullet in a .txt file (treated as a
-    // comment) and an offer written in a .ts comment. A comment can still ship and
-    // still be read — api/_shared/rag.js already carried a dead offer slug in one —
-    // so it is not a safe harbour. Verified this causes no false positives: the only
-    // comment hits were real leftovers, now removed.
-    const stripped = text;
-    const flat = stripped.replace(/\s+/g, " ").trim();
-    if (BANNED.test(stripped) || DESCRIPTION.test(flat)) {
-      const m = stripped.match(BANNED) || flat.match(DESCRIPTION);
+    // Comments are NOT stripped: a comment still ships and still gets read, and
+    // api/_shared/rag.js already carried a dead offer slug in one.
+    const f = flat(text);
+    if (BANNED.test(f) || SERVICE.test(f)) {
+      const m = f.match(BANNED) ?? f.match(SERVICE);
       const i = m && m.index !== undefined ? Math.max(0, m.index - 40) : 0;
-      offenders.push(`${file}: ...${flat.slice(i, i + 120)}...`);
+      offenders.push(`${file}: ...${f.slice(i, i + 130)}...`);
     }
   }
   assert.deepEqual(
