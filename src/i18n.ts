@@ -126,7 +126,7 @@ const _translationsEn = {
       {
         title: 'Client-Facing Delivery',
         icon: 'users',
-        desc: '30+ executive/investor demos, client consulting, private AI deployment',
+        desc: '10+ executive/investor demos, client consulting, private AI deployment',
       },
       {
         title: 'Cloud & Platform',
@@ -466,11 +466,11 @@ const _translationsEn = {
       desc: [
         'Original sub-10-person team. Sole technician — owned end-to-end fleet integration, validation, and test campaign execution under rapid iteration.',
         'Supported the 2,900-mile San Francisco → New York autonomous demo with zero critical failures and zero hands on the wheel.',
-        'Conducted 30+ executive and investor demonstrations as primary field-to-engineering liaison.',
+        'Conducted 10+ executive and investor demonstrations as primary field-to-engineering liaison.',
       ],
       tesauro: {
         title: '2,900-Mile Cross-Country Demo',
-        desc: 'Supported a 2,900-mile cross-country autonomous demonstration with zero critical failures. Conducted 30+ executive and investor demonstrations.',
+        desc: 'Supported a 2,900-mile cross-country autonomous demonstration with zero critical failures. Conducted 10+ executive and investor demonstrations.',
         videoUrl: 'https://vimeo.com/prontoai',
         videoLabel: 'Watch Demo Video',
       },
