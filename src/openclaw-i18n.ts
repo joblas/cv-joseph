@@ -211,7 +211,7 @@ const _en = {
       },
       {
         q: 'What happened to the OpenClaw code?',
-        a: 'The OpenClaw agents were retired, and this case study is their postmortem. The new runtime is Nous Research\'s open-source hermes-agent (github.com/NousResearch/hermes-agent); my own one-command installer experiment lives at github.com/joestechsolutions/hermes-forge. The lessons (org chart first, model selection per task, boring infrastructure, document the migration) are encoded in the new architecture.',
+        a: 'The OpenClaw agents were retired, and this case study is their postmortem. The new runtime is Nous Research\'s open-source hermes-agent (github.com/NousResearch/hermes-agent). The lessons (org chart first, model selection per task, boring infrastructure, document the migration) are encoded in the new architecture.',
       },
       {
         q: 'Can I build something like this for my business?',

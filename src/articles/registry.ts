@@ -189,7 +189,7 @@ export const articleRegistry: ArticleConfig[] = [
         { '@type': 'SoftwareApplication', name: 'Hermes', url: 'https://github.com/NousResearch/hermes-agent', applicationCategory: 'Agent Runtime' },
         { '@type': 'Thing', name: 'Multi-Agent AI Systems' },
       ],
-      extra: { proficiencyLevel: 'Expert', dependencies: 'Hermes, OpenClaw (retired), n8n, Claude API, Telegram, Slack, GitHub, Stripe, Tailscale, systemd, Ollama, MemPalace' },
+      extra: { proficiencyLevel: 'Expert', dependencies: 'Hermes, OpenClaw (retired), n8n, Claude API, Telegram, Slack, GitHub, Tailscale, systemd, Ollama, MemPalace' },
       citation: [
         { '@type': 'WebPage', name: 'Hermes agent runtime on GitHub', url: 'https://github.com/NousResearch/hermes-agent' },
         { '@type': 'WebPage', name: 'Original blog post: 22-Agent AI Team Architecture (superseded by this case study)', url: 'https://www.joestechsolutions.com/blog/22-agent-ai-team-architecture' },
@@ -266,7 +266,7 @@ export const articleRegistry: ArticleConfig[] = [
     title: 'Archive Beta Loop',
     seo: {
       title: 'The Archive Beta Loop: Client Texts Become Shipped Features',
-      description: 'Case study: a client\'s Telegram messages become shipped app features through an always-on agent loop — 20 issues, 13 PRs, median fix in under 14 minutes.',
+      description: 'Case study: an agent loop turns a client\'s Telegram messages into shipped app features. As of Sep 1, 2026: 20 issues, 13 PRs, median fix under 14 minutes.',
     },
     sectionLabels: {
       'the-client': 'The Client',

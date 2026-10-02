@@ -147,7 +147,10 @@ export const WORK_ITEMS = [
       // one ("set up a store"), a store for a musician or brand, selling online.
       // Not a feature named after a store ("a store locator", "shop hours").
       when: anyOf(
-        /\b(?:shopify|merch(?:andise)?|e-?commerce|storefronts?|web ?shop|t-?shirts?|tees|stickers?|hoodies?)\b/,
+        /\b(?:shopify|merch(?:andise)?|e-?commerce|storefronts?|web ?shop)\b/,
+        // Apparel and stickers only with a selling or store word nearby, not
+        // "sticker detection for perception" or "T-shirt cannons at Google".
+        near('t-?shirts?|tees|stickers?|hoodies?', 'sell\\w*|sold|stores?|shops?|merch\\w*|online|print\\w*|orders?|musicians?|bands?|artists?|brands?'),
         /\b(?:online|web|internet|merch|e-?commerce)\s+(?:stores?|shops?)\b/,
         /\b(?:build|make|set up|setup|create|launch|start)\s+(?:me\s+|us\s+|him\s+|her\s+|them\s+)?(?:a|an|my|our|his|her|their)\s+(?:(?:online|web|small|simple|little)\s+)?(?:stores?|shops?)\b(?!\s+(?:locators?|finders?|hours|maps?|lookups?|search))/,
         /\b(?:stores?|shops?)\s+(?:for\s+(?:a\s+|an\s+|my\s+|our\s+|his\s+|her\s+|their\s+)?(?:musicians?|bands?|artists?|brands?|creators?)|to sell|that sells|selling)\b/,
@@ -302,8 +305,11 @@ export const WORK_ITEMS = [
     name: { cloudyjoe: 'RenFaire Guide (renfaireguide.com)', jts: 'RenFaire Directory (RenFaireGuide.com)' },
     kind: 'own product',
     verdict: 'INCLUDE_WITH_CARE',
-    line: "Joe built and runs RenFaireGuide.com (the RenFaire Directory in the JTS portfolio), his own search-focused directory of 700+ Renaissance faires across the US, with maps, state and category pages and a blog. Next.js, Supabase and Leaflet on Cloudflare Pages, with an AI-assisted data pipeline: a monthly crawler refreshes faire dates and its changes are reviewed.",
-    short: "RenFaireGuide.com is Joe's own directory of 700+ Renaissance faires across the US, with maps and state pages, built in Next.js and Supabase.",
+    // Not "across the US": on 2026-10-02 the live sitemap's 50 state pages held
+    // 648 faires and its 16 country pages 67 (41 in Canada); the site itself
+    // says "across America & beyond".
+    line: "Joe built and runs RenFaireGuide.com (the RenFaire Directory in the JTS portfolio), his own search-focused directory of 700+ Renaissance faires, most in the US and the rest in other countries, with maps, state and category pages and a blog. Next.js, Supabase and Leaflet on Cloudflare Pages, with an AI-assisted data pipeline: a monthly crawler refreshes faire dates and its changes are reviewed.",
+    short: "RenFaireGuide.com is Joe's own directory of 700+ Renaissance faires in the US and abroad, with maps and state pages, built in Next.js and Supabase.",
     avoid: ['any traffic, ranking or earnings figure', 'the largest directory', '200+ listings', 'that it is client work'],
     pages: { jts: '/portfolio/renfaire-directory' },
     urls: ['https://www.renfaireguide.com/'],
@@ -319,7 +325,7 @@ export const WORK_ITEMS = [
     name: 'Remote AI agent install for a client',
     kind: 'client work',
     verdict: 'INCLUDE_WITH_CARE',
-    line: "Joe wrote a remote self-install guide and a one-command installer that let a small-business owner set up her own always-on AI agent (Nous Research's open-source Hermes agent) on a VPS she controls, reachable over Telegram, and he keeps nightly encrypted offsite backups of it. The JTS blog post 'Setting up a Hermes agent remotely' describes the approach.",
+    line: "Joe wrote a remote self-install guide and a one-command installer that let a small-business owner set up her own always-on AI agent (Nous Research's open-source Hermes agent) on a VPS she controls, reachable over Telegram, and he keeps nightly encrypted offsite backups of it. A post on the JTS blog describes the approach.",
     short: "Joe also set up a small-business owner's own always-on AI agent, Nous Research's open-source Hermes agent, on a server she controls, through a remote install guide, and he keeps nightly encrypted backups of it.",
     avoid: ["the client's name", "that her agent's memory or persona features work"],
     voiceAvoid: ["the client's name"],
@@ -455,7 +461,7 @@ export const WORK_ITEMS = [
     name: 'JTS Prompt Library',
     kind: 'own product',
     verdict: 'INCLUDE_WITH_CARE',
-    line: "The JTS Prompt Library is a 33-prompt PDF covering ops, sales, content, coding and research, free on joestechsolutions.com for an email address. It mixes prompts from Joe's own business with proven patterns.",
+    line: "The JTS Prompt Library is a 33-prompt PDF covering ops, sales, content, coding and research, free on joestechsolutions.com for an email address. It mixes prompts that run parts of Joe's own business with patterns from operators he follows, rewritten for real work.",
     short: 'The JTS Prompt Library is a free 33-prompt PDF on joestechsolutions.com.',
     avoid: ["all 33 are Joe's originals"],
     voice: false,

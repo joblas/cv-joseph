@@ -176,6 +176,26 @@ const withinMs = async <T,>(p: Promise<T>, ms: number): Promise<T | 'HUNG'> => {
   check('the reasoned answer is used when traceId is null', res.status === 200 && String(body.context).includes(REASONED))
 }
 
+// --- 3b. The reasoning step is handed Joe's work list -------------------------
+// The persona prompt it reasons under is the composed one (api/_shared/work.js),
+// so an empty or thin search can still be answered from the list. Test 2b's
+// card marker cannot pin this: the card reaches the model in the tool result
+// either way. Here the system text itself must carry the Shopify line.
+{
+  const work: any = await import('../functions/api-src/_shared/work.js')
+  const shop = work.WORK_ITEMS.find((i: any) => i.id === 'cbarrgs-shop')
+  for (const [persona, origin] of [['jts', 'https://www.joestechsolutions.com'], ['cloudyjoe', 'https://cloudyjoe.com']] as const) {
+    reset(); mode.model = 'answer'
+    const res = await post({ query: 'can he build a store for a musician', traceId: null, currentPage: '/', persona }, origin)
+    // The reasoning request is the one that replays the search_portfolio call.
+    const reasoning = sent.find((s) => s.url.includes('127.0.0.1:9') && JSON.stringify(s.body?.messages ?? '').includes('voice_rag_call'))
+    const system = typeof reasoning?.body?.system === 'string' ? reasoning.body.system : JSON.stringify(reasoning?.body?.system ?? '')
+    check(`${persona}: the reasoning step ran`, res.status === 200 && !!reasoning)
+    check(`${persona}: ...under a system prompt that carries the work list's Shopify line`,
+      !!shop && system.includes(work.renderTextLine(shop, persona)) && system.includes('shopify.cbarrgs.com'))
+  }
+}
+
 // --- 4. A genuinely EMPTY search, and a FAILED one, are told apart ------------
 {
   reset(); mode.site = 'empty'

@@ -162,8 +162,20 @@ const NAMING: Record<string, Record<PersonaId, boolean>> = {
 }
 check('CLIENT_NAMING matches the naming spec', JSON.stringify(work.CLIENT_NAMING) === JSON.stringify(NAMING))
 // Case-insensitive with letter boundaries, so a name inside a lowercase URL
-// slug ("nick-cleaning-assistant", "/van-setup-guide.html") counts as naming.
-const word = (w: string) => new RegExp(`(?<![A-Za-z])${w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![A-Za-z])`, 'i')
+// slug ("nick-cleaning-assistant", "/van-setup-guide.html") counts as naming,
+// and so does its possessive or plural form, with or without the apostrophe
+// ("Van's", "vans-archive-hair-salon-questionaire", "joblas/vans-app").
+const word = (w: string) => new RegExp(`(?<![A-Za-z])${w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?:['’]?s)?(?![A-Za-z])`, 'i')
+for (const [text, name] of [
+  ['Links: https://joestechsolutions.github.io/vans-archive-hair-salon-questionaire/', 'Van'],
+  ['https://github.com/joblas/vans-app', 'Van'],
+  ["Van's salon", 'Van'],
+  ['/van-setup-guide.html', 'Van'],
+  ['nick-cleaning-assistant', 'Nick'],
+] as const) check(`the naming check catches "${name}" in "${text}"`, word(name).test(text))
+for (const [text, name] of [['caravans', 'Van'], ['vanilla', 'Van'], ['Nickel', 'Nick']] as const) {
+  check(`the naming check does not fire on "${text}"`, !word(name).test(text))
+}
 // Everything a persona's model is handed: the composed prompts, the search
 // tool's schema strings and no-result text, and (cloudyjoe) the fact cards,
 // whose `asked` phrasings appear in no prompt.
@@ -189,10 +201,11 @@ for (const s of namingSurfaces) {
     check(`${s.label} never names ${n}`, !hit)
   }
 }
-// JTS: no day job, no Career-Ops, no first names.
-for (const c of consumers.filter((x) => x.id === 'jts')) {
-  check(`jts ${c.mode} never names Joe's employer`, !/quadient/i.test(c.text))
-  check(`jts ${c.mode} never mentions Career-Ops`, !/career[- ]?ops/i.test(c.text))
+// JTS: no day job, no Career-Ops, no first names. Every JTS surface the model
+// is handed, the search tool's own strings included.
+for (const s of namingSurfaces.filter((x) => x.id === 'jts')) {
+  check(`${s.label} never names Joe's employer`, !/quadient/i.test(s.text))
+  check(`${s.label} never mentions Career-Ops`, !/career[- ]?ops/i.test(s.text))
 }
 // EXCLUDE items never appear in any work list.
 const EXCLUDED = ['Self-Healing Chatbot', 'Semantic Galaxy', 'Wiki Graph', 'Maps Growth', 'Hermes Forge', 'Bootloader',
@@ -200,6 +213,20 @@ const EXCLUDED = ['Self-Healing Chatbot', 'Semantic Galaxy', 'Wiki Graph', 'Maps
 for (const id of PERSONAS) {
   const blocks = work.workTextBlock(id) + work.workVoiceBlock(id)
   for (const x of EXCLUDED) check(`${id} work list never lists ${x}`, !blocks.toLowerCase().includes(x.toLowerCase()))
+}
+// ...nor in the copy this change edits (prompts, llms.txt, the articles and
+// their registry). Two names stay, by decision: the Self-Healing Chatbot
+// article's related links and registry entry (its fate is Joe's call) and the
+// "Cloud Infrastructure" card (out of scope, Joe's call).
+const COPY_FILES = ['chatbot-prompt.txt', 'jts-prompt.txt', 'public/llms.txt', 'api/_shared/personas.js', 'api/voice-token.js',
+  'src/turnover-agent-i18n.ts', 'src/archive-beta-loop-i18n.ts', 'src/cbarrgs-agent-i18n.ts', 'src/skate-workshop-loop-i18n.ts',
+  'src/openclaw-i18n.ts', 'src/career-ops-i18n.ts', 'src/about-i18n.ts', 'src/articles/registry.ts']
+const KEPT_BY_DECISION = ['Self-Healing Chatbot', 'Cloud Infrastructure']
+for (const rel of COPY_FILES) {
+  const text = read(rel).toLowerCase()
+  for (const x of [...EXCLUDED.filter((n) => !KEPT_BY_DECISION.includes(n)), 'hermes-forge', 'ai-platform-bootloader']) {
+    check(`${rel} never points at the EXCLUDE item ${x}`, !text.includes(x.toLowerCase()))
+  }
 }
 check("work.js copy has no em dash (Joe's rule for new copy)", !read('api/_shared/work.js').includes('—'))
 // An item's own copy never says what its own wording rule forbids (the Archive
@@ -232,7 +259,16 @@ for (const c of consumers) {
   for (const fact of ['Shopify', 'shopify.cbarrgs.com', 't-shirts', 'sticker', 'Cbarrgs', 'set up']) {
     check(`${c.id} ${c.mode} knows the merch store: "${fact}"`, c.text.includes(fact))
   }
-  check(`${c.id} ${c.mode} answers the musician question with yes`, /musician/.test(c.text) && /yes/i.test(c.text))
+}
+// "Yes" on the Shopify line itself: both text prompts say "yes" elsewhere, so
+// a whole-prompt check could not see the line lose it.
+{
+  const shopItem = work.WORK_ITEMS.find((i: any) => i.id === 'cbarrgs-shop')
+  for (const c of consumers) {
+    const line = shopItem ? (c.mode === 'text' ? work.renderTextLine(shopItem, c.id) : work.renderVoiceLine(shopItem, c.id)) : ''
+    check(`${c.id} ${c.mode} answers the musician question with yes, on the Shopify line`,
+      c.text.includes(line) && /musician/.test(line) && /\byes\b/i.test(line))
+  }
 }
 // The Langfuse path cannot drop it either: a stale copy without the marker gets
 // the list appended, and the raw file's marker gets replaced.
@@ -301,6 +337,8 @@ const BANNED: [RegExp, string][] = [
   [/private ai deployment/i, '"private AI deployment" as delivered work (no delivery on record)'],
   [/your words about your projects|airtable structures|content you retrieve with search_portfolio was written by joe/i, 'first-person attribution of retrieved text'],
   [/no discovery calls/i, '"no discovery calls" (JTS offers a booking link)'],
+  [/\bfaires?\b[^.\n]{0,40}\bacross the (?:us|u\.s\.|united states|country)\b/i, 'RenFaireGuide as US-only (about 650 of its 700+ faires are in the US, the rest abroad)'],
+  [/\bopenclaw\s+(?:was|is)\s+(?:his|my|joe'?s|joseph'?s)\b|\b(?:his|my|joe'?s|joseph'?s)\s+(?:own\s+)?openclaw\s+(?:system|platform|framework|runtime)\b/i, 'OpenClaw as Joe\'s own system (it is the open-source runtime his setup ran on)'],
 ]
 // Text notes carry every `avoid` phrase, voice notes only `voiceAvoid`; strip both.
 const stripAvoid = (text: string) => work.WORK_ITEMS.reduce((t: string, item: any) => {
@@ -357,7 +395,9 @@ for (const { label, text } of scanned) {
 // both say OpenClaw is the 22-agent system. registry.ts carries the article's
 // SEO description, so it is scanned here too.
 const AGENTS_22 = /\b22[- ](?:specialized |specialised )?agents?\b|\b22-agent\b/i
-const ON_RUNTIME = /runtime|\bran\b[^.!?\n]{0,80}\bon\b/i
+// "runtime", or OpenClaw itself as what it ran on: "it ran on his own
+// machine" or "he ran it on a Mac mini" does not scope it.
+const ON_RUNTIME = /runtime|\bran\b[^.!?\n]{0,80}\bon\b[^.!?\n]{0,30}\bopenclaw\b/i
 for (const { label, text } of [...scanned, { label: 'src/articles/registry.ts', text: read('src/articles/registry.ts') }]) {
   // The window is the sentence and the one before it on the same line (one
   // field, one paragraph): an h1 under a kicker that names OpenClaw is not a claim.
@@ -399,14 +439,17 @@ for (const { label, text } of [
 ]) {
   check(`${label}: never lists the Self-Healing Chatbot`, !/self-healing chatbot/i.test(text))
 }
-// llms.txt: a section ABOUT Cbarrgs never calls it Next.js, even split across
-// lines (the one-line BANNED pattern cannot see "Stack: Next.js" on the next line).
+// A section ABOUT Cbarrgs never calls it Next.js, even split across lines (the
+// one-line BANNED pattern cannot see "Stack: Next.js" on the next line). The
+// prompt files are markdown with the same headings.
+for (const rel of ['public/llms.txt', 'chatbot-prompt.txt', 'jts-prompt.txt']) {
+  for (const sec of read(rel).split(/^(?=#{1,6} )/m).filter((x) => /^#{1,6} [^\n]*cbarrgs/i.test(x))) {
+    check(`${rel} "${sec.split('\n')[0]}" never says Next.js`, !/next\.?js/i.test(sec))
+  }
+}
 {
   const llms = read('public/llms.txt')
   const sections = llms.split(/^(?=#{2,3} )/m)
-  for (const sec of sections.filter((x) => /^#{2,3} [^\n]*cbarrgs/i.test(x))) {
-    check(`llms.txt "${sec.split('\n')[0]}" never says Next.js`, !/next\.?js/i.test(sec))
-  }
   // Credit where it is due, where a reader meets the item: a section headed by
   // Hermes or Whisper Walkie, and every non-heading line naming Whisper Walkie
   // or OpenClaw.
@@ -505,6 +548,18 @@ for (const id of PERSONAS) {
     p.searchTool.noResults.includes(`"${work.WORK_TEXT_HEADING}" list`) && /staying inside its lines/.test(p.searchTool.noResults))
   check(`${id} text noResults still forbids fabrication`, /MUST NOT/.test(p.searchTool.noResults))
 }
+// Every voice line that mentions the empty-search reply sends it to the list
+// first, and none tells the model to repeat it ("say exactly that" was the
+// incident's wording, in the cloudyjoe tool-result rule 5).
+for (const id of PERSONAS) {
+  const p = persona(id)
+  for (const line of (p.searchTool.voiceRule + '\n' + voiceInstructions(p)).split('\n').filter((l: string) => /No relevant content found|don't have that detail/.test(l))) {
+    check(`${id} voice: "${line.trim().slice(0, 60)}" does not say to repeat it`, !/say exactly/i.test(line))
+    if (/No relevant content found/.test(line)) {
+      check(`${id} voice: "${line.trim().slice(0, 60)}" falls back to the work list`, /no-result rule|(?:this|that) list/i.test(line))
+    }
+  }
+}
 check('cloudyjoe voice no longer parrots "I don\'t have that detail" without checking the list',
   !/If it says "I don't have that detail", say exactly that/.test(voiceInstructions(persona('cloudyjoe'))))
 check('jts voice: "not on the site" only after an empty search AND the list does not cover it',
@@ -538,6 +593,9 @@ const MUST_MAP: [string, string][] = [
   ['does he make sites for DJs', 'Cbarrgs'],
   ['Has he worked with artists on their websites?', 'Cbarrgs'],
   ['Has Joe built a directory site?', 'RenFaire'],
+  // Apparel and stickers with a selling word.
+  ['I sell hoodies and stickers, can he help?', 'Cbarrgs'],
+  ['Can he set me up to sell t-shirts?', 'Cbarrgs'],
 ]
 for (const [q, term] of MUST_MAP) {
   const e = rag.expandDocumentsQuery(q)
@@ -584,6 +642,8 @@ const LEAVE_ALONE: [string, string][] = [
   ['the beauty of composable agents', 'archive-salon-app'],
   ['Is Joe a stylist?', 'archive-salon-app'],
   ['Is Joe a colorist?', 'archive-salon-app'],
+  ['Has Joe worked on sticker detection for perception?', 'cbarrgs-shop'],
+  ['Did Joe do T-shirt cannons at Google?', 'cbarrgs-shop'],
 ]
 for (const [q, id] of LEAVE_ALONE) {
   const e = work.expandWorkQuery(q)

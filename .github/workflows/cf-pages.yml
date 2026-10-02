@@ -121,6 +121,9 @@ jobs:
           # voice) from one module, api/_shared/work.js, and the claims the
           # 2026-10-02 audit refuted stay out of prompts, llms.txt and articles.
           npm run test:agent-knowledge
+          # The export script itself writes the fact cards a manual rag:sync
+          # ingests (offline: reads repo files, writes gitignored scripts/chunks/).
+          npm run test:rag-export
       - name: Build (static site + Pages Functions)
         run: |
           npm run cf:prep   # api/ → functions/api-src/ (Workers shims), prompt module
