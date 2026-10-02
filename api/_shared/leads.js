@@ -1,6 +1,6 @@
 import { getPersona, DEFAULT_PERSONA } from './personas.js'
 import { boundedFetch } from './bounded-fetch.js'
-import { FAST_MODEL, scaleTokens } from './models.js'
+import { FAST_MODEL, createWithin, scaleTokens } from './models.js'
 // ---------------------------------------------------------------------------
 // Lead capture for the cloudyjoe.com chatbot.
 //
@@ -160,12 +160,14 @@ export async function buildBrief(history, client, { timeoutMs = BRIEF_TIMEOUT_MS
   const transcript = transcriptOf(history)
   if (!transcript || !client) return null
   try {
-    const res = await client.messages.create({
+    // createWithin: the body counts too, so a summary that stalls after its
+    // headers cannot hold Joe's notice past the background-work window.
+    const res = await createWithin(client, {
       model: FAST_MODEL,
       max_tokens: scaleTokens(450),
       system: BRIEF_SYSTEM,
       messages: [{ role: 'user', content: `Transcript:\n${transcript}` }],
-    }, { timeout: timeoutMs, maxRetries: 0 })
+    }, timeoutMs)
     const text = (res?.content || []).filter((b) => b.type === 'text').map((b) => b.text).join('').trim()
     // A reply that isn't the template is worse than none: Joe still gets the transcript.
     return /^Who:/m.test(text) && /^Need:/m.test(text) ? text.slice(0, 2500) : null

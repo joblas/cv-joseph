@@ -100,6 +100,7 @@ jobs:
           npm run test:chat-resilience
           npm run test:messages
           npm run test:agent-stream
+          npm run test:model-bounds
           # Career claims (30+ -> 10+, 15+ years, the resume titles). These are
           # facts repeated across the page, the chatbot prompt and llms.txt, so
           # they drift silently. This gate is why the check exists at all.

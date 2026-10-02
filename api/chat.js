@@ -10,7 +10,7 @@ import {
 import { getSystemPrompt } from './_shared/prompt.js'
 import { captureLead, checkRateLimit } from './_shared/leads.js'
 import { BOOKING_TOOL_NAMES, bookingContext, bookingFallbackText, bookingTools, runBookingTool } from './_shared/booking.js'
-import { CHAT_MODEL, FAST_MODEL, CHAT_MAX_TOKENS, scaleTokens, baseUrlHost, createAnthropicClient } from './_shared/models.js'
+import { CHAT_MODEL, FAST_MODEL, CHAT_MAX_TOKENS, scaleTokens, baseUrlHost, createAnthropicClient, createWithin } from './_shared/models.js'
 import { voiceProvider } from './_shared/voice-provider.js'
 import { fixContactEmail, visitorAddresses } from './_shared/contact-email.js'
 import { normalizeMessages } from './_shared/messages.js'
@@ -59,25 +59,40 @@ const minAttemptMs = () => limitMs('CHAT_MIN_ATTEMPT_MS', 15000)
 // skips). The widgets take 20s of silence as a dead connection, so this stays
 // well under that.
 export const heartbeatMs = () => limitMs('CHAT_HEARTBEAT_MS', 5000)
+// The heartbeat is a timer, not a sign of progress: while it runs, a widget
+// never sees a dead connection. So the reply itself must end, whatever hangs
+// inside it: no words of an answer by this time ends it with the error
+// message (the latest possible first words, from an attempt started at the
+// deadline's edge, come about 2s after the deadline)...
+export const firstWordsCeilingMs = () => limitMs('CHAT_FIRST_WORDS_CEILING_MS', replyDeadlineMs() + 10000)
+// ...and no reply, however it is going, runs longer than this.
+export const replyCeilingMs = () => limitMs('CHAT_REPLY_CEILING_MS', 120000)
+// The error message's event. `error` tells the new widgets to offer "Try
+// again" and never to send the message back as the agent's words; old widgets
+// show the text as before.
+const errorEvent = (text) => `data: ${JSON.stringify({ text, replace: true, error: true })}\n\n`
 
 // The tool decision. A second, identical request is raced against the first
 // once it has been pending decisionHedgeMs(), or started (after a short pause)
 // when the first failed QUICKLY with a 408, 429 or 5xx; a slow failure buys no
 // second slow try. The first answer wins and the other is cancelled. Never
-// more than two requests, and both end at the decision limit, after which the
-// reply is written without tools.
-async function decideTools(params) {
+// more than two requests, and both end at the decision limit, response body
+// included (createWithin), after which the reply is written without tools.
+// `signal` (the visitor left, or the reply hit its ceiling) ends it at once.
+async function decideTools(params, signal) {
   const started = Date.now()
   const end = started + decisionTimeoutMs()
   const requests = []
   const launch = () => {
     const ac = new AbortController()
     const request = { ac, settled: false }
-    request.result = client.messages.create(params, { timeout: Math.max(1, end - Date.now()), maxRetries: 0, signal: ac.signal })
+    request.result = createWithin(client, params, Math.max(1, end - Date.now()), { signal: ac.signal })
       .then((response) => ({ response }), (error) => ({ error }))
       .finally(() => { request.settled = true })
     requests.push(request)
   }
+  const leave = () => { for (const r of requests) r.ac.abort() }
+  signal?.addEventListener('abort', leave)
   launch()
   try {
     for (;;) {
@@ -90,6 +105,7 @@ async function decideTools(params) {
       }
       const out = await Promise.race(waits)
       clearTimeout(hedgeTimer)
+      if (signal?.aborted) throw new Error('the reply ended before the tool decision')
       if (out.hedge) {
         console.error(`[chat] tool decision slow (${Date.now() - started}ms), racing a second request`)
         launch()
@@ -102,6 +118,7 @@ async function decideTools(params) {
       if (requests.length < 2 && quick && retryable) {
         console.error(`[chat] tool decision failed (HTTP ${err.status}), retrying once`)
         await new Promise((r) => setTimeout(r, STREAM_RETRY_DELAY_MS))
+        if (signal?.aborted) throw err
         launch()
         continue
       }
@@ -109,6 +126,7 @@ async function decideTools(params) {
       throw err
     }
   } finally {
+    signal?.removeEventListener('abort', leave)
     for (const r of requests) if (!r.settled) r.ac.abort()
   }
 }
@@ -149,25 +167,26 @@ async function* untilStalled(stream, ms) {
 }
 
 // Answer text from the first of up to two identical streams to produce any.
-// The second starts only when the first has produced no text for hedgeMs;
-// whichever speaks first is kept and the other cancelled, so a stuck request
-// costs seconds and a healthy slow one is never cut off, only raced. Each
-// stream keeps its own silence limit. When neither speaks, the error says why
-// (an empty output first, so a retry gets the bigger budget). `winner()` is
-// the kept stream, for its usage.
-function firstToSpeak(makeStream, { hedgeMs, idleMs, onHedge }) {
+// The second starts only when the first has gone SILENT for hedgeMs (no event
+// at all: a model still thinking out loud is alive and is not raced, which
+// would only double its cost) and when there is still time for it
+// (`mayRace()`); whichever speaks first is kept and the other cancelled, so a
+// stuck request costs seconds and a healthy slow one is never cut off, only
+// raced. Each stream's silence limit is `idleMs()` when it starts. When
+// neither speaks, the error says why (an empty output first, so a retry gets
+// the bigger budget). `winner()` is the kept stream, for its usage.
+function firstToSpeak(makeStream, { hedgeMs, idleMs, mayRace = () => true, onHedge }) {
   const contenders = []
   let winner = null
   const isText = (e) => e?.type === 'content_block_delta' && e.delta?.type === 'text_delta'
   const add = () => {
     const stream = makeStream(contenders.length)
-    const c = { stream, it: untilStalled(stream, idleMs), buffer: [], over: false, error: null }
+    const c = { stream, it: untilStalled(stream, idleMs()), buffer: [], over: false, error: null, lastEventAt: Date.now() }
     c.pull = () => { c.next = c.it.next().then((r) => ({ c, r }), (error) => ({ c, error })) }
     c.pull()
     contenders.push(c)
   }
   async function* events() {
-    const started = Date.now()
     add()
     try {
       while (!winner) {
@@ -177,16 +196,21 @@ function firstToSpeak(makeStream, { hedgeMs, idleMs, onHedge }) {
         }
         const waits = live.map((c) => c.next)
         let hedgeTimer
-        if (contenders.length < 2) {
+        const first = contenders[0]
+        if (contenders.length < 2 && !first.over) {
           waits.push(new Promise((resolve) => {
-            hedgeTimer = setTimeout(() => resolve({ hedge: true }), Math.max(0, started + hedgeMs - Date.now()))
+            hedgeTimer = setTimeout(() => resolve({ hedge: true }), Math.max(0, first.lastEventAt + hedgeMs - Date.now()))
           }))
         }
         const out = await Promise.race(waits)
         clearTimeout(hedgeTimer)
         if (out.hedge) {
-          onHedge?.(Date.now() - started)
-          add()
+          if (mayRace()) {
+            onHedge?.(Date.now() - first.lastEventAt)
+            add()
+          } else {
+            first.lastEventAt = Infinity // too late to race; its own silence limit decides
+          }
           continue
         }
         const { c } = out
@@ -202,6 +226,7 @@ function firstToSpeak(makeStream, { hedgeMs, idleMs, onHedge }) {
           c.error = new Error(`empty output (stop_reason=${final?.stop_reason ?? 'unknown'})`)
           continue
         }
+        c.lastEventAt = Date.now()
         c.buffer.push(out.r.value)
         if (isText(out.r.value)) winner = c
         else c.pull()
@@ -348,7 +373,7 @@ export default async function handler(req) {
     // the search, the answer), so the reply starts NOW: respondNow sends bytes
     // at once and a heartbeat while it waits, so the widgets can tell a slow
     // answer from a dead connection.
-    return respondNow(async ({ status }) => {
+    return respondNow(async ({ status, signal }) => {
       // Prompt versioning: Langfuse with file fallback (Block 4)
       // Support X-Prompt-Version header for regression testing (Block 5)
       let systemPromptText
@@ -452,7 +477,7 @@ export default async function handler(req) {
             system: systemBlocks,
             messages: cleanMessages,
             tools,
-          })
+          }, signal)
         } catch (err) {
           decisionFailed = true
           console.error(`[chat] tool decision failed, answering without tools: ${err?.constructor?.name || 'Error'}: ${String(err?.message || '').slice(0, 200)}`)
@@ -654,9 +679,20 @@ const SSE_HEADERS = {
 // persona's error message, never a hung stream or a bare 500.
 function respondNow(answer, { persona, onFailure }) {
   const encoder = new TextEncoder()
+  // Aborted when the visitor leaves or the reply hits a ceiling: the work
+  // behind the reply (the tool decision, the model streams) stops with it.
+  const work = new AbortController()
   let heartbeat = null
+  let wordsCeiling = null
+  let ceiling = null
   let inner = null
   let gone = false
+  let ended = false // the reply was ended early (a ceiling): nothing more goes out
+  const stopTimers = () => {
+    clearInterval(heartbeat)
+    clearTimeout(wordsCeiling)
+    clearTimeout(ceiling)
+  }
   const body = new ReadableStream({
     async start(controller) {
       let open = true
@@ -668,35 +704,62 @@ function respondNow(answer, { persona, onFailure }) {
           open = false // the visitor left
         }
       }
+      const close = () => {
+        if (!open) return
+        open = false
+        try { controller.close() } catch { /* already closed */ }
+      }
+      // Whatever hangs inside, the reply ends: the error message, then [DONE].
+      const giveUp = (why) => {
+        if (ended || gone) return
+        ended = true
+        console.error(`[chat] reply ceiling: ${why}`)
+        onFailure(new Error(`reply ceiling: ${why}`))
+        send(errorEvent(persona.errorMessage))
+        send('data: [DONE]\n\n')
+        stopTimers()
+        work.abort()
+        inner?.cancel().catch(() => {})
+        close()
+      }
       send(': connected\n\n')
       heartbeat = setInterval(() => send(': ping\n\n'), heartbeatMs())
+      wordsCeiling = setTimeout(() => giveUp(`no answer words after ${firstWordsCeilingMs()}ms`), firstWordsCeilingMs())
+      ceiling = setTimeout(() => giveUp(`the reply ran past ${replyCeilingMs()}ms`), replyCeilingMs())
+      const decoder = new TextDecoder()
       try {
         const response = await answer({
           status: (phase) => send(`event: status\ndata: ${JSON.stringify({ phase })}\n\n`),
+          signal: work.signal,
         })
         inner = response.body.getReader()
-        if (gone) await inner.cancel()
+        if (gone || ended) await inner.cancel()
         for (;;) {
           const { done, value } = await inner.read()
           if (done) break
+          // The first words of an answer lift the first-words ceiling.
+          if (wordsCeiling && /"text":"[^"]/.test(decoder.decode(value, { stream: true }))) {
+            clearTimeout(wordsCeiling)
+            wordsCeiling = null
+          }
           send(value)
         }
       } catch (error) {
-        onFailure(error)
-        send(`data: ${JSON.stringify({ text: persona.errorMessage, replace: true })}\n\n`)
-        send('data: [DONE]\n\n')
-      } finally {
-        clearInterval(heartbeat)
-        if (open) {
-          open = false
-          try { controller.close() } catch { /* already closed */ }
+        if (!ended && !gone) {
+          onFailure(error)
+          send(errorEvent(persona.errorMessage))
+          send('data: [DONE]\n\n')
         }
+      } finally {
+        stopTimers()
+        close()
       }
     },
     cancel() {
       // The visitor left: stop the heartbeat and the answer behind it.
       gone = true
-      clearInterval(heartbeat)
+      stopTimers()
+      work.abort()
       inner?.cancel().catch(() => {})
     },
   })
@@ -835,8 +898,9 @@ function streamResponse({
                 messages,
               }))), {
                 hedgeMs: answerHedgeMs(),
-                idleMs: attemptIdleMs(),
-                onHedge: (ms) => console.error(`[chat] reply slow to start (${ms}ms), racing a second stream`),
+                idleMs: attemptIdleMs,
+                mayRace: () => timeLeft() >= minAttemptMs(),
+                onHedge: (ms) => console.error(`[chat] reply silent for ${ms}ms, racing a second stream`),
               })
 
               for await (const event of race.events) {
@@ -906,6 +970,11 @@ function streamResponse({
               })
 
               if (attempt < MAX_RETRIES) {
+                // A pause that cannot lead to a retry in time only delays the error message.
+                if (timeLeft() < STREAM_RETRY_DELAY_MS + minAttemptMs()) {
+                  console.error('[chat] reply deadline reached, skipping the retry')
+                  break
+                }
                 await new Promise(r => setTimeout(r, STREAM_RETRY_DELAY_MS))
                 controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text: '', replace: true })}\n\n`))
               }
@@ -1028,8 +1097,9 @@ function streamResponse({
               messages: fallbackMessages,
             })), {
               hedgeMs: answerHedgeMs(),
-              idleMs: attemptIdleMs(),
-              onHedge: (ms) => console.error(`[chat] fallback slow to start (${ms}ms), racing a second stream`),
+              idleMs: attemptIdleMs,
+              mayRace: () => timeLeft() >= minAttemptMs(),
+              onHedge: (ms) => console.error(`[chat] fallback silent for ${ms}ms, racing a second stream`),
             })
 
             // Send degraded status so frontend knows RAG failed
@@ -1088,7 +1158,7 @@ function streamResponse({
         // Last resort: send error message through SSE
         try {
           const errorText = lastResortText || persona.errorMessage
-          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text: errorText, replace: true })}\n\n`))
+          controller.enqueue(encoder.encode(errorEvent(errorText)))
           controller.enqueue(encoder.encode('data: [DONE]\n\n'))
           controller.close()
         } catch {

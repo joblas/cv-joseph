@@ -30,6 +30,26 @@ export function scaleTokens(n) {
   return Math.max(n, Math.round((n * CHAT_MAX_TOKENS) / 800))
 }
 
+// A non-streaming model call that ends within `ms`, the response body
+// included. The SDK's own `timeout` stops counting once the response headers
+// arrive (it clears its timer when fetch resolves), so a body that stalls
+// after them would hang the call for good (review of PR #47, 2026-10-02).
+// Aborting our own signal ends the body read too. `signal`, when given, ends
+// it early as well (the visitor left). Never retried here.
+export async function createWithin(client, params, ms, { signal } = {}) {
+  const ac = new AbortController()
+  const timer = setTimeout(() => ac.abort(), ms)
+  const leave = () => ac.abort()
+  if (signal?.aborted) ac.abort()
+  else signal?.addEventListener('abort', leave)
+  try {
+    return await client.messages.create(params, { timeout: ms, maxRetries: 0, signal: ac.signal })
+  } finally {
+    clearTimeout(timer)
+    signal?.removeEventListener('abort', leave)
+  }
+}
+
 export function createAnthropicClient() {
   return new Anthropic({
     // Bearer auth (ANTHROPIC_AUTH_TOKEN) is what Ollama Cloud expects. When it is

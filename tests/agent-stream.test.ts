@@ -6,7 +6,7 @@
 // The same file runs in joestechsolutions-nextjs against its twin copy.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { askAgent, type AgentEvent } from "../src/agent-stream";
+import { askAgent, SILENCE_MS, LEGACY_SILENCE_MS, type AgentEvent } from "../src/agent-stream";
 
 type Step = string | { wait: number } | "hang" | "end";
 const enc = new TextEncoder();
@@ -50,13 +50,14 @@ function fakeFetch(replies: Reply[]) {
   return { impl, calls };
 }
 
-async function ask(replies: Reply[], extra: { signal?: AbortSignal; silenceMs?: number; isOnline?: () => boolean } = {}) {
+async function ask(replies: Reply[], extra: { signal?: AbortSignal; silenceMs?: number; legacySilenceMs?: number; isOnline?: () => boolean } = {}) {
   const f = fakeFetch(replies);
   const events: AgentEvent[] = [];
   const t = Date.now();
   const outcome = await askAgent({
     url: "/api/chat", body: { messages: [{ role: "user", content: "hi" }] }, onEvent: (e) => events.push(e),
-    fetchImpl: f.impl, silenceMs: extra.silenceMs ?? 120, signal: extra.signal, isOnline: extra.isOnline ?? (() => true),
+    fetchImpl: f.impl, silenceMs: extra.silenceMs ?? 120, legacySilenceMs: extra.legacySilenceMs ?? 400,
+    signal: extra.signal, isOnline: extra.isOnline ?? (() => true),
   });
   const text = events.reduce((s, e) => (e.type === "text" ? s + e.text : e.type === "replace" ? e.text : s), "");
   return { outcome, events, text, calls: f.calls.length, ms: Date.now() - t };
@@ -180,4 +181,38 @@ test("an event split across network chunks is read whole", async () => {
   const r = await ask([[": conn", "ected\n\nda", 'ta: {"text":"Joined', ' up."}\n', "\ndata: [DO", "NE]\n\n"]]);
   assert.deepEqual(r.outcome, { ok: true });
   assert.equal(r.text, "Joined up.");
+});
+
+test("a server without heartbeats (an older deploy, a rollback) gets the long silence limit, so its slow replies are not cut", async () => {
+  // No ": connected", no pings, 250ms of thinking: past the 120ms limit, inside the 400ms one.
+  const r = await ask([[ { wait: 250 }, ev("Slow but fine."), "data: [DONE]\n\n" ]]);
+  assert.deepEqual(r.outcome, { ok: true });
+  assert.equal(r.calls, 1);
+});
+
+test("once the server has shown heartbeats, the short limit applies", async () => {
+  const r = await ask([[": connected\n\n", "hang"], ANSWER], { legacySilenceMs: 5000 });
+  assert.deepEqual(r.outcome, { ok: true });
+  assert.equal(r.calls, 2);
+  assert.ok(r.ms < 1000, `took ${r.ms}ms: the long limit was used`);
+});
+
+test("[DONE] ends the reply even if the connection stays open after it", async () => {
+  const r = await ask([[...ANSWER, "hang"]], { silenceMs: 5000 });
+  assert.deepEqual(r.outcome, { ok: true });
+  assert.equal(r.text, "Hello there.");
+  assert.ok(r.ms < 1000, `took ${r.ms}ms`);
+});
+
+test("the server's flagged error message is reported (Try again), never asked again automatically", async () => {
+  const flagged = `data: ${JSON.stringify({ text: "Sorry, something went wrong.", replace: true, error: true })}\n\n`;
+  const r = await ask([[": connected\n\n", ev("Half"), flagged, "data: [DONE]\n\n"], ANSWER]);
+  assert.deepEqual(r.outcome, { ok: false, reason: "server_error", message: "Sorry, something went wrong." });
+  assert.equal(r.calls, 1);
+  assert.equal(r.text, "Sorry, something went wrong.");
+});
+
+test("production limits: four missed 5s heartbeats mean a dead connection; a server without them gets more than its longest healthy silence", () => {
+  assert.ok(SILENCE_MS >= 20_000 && SILENCE_MS <= 30_000, `SILENCE_MS ${SILENCE_MS}`);
+  assert.ok(LEGACY_SILENCE_MS >= 45_000 && LEGACY_SILENCE_MS <= 90_000, `LEGACY_SILENCE_MS ${LEGACY_SILENCE_MS}`);
 });

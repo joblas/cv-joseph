@@ -377,10 +377,14 @@ check('the LLM fallback reranker budget stays within a few seconds',
   process.env.VOYAGE_API_KEY = 'stub-key'
   // Voyage rerank 500s -> voyageRerank returns null -> the LLM path runs.
   stubFetch({ 'embeddings': embedOK, '/rpc/': rpcRows, '/v1/rerank': () => ({ __status: 500 }) })
+  // The request's limits belong in the SDK's options (2nd argument); written
+  // into the request body (1st) they never applied (review of PR #47).
   let opts: any = null
+  let body: any = null
   const fakeAnthropic = {
     messages: {
-      create: async (o: any) => {
+      create: async (b: any, o: any) => {
+        body = b
         opts = o
         return { content: [{ type: 'text', text: '0,1,2,3,4' }], usage: { input_tokens: 10, output_tokens: 5 } }
       },
@@ -389,7 +393,8 @@ check('the LLM fallback reranker budget stays within a few seconds',
   await searchPortfolio('examples of his work', null, fakeAnthropic, jts)
   check('the LLM fallback reranker is actually reached', opts !== null)
   check('...and is given an explicit timeout, not the SDK\u2019s 600s default',
-    typeof opts?.timeout === 'number' && opts.timeout > 0 && opts.timeout <= 3000)
+    typeof opts?.timeout === 'number' && opts.timeout > 0 && opts.timeout <= 3000 && opts.signal instanceof AbortSignal)
+  check('...in the request options, never as fields of the request body', body && !('timeout' in body) && !('maxRetries' in body))
   // A timeout alone does not bound the CALL: the SDK retries while attempts
   // remain, so maxRetries 2 would still permit ~3x the timeout plus backoff.
   check('...and no retries, so the timeout bounds the call and not just one attempt',

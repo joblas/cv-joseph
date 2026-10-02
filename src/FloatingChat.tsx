@@ -177,6 +177,9 @@ export default function FloatingChat({}: FloatingChatProps) {
   const [failedAsk, setFailedAsk] = useState<string | null>(null);
   // What the wait is doing, shown under the typing indicator.
   const [waitHint, setWaitHint] = useState('');
+  // When the last question went out: Stop sits where Send was, so a
+  // double-click on Send must not land on Stop and cancel the question.
+  const sentAtRef = useRef(0);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -361,7 +364,9 @@ export default function FloatingChat({}: FloatingChatProps) {
   // Voice mode handlers
   const handleStartVoice = () => {
     setMode('voice');
-    activeVoice.start(messages, 'en', sessionId, location.pathname);
+    setFailedAsk(null); // a Try again from before the voice session would ask the wrong question
+    // Failure notes are not the agent's words: the voice session never hears them.
+    activeVoice.start(messages.filter((m) => !m.failed), 'en', sessionId, location.pathname);
   };
 
   const handleStopVoice = () => {
@@ -438,6 +443,7 @@ export default function FloatingChat({}: FloatingChatProps) {
     abortRef.current?.abort();
     const stop = new AbortController();
     abortRef.current = stop;
+    sentAtRef.current = Date.now();
 
     let fullText = '';
     try {
@@ -459,6 +465,11 @@ export default function FloatingChat({}: FloatingChatProps) {
             pendingRagDegradedRef.current = true;
           } else if (event.type === 'status') {
             setWaitHint(t.wait[event.phase as keyof typeof t.wait] ?? '');
+            // Asked again from scratch: nothing from the dropped try carries over.
+            if (event.phase === 'reconnecting') {
+              pendingRagSourcesRef.current = [];
+              pendingRagDegradedRef.current = false;
+            }
           } else if (event.type === 'replace') {
             // The server swapped the whole answer (a blocked leak, a corrected
             // address, or "" before its own retry): render it as is.
@@ -511,11 +522,14 @@ export default function FloatingChat({}: FloatingChatProps) {
       const note =
         outcome.reason === 'offline' ? t.offline
         : outcome.reason === 'rate_limited' ? outcome.message || t.error
+        : outcome.reason === 'server_error' ? outcome.message
         : outcome.shown ? t.dropped
         : t.error;
+      // The server's own error message is the note itself, not an answer to keep.
+      const kept = outcome.reason === 'server_error' ? '' : partial;
       setMessages((prev) => [
         ...prev.slice(0, -1),
-        ...(partial ? [{ role: 'assistant' as const, content: partial }] : []),
+        ...(kept ? [{ role: 'assistant' as const, content: kept }] : []),
         { role: 'assistant', content: note, failed: true },
       ]);
       if (outcome.reason !== 'rate_limited') setFailedAsk(text);
@@ -1011,7 +1025,10 @@ export default function FloatingChat({}: FloatingChatProps) {
                     <motion.button
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
-                      onClick={() => abortRef.current?.abort()}
+                      onClick={() => {
+                        // The second click of a double-click on Send lands here: ignore it.
+                        if (Date.now() - sentAtRef.current >= 800) abortRef.current?.abort();
+                      }}
                       aria-label={t.stop}
                       title={t.stop}
                       className={`rounded-xl bg-muted border border-border flex items-center justify-center text-foreground hover:border-primary/40 transition-colors ${

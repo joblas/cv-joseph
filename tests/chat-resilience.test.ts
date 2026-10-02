@@ -44,16 +44,16 @@ let failed = 0
 // Bound now: console.error is swapped below to capture the handler's logs, and
 // a failing check must still reach stderr.
 const report = console.error.bind(console)
-function check(name: string, cond: boolean) {
-  if (!cond) { report(`  ✗ ${name}`); failed++ }
+function check(name: string, cond: boolean, detail = '') {
+  if (!cond) { report(`  ✗ ${name}${detail ? ` — ${detail}` : ''}`); failed++ }
 }
 const JOE = 'joe@joestechsolutions.com'
 const TYPO = 'Email joe@joestsolutions.com and he replies within 24 hours.'
 
 type Plan = {
-  decision: 'text' | 'tool' | 'fail' | 'hang' | 'flaky' | 'overloaded' | 'slowOverload' | 'slowDecision' | 'hangOnce' | 'failLateOnce' | 'slowTool'; decisionText?: string; sources?: boolean
+  decision: 'text' | 'tool' | 'fail' | 'hang' | 'flaky' | 'overloaded' | 'slowOverload' | 'slowDecision' | 'hangOnce' | 'failLateOnce' | 'slowTool' | 'bodyStall'; decisionText?: string; sources?: boolean
   recordFails?: 'refused' | 'down' | 'hang'; dbStall?: 'get' | 'patch'; resend?: 'fail' | 'hang'
-  streams: Array<'typo' | 'ok' | 'empty' | 'fail' | 'stall' | 'stallAfterText' | 'trickle' | 'slowStart' | { say: string }>
+  streams: Array<'typo' | 'ok' | 'empty' | 'fail' | 'stall' | 'stallAfterText' | 'trickle' | 'slowStart' | 'thinking' | 'emptySlow' | { say: string }>
 }
 let plan: Plan = { decision: 'tool', streams: ['ok'] }
 const modelCalls: { at: number; body: any }[] = []
@@ -83,6 +83,7 @@ const mailAttempts: any[] = []
 const abortedStreams: string[] = []
 const abortedAt: Record<string, number> = {} // when each kind of stream was last cancelled
 let abortedDecisions = 0
+let abortedDecisionAt = 0
 
 ;(globalThis as any).fetch = async (url: any, init: any = {}) => {
   const u = String(url instanceof Request ? url.url : url)
@@ -96,7 +97,9 @@ let abortedDecisions = 0
     if (isBrief) return json({ id: 'b', type: 'message', role: 'assistant', model: 'stub', stop_reason: 'end_turn', content: [{ type: 'text', text: 'Who: Pat\nNeed: a website\nTimeline: soon' }], usage: { input_tokens: 1, output_tokens: 1 } })
     if (!body?.stream) {
       if (plan.decision === 'fail') return json({ type: 'error', error: { type: 'invalid_request_error', message: 'stub decision failure' } }, 400)
-      if (plan.decision === 'hang' || plan.decision === 'hangOnce') init.signal?.addEventListener('abort', () => { abortedDecisions++ })
+      if (['hang', 'hangOnce', 'bodyStall', 'slowDecision'].includes(plan.decision)) init.signal?.addEventListener('abort', () => { abortedDecisions++; abortedDecisionAt = Date.now() })
+      // Headers arrive, then the body never does (the SDK's own timeout stops at the headers).
+      if (plan.decision === 'bodyStall') return new Response(new ReadableStream({ start(c) { init.signal?.addEventListener('abort', () => c.error(aborted())) } }), { headers: { 'content-type': 'application/json' } })
       if (plan.decision === 'hang') return stalledCall(init.signal)
       if (plan.decision === 'hangOnce') {
         plan.decision = 'tool' // stuck once; a second identical request answers
@@ -129,6 +132,36 @@ let abortedDecisions = 0
     const label = typeof next === 'object' ? 'say' : next
     init.signal?.addEventListener('abort', () => { abortedStreams.push(label); abortedAt[label] = Date.now() })
     if (next === 'stall') return stalledBody(init.signal, start)
+    if (next === 'thinking') {
+      // Alive and thinking out loud for 400ms (an event every 50ms), then the answer.
+      return new Response(new ReadableStream({
+        async start(c) {
+          const put = (x: string) => c.enqueue(new TextEncoder().encode(x))
+          put(start + ev('content_block_start', { index: 0, content_block: { type: 'thinking', thinking: '' } }))
+          for (let i = 0; i < 8; i++) {
+            await new Promise((r) => setTimeout(r, 50))
+            if (init.signal?.aborted) return
+            put(ev('content_block_delta', { index: 0, delta: { type: 'thinking_delta', thinking: 'hmm ' } }))
+          }
+          put(ev('content_block_stop', { index: 0 }) + ev('content_block_start', { index: 1, content_block: { type: 'text', text: '' } })
+            + ev('content_block_delta', { index: 1, delta: { type: 'text_delta', text: 'Thought it through.' } }) + ev('content_block_stop', { index: 1 })
+            + ev('message_delta', { delta: { stop_reason: 'end_turn' }, usage: { output_tokens: 5 } }) + ev('message_stop', {}))
+          c.close()
+        },
+      }), { headers: { 'content-type': 'text/event-stream' } })
+    }
+    if (next === 'emptySlow') {
+      // Silent for 200ms, then ends having spent its whole budget thinking.
+      return new Response(new ReadableStream({
+        async start(c) {
+          c.enqueue(new TextEncoder().encode(start))
+          await new Promise((r) => setTimeout(r, 200))
+          if (init.signal?.aborted) return
+          c.enqueue(new TextEncoder().encode(ev('message_delta', { delta: { stop_reason: 'max_tokens' }, usage: { output_tokens: 5 } }) + ev('message_stop', {})))
+          c.close()
+        },
+      }), { headers: { 'content-type': 'text/event-stream' } })
+    }
     if (next === 'slowStart') {
       // Healthy but slow to its first word (200ms, under the 300ms idle limit).
       return new Response(new ReadableStream({
@@ -319,7 +352,7 @@ const ask = [{ role: 'user', content: 'How do I reach Joe?' }]
   const L = await import('../functions/api-src/_shared/leads.js')
   const { getPersona } = await import('../functions/api-src/_shared/personas.js')
   check('an unexpected failure ends the reply with the error message (never a hang or a bare 500), and releases the lead at once',
-    r.status === 200 && r.shown === getPersona('jts').errorMessage && r.out.includes('data: [DONE]')
+    r.status === 200 && r.shown === getPersona('jts').errorMessage && r.out.includes('data: [DONE]') && r.out.includes('"error":true')
     && logged.some((l) => /Chat API error:.*injected fault/.test(l)) && r.ms < 3000 && L.REPLY_WAIT_MS > 3000)
   check('...and the lead is still recorded and Joe still told', leadWrites.some((w) => w.method === 'PATCH' && w.body.notified === true) && emails.some((e) => /^Lead from/.test(e?.subject || '')))
 }
@@ -382,7 +415,7 @@ const ask = [{ role: 'user', content: 'How do I reach Joe?' }]
   const late = await chat(ask, { decision: 'tool', streams: ['stall', 'ok', 'ok'] })
   delete process.env.CHAT_REPLY_DEADLINE_MS
   check('past the reply deadline no retry or fallback starts: the error message comes at once',
-    late.shown === ERROR && late.streams.length === 1 && late.ms < 4000
+    late.shown === ERROR && late.streams.length === 1 && late.ms < 1000
     && logged.some((l) => /deadline reached, skipping the retry/.test(l)) && logged.some((l) => /deadline reached, skipping the fallback/.test(l)))
   const noDecision = await chat(ask, { decision: 'fail', streams: ['ok'] })
   check('a failed tool decision still gets an answer (written without search, marked degraded)',
@@ -420,10 +453,11 @@ const ask = [{ role: 'user', content: 'How do I reach Joe?' }]
   // heartbeat stays well under the widgets' 20s silence limit.
   const C = await import('../functions/api-src/chat.js')
   const saved = { ...process.env }
-  for (const k of ['CHAT_DECISION_TIMEOUT_MS', 'CHAT_DECISION_HEDGE_MS', 'CHAT_ANSWER_HEDGE_MS', 'CHAT_STREAM_IDLE_MS', 'CHAT_REPLY_DEADLINE_MS', 'CHAT_HEARTBEAT_MS']) delete process.env[k]
+  for (const k of ['CHAT_DECISION_TIMEOUT_MS', 'CHAT_DECISION_HEDGE_MS', 'CHAT_ANSWER_HEDGE_MS', 'CHAT_STREAM_IDLE_MS', 'CHAT_REPLY_DEADLINE_MS', 'CHAT_HEARTBEAT_MS', 'CHAT_FIRST_WORDS_CEILING_MS', 'CHAT_REPLY_CEILING_MS']) delete process.env[k]
   const L = {
     decision: C.decisionTimeoutMs(), decisionRace: C.decisionHedgeMs(), answerRace: C.answerHedgeMs(),
     idle: C.streamIdleMs(), deadline: C.replyDeadlineMs(), heartbeat: C.heartbeatMs(),
+    firstWords: C.firstWordsCeilingMs(), ceiling: C.replyCeilingMs(),
   }
   Object.assign(process.env, saved)
   check('production limits: races start after a healthy step, limits clear the slow spell, heartbeat well under 20s',
@@ -433,6 +467,10 @@ const ask = [{ role: 'user', content: 'How do I reach Joe?' }]
   // ...and the ceiling stays where a visitor still waits: back at 75s, Joe saw a frozen chat.
   check('production limits: no step, and no reply, can keep a visitor waiting past the ceiling (45-50s)',
     L.deadline <= 50_000 && L.idle <= 35_000 && L.decision <= 30_000 && L.decisionRace <= 15_000 && L.answerRace <= 15_000)
+  // The heartbeat keeps a widget from ever seeing silence, so the reply itself must end: the
+  // first-words ceiling leaves room for an attempt started at the deadline's edge, and caps it.
+  check('production limits: whatever hangs, a reply without words ends by 60s and any reply by 3 minutes',
+    L.firstWords >= L.deadline + 5_000 && L.firstWords <= 60_000 && L.ceiling >= 90_000 && L.ceiling <= 180_000)
 }
 
 // --- 5. The history the model gets is always one it accepts ------------------------------
@@ -514,9 +552,12 @@ const ask = [{ role: 'user', content: 'How do I reach Joe?' }]
   process.env.CHAT_DECISION_TIMEOUT_MS = '300'
   check('...and when the first fails after the race started, the second still answers (no needless fallback)',
     decisionCalls() === 2 && lateFail.shown === OK && !/tool_decision_failed/.test(lateFail.out) && lateFail.out.includes('"phase":"searching"'))
+  Object.assign(process.env, { CHAT_DECISION_HEDGE_MS: '500', CHAT_DECISION_TIMEOUT_MS: '1000' })
   const bothStuck = await chat(ask, { decision: 'hang', streams: ['ok'] })
-  check('...and when both hang, the answer comes without tools at the decision limit',
-    decisionCalls() === 2 && bothStuck.shown === OK && /tool_decision_failed/.test(bothStuck.out))
+  Object.assign(process.env, { CHAT_DECISION_HEDGE_MS: '100', CHAT_DECISION_TIMEOUT_MS: '300' })
+  check('...and when both hang, the answer comes without tools at the decision limit (the raced one ends there too)',
+    decisionCalls() === 2 && bothStuck.shown === OK && /tool_decision_failed/.test(bothStuck.out) && bothStuck.ms < 1350,
+    `${bothStuck.ms}ms; a full limit for the raced request would be ~1500ms`)
   process.env.CHAT_DECISION_HEDGE_MS = '60000'
 
   process.env.CHAT_ANSWER_HEDGE_MS = '100'
@@ -524,7 +565,7 @@ const ask = [{ role: 'user', content: 'How do I reach Joe?' }]
   const raced = await chat(ask, { decision: 'tool', streams: ['stall', 'ok'] })
   check('a reply stream stuck before its first word is raced by a second, which answers (no retry, no retry wait)',
     raced.shown === OK && raced.streams.length === 2 && !raced.out.includes('"phase":"retrying"') && raced.ms < 1200
-    && logged.some((l) => /reply slow to start \(\d+ms\), racing a second stream/.test(l)))
+    && logged.some((l) => /reply silent for \d+ms, racing a second stream/.test(l)))
   check('...and the stuck one is cancelled', abortedStreams.includes('stall'))
   const t = Date.now()
   const longWinner = await chat(ask, { decision: 'tool', streams: ['stall', 'trickle'] })
@@ -577,6 +618,85 @@ const ask = [{ role: 'user', content: 'How do I reach Joe?' }]
   await new Promise((r) => setTimeout(r, 300))
   process.env.CHAT_STREAM_IDLE_MS = '300'
   check('a visitor who leaves while the model is still thinking stops it at once', abortedStreams.includes('stall') && abortedAt.stall - left < 250)
+}
+
+// --- 7. Whatever hangs inside, the reply ends (review of #47, 2026-10-02) ---------------------
+// The heartbeat is a timer: while it runs a widget never sees a dead connection,
+// so every wait inside the reply must end, and the reply has ceilings of its own.
+{
+  const OK = 'Thanks — Joe will be in touch.'
+  const { getPersona } = await import('../functions/api-src/_shared/personas.js')
+  const ERROR = getPersona('jts').errorMessage
+  const decisionCalls = () => modelCalls.filter((c) => !c.body?.stream && Array.isArray(c.body?.tools)).length
+
+  abortedDecisions = 0
+  const stalledBody = await chat(ask, { decision: 'bodyStall', streams: ['ok'] })
+  check('a tool decision whose body stalls after its headers ends at the decision limit (the answer comes without tools)',
+    stalledBody.shown === OK && /tool_decision_failed/.test(stalledBody.out) && stalledBody.ms < 1500 && abortedDecisions >= 1)
+
+  // Only the ceiling can stop this 800ms decision early: its own limit is 5s here.
+  Object.assign(process.env, { CHAT_FIRST_WORDS_CEILING_MS: '400', CHAT_DECISION_TIMEOUT_MS: '5000' })
+  abortedDecisions = 0
+  const noWordsAt = Date.now()
+  const noWords = await chat([{ role: 'user', content: 'We need a new website. My email is pat@example.com' }], { decision: 'slowDecision', streams: ['ok'] })
+  delete process.env.CHAT_FIRST_WORDS_CEILING_MS
+  process.env.CHAT_DECISION_TIMEOUT_MS = '300'
+  check('no answer words by the first-words ceiling: the reply ends with the error message, flagged, at the ceiling',
+    noWords.shown === ERROR && noWords.out.includes('"error":true') && noWords.out.trimEnd().endsWith('data: [DONE]') && noWords.ms < 1500
+    && logged.some((l) => /\[chat\] reply ceiling: no answer words/.test(l)))
+  check('...the work behind it stops (the decision is cancelled at the ceiling, not left to finish at 800ms), and the lead is not lost',
+    abortedDecisions >= 1 && abortedDecisionAt - noWordsAt < 650 && emails.some((e) => /^Lead from/.test(e?.subject || '')),
+    `decision cancelled ${abortedDecisionAt - noWordsAt}ms in`)
+
+  process.env.CHAT_FIRST_WORDS_CEILING_MS = '300'
+  const started = await chat(ask, { decision: 'tool', streams: ['trickle'] })
+  delete process.env.CHAT_FIRST_WORDS_CEILING_MS
+  check('an answer already speaking is never cut by the first-words ceiling (a 1.2s answer, a 300ms ceiling)',
+    started.shown === 'This answer arrives slowly but steadily and must never be cut off.' && !started.out.includes('"error":true'))
+
+  process.env.CHAT_REPLY_CEILING_MS = '600'
+  const tooLong = await chat(ask, { decision: 'tool', streams: ['trickle'] })
+  delete process.env.CHAT_REPLY_CEILING_MS
+  check('...and no reply runs past the reply ceiling, even one still trickling words',
+    tooLong.shown === ERROR && tooLong.out.includes('"error":true') && tooLong.ms < 1100 && abortedStreams.includes('trickle'))
+
+  const allFail = await chat(ask, { decision: 'tool', streams: ['fail', 'fail', 'fail'] })
+  check('when every attempt fails, the error message is flagged so the widget offers Try again', allFail.shown === ERROR && allFail.out.includes('"error":true'))
+
+  process.env.CHAT_ANSWER_HEDGE_MS = '150'
+  const thinker = await chat(ask, { decision: 'tool', streams: ['thinking', 'ok'] })
+  check('a model still thinking out loud is alive: it is not raced (no doubled cost)',
+    thinker.shown === 'Thought it through.' && thinker.streams.length === 1 && !logged.some((l) => /racing a second stream/.test(l)))
+  process.env.CHAT_ANSWER_HEDGE_MS = '60000'
+
+  Object.assign(process.env, { CHAT_ANSWER_HEDGE_MS: '100', CHAT_REPLY_DEADLINE_MS: '500', CHAT_MIN_ATTEMPT_MS: '450' })
+  const tooLate = await chat(ask, { decision: 'tool', streams: ['stall', 'ok'] })
+  Object.assign(process.env, { CHAT_ANSWER_HEDGE_MS: '60000' }); delete process.env.CHAT_REPLY_DEADLINE_MS; delete process.env.CHAT_MIN_ATTEMPT_MS
+  check('no race starts that could not finish before the deadline', tooLate.streams.length === 1 && !logged.some((l) => /racing a second stream/.test(l)))
+
+  Object.assign(process.env, { CHAT_ANSWER_HEDGE_MS: '100' })
+  const emptyRace = await chat(ask, { decision: 'tool', streams: ['emptySlow', 'stall', 'ok'] })
+  Object.assign(process.env, { CHAT_ANSWER_HEDGE_MS: '60000' })
+  const budgets = emptyRace.streams.map((c) => c.body.max_tokens)
+  check('when neither raced stream speaks and one spent its budget thinking, the retry gets twice the budget',
+    emptyRace.shown === OK && budgets.length === 3 && budgets[2] === budgets[0] * 2)
+
+  // The visitor leaves while the tool decision is still running.
+  Object.assign(process.env, { CHAT_DECISION_HEDGE_MS: '200', CHAT_DECISION_TIMEOUT_MS: '5000' })
+  plan = { decision: 'slowDecision', streams: ['ok'] }; modelCalls.length = 0; abortedDecisions = 0
+  const res = await handler(new Request('https://cloudyjoe.com/api/chat', {
+    method: 'POST', headers: { 'Content-Type': 'application/json', Origin: 'https://www.joestechsolutions.com', 'cf-connecting-ip': '203.0.113.6' },
+    body: JSON.stringify({ persona: 'jts', messages: ask, lang: 'en', sessionId: 's-leaves-deciding', currentPage: '/' }),
+  }))
+  const reader = res.body!.getReader()
+  await reader.read() // ': connected'
+  await new Promise((r) => setTimeout(r, 100))
+  const leftAt = Date.now()
+  await reader.cancel()
+  await new Promise((r) => setTimeout(r, 400)) // past the 200ms race point
+  Object.assign(process.env, { CHAT_DECISION_HEDGE_MS: '60000', CHAT_DECISION_TIMEOUT_MS: '300' })
+  check('a visitor who leaves during the tool decision cancels it at once, and no second request starts',
+    abortedDecisions === 1 && abortedDecisionAt - leftAt < 60 && decisionCalls() === 1, `cancelled ${abortedDecisionAt - leftAt}ms after leaving`)
 }
 
 {

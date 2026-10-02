@@ -9,12 +9,18 @@
 // - Silence: the server sends a heartbeat every few seconds for as long as an
 //   answer takes, so silenceMs with no bytes at all means the connection is
 //   dead (a phone switching networks leaves it open with nothing coming). The
-//   request is dropped then, the wait for the response included.
+//   request is dropped then. That short limit applies only once the server has
+//   shown it sends heartbeats (its ": connected" line): a server without them
+//   (an older deploy, a rollback) is silent while it thinks, so until then
+//   the limit is legacySilenceMs, longer than any healthy silence measured.
 // - Retry: a dropped or failed request is asked again, once and quietly, when
 //   none of the answer is on screen. Never once words are showing (they would
 //   repeat), never on a rate limit or a refused request, never after Stop.
-// - Done: an answer counts only when the server says it is finished; an
-//   answer cut off midway is a failure the widget can offer to retry.
+// - Done: an answer counts only when the server says it is finished ([DONE]),
+//   and the reply is over the moment it does, even if the connection stays
+//   open; an answer cut off midway is a failure the widget can offer to retry.
+// - Server errors: the server flags its error message (`error: true`) once its
+//   own retries are spent; that is reported, never asked again automatically.
 // - Stop: the caller's signal ends the request at once.
 
 export type AgentEvent =
@@ -29,6 +35,7 @@ export type AskOutcome =
   | { ok: false; reason: "stopped" }
   | { ok: false; reason: "offline" }
   | { ok: false; reason: "rate_limited"; message: string | null }
+  | { ok: false; reason: "server_error"; message: string } // the server's own error message, on screen
   | { ok: false; reason: "failed"; shown: boolean } // shown: part of an answer is on screen
 
 export interface AskOptions {
@@ -37,6 +44,7 @@ export interface AskOptions {
   onEvent: (event: AgentEvent) => void;
   signal?: AbortSignal;
   silenceMs?: number;
+  legacySilenceMs?: number;
   retries?: number;
   fetchImpl?: typeof fetch;
   isOnline?: () => boolean;
@@ -44,11 +52,16 @@ export interface AskOptions {
 
 // Four missed heartbeats (the server sends one every 5s).
 export const SILENCE_MS = 20_000;
+// Before the server has shown it sends heartbeats. A server without them is
+// silent while it decides, searches and thinks: up to ~25s before the first
+// bytes and ~24s within an answer in the slowest spell measured (2026-09-27).
+export const LEGACY_SILENCE_MS = 60_000;
 
 type Attempt =
   | { kind: "done" }
   | { kind: "stopped" }
   | { kind: "rate_limited"; message: string | null }
+  | { kind: "server_error"; message: string }
   | { kind: "refused" } // a 4xx: the same request would be refused again
   | { kind: "dropped"; shown: boolean }; // silence, a network error, a 5xx, or an end without a finished answer
 
@@ -63,6 +76,7 @@ export async function askAgent(options: AskOptions): Promise<AskOutcome> {
     if (result.kind === "done") return { ok: true };
     if (result.kind === "stopped") return { ok: false, reason: "stopped" };
     if (result.kind === "rate_limited") return { ok: false, reason: "rate_limited", message: result.message };
+    if (result.kind === "server_error") return { ok: false, reason: "server_error", message: result.message };
     const shown = result.kind === "dropped" && result.shown;
     if (result.kind === "refused" || shown || attempt >= retries) return { ok: false, reason: "failed", shown };
   }
@@ -71,15 +85,17 @@ export async function askAgent(options: AskOptions): Promise<AskOutcome> {
 async function askOnce(options: AskOptions): Promise<Attempt> {
   const fetchImpl = options.fetchImpl ?? fetch;
   const silenceMs = options.silenceMs ?? SILENCE_MS;
+  const legacySilenceMs = options.legacySilenceMs ?? LEGACY_SILENCE_MS;
   const request = new AbortController();
   let silent = false;
+  let heartbeats = false; // the server has shown it sends them
   let timer: ReturnType<typeof setTimeout> | undefined;
   const arm = () => {
     clearTimeout(timer);
     timer = setTimeout(() => {
       silent = true;
       request.abort();
-    }, silenceMs);
+    }, heartbeats ? silenceMs : legacySilenceMs);
   };
   const stop = () => request.abort();
   options.signal?.addEventListener("abort", stop);
@@ -110,27 +126,31 @@ async function askOnce(options: AskOptions): Promise<Attempt> {
     let buffer = "";
     let eventType = "";
     let finished = false;
-    for (;;) {
+    let serverError: string | null = null;
+    while (!finished) {
       const { done, value } = await reader.read();
       if (done) break;
-      arm();
       buffer += decoder.decode(value, { stream: true });
       let newline: number;
-      while ((newline = buffer.indexOf("\n")) !== -1) {
+      while (!finished && (newline = buffer.indexOf("\n")) !== -1) {
         const line = buffer.slice(0, newline).trim();
         buffer = buffer.slice(newline + 1);
+        if (line.startsWith(":")) {
+          heartbeats = true; // ": connected" / ": ping"
+          continue;
+        }
         if (line.startsWith("event: ")) {
           eventType = line.slice(7);
           continue;
         }
-        if (!line.startsWith("data: ")) continue; // blank lines and heartbeats
+        if (!line.startsWith("data: ")) continue; // blank lines
         const kind = eventType;
         eventType = "";
         if (line === "data: [DONE]") {
-          finished = true;
+          finished = true; // the reply is over, whatever the connection does next
           continue;
         }
-        let data: { text?: unknown; replace?: unknown; status?: unknown; phase?: unknown } | unknown[];
+        let data: { text?: unknown; replace?: unknown; error?: unknown; status?: unknown; phase?: unknown } | unknown[];
         try {
           data = JSON.parse(line.slice(6));
         } catch {
@@ -153,14 +173,19 @@ async function askOnce(options: AskOptions): Promise<Attempt> {
         if (data.replace) {
           options.onEvent({ type: "replace", text: data.text });
           visible = data.text !== "";
+          serverError = data.error === true ? data.text : null;
         } else if (data.text) {
           options.onEvent({ type: "text", text: data.text });
           visible = true;
+          serverError = null;
         }
       }
+      arm(); // bytes arrived (after the line loop, so a first heartbeat already counts)
     }
-    // The server ends every reply with an answer (or its error message) and
-    // [DONE]; anything less is a connection that dropped.
+    if (finished) await reader.cancel().catch(() => {});
+    // The server ends every reply with an answer (or its flagged error
+    // message) and [DONE]; anything less is a connection that dropped.
+    if (finished && serverError !== null) return { kind: "server_error", message: serverError };
     return finished && visible ? { kind: "done" } : { kind: "dropped", shown: visible };
   } catch {
     if (options.signal?.aborted && !silent) return { kind: "stopped" };
