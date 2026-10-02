@@ -93,6 +93,10 @@ jobs:
           npm run test:contact-email
           npm run test:chat-resilience
           npm run test:messages
+          # Career claims (30+ -> 10+, 15+ years, the resume titles). These are
+          # facts repeated across the page, the chatbot prompt and llms.txt, so
+          # they drift silently. This gate is why the check exists at all.
+          npm run test:career-claims
       - name: Build (static site + Pages Functions)
         run: |
           npm run cf:prep   # api/ → functions/api-src/ (Workers shims), prompt module
