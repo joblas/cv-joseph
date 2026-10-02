@@ -2,7 +2,7 @@
 // Shared RAG pipeline — used by api/chat.js (text) and api/rag-search.js (voice)
 // ---------------------------------------------------------------------------
 
-import { FAST_MODEL, scaleTokens } from './models.js'
+import { FAST_MODEL, createWithin, scaleTokens } from './models.js'
 import { getPersona } from './personas.js'
 import { boundedFetch } from './bounded-fetch.js'
 
@@ -519,31 +519,22 @@ export async function rerankChunks(query, chunks, anthropicClient) {
       `[${i}] ${c.content.slice(0, 200)}`
     ).join('\n')
 
-    const response = await anthropicClient.messages.create({
+    // Bounded, not retried, body included (createWithin). The Anthropic SDK
+    // defaults to a 600s timeout with 2 retries, so an unhealthy-but-responsive
+    // provider could hold a chat turn for ten minutes. Safe to cap: the catch
+    // below falls back to the fused order, so exceeding this degrades ranking
+    // quality rather than failing the turn, and past ~2.5s the ranking is not
+    // worth waiting for. Until 2026-10-02 the cap was written into the request
+    // BODY (`timeout`, `maxRetries` beside `model`), where the SDK never read
+    // it: the bound did not exist (review of PR #47).
+    const response = await createWithin(anthropicClient, {
       model: FAST_MODEL,
       max_tokens: scaleTokens(150),
-      // The Anthropic SDK defaults to a 600s timeout with maxRetries 2, so an
-      // unhealthy-but-responsive provider could hold a chat turn for ten
-      // minutes. This was the last unbounded call left in the retrieval path
-      // after the two Voyage legs were bounded. Safe to cap: the catch below
-      // falls back to the fused order, so exceeding this degrades ranking
-      // quality rather than failing the turn — and past ~2.5s on a
-      // 1-CPU-second budget the ranking is not worth waiting for anyway.
-      timeout: LLM_RERANK_TIMEOUT_MS,
-      // `timeout` bounds ONE ATTEMPT, not the call: the SDK retries while
-      // attempts remain and only throws once they are exhausted, with
-      // maxRetries defaulting to 2. So the cap above alone would still allow
-      // 3 x 2500ms plus backoff, about 9s. Retrying is not worth it here —
-      // the catch below falls back to the fused order instantly and the
-      // ranking difference is small, so a retry buys little and costs the
-      // visitor seconds. This is the same attempt-vs-call distinction that
-      // made RERANK_TIMEOUT_MS bound the Voyage attempt rather than the step.
-      maxRetries: 0,
       messages: [{
         role: 'user',
         content: `Query: "${query}"\nRank these chunks by relevance. Return ONLY the top 5 IDs as comma-separated numbers (most relevant first):\n${numbered}`,
       }],
-    })
+    }, LLM_RERANK_TIMEOUT_MS)
 
     // Thinking models put a `thinking` block before the text block.
     const text = response.content.filter(b => b.type === 'text').map(b => b.text).join('')

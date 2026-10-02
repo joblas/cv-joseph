@@ -13,6 +13,8 @@ import {
   Mic,
   MessageSquare,
   PhoneOff,
+  Square,
+  RotateCcw,
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -21,6 +23,7 @@ import { getSectionLabels, getPageTitles } from './articles/registry';
 import { useVoiceMode } from './useVoiceMode';
 import { useGeminiVoice } from './useGeminiVoice';
 import VoiceOrb from './VoiceOrb';
+import { askAgent } from './agent-stream';
 
 interface RagSource {
   article_id: string;
@@ -37,6 +40,16 @@ interface Message {
   content: string;
   ragSources?: RagSource[];
   ragDegraded?: boolean;
+  // A note that the reply failed: shown, never sent back to the agent as its words.
+  failed?: boolean;
+}
+
+// The history up to the visitor's last question: a retry asks it again, so the
+// failed reply (and any half of it that arrived) goes.
+function upToLastQuestion(messages: Message[]): Message[] {
+  let end = messages.length;
+  while (end > 0 && messages[end - 1].role === 'assistant') end--;
+  return messages.slice(0, end);
 }
 
 interface FloatingChatProps {
@@ -160,6 +173,13 @@ export default function FloatingChat({}: FloatingChatProps) {
   const [showPrompts, setShowPrompts] = useState(session.showPrompts);
   const [sessionId] = useState(session.sessionId);
   const [mode, setMode] = useState<'text' | 'voice'>('text');
+  // The question whose reply failed, for "Try again".
+  const [failedAsk, setFailedAsk] = useState<string | null>(null);
+  // What the wait is doing, shown under the typing indicator.
+  const [waitHint, setWaitHint] = useState('');
+  // When the last question went out: Stop sits where Send was, so a
+  // double-click on Send must not land on Stop and cancel the question.
+  const sentAtRef = useRef(0);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -344,7 +364,9 @@ export default function FloatingChat({}: FloatingChatProps) {
   // Voice mode handlers
   const handleStartVoice = () => {
     setMode('voice');
-    activeVoice.start(messages, 'en', sessionId, location.pathname);
+    setFailedAsk(null); // a Try again from before the voice session would ask the wrong question
+    // Failure notes are not the agent's words: the voice session never hears them.
+    activeVoice.start(messages.filter((m) => !m.failed), 'en', sessionId, location.pathname);
   };
 
   const handleStopVoice = () => {
@@ -383,13 +405,28 @@ export default function FloatingChat({}: FloatingChatProps) {
   // Can toggle to voice?
   const canStartVoice = !isLoading && !isStreaming && voiceProvider !== null && voiceProvider !== 'none' && activeVoice.isSupported;
 
-  const sendMessage = async (messageText?: string) => {
+  // A wait with no words yet says it is still working after a few seconds.
+  useEffect(() => {
+    if (!isLoading || isStreaming) return;
+    const timer = setTimeout(() => setWaitHint((hint) => (!hint || hint === t.wait.searching ? t.wait.slow : hint)), 12_000);
+    return () => clearTimeout(timer);
+  }, [isLoading, isStreaming, t.wait.searching, t.wait.slow]);
+
+  // Every reply goes through askAgent (agent-stream.ts): a dead connection is
+  // dropped after 20s of silence and asked again once, quietly; Stop ends the
+  // wait; any failure ends in a note and a "Try again". Nothing can leave the
+  // chat locked (2026-10-02: a reply froze at about a minute).
+  const sendMessage = async (messageText?: string, retry = false) => {
     const text = messageText || input.trim();
     if (!text || isLoading) return;
 
     setInput('');
     setShowPrompts(false);
-    setMessages((prev) => [...prev, { role: 'user', content: text }]);
+    setFailedAsk(null);
+    setWaitHint('');
+    const base: Message[] = retry ? upToLastQuestion(messages) : [...messages, { role: 'user', content: text }];
+    // An empty assistant bubble shows the typing indicator until words arrive.
+    setMessages([...base, { role: 'assistant', content: '' }]);
     setIsLoading(true);
 
     // Reset streaming state
@@ -403,158 +440,101 @@ export default function FloatingChat({}: FloatingChatProps) {
       drainTimerRef.current = null;
     }
 
-    // Add empty assistant message BEFORE fetch so loading indicator shows
-    setMessages((prev) => [...prev, { role: 'assistant', content: '' }]);
+    abortRef.current?.abort();
+    const stop = new AbortController();
+    abortRef.current = stop;
+    sentAtRef.current = Date.now();
 
+    let fullText = '';
     try {
-      if (!navigator.onLine) {
-        throw new Error('offline');
-      }
-
-      abortRef.current?.abort();
-      const controller = new AbortController();
-      abortRef.current = controller;
-
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        signal: controller.signal,
-        body: JSON.stringify({
-          messages: [...messages, { role: 'user', content: text }].filter(
-            (m) => m.role !== 'assistant' || m.content !== t.greeting,
-          ),
+      const outcome = await askAgent({
+        url: '/api/chat',
+        signal: stop.signal,
+        body: {
+          messages: base
+            .filter((m) => !m.failed && (m.role !== 'assistant' || m.content !== t.greeting))
+            .map((m) => ({ role: m.role, content: m.content })),
           lang: 'en',
           sessionId,
           currentPage: location.pathname,
-        }),
+        },
+        onEvent: (event) => {
+          if (event.type === 'sources') {
+            pendingRagSourcesRef.current = event.sources as RagSource[];
+          } else if (event.type === 'degraded') {
+            pendingRagDegradedRef.current = true;
+          } else if (event.type === 'status') {
+            setWaitHint(t.wait[event.phase as keyof typeof t.wait] ?? '');
+            // Asked again from scratch: nothing from the dropped try carries over.
+            if (event.phase === 'reconnecting') {
+              pendingRagSourcesRef.current = [];
+              pendingRagDegradedRef.current = false;
+            }
+          } else if (event.type === 'replace') {
+            // The server swapped the whole answer (a blocked leak, a corrected
+            // address, or "" before its own retry): render it as is.
+            fullText = event.text;
+            fullTextRef.current = event.text;
+            drainPosRef.current = event.text.length;
+            const sources = pendingRagSourcesRef.current;
+            const degraded = pendingRagDegradedRef.current;
+            setMessages((prev) => {
+              const next = [...prev];
+              next[next.length - 1] = {
+                role: 'assistant',
+                content: event.text,
+                ragSources: sources.length > 0 ? sources : undefined,
+                ragDegraded: degraded || undefined,
+              };
+              return next;
+            });
+          } else {
+            if (!isStreamingRef.current) {
+              isStreamingRef.current = true;
+              setIsStreaming(true);
+            }
+            setWaitHint('');
+            fullText += event.text;
+            fullTextRef.current = fullText;
+            startDrain();
+          }
+        },
       });
 
-      if (!response.ok) throw new Error('Failed to send message');
-
-      const reader = response.body?.getReader();
-      const decoder = new TextDecoder();
-
-      if (!reader) throw new Error('No reader available');
-
-      let buffer = '';
-      let fullText = '';
-      let currentEventType = '';
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        buffer += decoder.decode(value, { stream: true });
-
-        // Process complete lines only
-        let newlineIndex;
-        while ((newlineIndex = buffer.indexOf('\n')) !== -1) {
-          const line = buffer.slice(0, newlineIndex).trim();
-          buffer = buffer.slice(newlineIndex + 1);
-
-          // Parse SSE event type
-          if (line.startsWith('event: ')) {
-            currentEventType = line.slice(7);
-            continue;
-          }
-
-          if (line.startsWith('data: ') && line !== 'data: [DONE]') {
-            try {
-              const data = JSON.parse(line.slice(6));
-
-              if (currentEventType === 'rag-sources') {
-                pendingRagSourcesRef.current = data as RagSource[];
-                currentEventType = '';
-                continue;
-              }
-
-              if (currentEventType === 'rag-status') {
-                pendingRagDegradedRef.current = data.status === 'degraded';
-                currentEventType = '';
-                continue;
-              }
-
-              currentEventType = '';
-
-              if (data.text) {
-                if (data.replace) {
-                  // Leak blocked — bypass buffer, render immediately
-                  fullText = data.text;
-                  fullTextRef.current = data.text;
-                  drainPosRef.current = data.text.length;
-                  const sources = pendingRagSourcesRef.current;
-                  const degraded = pendingRagDegradedRef.current;
-                  setMessages((prev) => {
-                    const newMessages = [...prev];
-                    newMessages[newMessages.length - 1] = {
-                      role: 'assistant',
-                      content: data.text,
-                      ragSources: sources.length > 0 ? sources : undefined,
-                      ragDegraded: degraded || undefined,
-                    };
-                    return newMessages;
-                  });
-                } else {
-                  // First chunk — activate streaming
-                  if (!isStreamingRef.current) {
-                    isStreamingRef.current = true;
-                    setIsStreaming(true);
-                  }
-
-                  fullText += data.text;
-                  fullTextRef.current = fullText;
-                  startDrain();
-                }
-              }
-            } catch {
-              // Skip malformed JSON
-              currentEventType = '';
-            }
-          }
-        }
-      }
-
-      // Stream ended — signal drain to flush remaining words
+      // The request is over: a running drain flushes what is left, then ends streaming.
       isStreamingRef.current = false;
-
-      // Fallback: if stream ended but no text was received, show error
-      if (!fullText) {
-        const errorMsg = t.error;
-        setMessages((prev) => {
-          const last = prev[prev.length - 1];
-          if (last?.role === 'assistant' && last.content === '') {
-            return [
-              ...prev.slice(0, -1),
-              { role: 'assistant', content: errorMsg },
-            ];
-          }
-          return prev;
-        });
+      if (outcome.ok) {
+        if (!drainTimerRef.current) setIsStreaming(false);
+        return;
       }
-    } catch (err) {
-      if (err instanceof Error && err.name === 'AbortError') return;
-      const isOffline = !navigator.onLine || (err instanceof Error && err.message === 'offline');
-      const errorMsg = isOffline ? t.offline : t.error;
-      // Clear streaming state on error
-      fullTextRef.current = '';
-      drainPosRef.current = 0;
+      // Not a whole answer: stop the drain and show exactly what arrived.
       if (drainTimerRef.current) {
         clearInterval(drainTimerRef.current);
         drainTimerRef.current = null;
       }
       setIsStreaming(false);
-      isStreamingRef.current = false;
-      setMessages((prev) => {
-        const last = prev[prev.length - 1];
-        if (last?.role === 'assistant' && last.content === '') {
-          return [
-            ...prev.slice(0, -1),
-            { role: 'assistant', content: errorMsg },
-          ];
-        }
-        return [...prev, { role: 'assistant', content: errorMsg }];
-      });
+      const partial = fullTextRef.current;
+      if (outcome.reason === 'stopped') {
+        // Stopped by the visitor: keep what was said, drop an empty bubble.
+        setMessages((prev) => [...prev.slice(0, -1), ...(partial ? [{ role: 'assistant' as const, content: partial }] : [])]);
+        return;
+      }
+      const note =
+        outcome.reason === 'offline' ? t.offline
+        : outcome.reason === 'rate_limited' ? outcome.message || t.error
+        : outcome.reason === 'server_error' ? outcome.message
+        : outcome.shown ? t.dropped
+        : t.error;
+      // The server's own error message is the note itself, not an answer to keep.
+      const kept = outcome.reason === 'server_error' ? '' : partial;
+      setMessages((prev) => [
+        ...prev.slice(0, -1),
+        ...(kept ? [{ role: 'assistant' as const, content: kept }] : []),
+        { role: 'assistant', content: note, failed: true },
+      ]);
+      if (outcome.reason !== 'rate_limited') setFailedAsk(text);
     } finally {
+      setWaitHint('');
       setIsLoading(false);
     }
   };
@@ -903,6 +883,18 @@ export default function FloatingChat({}: FloatingChatProps) {
                     </motion.div>
                   )}
 
+                  {failedAsk && !isLoading && (
+                    <div className="flex justify-start">
+                      <button
+                        onClick={() => sendMessage(failedAsk, true)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border bg-muted text-xs text-foreground hover:border-primary/40 hover:text-primary transition-colors"
+                      >
+                        <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" />
+                        {t.retry}
+                      </button>
+                    </div>
+                  )}
+
                   {isLoading && messages[messages.length - 1]?.content === '' && (
                     <motion.div
                       initial={{ opacity: 0, y: 10 }}
@@ -921,7 +913,7 @@ export default function FloatingChat({}: FloatingChatProps) {
                         <span
                           className={`text-muted-foreground ${isMobile ? 'text-sm' : 'text-xs'}`}
                         >
-                          {translations.ui.typingIndicator}
+                          {waitHint || translations.ui.typingIndicator}
                         </span>
                       </div>
                     </motion.div>
@@ -1028,19 +1020,37 @@ export default function FloatingChat({}: FloatingChatProps) {
                       <Mic className={isMobile ? 'w-5 h-5' : 'w-4 h-4'} aria-hidden="true" />
                     </motion.button>
                   )}
-                  {/* Send button */}
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => sendMessage()}
-                    disabled={isLoading || !input.trim()}
-                    aria-label="Send message"
-                    className={`rounded-xl bg-gradient-theme flex items-center justify-center text-white disabled:opacity-50 disabled:cursor-not-allowed transition-opacity ${
-                      isMobile ? 'w-12 h-12' : 'w-10 h-10'
-                    }`}
-                  >
-                    <Send className={isMobile ? 'w-5 h-5' : 'w-4 h-4'} aria-hidden="true" />
-                  </motion.button>
+                  {/* Send button; Stop while a reply is pending, so the chat is never locked */}
+                  {isLoading ? (
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => {
+                        // The second click of a double-click on Send lands here: ignore it.
+                        if (Date.now() - sentAtRef.current >= 800) abortRef.current?.abort();
+                      }}
+                      aria-label={t.stop}
+                      title={t.stop}
+                      className={`rounded-xl bg-muted border border-border flex items-center justify-center text-foreground hover:border-primary/40 transition-colors ${
+                        isMobile ? 'w-12 h-12' : 'w-10 h-10'
+                      }`}
+                    >
+                      <Square className={isMobile ? 'w-4 h-4' : 'w-3.5 h-3.5'} fill="currentColor" aria-hidden="true" />
+                    </motion.button>
+                  ) : (
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => sendMessage()}
+                      disabled={!input.trim()}
+                      aria-label="Send message"
+                      className={`rounded-xl bg-gradient-theme flex items-center justify-center text-white disabled:opacity-50 disabled:cursor-not-allowed transition-opacity ${
+                        isMobile ? 'w-12 h-12' : 'w-10 h-10'
+                      }`}
+                    >
+                      <Send className={isMobile ? 'w-5 h-5' : 'w-4 h-4'} aria-hidden="true" />
+                    </motion.button>
+                  )}
                 </div>
               ) : (
                 /* Voice mode controls */
