@@ -5,7 +5,7 @@
 import { FAST_MODEL, createWithin, scaleTokens } from './models.js'
 import { getPersona } from './personas.js'
 import { boundedFetch } from './bounded-fetch.js'
-import { expandWorkQuery, FACT_CARDS_ID } from './work.js'
+import { expandWorkQuery, FACT_CARDS_ID, FACT_CARD_GUIDE_PREFIXES } from './work.js'
 
 // ---------------------------------------------------------------------------
 // Cost tracking per span
@@ -602,7 +602,15 @@ export function diversifyByArticle(ranked) {
 // RAG: format chunks for tool_result + extract sources for badges
 // ---------------------------------------------------------------------------
 
-export function formatChunksForContext(chunks) {
+// `spoken`: the text goes to the voice model to be read out (the voice search's
+// raw-chunk fallback), so a fact card loses its guide lines (retrieval phrasings,
+// wording rule, provenance). Everywhere else the model sees the whole card.
+const stripCardGuides = (content) => String(content ?? '')
+  .split('\n')
+  .filter((line) => !FACT_CARD_GUIDE_PREFIXES.some((p) => line.trimStart().startsWith(p)))
+  .join('\n')
+
+export function formatChunksForContext(chunks, { spoken = false } = {}) {
   return chunks.map((c, i) => {
     const meta = c.metadata || {}
     // Site personas label by corpus (`kind`), never by section id: cloudyjoe's
@@ -614,7 +622,8 @@ export function formatChunksForContext(chunks) {
       : meta.article_id === FACT_CARDS_ID
         ? `[Curated fact card: ${meta.section_id}]`
         : meta.article_id ? `[From Joe's article: ${meta.article_id}, section: ${meta.section_id}]` : ''
-    return `--- Your content ${i + 1} ${source} ---\n${c.content}`
+    const content = spoken && meta.article_id === FACT_CARDS_ID ? stripCardGuides(c.content) : c.content
+    return `--- Your content ${i + 1} ${source} ---\n${content}`
   }).join('\n\n')
 }
 

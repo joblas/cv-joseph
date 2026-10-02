@@ -8,7 +8,6 @@ import {
   containsFingerprint, LEAK_RESPONSE,
 } from './_shared/rag.js'
 import { getSystemPrompt } from './_shared/prompt.js'
-import { composeTextPrompt } from './_shared/work.js'
 import { captureLead, checkRateLimit } from './_shared/leads.js'
 import { BOOKING_TOOL_NAMES, bookingContext, bookingFallbackText, bookingTools, runBookingTool } from './_shared/booking.js'
 import { CHAT_MODEL, FAST_MODEL, CHAT_MAX_TOKENS, scaleTokens, baseUrlHost, createAnthropicClient, createWithin } from './_shared/models.js'
@@ -381,27 +380,13 @@ export default async function handler(req) {
     return respondNow(async ({ status, signal }) => {
       // Prompt versioning: Langfuse with file fallback (Block 4)
       // Support X-Prompt-Version header for regression testing (Block 5)
-      let systemPromptText
-      let promptVersion
       const overrideVersion = req.headers.get('x-prompt-version')
       const overrideAuth = req.headers.get('x-prompt-auth')
-      // Only personas with a Langfuse-managed prompt can be pinned to a version
-      if (overrideAuth === process.env.PROMPT_REGRESSION_SECRET && overrideVersion && langfuse && persona.langfusePrompt) {
-        try {
-          const prompt = await langfuse.getPrompt(persona.langfusePrompt, parseInt(overrideVersion), {
-            type: 'text', cacheTtlSeconds: 0,
-          })
-          systemPromptText = composeTextPrompt(prompt.prompt, persona.id)
-          promptVersion = prompt.version
-        } catch {
-          systemPromptText = persona.prompt
-          promptVersion = 'file'
-        }
-      } else {
-        const { text, version } = await getSystemPrompt(langfuse, persona)
-        systemPromptText = text
-        promptVersion = version
-      }
+      // Only personas with a Langfuse-managed prompt can be pinned to a version.
+      // Pinned or not, getSystemPrompt composes the work list in (prompt.js).
+      const pinned = overrideAuth === process.env.PROMPT_REGRESSION_SECRET && overrideVersion && langfuse && persona.langfusePrompt
+      const { text: systemPromptText, version: promptVersion } =
+        await getSystemPrompt(langfuse, persona, pinned ? { version: parseInt(overrideVersion) } : undefined)
 
       if (langfuse) {
         trace = langfuse.trace({

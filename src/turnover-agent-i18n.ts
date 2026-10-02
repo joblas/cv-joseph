@@ -50,7 +50,7 @@ const _en = {
           { label: 'Guest questions.', detail: 'A late-checkout request needs a calendar answer, not a vibe.' },
           { label: 'Tool fatigue.', detail: 'Property-management SaaS assumes everyone installs an app. Nick\'s cleaners won\'t, and his guests definitely won\'t.' },
         ],
-        punchline: 'Nobody downloads an app. Nick talks to the bot in plain English on Telegram, cleaners get ordinary text messages, guests get a concierge chat. The interface is whatever everyone already has.',
+        punchline: 'Nobody downloads an app. Nick talks to the bot in plain English on Telegram, cleaners are messaged on Telegram with an SMS fallback, guests get a concierge chat. The interface is whatever everyone already has.',
         whyNotN8n: {
           heading: 'Why Not n8n',
           body: 'The first version was an n8n workflow. It was good for testing the concept and wrong for a client-facing product — I wrote that verdict into the plan doc before rebuilding, and I stand by it. A prototype that proves an idea and a system a client runs a business on are different animals. The rest of this article is about the second one.',
@@ -173,7 +173,7 @@ const _en = {
           { name: 'python-telegram-bot', role: 'Polling loop — manager chat and guest concierge on the same bot' },
           { name: 'Supabase Postgres', role: 'Off-box data via the connection pooler; RLS on all 14 tables; migrated from SQLite pre-launch' },
           { name: 'Ollama Cloud + Anthropic', role: 'Three-leg LLM fallback chain with graceful degradation' },
-          { name: 'Telegram-first cleaner messaging', role: 'Cleaners are messaged on Telegram first; the code keeps an email-to-SMS gateway as the fallback. No app to install' },
+          { name: 'Telegram-first cleaner messaging', role: 'Cleaners are messaged on Telegram first; the code keeps an email-to-SMS gateway as the fallback' },
           { name: 'Docker + Caddy', role: 'Single container behind auto-HTTPS on a Hostinger VPS, with a host cron watchdog' },
         ],
       },
@@ -218,7 +218,7 @@ const _en = {
       items: [
         {
           q: 'Why Telegram instead of a web app or a native app?',
-          a: 'Because adoption is the hardest problem in client software, and the way to win it is to not need any. Nick already lives in chat, so the manager interface is a conversation with a bot. Cleaners are messaged on Telegram first, with an email-to-SMS gateway as the fallback: nothing to install, nothing to learn. Guests who message the bot get a concierge mode with a single restricted tool. There is a web dashboard for the visual work — invite-only and passwordless — but it\'s the secondary surface. The design goal from the README says it best: nobody downloads an app.',
+          a: 'Because adoption is the hardest problem in client software, and the way to win it is to not need any. Nick already lives in chat, so the manager interface is a conversation with a bot. Cleaners are messaged where they already are: Telegram first, with an email-to-SMS gateway as the fallback. Guests who message the bot get a concierge mode with a single restricted tool. There is a web dashboard for the visual work — invite-only and passwordless — but it\'s the secondary surface. The design goal from the README says it best: nobody downloads an app.',
         },
         {
           q: 'What does the LLM actually do, and what happens when it goes down?',
@@ -234,7 +234,7 @@ const _en = {
         },
         {
           q: 'What does it cost to run?',
-          a: 'I won\'t quote revenue: pricing was genuinely still being discussed with Nick in late August — through the bot, of course, as feature request #19 — and this article only prints verified numbers. Infrastructure is modest by design: one small VPS, a hosted Postgres database, and LLM calls that land almost entirely on an economical primary model. My internal estimate is a few tens of dollars a month, and I\'m flagging that as an estimate because I haven\'t reconciled it against invoices.',
+          a: 'Infrastructure is modest by design: one small VPS, a hosted Postgres database, and LLM calls that land almost entirely on an economical primary model. This article prints only verified numbers, and I have not reconciled running costs against invoices, so it gives no cost figure.',
         },
         {
           q: 'What would you build differently today?',

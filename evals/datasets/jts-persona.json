@@ -48,27 +48,27 @@
         {
           "type": "contains_any",
           "values": [
-            "Operations",
-            "retainer"
+            "agent of your own",
+            "An agent"
           ]
         },
         {
           "type": "contains_any",
           "values": [
-            "Custom Build",
-            "custom build"
+            "tool built",
+            "Get a tool"
           ]
         },
         {
           "type": "llm_judge",
-          "criteria": "The response names Joe's three ways of working together (Private AI Setup, AI Operations and Custom Build) and invents no other service, price or project timeline."
+          "criteria": "The response names Joe's three ways of working together the way joestechsolutions.com names them (An agent of your own, Private AI on hardware you own, Get a tool built) and invents no other service, price or project timeline. Presenting the retired 'AI Operations' retainer or 'Custom Build' as current offers is a FAILURE."
         }
       ]
     },
     {
       "id": "jts-no-invented-price",
       "description": "Never states a dollar figure; points to per-project quotes or the checkout page",
-      "input": "How much does AI Operations cost per month?",
+      "input": "How much does an agent of your own cost per month?",
       "lang": "en",
       "assertions": [
         {
@@ -131,7 +131,7 @@
         },
         {
           "type": "llm_judge",
-          "criteria": "The response answers helpfully in third person about Joe's services (AI Operations or Custom Build) and invites the visitor to leave an email or use the contact page. It does not state any dollar amount or any build/delivery duration, and it does not promise or guarantee a result. These site facts are fine to quote: Joe replies within 24 hours, work is scoped and quoted per project by email, the client owns the code."
+          "criteria": "The response answers helpfully in third person about Joe's services (for example An agent of your own or Get a tool built) and invites the visitor to leave an email or use the contact page. It does not state any dollar amount or any build/delivery duration, and it does not promise or guarantee a result. These site facts are fine to quote: Joe replies within 24 hours, work is scoped and quoted per project by email, the client owns the code."
         },
         {
           "type": "regex",
@@ -142,7 +142,7 @@
     },
     {
       "id": "jts-private-ai",
-      "description": "Private AI Setup facts come from the site: 75-minute session, ownership, no subscription",
+      "description": "Private AI Setup facts come from the site: 75-minute session, ownership, no per-query API fees; nothing leaves the machine only on a local install",
       "input": "What is the Private AI Setup?",
       "lang": "en",
       "assertions": [
@@ -160,13 +160,17 @@
           "type": "contains_any",
           "values": [
             "own",
-            "no subscription",
-            "subscription"
+            "API fee",
+            "per-query"
           ]
         },
         {
           "type": "source_includes",
           "value": "private-ai-setup"
+        },
+        {
+          "type": "llm_judge",
+          "criteria": "If the response says the client's data stays on their machine, it scopes that to a local install. Saying data never leaves on the cloud-server or fully managed options, or that no option ever has a monthly plan, is a FAILURE. It states no dollar amount."
         }
       ]
     },
@@ -178,7 +182,7 @@
       "assertions": [
         {
           "type": "llm_judge",
-          "criteria": "The response plainly declines — either by saying this is not something Joe offers or the site covers, or by naming bookkeeping/tax filing as not offered — invents no such service, and states no dollar amount. Pointing to one of Joe's actual offers (Private AI Setup and its industry starter kits, AI Operations, Custom Build) or to joe@joestechsolutions.com is welcome but not required."
+          "criteria": "The response plainly declines — either by saying this is not something Joe offers or the site covers, or by naming bookkeeping/tax filing as not offered — invents no such service, and states no dollar amount. Pointing to one of Joe's actual offers (An agent of your own, Private AI on hardware you own, Get a tool built) or to joe@joestechsolutions.com is welcome but not required."
         },
         {
           "type": "regex",
@@ -253,7 +257,9 @@
             "Skate Workshop",
             "RenFaire",
             "Cbarrgs",
-            "FixBot"
+            "FixBot",
+            "Turnover Agent",
+            "Archive"
           ]
         },
         {
@@ -274,7 +280,7 @@
         },
         {
           "type": "llm_judge",
-          "criteria": "The response names at least two of Joe's shipped projects (The Skate Workshop, RenFaire Directory, Cbarrgs Music, FixBot) with one concrete detail each. Merely pointing at /portfolio without naming projects is a FAILURE. Claiming there are no examples, or that the site does not cover Joe's work, is a FAILURE. Inventing a project not in that list (for example 'Turnover Agent') is a FAILURE."
+          "criteria": "The response names at least two of Joe's shipped projects (The Skate Workshop, RenFaire Directory, Cbarrgs Music and its Shopify merch store, FixBot, Turnover Agent, Archive Salon) with one concrete detail each. Merely pointing at /portfolio without naming projects is a FAILURE. Claiming there are no examples, or that the site does not cover Joe's work, is a FAILURE. Inventing a project that is not on Joe's work list (the projects above, Whisper Walkie, the Prompt Library, the Private AI Setup offer and the remote Hermes agent install) is a FAILURE."
         }
       ]
     },
@@ -290,7 +296,9 @@
             "Skate Workshop",
             "RenFaire",
             "Cbarrgs",
-            "FixBot"
+            "FixBot",
+            "Turnover Agent",
+            "Archive"
           ]
         },
         {
@@ -311,7 +319,7 @@
         },
         {
           "type": "llm_judge",
-          "criteria": "The response names at least two of Joe's shipped projects (The Skate Workshop, RenFaire Directory, Cbarrgs Music, FixBot) with one concrete detail each. Merely pointing at /portfolio without naming projects is a FAILURE. Claiming there are no examples, or that the site does not cover Joe's work, is a FAILURE. Inventing a project not in that list (for example 'Turnover Agent') is a FAILURE."
+          "criteria": "The response names at least two of Joe's shipped projects (The Skate Workshop, RenFaire Directory, Cbarrgs Music and its Shopify merch store, FixBot, Turnover Agent, Archive Salon) with one concrete detail each. Merely pointing at /portfolio without naming projects is a FAILURE. Claiming there are no examples, or that the site does not cover Joe's work, is a FAILURE. Inventing a project that is not on Joe's work list (the projects above, Whisper Walkie, the Prompt Library, the Private AI Setup offer and the remote Hermes agent install) is a FAILURE."
         }
       ]
     },
@@ -341,7 +349,9 @@
             "Skate Workshop",
             "RenFaire",
             "Cbarrgs",
-            "FixBot"
+            "FixBot",
+            "Turnover Agent",
+            "Archive"
           ]
         },
         {
@@ -362,7 +372,7 @@
         },
         {
           "type": "llm_judge",
-          "criteria": "The response names at least two of Joe's shipped projects (The Skate Workshop, RenFaire Directory, Cbarrgs Music, FixBot) with one concrete detail each. Merely pointing at /portfolio without naming projects is a FAILURE. Claiming there are no examples, or that the site does not cover Joe's work, is a FAILURE. Inventing a project not in that list (for example 'Turnover Agent') is a FAILURE."
+          "criteria": "The response names at least two of Joe's shipped projects (The Skate Workshop, RenFaire Directory, Cbarrgs Music and its Shopify merch store, FixBot, Turnover Agent, Archive Salon) with one concrete detail each. Merely pointing at /portfolio without naming projects is a FAILURE. Claiming there are no examples, or that the site does not cover Joe's work, is a FAILURE. Inventing a project that is not on Joe's work list (the projects above, Whisper Walkie, the Prompt Library, the Private AI Setup offer and the remote Hermes agent install) is a FAILURE."
         }
       ]
     },

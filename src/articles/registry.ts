@@ -126,8 +126,8 @@ export const articleRegistry: ArticleConfig[] = [
     heroImage: 'https://cloudyjoe.com/career-ops/hero-career-ops.webp',
     component: () => import('../CareerOps.tsx'),
     seoMeta: {
-      datePublished: '2026-03-17',
-      dateModified: '2026-04-07',
+      datePublished: '2026-04-07',
+      dateModified: '2026-10-02',
       keywords: ['ai job search', 'ai job search tool', 'ai powered job search', 'ai resume builder', 'ai resume', 'multi agent system', 'multi agent orchestration', 'automated job application', 'ATS-optimized resume', 'Claude Code', 'batch processing', 'HITL', 'job search automation', 'career-ops', 'ai auto apply', 'agente ia', 'crear cv con ia', 'automatizacion con ia', 'sistema multiagente', 'busqueda de empleo ia'],
       articleType: 'TechArticle',
       articleTags: 'multi-agent,job search,Claude Code,ATS,batch processing,HITL,automation,Playwright',
@@ -142,7 +142,6 @@ export const articleRegistry: ArticleConfig[] = [
       citation: [
         { '@type': 'WebPage', name: 'Anthropic Claude Code Documentation', url: 'https://docs.anthropic.com/en/docs/claude-code' },
         { '@type': 'WebPage', name: 'Playwright Browser Automation Documentation', url: 'https://playwright.dev/docs/intro' },
-        { '@type': 'DiscussionForumPosting', name: 'I built an AI job search system with Claude Code — r/ClaudeAI (250+ upvotes)', url: 'https://www.reddit.com/r/ClaudeAI/comments/1sd2f37/i_built_an_ai_job_search_system_with_claude_code/' },
       ],
       mentions: [
         { '@type': 'SoftwareApplication', name: 'Claude Code', url: 'https://claude.ai' },
@@ -150,7 +149,6 @@ export const articleRegistry: ArticleConfig[] = [
         { '@type': 'SoftwareApplication', name: 'Puppeteer', url: 'https://pptr.dev' },
         { '@type': 'SoftwareApplication', name: 'Node.js', url: 'https://nodejs.org' },
       ],
-      discussionUrl: 'https://www.reddit.com/r/SideProject/comments/1rw1lg4/i_automated_my_job_search_with_ai_agents_516/',
       relatedLink: 'https://github.com/santifer/career-ops',
     },
   },

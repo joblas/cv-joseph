@@ -62,15 +62,21 @@ check('no consumer still carries the unreplaced work marker', consumers.every((c
 // Hardcoded on purpose: this list is the spec, not a mirror of the module, so
 // dropping an item from work.js (or slipping an unaudited one in) fails here.
 // Each fragment is a fact the line must carry, per persona where they differ.
-const SPEC: Record<string, string | Record<PersonaId, string>> = {
+// An array means every fragment must be there. The mobile apps' settled
+// release status is part of the spec: TestFlight beta only (the 2026-10-02
+// audit checked the v3 repo, EAS builds and the App Store and Play lookups),
+// and Skate development is paused. Changing a line to "available on the App
+// Store" fails here, not only where a banned phrase happens to match.
+type Frag = string | string[]
+const SPEC: Record<string, Frag | Record<PersonaId, Frag>> = {
   'cbarrgs-site': { cloudyjoe: 'cbarrgs.com, website for the artist Cbarrgs', jts: 'Cbarrgs Music' },
   'cbarrgs-shop': 'shopify.cbarrgs.com',
   'cbarrgs-site-agent': 'Telegram line to an AI coding agent',
   'cbarrgs-news-worker': 'Cloudflare Worker',
   'turnover-agent': 'Turnover Agent',
-  'archive-salon-app': { cloudyjoe: 'Archive salon app', jts: 'Archive Salon' },
+  'archive-salon-app': { cloudyjoe: ['Archive salon app', 'TestFlight beta'], jts: ['Archive Salon', 'TestFlight beta'] },
   'archive-beta-loop': 'Archive beta-feedback loop',
-  'skate-workshop-app': 'The Skate Workshop',
+  'skate-workshop-app': ['The Skate Workshop', 'TestFlight beta', 'paused'],
   'skate-workshop-loop': 'Skate Workshop agent dev loop',
   'skate-workshop-site': 'theskateworkshop.app',
   'renfaire-guide': { cloudyjoe: 'RenFaire Guide', jts: 'RenFaire Directory' },
@@ -88,19 +94,59 @@ const SPEC: Record<string, string | Record<PersonaId, string>> = {
   'dalle-demo': 'DALL-E',
   'jts-company': 'three active client builds',
 }
+// Low-value items stay out of the voice instructions (Gemini Live bills the
+// whole setup every session); they remain in the text prompts and fact cards.
+// Pinned, so dropping a client item from voice is a visible test change.
+const VOICE_SKIPPED = ['cbarrgs-news-worker', 'jts-site', 'agent-playbook', 'prompt-library', 'dalle-demo']
 const ids = work.WORK_ITEMS.map((i: any) => i.id)
 check(`work.js holds exactly the audited items (got: ${ids.join(', ')})`,
   JSON.stringify([...ids].sort()) === JSON.stringify(Object.keys(SPEC).sort()))
 check('every item is INCLUDE or INCLUDE_WITH_CARE (EXCLUDE items never enter the list)',
   work.WORK_ITEMS.every((i: any) => i.verdict === 'INCLUDE' || i.verdict === 'INCLUDE_WITH_CARE'))
+check(`exactly the pinned low-value items skip voice (got: ${ids.filter((id: string) => work.WORK_ITEMS.find((i: any) => i.id === id).voice === false).join(', ')})`,
+  JSON.stringify(work.WORK_ITEMS.filter((i: any) => i.voice === false).map((i: any) => i.id).sort()) === JSON.stringify([...VOICE_SKIPPED].sort()))
+check('every voice wording rule is one of the item\'s own text rules',
+  work.WORK_ITEMS.every((i: any) => (i.voiceAvoid || []).every((a: string) => (i.avoid || []).includes(a))))
 for (const item of work.WORK_ITEMS) {
   for (const c of consumers) {
     const line = c.mode === 'text' ? work.renderTextLine(item, c.id) : work.renderVoiceLine(item, c.id)
+    if (c.mode === 'voice' && VOICE_SKIPPED.includes(item.id)) {
+      check(`${item.id} is left out of ${c.id} voice`, !c.text.includes(line))
+      continue
+    }
     check(`${item.id} reaches ${c.id} ${c.mode}`, c.text.includes(line))
     const spec = SPEC[item.id]
-    const fragment = typeof spec === 'string' ? spec : spec?.[c.id]
-    if (fragment) check(`${item.id} in ${c.id} ${c.mode} says "${fragment}"`, line.includes(fragment))
+    const frag = typeof spec === 'string' || Array.isArray(spec) ? spec : spec?.[c.id]
+    for (const fragment of ([] as string[]).concat(frag ?? [])) {
+      check(`${item.id} in ${c.id} ${c.mode} says "${fragment}"`, line.includes(fragment))
+    }
   }
+}
+// The high-risk wording rules stay in voice even though most notes do not:
+// claims the records refute that a caller is likely to prompt.
+const VOICE_GUARDS: Record<string, string[]> = {
+  'turnover-agent': ['Twilio'],
+  'cbarrgs-site': ['Next.js'],
+  'archive-salon-app': ['on the App Store'],
+  'skate-workshop-app': ['live on the App Store', 'Olympic coach'],
+  'openclaw-migration': ['that Joe built OpenClaw'],
+  'hermes-back-office': ['that Joe wrote the Hermes runtime'],
+  'remote-hermes-install': ["the client's name"],
+  'jts-company': ['three live client deployments'],
+}
+for (const [id, phrases] of Object.entries(VOICE_GUARDS)) {
+  const item = work.WORK_ITEMS.find((i: any) => i.id === id)
+  for (const c of consumers.filter((x) => x.mode === 'voice')) {
+    const line = item ? work.renderVoiceLine(item, c.id) : ''
+    for (const ph of phrases) check(`${c.id} voice keeps the "${ph}" rule on ${id}`, /Do not say or imply:/.test(line) && line.includes(`"${ph}"`) && c.text.includes(line))
+  }
+}
+// Size budget for the voice setup: Gemini Live is billed for the whole system
+// instruction every session and it is not cacheable. Measured 2026-10-02:
+// cloudyjoe 14.3k chars, jts 10.9k (before the work list: 8.0k and 5.4k).
+const VOICE_BUDGET: Record<PersonaId, number> = { cloudyjoe: 15000, jts: 12000 }
+for (const c of consumers.filter((x) => x.mode === 'voice')) {
+  check(`${c.id} voice setup stays within ${VOICE_BUDGET[c.id]} chars (is ${c.text.length})`, c.text.length <= VOICE_BUDGET[c.id])
 }
 
 // Per-persona naming. CLIENT_NAMING is pinned here too, so loosening a rule in
@@ -114,16 +160,27 @@ const NAMING: Record<string, Record<PersonaId, boolean>> = {
 }
 check('CLIENT_NAMING matches the naming spec', JSON.stringify(work.CLIENT_NAMING) === JSON.stringify(NAMING))
 const word = (w: string) => new RegExp(`\\b${w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`)
-for (const c of consumers) {
+// Everything a persona's model is handed: the composed prompts, the search
+// tool's schema strings and no-result text, and (cloudyjoe) the fact cards,
+// whose `asked` phrasings appear in no prompt.
+const namingSurfaces: { id: PersonaId; label: string; text: string }[] = [
+  ...consumers.map((c) => ({ id: c.id, label: `${c.id} ${c.mode}`, text: c.text })),
+  ...PERSONAS.map((id) => {
+    const t = persona(id).searchTool
+    return { id, label: `${id} search tool`, text: [t.description, t.voiceDescription, t.noResults, t.voiceRule].join('\n') }
+  }),
+  { id: 'cloudyjoe', label: 'cloudyjoe fact cards', text: factCardChunks().map((c: any) => c.content).join('\n') },
+]
+for (const s of namingSurfaces) {
   for (const [name, on] of Object.entries(NAMING)) {
-    if (on[c.id]) continue
-    for (const part of name.split(' ')) check(`${c.id} ${c.mode} never names "${part}"`, !word(part).test(c.text))
+    if (on[s.id]) continue
+    for (const part of name.split(' ')) check(`${s.label} never names "${part}"`, !word(part).test(s.text))
   }
 }
 // Names that are never public on either persona (unlisted pages, prospects, people).
-for (const c of consumers) {
+for (const s of namingSurfaces) {
   for (const n of ['Zach', 'ZW Home', 'Ryan Adams', 'Anouk', 'Ciphrix', 'H Brothers', 'Autobody', 'Precision Welding', 'Carlos']) {
-    check(`${c.id} ${c.mode} never names ${n}`, !c.text.includes(n))
+    check(`${s.label} never names ${n}`, !s.text.includes(n))
   }
 }
 // JTS: no day job, no Career-Ops, no first names.
@@ -160,6 +217,16 @@ for (const c of consumers) {
     work.composeTextPrompt(persona('cloudyjoe').prompt, 'cloudyjoe') === persona('cloudyjoe').prompt)
   const file = await getSystemPrompt(null, persona('jts'))
   check('the file path (production: Langfuse unset) is the composed prompt', file.version === 'file' && file.text === persona('jts').prompt)
+  // The X-Prompt-Version regression path (chat.js) pins a version through the
+  // same function, so it cannot skip the composition either.
+  const asked: any[] = []
+  const pinnedStub = { getPrompt: async (...args: any[]) => { asked.push(args); return { prompt: 'An old pinned prompt with no work list.', version: 5 } } }
+  const r3 = await getSystemPrompt(pinnedStub, persona('cloudyjoe'), { version: 5 })
+  check('a pinned Langfuse version gets the work list', r3.version === 5 && r3.text.includes('shopify.cbarrgs.com'))
+  check('...and really asks Langfuse for that version', asked[0]?.[1] === 5)
+  const chatSrc = read('api/chat.js')
+  check('chat.js takes every system prompt from getSystemPrompt (no direct langfuse.getPrompt)',
+    !/langfuse\.getPrompt\(/.test(chatSrc) && /getSystemPrompt\(langfuse, persona, pinned \?/.test(chatSrc))
 }
 
 // --- (iii) banned claims ------------------------------------------------------------
@@ -176,7 +243,12 @@ const BANNED: [RegExp, string][] = [
   [/\d+(?:\.\d+)?k monthly (?:spotify )?listeners|monthly spotify listeners/i, 'the Spotify listener figure'],
   [/android builds rolling|live on ios|olympic-level|olympic (?:skateboarding )?coach\b|400\+ trick|multiplayer sessions|19-table/i, 'Skate Workshop overclaims (TestFlight beta only, no Android release, 140 tricks)'],
   [/on the client'?s own server|cleaning[- ]operations company|cleaning company|booking and support lane|\b0 lost messages/i, 'FixBot overclaims'],
-  [/under thirty seconds, zero typing|real formulas captured daily|salon management app/i, 'Archive overclaims'],
+  [/under thirty seconds,? (?:with )?zero typing|real formulas captured daily|salon management app/i, 'Archive overclaims'],
+  [/unattended for weeks/i, '"unattended for weeks" (the loops run on Joe\'s machine and have had outages)'],
+  [/\b(?:available|live|out|launched|released)\s+(?:now\s+)?(?:on|in)\s+(?:the\s+)?(?:app store|play store|google play)/i, 'a store release (every mobile app is TestFlight beta only, never submitted)'],
+  [/no data leaving|data never leaves|no data ever leaving|never leaves (?:your|their) (?:hardware|servers?)/i, 'unscoped "no data leaving" for Private AI (only a local install keeps everything on the machine; the server and managed options do not)'],
+  [/openclaw development/i, '"OpenClaw development" (he ran a setup on the open-source OpenClaw runtime; he did not develop it)'],
+  [/516\+? upvotes|250\+ upvotes|74% of evaluated offers|score distribution/i, "santifer's Career-Ops results and Reddit posts presented as Joe's"],
   [/\bAI Operations\b|\bCustom Builds?\b|Operations retainer|\/services#/, 'retired JTS offers'],
   [/agentic observability with langfuse|every autonomous pipeline decision traced|custom operations dashboard|openai realtime/i, 'Langfuse / OpenAI Realtime self-description (production has neither)'],
   [/github\.com\/joblas\/mempalace/i, 'the MemPalace link (404; MemPalace is not his)'],
@@ -191,9 +263,10 @@ const BANNED: [RegExp, string][] = [
   [/your words about your projects|airtable structures|content you retrieve with search_portfolio was written by joe/i, 'first-person attribution of retrieved text'],
   [/no discovery calls/i, '"no discovery calls" (JTS offers a booking link)'],
 ]
+// Text notes carry every `avoid` phrase, voice notes only `voiceAvoid`; strip both.
 const stripAvoid = (text: string) => work.WORK_ITEMS.reduce((t: string, item: any) => {
-  const note = work.avoidNote(item)
-  return note ? t.split(note).join('') : t
+  for (const note of [work.avoidNote(item), work.avoidNote(item, 'voice')]) if (note) t = t.split(note).join('')
+  return t
 }, text)
 // Files scanned raw. Not scanned, deliberately: api/_shared/work.js (it declares
 // the bans; its rendered output is scanned below with the notes stripped),
@@ -230,10 +303,46 @@ for (const c of consumers) {
     check(`${c.id} ${c.mode} credits: "${credit}"`, c.text.includes(credit))
   }
 }
+// "Nothing leaves the machine" is true of a local install (and of Whisper
+// Walkie), never of the Private AI server or managed options: every sentence
+// that says it must carry its scope.
+for (const { label, text } of scanned) {
+  for (const s of text.split(/(?<=[.;!?])\s+|\n/).filter((x) => /nothing (?:ever )?leaves?\b|never leaves?\b/i.test(x))) {
+    check(`${label}: "nothing leaves" is scoped: "${s.trim().slice(0, 80)}"`, /local install|whisper walkie|this app|transcrib/i.test(s))
+  }
+}
+// The Career-Ops material santifer (the upstream template author) wrote before
+// the 2026-04-07 fork stays credited or gone: his own score distribution and
+// first-person callout, his Reddit posts under Joe's "Community", the
+// article's pre-fork date (git blame 6ef6ceb1, fadcf8e4, da91e144, b19d0b45).
+{
+  const FORK = '2026-04-07'
+  const careerOps = read('src/career-ops-i18n.ts')
+  const date = careerOps.match(/date: '([A-Z][a-z]{2} \d{1,2}, \d{4})'/)?.[1]
+  check(`career-ops article date is not before the fork (got "${date}")`, !!date && new Date(`${date} UTC`).toISOString().slice(0, 10) >= FORK)
+  const registry = read('src/articles/registry.ts')
+  const coEntry = registry.slice(registry.indexOf("i18nFile: 'src/career-ops-i18n.ts'"), registry.indexOf("id: 'hermes'"))
+  const published = coEntry.match(/datePublished: '(\d{4}-\d{2}-\d{2})'/)?.[1]
+  check(`career-ops datePublished is not before the fork (got "${published}")`, !!published && published >= FORK)
+  for (const rel of ['src/articles/registry.ts', 'src/about-i18n.ts', 'src/CareerOps.tsx', 'src/career-ops-i18n.ts']) {
+    check(`${rel}: no santifer Reddit post presented as Joe's`, !/reddit\.com\/r\/(?:SideProject|ClaudeAI)\/comments\/(?:1rw1lg4|1sd2f37)/.test(read(rel)))
+  }
+  check("CareerOps.tsx: the hero screenshot is credited to santifer, not captioned as Joe's 516 offers",
+    !/516 evaluated offers/.test(read('src/CareerOps.tsx')) && /santifer/.test(read('src/CareerOps.tsx')))
+}
+// The About page's Career-Ops card: its description itself credits santifer
+// and says Joe did not build it (a credit only in the card's name would let
+// the description call it Joe's pipeline).
+{
+  const card = read('src/about-i18n.ts').split('\n').find((l) => /name: 'Career[- ]?Ops/i.test(l)) || ''
+  const desc = card.match(/desc: '((?:[^'\\]|\\.)*)'/)?.[1] || ''
+  check(`About Career-Ops card description credits santifer: "${desc.slice(0, 70)}"`, /santifer/.test(desc) && /did not build/.test(desc))
+}
 // On cloudyjoe, every line that names Career-Ops carries its credit.
 for (const { label, text } of [
   { label: 'chatbot-prompt.txt', text: read('chatbot-prompt.txt') },
   { label: 'public/llms.txt', text: read('public/llms.txt') },
+  { label: 'src/about-i18n.ts', text: read('src/about-i18n.ts') },
   ...consumers.filter((c) => c.id === 'cloudyjoe').map((c) => ({ label: `cloudyjoe ${c.mode}`, text: c.text })),
 ]) {
   for (const line of text.split('\n').filter((l) => /career[- ]?ops/i.test(l))) {
@@ -244,6 +353,17 @@ check('llms.txt credits the cv-santiago template on the cv-joseph entry', /### c
 check('llms.txt carries the Shopify merch store', read('public/llms.txt').includes('shopify.cbarrgs.com'))
 
 // --- (iv) a search that finds nothing does not dead-end -------------------------------
+// The rule's MEANING is pinned, not only its presence: reverting it to the old
+// dead end ("say exactly that you don't have that detail") is the behaviour
+// behind the Shopify miss, and a presence check would still pass.
+for (const [mode, rule] of Object.entries(work.NO_RESULT_RULE) as [string, string][]) {
+  check(`NO_RESULT_RULE.${mode} checks the list before giving up`,
+    /first check this list|answer from this list/.test(rule) && /adding nothing/.test(rule))
+  check(`NO_RESULT_RULE.${mode} says "don't have that detail" only after the list fails`,
+    /Only (?:when|if) [^.]*(?:neither|not cover)[^.]*, say you don't have that detail/.test(rule) &&
+    rule.indexOf("don't have that detail") > rule.search(/first check this list|answer from this list/))
+  check(`NO_RESULT_RULE.${mode} is not the old dead end`, !/say exactly/i.test(rule))
+}
 for (const id of PERSONAS) {
   const p = persona(id)
   check(`${id} voice instructions carry the no-result rule`, voiceInstructions(p).includes(work.NO_RESULT_RULE.voice))
@@ -272,6 +392,11 @@ const MUST_MAP: [string, string][] = [
   ['vacation rental turnovers', 'turnover'],
   ['has he built anything for a hair salon', 'Archive'],
   ['a coaching app for skaters', 'skate'],
+  // Only the explicit Shopify trigger matches these two.
+  ['Does he know Shopify?', 'Cbarrgs'],
+  ['any shopify experience', 'Cbarrgs'],
+  ['Can Joe build websites for musicians?', 'Cbarrgs'],
+  ['Has Joe built a directory site?', 'RenFaire'],
 ]
 for (const [q, term] of MUST_MAP) {
   const e = rag.expandDocumentsQuery(q)
@@ -283,6 +408,38 @@ for (const [q, term] of MUST_MAP) {
 for (const q of ['when will it be on the App Store', 'how do you store my data', 'is it on the Play Store', 'what is his background', 'hello']) {
   const e = rag.expandDocumentsQuery(q)
   check(`leaves "${q}" alone`, e.keyword === q && e.semantic === q)
+}
+// Ordinary recruiter and visitor questions that share a common word with a
+// work item ("clean", "host", "coach", "directory", "artist", "the store") must
+// not pull that item's rows into the top results (review, 2026-10-02).
+const LEAVE_ALONE: [string, string][] = [
+  ['Does Joe write clean code?', 'turnover-agent'],
+  ['Who hosts this site?', 'turnover-agent'],
+  ['Does he host his own models?', 'turnover-agent'],
+  ['What are his short-term goals?', 'turnover-agent'],
+  ['Can he build a Stripe checkout?', 'turnover-agent'],
+  ['car rental fleets', 'turnover-agent'],
+  ['fleet checkouts at Google', 'turnover-agent'],
+  ['What was staff turnover like at Uber?', 'turnover-agent'],
+  ['Is he coachable?', 'skate-workshop-app'],
+  ['Does he coach his team?', 'skate-workshop-app'],
+  ['tricks for prompt engineering', 'skate-workshop-app'],
+  ['Does he know Active Directory?', 'renfaire-guide'],
+  ['GitHub directory of projects', 'renfaire-guide'],
+  ['Is the skate app in the store yet?', 'cbarrgs-shop'],
+  ['Is the app on the store?', 'cbarrgs-shop'],
+  ['Is Archive in the store?', 'cbarrgs-shop'],
+  ['coffee shop', 'cbarrgs-shop'],
+  ['repair shop', 'cbarrgs-shop'],
+  ['Can he build a site for a coffee shop?', 'cbarrgs-shop'],
+  ['Is Joe an artist?', 'cbarrgs-site'],
+  ['What kind of music does Joe like?', 'cbarrgs-site'],
+  ['sensor bands', 'cbarrgs-site'],
+  ['the beauty of composable agents', 'archive-salon-app'],
+]
+for (const [q, id] of LEAVE_ALONE) {
+  const e = work.expandWorkQuery(q)
+  check(`"${q}" does not pull in ${id}${e.matched.includes(id) ? ` (adds: ${e.terms.join(', ')})` : ''}`, !e.matched.includes(id))
 }
 check('expansion is safe on empty input', rag.expandDocumentsQuery('').keyword === '' && rag.expandDocumentsQuery(undefined).keyword === '')
 
@@ -331,6 +488,19 @@ check('expansion is safe on empty input', rag.expandDocumentsQuery('').keyword =
   const renfaire = cards.find((c: any) => c.metadata.section_id === 'renfaire-guide')
   check('a card with no cloudyjoe article gets no badge', rag.extractSources([renfaire]).length === 0)
   check('fact cards are labelled as curated facts for the model', /\[Curated fact card: cbarrgs-shop\]/.test(rag.formatChunksForContext([shop])))
+  // scripts/ingest-rag.ts splits anything over 1,000 chars, and a split card's
+  // tail would hold its wording rule without the fact it qualifies.
+  const long = cards.filter((c: any) => c.content.length > 1000).map((c: any) => `${c.metadata.section_id} (${c.content.length})`)
+  check(`every fact card fits one ingest chunk (over 1,000: ${long.join(', ') || 'none'})`, long.length === 0)
+  // The reasoning model sees the whole card; the spoken fallback must not read
+  // the guide lines aloud.
+  const turnover = cards.find((c: any) => c.metadata.section_id === 'turnover-agent')
+  const forModel = rag.formatChunksForContext([turnover])
+  const spoken = rag.formatChunksForContext([turnover], { spoken: true })
+  check('the model still sees a card\'s wording rule and phrasings', /Wording rule:/.test(forModel) && /Answers questions like:/.test(forModel))
+  check('the spoken form drops them, and the provenance line', !/Wording rule:|Answers questions like:|Source: curated fact card/.test(spoken) && /Telegram-first/.test(spoken))
+  const article = { content: 'Answers questions like: a sentence in an article.', metadata: { article_id: 'hermes', section_id: 'intro' } }
+  check('the spoken form leaves article chunks untouched', rag.formatChunksForContext([article], { spoken: true }).includes('Answers questions like: a sentence'))
 }
 
 if (failed) { console.error(`\n${failed} check(s) failed`); process.exit(1) }

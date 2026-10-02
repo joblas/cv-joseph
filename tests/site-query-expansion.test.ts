@@ -162,7 +162,8 @@ for (const phantom of ['Fairway']) {
 // record (the v3 repo, EAS builds, the App Store and Play lookups): TestFlight
 // beta only, never submitted to a store, development paused. "Paused" is now a
 // curated fact (api/_shared/work.js), so only the refuted wording stays banned;
-// tests/agent-knowledge.test.ts checks the settled status is what the prompts say.
+// tests/agent-knowledge.test.ts pins "TestFlight beta" (and "paused" for Skate)
+// in every surface's line for both apps, and bans store-release wording.
 for (const claim of ['Android builds rolling', 'Live on iOS']) {
   check(`text prompt does not hard-code disputed status "${claim}"`, !(jts.prompt || '').includes(claim))
   check(`voice prompt does not hard-code disputed status "${claim}"`, !(jts.voicePrompt || '').includes(claim))

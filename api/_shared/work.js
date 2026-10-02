@@ -61,6 +61,18 @@ export const CLIENT_NAMING = {
   Van: { cloudyjoe: false, jts: false },
 }
 
+// Retrieval-bridge pattern helpers (see `expand` below).
+// Any of several patterns, case-insensitive.
+function anyOf(...patterns) {
+  return new RegExp(patterns.map((p) => p.source).join('|'), 'i')
+}
+// Two word groups in the same sentence, in either order.
+function near(a, b, gap = 60) {
+  const A = `\\b(?:${a})\\b`
+  const B = `\\b(?:${b})\\b`
+  return new RegExp(`${A}[^.?!]{0,${gap}}${B}|${B}[^.?!]{0,${gap}}${A}`)
+}
+
 // Work items. Fields:
 //   id        stable id (fact-card section id, test anchor)
 //   name      short label the agents use; a string, or { cloudyjoe, jts }
@@ -70,11 +82,22 @@ export const CLIENT_NAMING = {
 //             a string, or { cloudyjoe, jts } where naming differs
 //   short     the spoken-length version for voice instructions (same shape)
 //   avoid     phrases never to use about this item
+//   voiceAvoid  the subset of `avoid` repeated in the voice instructions: only
+//             the high-risk ones (a vendor, framework or store release the
+//             records refute, an authorship claim, a client's name). Gemini
+//             Live is billed for its whole setup every session, so the rest
+//             stay in the text prompt and the fact cards.
+//   voice     false keeps a low-value item out of the voice instructions (it
+//             stays in the text prompt and the fact cards)
 //   pages     each persona's own page for it ({ cloudyjoe, jts }, either optional)
 //   urls      other public URLs (both personas)
 //   article   the cloudyjoe article id its fact card badges to (optional)
 //   asked     how visitors ask about it (fact cards only, for retrieval)
-//   expand    retrieval bridge: { when: RegExp, terms: [...] } (optional)
+//   expand    retrieval bridge: { when: RegExp, terms: [...] } (optional). The
+//             pattern must need the item's own domain words: a bare common
+//             word ("clean", "host", "coach", "directory", "artist", "a store")
+//             fires on recruiters' ordinary questions and pulls this item's
+//             rows into answers it has nothing to do with.
 export const WORK_ITEMS = [
   {
     id: 'cbarrgs-site',
@@ -89,29 +112,41 @@ export const WORK_ITEMS = [
     urls: ['https://cbarrgs.com/'],
     article: 'cbarrgs-agent',
     asked: ['Can Joe build a website for a musician or band?', 'What did Joe build for Cbarrgs?', 'Does Joe do artist websites?'],
-    expand: { when: /\b(?:musicians?|bands?|artists?|rappers?|singers?|music|records? label)\b/i, terms: ['Cbarrgs', 'musician', 'website'] },
+    voiceAvoid: ['Next.js'],
+    expand: {
+      // A musician self-describing is enough; "artist" or "band" alone is not
+      // ("Is Joe an artist?", "sensor bands"): it needs a site, store or work word.
+      when: anyOf(
+        /\b(?:musicians?|rappers?|singers?|songwriters?|record labels?)\b/,
+        near('artists?|bands?|djs?', 'sites?|websites?|web ?pages?|landing pages?|stores?|shops?|merch\\w*|streaming|releases?|smart ?links?|clients?|work(?:s|ed)? with|built for|build(?:s|ing)? for'),
+      ),
+      terms: ['Cbarrgs', 'musician', 'website'],
+    },
   },
   {
     id: 'cbarrgs-shop',
     name: 'Cbarrgs merch store on Shopify',
     kind: 'client work',
     verdict: 'INCLUDE_WITH_CARE',
-    line: "Joe set up the artist Cbarrgs's Shopify merch storefront at shopify.cbarrgs.com (t-shirts, a pin and a sticker pack, on Shopify's Dawn theme) and wired it into cbarrgs.com through the cart icon, the menu, a merch carousel and a Visit Store button. So when someone asks whether Joe can set up a Shopify, online or merch store, for example for a musician selling t-shirts and stickers, the answer is yes: this is the one he did.",
-    short: "Joe set up the artist Cbarrgs's Shopify merch store at shopify.cbarrgs.com, selling t-shirts, a pin and a sticker pack, and wired it into cbarrgs.com. So yes, he has set up a Shopify merch store for a musician.",
+    line: "Joe set up the artist Cbarrgs's Shopify merch storefront at shopify.cbarrgs.com (t-shirts, a pin and a sticker pack, on Shopify's Dawn theme) and wired it into cbarrgs.com through the cart icon, the menu, a merch carousel and a Visit Store button. So if someone asks whether Joe can set up a Shopify merch store, for example for a musician selling t-shirts and stickers, the answer is yes: he has set up this one. Anything beyond it, such as a custom theme or a custom-built store, is scoped per project.",
+    short: "Joe set up the artist Cbarrgs's Shopify merch store at shopify.cbarrgs.com, selling t-shirts, a pin and a sticker pack, and wired it into cbarrgs.com. So yes, he has set up a Shopify merch store for a musician; anything beyond that is scoped per project.",
     avoid: ['any sales, order or revenue figure', 'a custom Shopify theme or app'],
     pages: { cloudyjoe: '/cbarrgs-agent', jts: '/portfolio/cbarrgs' },
     urls: ['https://shopify.cbarrgs.com/'],
     article: 'cbarrgs-agent',
     asked: ['Can Joe build a Shopify store?', 'Can he make an online store for a musician selling t-shirts and stickers?', 'Has Joe done e-commerce or a merch shop?'],
     expand: {
-      // "store" alone is ambiguous: the verb ("store my data"), an app store, a
-      // data store. Only the noun counts ("a store", "an online shop", "a store
-      // for a musician"), and never after app/play/data/vector/object.
-      when: new RegExp([
-        /\b(?:shopify|merch(?:andise)?|e-?commerce|storefronts?|web ?shop|t-?shirts?|tees|stickers?|hoodies?)\b/.source,
-        /\b(?:a|an|the|my|our|his|her|their|your|own|online|web|merch|music)\s+(?:[\w-]+\s+)?(?<!\b(?:app|play|data|vector|key-value|object)\s)(?:stores?|shops?)\b/.source,
-        /(?<!\b(?:app|play|data|vector|key-value|object)\s)\b(?:stores?|shops?)\s+(?:for|to sell|that sells|selling)\b/.source,
-      ].join('|'), 'i'),
+      // "store" alone is ambiguous: the verb ("store my data"), an app store
+      // ("is it in the store yet?"), a kind of business ("a coffee shop"). It
+      // counts only with an e-commerce cue: online/web/merch store, building
+      // one ("set up a store"), a store for a musician or brand, selling online.
+      when: anyOf(
+        /\b(?:shopify|merch(?:andise)?|e-?commerce|storefronts?|web ?shop|t-?shirts?|tees|stickers?|hoodies?)\b/,
+        /\b(?:online|web|internet|merch|e-?commerce)\s+(?:stores?|shops?)\b/,
+        /\b(?:build|make|set up|setup|create|launch|start)\s+(?:me\s+|us\s+|him\s+|her\s+|them\s+)?(?:a|an|my|our|his|her|their)\s+(?:(?:online|web|small|simple|little)\s+)?(?:stores?|shops?)\b/,
+        /\b(?:stores?|shops?)\s+(?:for\s+(?:a\s+|an\s+|my\s+|our\s+|his\s+|her\s+|their\s+)?(?:musicians?|bands?|artists?|brands?|creators?)|to sell|that sells|selling)\b/,
+        /\bsell(?:s|ing)?\b[^.?!]{0,40}\bonline\b/,
+      ),
       terms: ['Cbarrgs', 'merch', 'Shopify'],
     },
   },
@@ -136,6 +171,7 @@ export const WORK_ITEMS = [
     line: "A small supporting service: a Cloudflare Worker, started from Cloudflare's Agents SDK starter, that serves the news and hero copy shown on cbarrgs.com and holds a few marketing helper tools Joe added.",
     short: "A small Cloudflare Worker, started from Cloudflare's Agents SDK starter, serves the news and hero copy on cbarrgs.com.",
     avoid: ['an autonomous marketing agent'],
+    voice: false,
     pages: {},
     urls: [],
     article: 'cbarrgs-agent',
@@ -146,14 +182,21 @@ export const WORK_ITEMS = [
     name: 'Turnover Agent (short-term-rental turnovers)',
     kind: 'client work',
     verdict: 'INCLUDE_WITH_CARE',
-    line: "Joe built and runs a turnover assistant for a short-term-rental manager. It watches the booking calendars for guest checkouts, messages the cleaner (Telegram-first, with an email-to-SMS fallback in the code) and is built to track each clean and escalate when one stalls. The manager uses it through a Telegram bot and a login-protected mobile dashboard. In production since late July 2026 on a server Joe operates; Python with FastAPI, Supabase (Postgres) and python-telegram-bot, deployed with Docker and Caddy. Joe is still extending it at the manager's request: on 2026-10-02 he shipped a schedule timeline, close-out of past jobs and cleaner time off.",
+    line: "Joe built and runs a turnover assistant for a short-term-rental manager. It watches the booking calendars for guest checkouts, messages the cleaner (Telegram-first, with an email-to-SMS fallback) and is built to track each clean and escalate when one stalls. The manager uses it through a Telegram bot and a login-protected mobile dashboard. In production since late July 2026 on a server Joe operates; Python with FastAPI, Supabase and python-telegram-bot, deployed with Docker and Caddy. Joe is still extending it at the manager's request.",
     short: "Joe built and runs a turnover assistant for a short-term-rental manager: it watches booking calendars for checkouts, messages the cleaner on Telegram first, and is built to track the clean and escalate if it stalls. In production since late July 2026.",
     avoid: ['Twilio', 'plain SMS for cleaners', 'unattended for weeks', 'any message, turnover or usage count', "the client's own server"],
     pages: { cloudyjoe: '/turnover-agent', jts: '/portfolio/turnover-agent' },
     urls: [],
     article: 'turnover-agent',
     asked: ['Can Joe automate cleaner scheduling for an Airbnb or vacation rental?', 'Has he built anything for property managers?'],
-    expand: { when: /\b(?:cleaners?|cleaning|cleans?|rentals?|turnovers?|airbnb|vrbo|vacation home|property manag\w*|short-term|check-?outs?|hosts?)\b/i, terms: ['turnover', 'cleaner', 'rental'] },
+    voiceAvoid: ['Twilio', 'plain SMS for cleaners'],
+    expand: {
+      // Rental-operations words only: not "clean" ("clean code"), "host" ("who
+      // hosts this site"), "short-term" ("short-term goals") or "checkout"
+      // ("a Stripe checkout"); not staff turnover either.
+      when: /\b(?:cleaners?|cleaning (?:crews?|staff|teams?|schedul\w*|services?|business\w*)|(?<!\b(?:staff|employee|team|job|high|low)\s)turnovers?|airbnbs?|vrbos?|vacation (?:homes?|rentals?)|short-term rentals?|rental propert(?:y|ies)|property manag\w*|guest check-?(?:outs?|ins?))\b/i,
+      terms: ['turnover', 'cleaner', 'rental'],
+    },
   },
   {
     id: 'archive-salon-app',
@@ -167,7 +210,12 @@ export const WORK_ITEMS = [
     urls: [],
     article: 'archive-beta-loop',
     asked: ['Has Joe built an app for a salon or a beauty business?', 'Can he build an inventory app with barcode scanning?'],
-    expand: { when: /\b(?:salons?|hair|colou?rists?|stylists?|barbers?|beauty|colou?r formulas?|barcodes?)\b/i, terms: ['Archive', 'salon', 'formula'] },
+    voiceAvoid: ['on the App Store'],
+    expand: {
+      // Not bare "hair" or "beauty" ("the beauty of composable agents").
+      when: /\b(?:salons?|hair ?(?:salons?|stylists?|colou?r\w*|dressers?|studios?)|hairdressers?|colou?rists?|stylists?|barbers?|barbershops?|beauty (?:salons?|shops?|studios?|business\w*|brands?|industry)|colou?r formulas?|barcodes?)\b/i,
+      terms: ['Archive', 'salon', 'formula'],
+    },
   },
   {
     id: 'archive-beta-loop',
@@ -200,7 +248,13 @@ export const WORK_ITEMS = [
     urls: ['https://www.theskateworkshop.app/'],
     article: 'skate-workshop-loop',
     asked: ['Has Joe built a mobile app?', 'Can he build a coaching app with video feedback?'],
-    expand: { when: /\b(?:skate\w*|coach\w*|athletes?|tricks?|video feedback|sports? app)\b/i, terms: ['skate', 'coach', 'athlete'] },
+    voiceAvoid: ['Olympic coach', 'live on the App Store'],
+    expand: {
+      // Not bare "coach" ("is he coachable?", "does he coach his team?") or
+      // "tricks" ("tricks for prompt engineering").
+      when: /\b(?:skate\w*|(?:coaching|sports?|athletes?|training|fitness) apps?|athletes?|video feedback)\b/i,
+      terms: ['skate', 'coach', 'athlete'],
+    },
   },
   {
     id: 'skate-workshop-loop',
@@ -239,7 +293,11 @@ export const WORK_ITEMS = [
     pages: { jts: '/portfolio/renfaire-directory' },
     urls: ['https://www.renfaireguide.com/'],
     asked: ['Has Joe built a directory or a content site?', 'Does he do SEO sites?'],
-    expand: { when: /\b(?:ren(?:aissance)?\s?faires?|renfaire|directory|directories|festivals?)\b/i, terms: ['RenFaire', 'directory'] },
+    expand: {
+      // Not bare "directory" ("Active Directory", "a GitHub directory").
+      when: /\b(?:ren(?:aissance)?\s?faires?|renfaire\w*|faire directory|renaissance festivals?|director(?:y|ies) (?:sites?|websites?)|(?:listings?|business|local|seo|event) director(?:y|ies))\b/i,
+      terms: ['RenFaire', 'directory'],
+    },
   },
   {
     id: 'remote-hermes-install',
@@ -249,6 +307,7 @@ export const WORK_ITEMS = [
     line: "Joe wrote a remote self-install guide and a one-command installer that let a small-business owner set up her own always-on AI agent (Nous Research's open-source Hermes agent) on a VPS she controls, reachable over Telegram, and he keeps nightly encrypted offsite backups of it. The JTS blog post 'Setting up a Hermes agent remotely' describes the approach.",
     short: "Joe also set up a small-business owner's own always-on AI agent, Nous Research's open-source Hermes agent, on a server she controls, through a remote install guide, and he keeps nightly encrypted backups of it.",
     avoid: ["the client's name", "that her agent's memory or persona features work"],
+    voiceAvoid: ["the client's name"],
     pages: { jts: '/blog/setting-up-a-hermes-agent-remotely' },
     urls: [],
     asked: ['Can Joe set up an AI agent for my business remotely?'],
@@ -261,6 +320,7 @@ export const WORK_ITEMS = [
     line: "Joe built and runs joestechsolutions.com, his company's site, in Next.js on Cloudflare Pages, including the portfolio case studies and the embedded chat and voice agent.",
     short: "Joe built and runs his company's site, joestechsolutions.com, in Next.js on Cloudflare Pages.",
     avoid: [],
+    voice: false,
     pages: { jts: '/' },
     urls: ['https://www.joestechsolutions.com/'],
     asked: ['Who built this website?'],
@@ -274,6 +334,7 @@ export const WORK_ITEMS = [
     line: "One backend Joe runs powers the chat and voice agent on both of his sites, cloudyjoe.com and joestechsolutions.com, this one included: Cloudflare Pages Functions, retrieval over each site's own pages, Gemini Live voice with short-lived tokens, and lead hand-off to Joe's email. The chat model runs with a cloud provider, as the Runtime line says.",
     short: "This agent itself: one backend Joe runs for both of his sites, on Cloudflare, with retrieval over each site's pages and Gemini Live voice.",
     avoid: ['local or private (the chat model runs in the cloud)', 'Langfuse tracing in production', 'OpenAI Realtime voice', 'simulated or eval results as user outcomes'],
+    voiceAvoid: ['local or private (the chat model runs in the cloud)'],
     pages: {},
     urls: ['https://cloudyjoe.com/', 'https://www.joestechsolutions.com/'],
     asked: ['How does this chat work?', 'Can Joe build me an AI assistant for my website?'],
@@ -287,6 +348,7 @@ export const WORK_ITEMS = [
     line: "cloudyjoe.com is Joe's interactive CV and portfolio. It is built on Santiago Fernández's (santifer's) open-source cv-santiago template, which the site credits, and Joe extended it with his own career content, case studies, the shared chat agent, Gemini Live voice and the Cloudflare backend.",
     short: "cloudyjoe.com is Joe's interactive CV, built on santifer's open-source cv-santiago template and extended by Joe with his case studies and this agent.",
     avoid: ['built from scratch'],
+    voiceAvoid: ['built from scratch'],
     pages: { cloudyjoe: '/' },
     urls: ['https://cloudyjoe.com/', 'https://github.com/joblas/cv-joseph'],
     asked: ['Did Joe build this site?'],
@@ -299,6 +361,7 @@ export const WORK_ITEMS = [
     line: "Joe runs his business operations on an agent setup built on Nous Research's open-source Hermes agent: one orchestrator with 40+ scheduled automations (a daily brief, per-project checks, uptime watchdogs, weekly reviews) that he reaches over Telegram. The runtime is Nous Research's; Joe's work is the configuration, skills, automations and safeguards on top of it. Models run mostly on Ollama Cloud.",
     short: "Joe runs his own back office on Nous Research's open-source Hermes agent, with 40+ scheduled automations he reaches over Telegram; models run mostly on Ollama Cloud.",
     avoid: ['100% local or private', 'zero downtime', 'that Joe wrote the Hermes runtime'],
+    voiceAvoid: ['that Joe wrote the Hermes runtime'],
     pages: { cloudyjoe: '/hermes', jts: '/stack' },
     urls: ['https://github.com/NousResearch/hermes-agent'],
     article: 'hermes',
@@ -312,6 +375,7 @@ export const WORK_ITEMS = [
     line: 'Before Hermes, Joe ran a larger multi-agent setup on the open-source OpenClaw agent runtime, then consolidated it into the leaner Hermes setup. His write-up is a postmortem on why fewer, composable agents worked better than many specialized ones.',
     short: 'Before Hermes, Joe ran a larger multi-agent setup on the open-source OpenClaw runtime and cut it down to a leaner one; his write-up explains why fewer, composable agents worked better.',
     avoid: ['that Joe built OpenClaw', 'built from scratch'],
+    voiceAvoid: ['that Joe built OpenClaw'],
     pages: { cloudyjoe: '/hermes' },
     urls: ['https://cloudyjoe.com/hermes/'],
     article: 'hermes',
@@ -325,6 +389,7 @@ export const WORK_ITEMS = [
     line: "Joe writes and keeps his own operating playbook for building client software with AI coding agents: an independent review before any merge, evidence attached to every status claim, a single queue for decisions only the owner can make, and per-repository rules for what agents may touch. He applies it in client repositories; the salon app's ship gate is one example.",
     short: 'Joe keeps his own playbook for AI-built client software: independent review before any merge and evidence behind every status claim.',
     avoid: ['a product for sale', 'a link to it (it is private)'],
+    voice: false,
     pages: {},
     urls: [],
     asked: ['How does Joe keep AI-written code safe?'],
@@ -337,6 +402,7 @@ export const WORK_ITEMS = [
     line: "FixBot is the JTS name for the 'text it, it gets fixed' support pattern from the salon beta loop: a client's messages become tracked issues, and clear-cut bugs get reviewed fixes shipped over the air. Today it runs on Joe's machine; it is an offer, not a separately deployed product.",
     short: "FixBot is the JTS name for the salon loop's pattern: messages become tracked issues and clear-cut bugs get reviewed fixes shipped over the air.",
     avoid: ["on the client's own server", 'a cleaning-operations company', 'booking and support lane', '0 lost messages', 'a 30-minute install', 'same-day fixes for The Skate Workshop'],
+    voiceAvoid: ["on the client's own server"],
     pages: { jts: '/fixbot' },
     urls: [],
     asked: ['What is FixBot?'],
@@ -348,7 +414,8 @@ export const WORK_ITEMS = [
     verdict: 'INCLUDE_WITH_CARE',
     line: 'JTS offers a Private AI Setup: open-weight models set up on a client\'s own machine or on a server they control, in one live session. On a local install, nothing leaves their machine.',
     short: 'JTS offers a Private AI Setup: open-weight models on hardware the client owns or a server they control, set up in one live session.',
-    avoid: ['that any client has already received one', 'runs in under 5 minutes'],
+    avoid: ['that any client has already received one', 'runs in under 5 minutes', 'that nothing leaves on the server or managed options'],
+    voiceAvoid: ['that any client has already received one'],
     pages: { jts: '/private-ai-setup' },
     urls: ['https://www.joestechsolutions.com/private-ai-setup'],
     asked: ['Can Joe set up private, local AI for my business?'],
@@ -373,6 +440,7 @@ export const WORK_ITEMS = [
     line: "The JTS Prompt Library is a 33-prompt PDF covering ops, sales, content, coding and research, free on joestechsolutions.com for an email address. It mixes prompts from Joe's own business with proven patterns.",
     short: 'The JTS Prompt Library is a free 33-prompt PDF on joestechsolutions.com.',
     avoid: ["all 33 are Joe's originals"],
+    voice: false,
     pages: { jts: '/prompt-library' },
     urls: ['https://www.joestechsolutions.com/prompt-library'],
     asked: ['Does Joe have any free resources?'],
@@ -385,6 +453,7 @@ export const WORK_ITEMS = [
     line: 'An early (2023) AI image-generation web app on the OpenAI DALL-E API, a MERN-stack learning demo Joe built by following a public tutorial. It is still live at jblas-dall-e.com.',
     short: 'An early 2023 image-generation demo on the DALL-E API, built by following a public tutorial.',
     avoid: ['a production application', 'a current project'],
+    voice: false,
     pages: {},
     urls: ['https://jblas-dall-e.com/'],
     asked: ['What did Joe build early on?'],
@@ -397,6 +466,7 @@ export const WORK_ITEMS = [
     line: "Joe founded and runs Joe's Tech Solutions, a one-person company building software, automation and private AI for small businesses (founded 2025). Its three active client builds: a rental-turnover agent (live), an artist website with its own site agent (live) and a salon app (TestFlight beta). A fourth, the skate coaching app, is paused in TestFlight beta.",
     short: "Joe's Tech Solutions is Joe's one-person company; its three active client builds are a rental-turnover agent and an artist website (both live) and a salon app in TestFlight beta.",
     avoid: ['watched around the clock', 'everything is in production with real users', 'working payments', 'three live client deployments'],
+    voiceAvoid: ['three live client deployments'],
     pages: { jts: '/about' },
     urls: ['https://www.joestechsolutions.com/about'],
     asked: ['How many clients does Joe have?'],
@@ -429,19 +499,22 @@ function pick(value, personaId) {
   return value
 }
 
-export function workItemsFor(personaId) {
-  return WORK_ITEMS.filter((item) => !item.personas || item.personas.includes(personaId))
+// mode 'voice' leaves out the items marked voice: false.
+export function workItemsFor(personaId, mode = 'text') {
+  return WORK_ITEMS.filter((item) => (!item.personas || item.personas.includes(personaId)) && (mode !== 'voice' || item.voice !== false))
 }
 
 export function creditsFor(personaId) {
   return CREDITS.filter((c) => c.on.includes(personaId))
 }
 
-// The "Do not say or imply" note rendered for an item. Exported so the banned-claims test
-// can strip exactly these notes, and nothing else, before it scans.
-export function avoidNote(item) {
-  if (!item.avoid?.length) return ''
-  return `Do not say or imply: ${item.avoid.map((a) => `"${a}"`).join('; ')}.`
+// The "Do not say or imply" note rendered for an item: every `avoid` phrase in
+// text, only the high-risk `voiceAvoid` subset in voice. Exported so the
+// banned-claims test can strip exactly these notes, and nothing else, before it scans.
+export function avoidNote(item, mode = 'text') {
+  const list = mode === 'voice' ? (item.voiceAvoid || []) : (item.avoid || [])
+  if (!list.length) return ''
+  return `Do not say or imply: ${list.map((a) => `"${a}"`).join('; ')}.`
 }
 
 // A persona's own page as a path (JTS, whose prompt links site paths) or a full
@@ -464,7 +537,7 @@ export function renderTextLine(item, personaId) {
 }
 
 export function renderVoiceLine(item, personaId) {
-  return [`- ${pick(item.name, personaId)}: ${pick(item.short, personaId)}`, avoidNote(item)].filter(Boolean).join(' ')
+  return [`- ${pick(item.name, personaId)}: ${pick(item.short, personaId)}`, avoidNote(item, 'voice')].filter(Boolean).join(' ')
 }
 
 // Bold, not a markdown heading: both prompts nest it inside an existing
@@ -487,7 +560,7 @@ export function workTextBlock(personaId) {
 export function workVoiceBlock(personaId) {
   return [
     `## ${WORK_VOICE_HEADING} (curated facts, checked ${WORK_AS_OF}; you may state these without searching, and never add to them)`,
-    ...workItemsFor(personaId).map((item) => renderVoiceLine(item, personaId)),
+    ...workItemsFor(personaId, 'voice').map((item) => renderVoiceLine(item, personaId)),
     `Credit: ${creditsFor(personaId).map((c) => c.text).join(' ')}`,
     NO_RESULT_RULE.voice,
   ].join('\n')
@@ -549,6 +622,12 @@ export function expandWorkQuery(query) {
 // article; cards without one get no badge (rag.js extractSources).
 export const FACT_CARDS_ID = 'work-facts'
 
+// Lines of a card that guide the model and retrieval but must never be spoken:
+// the retrieval phrasings, the wording rule and the provenance line. The voice
+// search's raw-chunk fallback (rag.js formatChunksForContext, spoken mode)
+// drops exactly these; the embedded text and the reasoning model keep them.
+export const FACT_CARD_GUIDE_PREFIXES = ['Answers questions like:', 'Wording rule:', 'Source: curated fact card']
+
 export function workFactCards() {
   const cards = workItemsFor('cloudyjoe').map((item) => ({
     id: item.id,
@@ -556,16 +635,16 @@ export function workFactCards() {
     content: [
       `${pick(item.name, 'cloudyjoe')}.`,
       pick(item.line, 'cloudyjoe'),
-      item.asked?.length ? `Answers questions like: ${item.asked.join(' ')}` : '',
+      item.asked?.length ? `${FACT_CARD_GUIDE_PREFIXES[0]} ${item.asked.join(' ')}` : '',
       linksFor(item, 'cloudyjoe'),
-      avoidNote(item) ? `Wording rule: ${avoidNote(item)}` : '',
-      `Source: curated fact card, checked ${WORK_AS_OF}.`,
+      avoidNote(item) ? `${FACT_CARD_GUIDE_PREFIXES[1]} ${avoidNote(item)}` : '',
+      `${FACT_CARD_GUIDE_PREFIXES[2]}, checked ${WORK_AS_OF}.`,
     ].filter(Boolean).join('\n'),
   }))
   cards.push({
     id: 'credits',
     badgeArticleId: null,
-    content: ['Credit where it is due: work by others that Joe uses.', ...creditsFor('cloudyjoe').map((c) => c.text), `Source: curated fact card, checked ${WORK_AS_OF}.`].join('\n'),
+    content: ['Credit where it is due: work by others that Joe uses.', ...creditsFor('cloudyjoe').map((c) => c.text), `${FACT_CARD_GUIDE_PREFIXES[2]}, checked ${WORK_AS_OF}.`].join('\n'),
   })
   return cards
 }

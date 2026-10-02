@@ -15,7 +15,7 @@ const _en = {
       h1: 'Career-Ops: Finding the Right Tool, Making It Mine',
       subtitle: 'Career-Ops is an open-source multi-agent job search tool created by santifer. I evaluated it against alternatives, forked it, customized the scoring, archetypes, and CV templates for my profile, and now run it daily. This is how I find, adopt, and optimize open-source tools — the same skill I bring to any engineering team.',
       badge: 'Open-source tool — forked & customized',
-      date: 'Mar 17, 2026',
+      date: 'Apr 7, 2026',
     },
     heroMetrics: [
       { value: '12', label: 'Modes' },
@@ -98,16 +98,6 @@ const _en = {
             ['Timeline', 'Closing speed and hiring urgency', 'Low'],
           ],
         },
-        distribution: {
-          heading: 'Score Distribution',
-          items: [
-            { value: '21', label: 'Score >= 4.5 (A)' },
-            { value: '52', label: 'Score 4.0-4.4 (B)' },
-            { value: '71', label: 'Score 3.0-3.9 (C)' },
-            { value: '51', label: 'Score < 3.0 (D-F)' },
-          ],
-        },
-        callout: '74% of evaluated offers score below 4.0. Without the system, I would have spent hours reading JDs that never fit.',
       },
       pipeline: {
         heading: 'The Pipeline',
@@ -237,7 +227,7 @@ const _en = {
         },
         {
           q: 'What does it cost to run?',
-          a: 'Zero marginal cost per evaluation. Career-Ops runs on a Claude Max subscription, which covers all Claude Code usage across every project: portfolio development, OpenClaw development, and Career-Ops itself. Each evaluation uses approximately 4,000-6,000 input tokens for the JD plus CV context and generates around 2,000 tokens of evaluation output. Under the Max plan, this volume is well within the included capacity. There is no per-API-call billing, no token metering, and no usage caps that would throttle batch processing. The economics make it viable to evaluate every offer the scanner finds rather than pre-filtering manually.',
+          a: 'Zero marginal cost per evaluation. Career-Ops runs on a Claude Max subscription, which covers all Claude Code usage across every project: portfolio development, work on my own agent setup, and Career-Ops itself. Each evaluation uses approximately 4,000-6,000 input tokens for the JD plus CV context and generates around 2,000 tokens of evaluation output. Under the Max plan, this volume is well within the included capacity. There is no per-API-call billing, no token metering, and no usage caps that would throttle batch processing. The economics make it viable to evaluate every offer the scanner finds rather than pre-filtering manually.',
         },
         {
           q: 'Does the apply mode fill forms automatically?',

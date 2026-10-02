@@ -115,7 +115,6 @@ const _en = {
       { name: 'Telegram', role: 'Cron job delivery (morning brief, evening plan, content draft)' },
       { name: 'GitHub', role: 'Code, PRs, CI/CD — both orgs (joestechsolutions for work, joblas for personal)' },
       { name: 'Gmail + Google Calendar', role: 'Client communications and scheduling' },
-      { name: 'Stripe', role: 'Invoicing and payments' },
       { name: 'Hermes', role: 'Current multi-agent orchestration' },
       { name: 'Tailscale VPN', role: 'Mesh network connecting all services' },
       { name: 'systemd', role: 'Service management — hermes-gateway, open-design, free-claude-code as user services' },

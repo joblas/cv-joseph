@@ -66,23 +66,12 @@ const PROOF_POINTS: ProofPoint[] = [
     terms: ['multi-agent', 'RAG', 'prompt engineering'],
   },
 
-  // -- Self-Healing Chatbot (chatbot-i18n.ts) --
-  {
-    source: 'chatbot-i18n.ts → defense',
-    terms: ['6-layer', 'canary token', 'fingerprint'],
-  },
-  {
-    source: 'chatbot-i18n.ts → evals',
-    terms: ['71', 'CI gate', 'trace-to-eval'],
-  },
-  {
-    source: 'chatbot-i18n.ts → cost',
-    terms: ['$0.005', '$0 infrastructure'],
-  },
-  {
-    source: 'chatbot-i18n.ts → batch eval',
-    terms: ['Sonnet', 'intent', 'quality', 'safety', 'jailbreak', 'Resend'],
-  },
+  // -- Self-Healing Chatbot (chatbot-i18n.ts): deliberately NOT required. --
+  // That article tells the cv-santiago template author's build history and
+  // numbers (71 evals, $0.005 per conversation, Langfuse tracing) in Joe's first
+  // person; on this site the eval workflow is manual-only and Langfuse is not
+  // configured in production. The 2026-10-02 knowledge audit marked it EXCLUDE,
+  // so llms.txt no longer carries it, and this check must not force it back.
 
   // -- Articles published (registry.ts) --
   {

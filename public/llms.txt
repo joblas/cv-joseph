@@ -85,7 +85,7 @@ AI operations system Joe runs for his own business, with models pinned per job o
 ### Joe's Tech Solutions LLC (2025-Present) — Founder & AI Systems Developer
 - Operate Hermes (Nous Research's open-source agent runtime — Lurkr as CTO, C-suite skills, VPs, 40+ scheduled automations on Ollama Cloud) handling real business operations
 - Previously: ran a 22-agent specialized setup on the open-source OpenClaw runtime (2024–2026), then migrated to Hermes
-- Client offerings at joestechsolutions.com: An agent of your own, Private AI on hardware you own (a one-time 75-minute session, no subscription; on a local install nothing leaves the machine), Get a tool built
+- Client offerings at joestechsolutions.com: An agent of your own, Private AI on hardware you own (a 75-minute setup session; no per-query API fees; only on a local install does nothing leave the machine), Get a tool built
 - Three active client builds: a short-term-rental turnover agent (live), the artist Cbarrgs's website, Shopify merch store and site agent (live), and the Archive salon's formula and inventory app (TestFlight beta)
 - Ship web apps to production and mobile apps to TestFlight beta: React, Next.js, React Native, TypeScript, Supabase
 - Created Whisper Walkie: open-source push-to-talk voice typing that transcribes locally with OpenAI's open Whisper models via faster-whisper
@@ -185,9 +185,6 @@ Interactive CV with AI chatbot, Gemini Live voice mode, RAG pipeline, and multi-
 - Valid driver's license with clean driving record
 
 ## Portfolio Case Studies
-
-### The Self-Healing Chatbot
-The chat design this site inherited from santifer's open-source cv-santiago template: a 6-layer defense with canary token injection and fingerprint detection, 71 automated evals with a CI gate and a trace-to-eval closed loop, under $0.005 per conversation on $0 infrastructure, and a batch eval pipeline that uses Sonnet to score intent, quality, safety, and jailbreak resistance, with alerts via Resend. Those figures are the template's, not Joe's measured results; Joe ported the chat to Cloudflare Pages Functions and added the two-site persona backend and Gemini Live voice.
 
 ### The Turnover Agent
 Case study: a Telegram-first LLM ops agent for a short-term-rental manager: iCal checkout detection, cleaner messaging (Telegram-first), escalation ladders and watchdogs. In production since late July 2026.
