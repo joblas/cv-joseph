@@ -33,9 +33,10 @@ const mods = {
   'rag-search': () => import('../api-src/rag-search.js'),
   'voice-token': () => import('../api-src/voice-token.js'),
   'voice-trace': () => import('../api-src/voice-trace.js'),
+  'voice-live': () => import('../api-src/voice-live.js'),
 }
 
-const PERSONA_ROUTES = new Set(['chat', 'rag-search', 'voice-token', 'voice-trace'])
+const PERSONA_ROUTES = new Set(['chat', 'rag-search', 'voice-token', 'voice-trace', 'voice-live'])
 
 function routeKey(segs) {
   if (segs[0] === 'ops' && segs[1] === 'trace' && segs.length === 3) return 'ops/trace'
@@ -83,6 +84,9 @@ export const onRequest = async (ctx) => {
 
   const mod = await loader()
   const response = await ctxStore.run(ctx, () => mod.default(withTrustedIp(request)))
+  // A WebSocket handshake (the voice relay) must go out as-is: re-wrapping it
+  // below would drop its socket. CORS does not apply to WebSockets anyway.
+  if (response.status === 101 || response.webSocket) return response
   if (!Object.keys(cors).length) return response
   const headers = new Headers(response.headers)
   for (const [k, v] of Object.entries(cors)) headers.set(k, v)

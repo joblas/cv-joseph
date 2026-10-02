@@ -345,7 +345,9 @@ export function useGeminiVoice() {
       const tokenRes = await fetch('/api/voice-token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ lang, sessionId }),
+        // relay: this page's security policy allows the site's own voice relay,
+        // which works where Google's address does not (a VPN, a filtered network).
+        body: JSON.stringify({ lang, sessionId, relay: true }),
       });
       if (!tokenRes.ok) {
         if (tokenRes.status === 429) { fail('rateLimited'); return; }
