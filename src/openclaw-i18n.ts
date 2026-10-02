@@ -20,7 +20,7 @@ const _en = {
   },
   intro: {
     hook: 'I built a 22-agent AI team to run my business. Then I tore it down and built a smaller composable system in its place.',
-    body: 'OpenClaw worked. It was 22 specialized agents orchestrated by 4 directors and 1 CTO (Lurkr), 3 model tiers, workflow-automation orchestrated, ran my real business for ~18 months: lead gen, proposals, invoicing, code review, deployments, content pipeline. Every morning at 9AM Pacific I got standup messages from the 4 directors in Telegram. I read them over coffee. It felt like having a team.',
+    body: 'My OpenClaw setup worked. It ran on the open-source OpenClaw agent runtime (I did not build OpenClaw): 22 specialized agents orchestrated by 4 directors and 1 CTO (Lurkr), 3 model tiers, workflow-automation orchestrated, and it ran my real business for ~18 months: code review, deployments, content pipeline. Every morning at 9AM Pacific I got standup messages from the 4 directors in Telegram. I read them over coffee. It felt like having a team.',
     punchline: 'Then I learned that the team I thought I wanted was the team I actually didn\'t need. The lesson: more agents isn\'t better. Each new agent is a new maintenance burden, a new failure mode, a new coordination cost. I consolidated to Hermes — composable agents behind a C-suite + VP structure on Ollama Cloud. The OpenClaw era is over. The lessons stuck.',
   },
   orgChart: {
@@ -32,7 +32,7 @@ const _en = {
       name: 'Lurkr',
       role: 'CTO (OpenClaw era) → now the CTO layer in Hermes',
       model: 'Was Claude Opus 4.6, now glm-5.3-flash on Ollama Cloud',
-      description: 'In OpenClaw, Lurkr was a dedicated CTO agent. In Hermes, Lurkr (me) is the CTO layer, delegating through C-suite skills and VPs to on-demand worker agents.',
+      description: 'In OpenClaw, Lurkr was a dedicated CTO agent. In Hermes, Lurkr, my orchestrator agent, is the CTO layer, delegating through C-suite skills and VPs to on-demand worker agents.',
     },
     divisions: [
       {
@@ -110,8 +110,8 @@ const _en = {
     tools: [
       { name: 'Hermes (NousResearch/hermes-agent)', role: 'Open-source (MIT) agent runtime by Nous Research — composes agents via delegation behind a C-suite + VP structure, with skills, cron jobs, and a memory system' },
       { name: 'Ollama Cloud', role: 'Primary model provider; models pinned per job' },
-      { name: 'NVIDIA NIM', role: 'Fallback provider (deepseek-v4-flash)' },
-      { name: 'MemPalace', role: 'Persistent memory — wings and drawers with semantic search and a knowledge graph' },
+      { name: 'Fallback models', role: 'glm-5.3, then deepseek-v4.1-flash, both on Ollama Cloud' },
+      { name: 'MemPalace', role: 'Third-party memory tool (not mine): wings and drawers with semantic search and a knowledge graph' },
       { name: 'Telegram', role: 'Cron job delivery (morning brief, evening plan, content draft)' },
       { name: 'GitHub', role: 'Code, PRs, CI/CD — both orgs (joestechsolutions for work, joblas for personal)' },
       { name: 'Gmail + Google Calendar', role: 'Client communications and scheduling' },
@@ -196,11 +196,11 @@ const _en = {
     items: [
       {
         q: 'What was OpenClaw?',
-        a: 'OpenClaw was a 22-agent multi-agent AI system I built and operated from 2024 to early 2026. 22 specialized agents orchestrated by 4 directors and 1 CTO (Lurkr), 3 model tiers (Opus/Sonnet/Haiku), workflow-automation orchestrated. It ran real business operations: email routing, CRM automation, invoicing, SEO optimization, deployment pipelines. It was retired in 2026 when I consolidated to Hermes. The full postmortem is this case study.',
+        a: 'OpenClaw is the open-source agent runtime my earlier setup ran on; I did not build OpenClaw. On it I configured and operated a 22-agent system from 2024 to early 2026: 22 specialized agents orchestrated by 4 directors and 1 CTO (Lurkr), 3 model tiers (Opus/Sonnet/Haiku), workflow-automation orchestrated. It ran real business operations: email routing, SEO optimization, deployment pipelines. It was retired in 2026 when I consolidated to Hermes. The full postmortem is this case study.',
       },
       {
         q: 'What is Hermes?',
-        a: 'Hermes is my current AI operations system, replacing OpenClaw — built on Nous Research\'s open-source hermes-agent runtime. Lurkr (me) acts as CTO, with executive skills (Chief of Staff, CFO, COO, CMO), VPs for Engineering, Infrastructure, and Product, and 40+ scheduled automations with models pinned per job on Ollama Cloud. Agents compose via delegation rather than hard-wired specialization. Skills system for reusable patterns. MemPalace for persistent memory across sessions.',
+        a: 'Hermes is my current AI operations system, replacing OpenClaw — built on Nous Research\'s open-source hermes-agent runtime. Lurkr, my orchestrator agent, acts as CTO, with executive skills (Chief of Staff, CFO, COO, CMO), VPs for Engineering, Infrastructure, and Product, and 40+ scheduled automations with models pinned per job on Ollama Cloud. Agents compose via delegation rather than hard-wired specialization. Skills system for reusable patterns. MemPalace (a third-party memory tool) for persistent memory across sessions.',
       },
       {
         q: 'Why did you retire OpenClaw?',
@@ -224,7 +224,6 @@ const _en = {
     heading: 'Resources',
     items: [
       { label: 'Hermes agent runtime on GitHub (Nous Research)', url: 'https://github.com/NousResearch/hermes-agent' },
-      { label: 'MemPalace (memory system)', url: 'https://github.com/joblas/mempalace' },
       { label: 'Anthropic Claude Documentation', url: 'https://docs.anthropic.com' },
       { label: 'Tailscale VPN', url: 'https://tailscale.com' },
       { label: 'n8n Documentation', url: 'https://docs.n8n.io' },

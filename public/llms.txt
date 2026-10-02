@@ -15,26 +15,26 @@
 
 ## Professional Summary
 
-AI systems developer and founder of Joe's Tech Solutions: custom software, AI agents, automation, and private AI for small businesses, built on the same stack he runs his own company on — three live client deployments. Runs Hermes as a multi-agent AI team: Lurkr (me) as CTO, with executive skills (Chief of Staff, CFO, COO, CMO), VPs for Engineering, Infrastructure, and Product, and 40+ scheduled automations with models pinned per job on Ollama Cloud. Ship full-stack applications using React/React Native, TypeScript, Python, and PostgreSQL. Use AI coding assistants daily as core development tools.
+AI systems developer and founder of Joe's Tech Solutions: custom software, AI agents, automation, and private AI for small businesses, built on the same stack he runs his own company on, with three active client builds (a rental-turnover agent and an artist website, both live, and a salon app in TestFlight beta). Runs Hermes, Nous Research's open-source agent runtime, as a multi-agent AI team: Lurkr, his orchestrator agent, as CTO, with executive skills (Chief of Staff, CFO, COO, CMO), VPs for Engineering, Infrastructure, and Product, and 40+ scheduled automations with models pinned per job on Ollama Cloud. Ship full-stack applications using React/React Native, TypeScript, Python, and PostgreSQL. Use AI coding assistants daily as core development tools.
 
-Previously: built and operated OpenClaw (22 specialized agents, 2024–2026) — migrated to Hermes after learning composability beats specialization. The migration postmortem is the OpenClaw → Hermes case study on this site.
+Previously: ran a multi-agent setup on the open-source OpenClaw runtime (22 specialized agents, 2024–2026), then migrated to Hermes after learning composability beats specialization. He did not build OpenClaw. The migration postmortem is the OpenClaw → Hermes case study on this site.
 
 Previously: 10 years as an autonomous vehicle systems specialist. Built Google's Firefly autonomous vehicle from the ground up. Supported the world's first fully driverless ride on public roads (2015). Subject Matter Expert for drive-by-wire systems across the first 100 Google self-driving cars and 10 hardware iterations. Managed sensor calibration operations for the entire Google AV fleet — final release authority. Led fleet operations at Uber ATG and Pronto.ai. ITAR-controlled hardware experience. Then 5+ years learning AI tools, code, and building personal and client projects.
 
 ## What Joe Does
 
-1. **Custom Software & AI Systems** — Custom software, AI agents, automation, and private AI for small businesses; Private AI Setup, AI Operations, Custom Builds (joestechsolutions.com)
+1. **Custom Software & AI Systems**: custom software, AI agents, automation, and private AI for small businesses; offers: An agent of your own, Private AI on hardware you own, Get a tool built (joestechsolutions.com)
 2. **AI Systems** — Multi-agent operations (Hermes), full-stack AI apps, RAG, prompt engineering
 3. **Autonomous Systems background** — 10 years in AV programs, sensor integration, drive-by-wire, CAN/LIN, HIL testing
 
 ## Key Achievement: Hermes (Multi-Agent AI Team)
 
-AI operations system I operate as CTO — models pinned per job on Ollama Cloud. Built on Nous Research's open-source hermes-agent (github.com/NousResearch/hermes-agent).
+AI operations system Joe runs for his own business, with models pinned per job on Ollama Cloud. Built on Nous Research's open-source hermes-agent (github.com/NousResearch/hermes-agent); Joe configures and runs it, he did not write the runtime.
 
-- **Architecture:** Lurkr (me) as CTO, executive skills (Chief of Staff, CFO, COO, CMO), VPs for Engineering, Infrastructure, and Product, and 40+ scheduled automations
+- **Architecture:** Lurkr, Joe's orchestrator agent, as CTO, executive skills (Chief of Staff, CFO, COO, CMO), VPs for Engineering, Infrastructure, and Product, and 40+ scheduled automations
 - **Model Routing:** Ollama Cloud model selection by task
-- **Capabilities:** Email routing, CRM automation, invoicing, SEO optimization, deployment pipelines, content drafting, security sweeps, daily morning briefs, evening plans
-- **Memory:** MemPalace (semantic search, knowledge graph) — persistent across sessions
+- **Capabilities:** Daily morning briefs, evening plans, per-project checks, uptime watchdogs, weekly reviews, deployment pipelines, content drafting, security sweeps
+- **Memory:** MemPalace, a third-party memory tool (semantic search, knowledge graph), persistent across sessions
 - **Skills:** Reusable patterns for recurring workflows
 - **Cron Jobs:** Daily/weekly jobs (morning brief, evening plan, content draft, security sweep, weekly model bakeoff)
 - **Migration:** Retired 22-agent OpenClaw system in 2026 — case study covers the migration
@@ -51,9 +51,9 @@ AI operations system I operate as CTO — models pinned per job on Ollama Cloud.
 ## Core Competencies
 
 - **Multi-Agent AI Systems:** Hermes (Lurkr as CTO, executive skills, VPs, 40+ scheduled automations on Ollama Cloud), RAG, prompt engineering, prompt versioning
-- **Full-Stack AI Development:** React 19, TypeScript, Python, Next.js, Supabase, AI APIs (Claude + OpenAI Realtime)
+- **Full-Stack AI Development:** React 19, TypeScript, Python, Next.js, Supabase, AI APIs (Claude, Gemini Live)
 - **AV Systems Integration:** Sensor calibration, drive-by-wire SME, ADAS validation, CAN/LIN
-- **Client-Facing Delivery:** 10+ executive/investor demos, client consulting, private AI deployment
+- **Client-Facing Delivery:** 10+ executive/investor demos, client consulting, client app and agent builds
 - **Cloud & Platform:** AWS, GCP, Docker, K8s, Terraform, CI/CD
 - **Hardware-Software Bridge:** HIL test rigs, bench testing, embedded validation, wiring harness fabrication
 
@@ -62,7 +62,7 @@ AI operations system I operate as CTO — models pinned per job on Ollama Cloud.
 ### AI / LLM
 - Claude & OpenAI APIs — multi-agent orchestration, RAG, prompt engineering
 - LangChain / CrewAI — agent frameworks
-- Ollama / Open WebUI — private AI deployment
+- Ollama / Open WebUI: running open-weight models locally
 - Hermes — AI operations system (40+ scheduled automations, Ollama Cloud)
 
 ### Frontend
@@ -84,13 +84,13 @@ AI operations system I operate as CTO — models pinned per job on Ollama Cloud.
 
 ### Joe's Tech Solutions LLC (2025-Present) — Founder & AI Systems Developer
 - Operate Hermes (Nous Research's open-source agent runtime — Lurkr as CTO, C-suite skills, VPs, 40+ scheduled automations on Ollama Cloud) handling real business operations
-- Previously: OpenClaw (22-agent specialized system, 2024–2026) — migrated to Hermes
-- Client offerings at joestechsolutions.com: Private AI Setup (one-time 75-minute session, no subscription), AI Operations, Custom Builds
-- Private AI runs on the client's own hardware (Ollama, Open WebUI, local automation stacks)
-- Ship production web and mobile apps: React, Next.js, React Native, TypeScript, Supabase
-- Created Whisper Walkie — open source push-to-talk voice typing (100% local)
-- Published the JTS Prompt Library — 33 prompts across ops, sales, content, coding, and research (free PDF at joestechsolutions.com/prompt-library)
-- Built The Skate Workshop — React Native app for Olympic coach (19-table Supabase backend, push notifications, live on iOS via TestFlight, Android builds rolling)
+- Previously: ran a 22-agent specialized setup on the open-source OpenClaw runtime (2024–2026), then migrated to Hermes
+- Client offerings at joestechsolutions.com: An agent of your own, Private AI on hardware you own (a one-time 75-minute session, no subscription; on a local install nothing leaves the machine), Get a tool built
+- Three active client builds: a short-term-rental turnover agent (live), the artist Cbarrgs's website, Shopify merch store and site agent (live), and the Archive salon's formula and inventory app (TestFlight beta)
+- Ship web apps to production and mobile apps to TestFlight beta: React, Next.js, React Native, TypeScript, Supabase
+- Created Whisper Walkie: open-source push-to-talk voice typing that transcribes locally with OpenAI's open Whisper models via faster-whisper
+- Published the JTS Prompt Library: 33 prompts across ops, sales, content, coding, and research (free PDF at joestechsolutions.com/prompt-library)
+- Built The Skate Workshop: React Native app for a skate coach of Olympians (push notifications; TestFlight beta only, development paused)
 
 ### Quadient (May 2025 - Present) — Field Service Technician
 - Install, maintain, and repair mailing and shipping systems, including postage meters and folder inserters, at customer sites across a North County territory
@@ -128,29 +128,29 @@ AI operations system I operate as CTO — models pinned per job on Ollama Cloud.
 ## Projects
 
 ### Hermes — Multi-Agent AI Team (Current)
-AI operations system I operate as CTO. Lurkr (me) as CTO, executive skills, C-suite, VPs for Engineering/Infrastructure/Product, and 40+ scheduled automations with models pinned per job on Ollama Cloud. Persistent memory (MemPalace), skills system. Built on Nous Research's open-source hermes-agent. Handles real business operations: daily briefings, project stewards, watchdogs, weekly executive reviews, deployments, content drafting.
+AI operations system Joe runs for his own business: Lurkr, his orchestrator agent, as CTO, executive skills, C-suite, VPs for Engineering/Infrastructure/Product, and 40+ scheduled automations with models pinned per job on Ollama Cloud. Persistent memory (MemPalace, third-party), skills system. Built on Nous Research's open-source hermes-agent; Joe configures and runs it. Handles real business operations: daily briefings, project stewards, watchdogs, weekly executive reviews, deployments, content drafting.
 
 ### OpenClaw → Hermes — Migration Case Study
-Why I retired a 22-agent specialized system for a composable executive-led team. Design for composability, not specialization. The lesson generalizes. Open source.
+Why Joe retired the 22-agent specialized setup he ran on the open-source OpenClaw runtime for a composable executive-led team. Design for composability, not specialization. The lesson generalizes.
 
 ### The Skate Workshop — React Native Mobile App
-Full-stack app for Olympic skateboarding coach. 19-table Supabase backend, live push notifications. Live on iOS via TestFlight; Android builds rolling.
-Live at theskateworkshop.app
+One-on-one skateboarding coaching app (Expo / React Native + Supabase) for a skate coach of Olympians: clip markup with drawings and voice notes, homework, a 4,952-combination trick grid, iOS push notifications. TestFlight beta only, never submitted to the app stores; development is paused.
+Pre-launch site: theskateworkshop.app
 
-### Career Ops — AI Job Search Pipeline (Open Source)
-Evaluates offers with scoring, generates ATS-optimized CVs, pre-fills applications. Built on Claude Code.
+### Career Ops (santifer's open-source project, run by Joe)
+Career-Ops is santifer's open-source AI job-search system (github.com/career-ops-hq/career-ops). Joe runs a customized fork for his own job search; he did not build it. It evaluates offers with scoring, generates ATS-optimized CVs and pre-fills applications.
 
-### DALL-E Image Generator — Live Web Application
-Production AI image generation using OpenAI DALL-E 3.0 API. Live at jblas-dall-e.com
+### DALL-E Image Generator (2023 learning demo)
+A 2023 tutorial-based learning demo on the OpenAI DALL-E API, still live at jblas-dall-e.com.
 
 ### Whisper Walkie — Open Source Voice Typing
-Push-to-talk voice typing tool with 100% local processing.
+Open-source (MIT) push-to-talk dictation for Windows, macOS and Linux. It transcribes locally with OpenAI's open Whisper models through the faster-whisper library. github.com/joestechsolutions/whisper-walkie
 
 ### Cloud Infrastructure Projects
 Multicloud Terraform deployment (AWS/GCP), K8s migration with Cloud SQL HA, legacy modernization with Anthos/GKE.
 
 ### cv-joseph — This Portfolio (Open Source)
-Interactive CV with AI chatbot, voice mode, RAG pipeline, and multi-layer defense. github.com/joblas/cv-joseph
+Interactive CV with AI chatbot, Gemini Live voice mode, RAG pipeline, and multi-layer defense, built on Santiago Fernández's (santifer's) open-source cv-santiago template and extended by Joe. github.com/joblas/cv-joseph
 
 ## Certifications
 
@@ -187,13 +187,16 @@ Interactive CV with AI chatbot, voice mode, RAG pipeline, and multi-layer defens
 ## Portfolio Case Studies
 
 ### The Self-Healing Chatbot
-Production LLMOps system powering this portfolio's AI chat. Features 6-layer defense with canary token injection and fingerprint detection. 71 automated evals with CI gate enforcement and trace-to-eval closed loop. Cost: <$0.005 per conversation on $0 infrastructure. Batch eval pipeline uses Sonnet to score intent, quality, safety, and jailbreak resistance. Alerts via Resend.
+The chat design this site inherited from santifer's open-source cv-santiago template: a 6-layer defense with canary token injection and fingerprint detection, 71 automated evals with a CI gate and a trace-to-eval closed loop, under $0.005 per conversation on $0 infrastructure, and a batch eval pipeline that uses Sonnet to score intent, quality, safety, and jailbreak resistance, with alerts via Resend. Those figures are the template's, not Joe's measured results; Joe ported the chat to Cloudflare Pages Functions and added the two-site persona backend and Gemini Live voice.
 
 ### The Turnover Agent
-Case study: a Telegram-first LLM ops agent for a short-term-rental manager — 32 tools, iCal turnover detection, escalation ladders, triple watchdogs.
+Case study: a Telegram-first LLM ops agent for a short-term-rental manager: iCal checkout detection, cleaner messaging (Telegram-first), escalation ladders and watchdogs. In production since late July 2026.
 
 ### The Archive Beta Loop
-Case study: my client's Telegram messages become shipped app features through an always-on Claude Code loop — with written guardrails on exactly what ships without me. 20 issues, 13 merged PRs, 10 OTA updates, a 13.8-minute median fix.
+Case study: my client's Telegram messages become shipped app features through an always-on Claude Code loop — with written guardrails on exactly what ships without me. As of the 2026-09-01 write-up: 20 issues, 13 merged PRs, 10 OTA updates, a 13.8-minute median from message to merged fix.
+
+### Cbarrgs: website, Shopify merch store and site agent
+Joe builds and maintains cbarrgs.com (Vite + React on Cloudflare Pages) for the electronic and ambient artist Cbarrgs, and set up the artist's Shopify merch storefront at shopify.cbarrgs.com (t-shirts, a pin and a sticker pack), wired into the site.
 
 ### The Cbarrgs Agent
 Case study: my musician client's website is maintained by a Claude Code agent that lives inside the site's repo and answers his Telegram messages. Written charter, pairing-gated access, a 5-minute watchdog, and honest launch-week numbers.

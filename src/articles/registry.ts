@@ -247,7 +247,7 @@ export const articleRegistry: ArticleConfig[] = [
         { '@type': 'Thing', name: 'LLM Agents' },
         { '@type': 'Thing', name: 'Short-Term Rental Operations' },
       ],
-      extra: { proficiencyLevel: 'Expert', dependencies: 'Python, FastAPI, python-telegram-bot, Supabase, Twilio, Ollama Cloud, Anthropic, Docker, Caddy' },
+      extra: { proficiencyLevel: 'Expert', dependencies: 'Python, FastAPI, python-telegram-bot, Supabase, Ollama Cloud, Anthropic, Docker, Caddy' },
       citation: [
         { '@type': 'WebPage', name: 'FastAPI Documentation', url: 'https://fastapi.tiangolo.com' },
         { '@type': 'WebPage', name: 'python-telegram-bot Documentation', url: 'https://docs.python-telegram-bot.org' },
@@ -256,7 +256,6 @@ export const articleRegistry: ArticleConfig[] = [
       mentions: [
         { '@type': 'SoftwareApplication', name: 'FastAPI', url: 'https://fastapi.tiangolo.com' },
         { '@type': 'SoftwareApplication', name: 'Supabase', url: 'https://supabase.com' },
-        { '@type': 'SoftwareApplication', name: 'Twilio', url: 'https://www.twilio.com' },
         { '@type': 'SoftwareApplication', name: 'Docker', url: 'https://www.docker.com' },
         { '@type': 'SoftwareApplication', name: 'Caddy', url: 'https://caddyserver.com' },
         { '@type': 'SoftwareApplication', name: 'Ollama', url: 'https://ollama.com' },

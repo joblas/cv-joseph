@@ -33,7 +33,7 @@ const _en = {
       },
       skateWorkshop: {
         text: 'The Skate Workshop | Case Study',
-        href: '/skate-workshop',
+        href: '/skate-workshop-loop',
       },
     },
     sections: {
@@ -219,7 +219,7 @@ const _en = {
       },
       cta: {
         heading: 'Ask',
-        body: 'Open the chat and ask how I evaluated, customized, and operate Career-Ops. Or check out OpenClaw and The Skate Workshop — those are systems I built from scratch.',
+        body: 'Open the chat and ask how I evaluated, customized, and operate Career-Ops. Or read the OpenClaw to Hermes migration and The Skate Workshop loop, two write-ups about my own work.',
         ctaLabel: 'Open chat',
         ctaHref: '#chat',
       },

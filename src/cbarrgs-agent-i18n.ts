@@ -12,7 +12,7 @@ const _en = {
     header: {
       kicker: 'Client Work — Agent Operations',
       h1: 'The Cbarrgs Agent: A Coding Agent That Lives in My Client\'s Website',
-      subtitle: 'Cbarrgs is an indie musician with roughly 74K monthly Spotify listeners. His website is maintained by a full Claude Code session that lives inside the site\'s own repository and answers his Telegram messages — the same architecture, and nearly the same keepalive script, that runs my own personal agent. This is how I ship an AI agent to a client: a written job description, a two-person allowlist, hard escalation lines, and the honest numbers from launch week.',
+      subtitle: 'Cbarrgs is an independent electronic and ambient artist. His website is maintained by a full Claude Code session that lives inside the site\'s own repository and answers his Telegram messages — the same architecture, and nearly the same keepalive script, that runs my own personal agent. This is how I ship an AI agent to a client: a written job description, a two-person allowlist, hard escalation lines, and the honest numbers from launch week.',
       badge: 'Client production system — live since Aug 26, 2026',
       date: 'Sep 1, 2026',
     },
