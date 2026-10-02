@@ -230,6 +230,11 @@ bookingOn(true)
   check('the booking really ran (test precondition)', !!label && /^Booked: /.test(String(toolResults(r.streams[0]?.messages)[0]?.content)))
   check('every reply attempt failed, yet the visitor is told the call is booked, with its time',
     r.out.includes(`Your call with Joe is booked: ${label}.`) && !r.out.includes('Sorry, something went wrong'))
+  // Review of #47 (N1): the booking result is the answer, not an error. Flagged,
+  // the widgets would show it as a failure with Try again (asking to book again)
+  // and never send it back, so the agent would forget the call in later turns.
+  const bookedLine = r.out.split('\n').find((l) => l.includes('Your call with Joe is booked')) || ''
+  check('...as an answer the widget keeps, never flagged as an error', bookedLine !== '' && !bookedLine.includes('"error":true'))
 }
 {
   mode.decision = [{ type: 'tool_use', id: 'tu_search', name: 'search_portfolio', input: { query: 'x' } }]

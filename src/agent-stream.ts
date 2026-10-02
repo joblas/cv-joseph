@@ -57,6 +57,15 @@ export const SILENCE_MS = 20_000;
 // bytes and ~24s within an answer in the slowest spell measured (2026-09-27).
 export const LEGACY_SILENCE_MS = 60_000;
 
+// Whether this page has already seen the server's heartbeats. Once it has,
+// every later request uses the short limit from its very first byte, so a
+// connection that dies before sending anything is noticed in 20s, not 60s.
+let heartbeatsSeen = false;
+/** Tests only: forget that the server sends heartbeats. */
+export function forgetHeartbeats(): void {
+  heartbeatsSeen = false;
+}
+
 type Attempt =
   | { kind: "done" }
   | { kind: "stopped" }
@@ -88,7 +97,7 @@ async function askOnce(options: AskOptions): Promise<Attempt> {
   const legacySilenceMs = options.legacySilenceMs ?? LEGACY_SILENCE_MS;
   const request = new AbortController();
   let silent = false;
-  let heartbeats = false; // the server has shown it sends them
+  let heartbeats = heartbeatsSeen; // the server has shown it sends them
   let timer: ReturnType<typeof setTimeout> | undefined;
   const arm = () => {
     clearTimeout(timer);
@@ -137,6 +146,7 @@ async function askOnce(options: AskOptions): Promise<Attempt> {
         buffer = buffer.slice(newline + 1);
         if (line.startsWith(":")) {
           heartbeats = true; // ": connected" / ": ping"
+          heartbeatsSeen = true;
           continue;
         }
         if (line.startsWith("event: ")) {

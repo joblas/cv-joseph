@@ -6,7 +6,7 @@
 // The same file runs in joestechsolutions-nextjs against its twin copy.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { askAgent, SILENCE_MS, LEGACY_SILENCE_MS, type AgentEvent } from "../src/agent-stream";
+import { askAgent, forgetHeartbeats, SILENCE_MS, LEGACY_SILENCE_MS, type AgentEvent } from "../src/agent-stream";
 
 type Step = string | { wait: number } | "hang" | "end";
 const enc = new TextEncoder();
@@ -50,7 +50,8 @@ function fakeFetch(replies: Reply[]) {
   return { impl, calls };
 }
 
-async function ask(replies: Reply[], extra: { signal?: AbortSignal; silenceMs?: number; legacySilenceMs?: number; isOnline?: () => boolean } = {}) {
+async function ask(replies: Reply[], extra: { signal?: AbortSignal; silenceMs?: number; legacySilenceMs?: number; isOnline?: () => boolean; remember?: boolean } = {}) {
+  if (!extra.remember) forgetHeartbeats(); // each case starts on a page that has not heard the server yet
   const f = fakeFetch(replies);
   const events: AgentEvent[] = [];
   const t = Date.now();
@@ -215,4 +216,12 @@ test("the server's flagged error message is reported (Try again), never asked ag
 test("production limits: four missed 5s heartbeats mean a dead connection; a server without them gets more than its longest healthy silence", () => {
   assert.ok(SILENCE_MS >= 20_000 && SILENCE_MS <= 30_000, `SILENCE_MS ${SILENCE_MS}`);
   assert.ok(LEGACY_SILENCE_MS >= 45_000 && LEGACY_SILENCE_MS <= 90_000, `LEGACY_SILENCE_MS ${LEGACY_SILENCE_MS}`);
+});
+
+test("a page that has seen the server's heartbeats uses the short limit from the first byte of its next request", async () => {
+  await ask([ANSWER], { legacySilenceMs: 5000 }); // this page now knows the server sends heartbeats
+  const r = await ask(["never", ANSWER], { legacySilenceMs: 5000, remember: true }); // the next request never answers at all
+  assert.deepEqual(r.outcome, { ok: true });
+  assert.equal(r.calls, 2);
+  assert.ok(r.ms < 1500, `took ${r.ms}ms: the long limit was used`);
 });

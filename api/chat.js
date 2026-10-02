@@ -62,8 +62,10 @@ export const heartbeatMs = () => limitMs('CHAT_HEARTBEAT_MS', 5000)
 // The heartbeat is a timer, not a sign of progress: while it runs, a widget
 // never sees a dead connection. So the reply itself must end, whatever hangs
 // inside it: no words of an answer by this time ends it with the error
-// message (the latest possible first words, from an attempt started at the
-// deadline's edge, come about 2s after the deadline)...
+// message. That is more than twice the slowest healthy first word measured
+// (24s) and past the reply deadline, so every attempt that started in time
+// has had its chance; a model still thinking out loud at this point (it keeps
+// resetting its own silence limit) is cut here...
 export const firstWordsCeilingMs = () => limitMs('CHAT_FIRST_WORDS_CEILING_MS', replyDeadlineMs() + 10000)
 // ...and no reply, however it is going, runs longer than this.
 export const replyCeilingMs = () => limitMs('CHAT_REPLY_CEILING_MS', 120000)
@@ -92,6 +94,7 @@ async function decideTools(params, signal) {
     requests.push(request)
   }
   const leave = () => { for (const r of requests) r.ac.abort() }
+  if (signal?.aborted) throw new Error('the reply ended before the tool decision')
   signal?.addEventListener('abort', leave)
   launch()
   try {
@@ -188,6 +191,7 @@ function firstToSpeak(makeStream, { hedgeMs, idleMs, mayRace = () => true, onHed
   }
   async function* events() {
     add()
+    let raceClosed = false
     try {
       while (!winner) {
         const live = contenders.filter((c) => !c.over)
@@ -197,7 +201,7 @@ function firstToSpeak(makeStream, { hedgeMs, idleMs, mayRace = () => true, onHed
         const waits = live.map((c) => c.next)
         let hedgeTimer
         const first = contenders[0]
-        if (contenders.length < 2 && !first.over) {
+        if (contenders.length < 2 && !first.over && !raceClosed) {
           waits.push(new Promise((resolve) => {
             hedgeTimer = setTimeout(() => resolve({ hedge: true }), Math.max(0, first.lastEventAt + hedgeMs - Date.now()))
           }))
@@ -209,7 +213,7 @@ function firstToSpeak(makeStream, { hedgeMs, idleMs, mayRace = () => true, onHed
             onHedge?.(Date.now() - first.lastEventAt)
             add()
           } else {
-            first.lastEventAt = Infinity // too late to race; its own silence limit decides
+            raceClosed = true // too late to race; its own silence limit decides
           }
           continue
         }
@@ -1157,8 +1161,12 @@ function streamResponse({
 
         // Last resort: send error message through SSE
         try {
-          const errorText = lastResortText || persona.errorMessage
-          controller.enqueue(encoder.encode(errorEvent(errorText)))
+          // Only the error message is an error. A booking result (lastResortText)
+          // is real information: the visitor keeps it as the answer and the
+          // model must see it in later turns, so it is never flagged.
+          controller.enqueue(encoder.encode(lastResortText
+            ? `data: ${JSON.stringify({ text: lastResortText, replace: true })}\n\n`
+            : errorEvent(persona.errorMessage)))
           controller.enqueue(encoder.encode('data: [DONE]\n\n'))
           controller.close()
         } catch {
