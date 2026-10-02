@@ -374,6 +374,79 @@ for (const { label, text } of scanned) {
     check(`${label}: no ${what}${m ? ` (found "${m[0]}")` : ''}`, !m)
   }
 }
+// --- (iii-b) Joe's 2026-10-02 decisions on contact and AV wording, bot surfaces only ---
+// Joe's own answers (2026-10-02): no phone number anywhere the bot speaks from
+// (email only); "part of the team that built Firefly", never "built Firefly
+// from the ground up", and Firefly never dated to 2009 (the vehicle came later);
+// Otto's October 2016 run is an "autonomous beer delivery in Colorado", with no
+// Guinness record, no "driverless" and no "world's first commercial delivery";
+// Pronto's demo is "cross-country, San Francisco to New York", with no mileage
+// figure; Pronto's founder is never named.
+// Scope: what the bot is handed or retrieves. The prompts, the voice prompt
+// file, personas and the work list raw; public/llms.txt (written for AI
+// agents); every article source the registry marks ragReady; and the composed
+// prompts, search-tool strings and fact cards. NOT src/i18n.ts or
+// src/about-i18n.ts: the visible homepage and About copy are Joe's separate
+// call, and they still carry some of these phrases on purpose.
+let decidedSummary = ''
+{
+  const { articleRegistry }: any = await import('../src/articles/registry.ts')
+  const ragSources: string[] = articleRegistry.filter((a: any) => a.ragReady && a.i18nFile).map((a: any) => a.i18nFile)
+  check(`the registry still marks the article sources ragReady (got ${ragSources.length}; none would pass every ban vacuously)`, ragSources.length >= 7)
+  const BOT_FILES = ['chatbot-prompt.txt', 'jts-prompt.txt', 'api/voice-token.js', 'api/_shared/personas.js', 'api/_shared/work.js',
+    'public/llms.txt', ...ragSources]
+  for (const rel of ['src/i18n.ts', 'src/about-i18n.ts']) check(`${rel} (visible site copy) is not a bot surface here`, !BOT_FILES.includes(rel))
+  const botSurfaces: { label: string; text: string }[] = [
+    ...BOT_FILES.map((rel) => ({ label: rel, text: read(rel) })),
+    ...consumers.map((c) => ({ label: `${c.id} ${c.mode} (composed)`, text: c.text })),
+    ...PERSONAS.map((id) => {
+      const t = persona(id).searchTool
+      return { label: `${id} search tool`, text: [t.description, t.voiceDescription, t.noResults, t.voiceRule].join('\n') }
+    }),
+    { label: 'fact cards', text: factCardChunks().map((c: any) => c.content).join('\n') },
+  ]
+  const DECIDED: [RegExp, string][] = [
+    [/\(?\b408\)?[\s.-]*401[\s.-]*9943\b|\b4084019943\b/, "Joe's phone number (email only)"],
+    [/guinness/i, 'a Guinness World Record for the Otto delivery (no source)'],
+    [/\b2,900\b|\b2900[\s-]*miles?\b/i, 'the 2,900-mile Pronto figure (say cross-country, San Francisco to New York)'],
+    [/levandowsk|\banthony\s+l\b/i, "Pronto.ai's founder by name"],
+    [/firefly[^.\n]{0,80}\bground[- ]up\b|\bground[- ]up\b[^.\n]{0,80}firefly/i, '"built Firefly from the ground up" (part of the team that built Firefly)'],
+    [/world['’]?s first commercial/i, '"world\'s first commercial delivery" for the Otto run'],
+    [/\b(?:otto|budweiser|beer|truck)\b[^.\n]{0,80}\bdriverless\b|\bdriverless\b[^.\n]{0,80}\b(?:otto|budweiser|beer|truck)/i, 'the Otto delivery as driverless (a driver was aboard)'],
+  ]
+  // Sentence-scoped: the line before a bullet, or a "2009-2016" span, does
+  // not date Firefly; "started in 2009 working on the Firefly vehicle" does.
+  const sentencesOf = (text: string) => text.split(/(?<=[.;!?])\s+|\n/)
+  const DATED_2009 = /\b2009\b(?!\s*(?:-|–|—|to)\s*(?:20)?\d\d\b)/
+  for (const { label, text } of botSurfaces) {
+    for (const [re, what] of DECIDED) {
+      const m = text.match(re)
+      check(`${label}: no ${what}${m ? ` (found "${m[0]}")` : ''}`, !m)
+    }
+    for (const s of sentencesOf(text).filter((x) => /firefly/i.test(x) && DATED_2009.test(x))) {
+      check(`${label}: Firefly is not dated to 2009: "${s.trim().slice(0, 90)}"`, false)
+    }
+    // Who built Firefly: a team Joe was part of, never Joe alone.
+    for (const m of text.matchAll(/\bbuilt\s+(?:google['’]?s\s+|the\s+)?firefly\b/gi)) {
+      check(`${label}: "${m[0]}" is credited to the team ("part of the team that built")`,
+        /part of the team that\s+$/i.test(text.slice(Math.max(0, m.index! - 30), m.index)))
+    }
+  }
+  // Fixed, not dropped: the cloudyjoe agent still knows the three highlights,
+  // in Joe's wording.
+  const cjText = consumers.find((c) => c.id === 'cloudyjoe' && c.mode === 'text')?.text ?? ''
+  const cjVoice = consumers.find((c) => c.id === 'cloudyjoe' && c.mode === 'voice')?.text ?? ''
+  for (const phrase of ["Part of the team that built Google's Firefly", "Otto's October 2016 autonomous beer delivery in Colorado", 'cross-country (San Francisco to New York)']) {
+    check(`cloudyjoe text still says "${phrase}"`, cjText.includes(phrase))
+  }
+  for (const phrase of ["part of the team that built Google's Firefly", 'cross-country autonomous demo, San Francisco to New York']) {
+    check(`cloudyjoe voice still says "${phrase}"`, cjVoice.includes(phrase))
+  }
+  decidedSummary = `; ${DECIDED.length + 2} wording decisions hold on ${botSurfaces.length} bot surfaces (${ragSources.length} ragReady articles)`
+  check('the cloudyjoe fallback line gives the email only',
+    /the safe default is: "That's a great question for Joe directly — you can reach him at blasj408@gmail\.com\."/.test(read('chatbot-prompt.txt')))
+}
+
 // Credit must be present, not merely the false claim absent.
 for (const c of consumers) {
   for (const credit of ['Nous Research', 'cv-santiago', 'faster-whisper', 'did not build OpenClaw']) {
@@ -770,4 +843,4 @@ function parseCsv(text: string): string[][] {
 }
 
 if (failed) { console.error(`\n${failed} check(s) failed`); process.exit(1) }
-console.log(`ok — ${work.WORK_ITEMS.length} work items reach all four consumers; ${BANNED.length} refuted claims absent from ${scanned.length} surfaces`)
+console.log(`ok — ${work.WORK_ITEMS.length} work items reach all four consumers; ${BANNED.length} refuted claims absent from ${scanned.length} surfaces${decidedSummary}`)

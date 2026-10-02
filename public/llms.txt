@@ -19,7 +19,7 @@ AI systems developer and founder of Joe's Tech Solutions: custom software, AI ag
 
 Previously: ran a multi-agent setup on the open-source OpenClaw runtime (22 specialized agents, 2024–2026), then migrated to Hermes after learning composability beats specialization. He did not build OpenClaw. The migration postmortem is the OpenClaw → Hermes case study on this site.
 
-Previously: 10 years as an autonomous vehicle systems specialist. Built Google's Firefly autonomous vehicle from the ground up. Supported the world's first fully driverless ride on public roads (2015). Subject Matter Expert for drive-by-wire systems across the first 100 Google self-driving cars and 10 hardware iterations. Managed sensor calibration operations for the entire Google AV fleet — final release authority. Led fleet operations at Uber ATG and Pronto.ai. ITAR-controlled hardware experience. Then 5+ years learning AI tools, code, and building personal and client projects.
+Previously: 10 years as an autonomous vehicle systems specialist. Part of the team that built Google's Firefly autonomous vehicle. Supported the world's first fully driverless ride on public roads (2015). Subject Matter Expert for drive-by-wire systems across the first 100 Google self-driving cars and 10 hardware iterations. Managed sensor calibration operations for the entire Google AV fleet — final release authority. Led fleet operations at Uber ATG and Pronto.ai. ITAR-controlled hardware experience. Then 5+ years learning AI tools, code, and building personal and client projects.
 
 ## What Joe Does
 
@@ -41,7 +41,7 @@ AI operations system Joe runs for his own business, with models pinned per job o
 
 ## Key Achievement: Google Self-Driving Car (Firefly)
 
-- Built Google's Firefly autonomous vehicle from the ground up — fully custom, all-electric, no steering wheel or pedals
+- Part of the team that built Google's Firefly autonomous vehicle: fully custom, all-electric, no steering wheel or pedals
 - Drive-by-wire SME across 100 vehicles and 10 hardware iterations
 - Managed sensor calibration for entire fleet — final release authority
 - Reduced calibration from 9 hours to 60 minutes (promoted to L4)
@@ -107,9 +107,9 @@ AI operations system Joe runs for his own business, with models pinned per job o
 - Troubleshoot complex technical issues across multiple system layers
 
 ### Pronto.ai (2018-2019) — Autonomous Systems Operations
-- Sole technician hired by founder Anthony Levandowski
+- Sole technician on the original sub-10-person team
 - Built, integrated, and operated entire autonomous vehicle fleet
-- 2,900-mile cross-country autonomous demo with zero critical failures
+- Cross-country autonomous demo, San Francisco to New York, with zero critical failures
 - 10+ executive and investor demonstrations
 
 ### Uber ATG / Otto (2016-2018) — Hardware Integration & Test Operations
@@ -117,7 +117,7 @@ AI operations system Joe runs for his own business, with models pinned per job o
 - Log analysis, root cause analysis, end-to-end testing
 
 ### Google Self-Driving Car Project / Waymo (2009-2016) — Program Manager (L4) / Fleet Technician
-- Built Firefly autonomous vehicle from the ground up
+- Part of the team that built the Firefly autonomous vehicle
 - Drive-by-wire SME across first 100 vehicles and 10 hardware iterations
 - Sensor calibration operations for entire fleet — final release authority
 - Reduced calibration from 9 hours to 60 minutes (promoted to L4)
