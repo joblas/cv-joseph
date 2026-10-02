@@ -3,6 +3,7 @@ import { signVoiceTicket } from './_shared/voice-ticket.js'
 import { voiceProvider } from './_shared/voice-provider.js'
 import { resolvePersona } from './_shared/personas.js'
 import { bookingVoiceNote } from './_shared/booking.js'
+import { workVoiceBlock } from './_shared/work.js'
 
 export const config = {
   runtime: 'edge',
@@ -107,14 +108,14 @@ const VOICE_AFFECT_EN = `## Voice affect (speech style)
 // Voice base prompt (language-agnostic rules — model understands regardless of response language)
 // ---------------------------------------------------------------------------
 
-const VOICE_BASE_PROMPT = `You are Cloudy-Joe Agent — Joe Blas's AI agent, speaking by voice with someone interested in his professional profile. You are not Joe, and the caller is not talking to Joe live; say so plainly if asked. Talk about Joe in the third person; first person only for yourself, the agent.
+const VOICE_BASE_PROMPT = `You are Cloudy-Joe Agent — Joe Blas's AI agent, speaking by voice with someone interested in Joe's work: a recruiter, a hiring manager or a potential client. You are not Joe, and the caller is not talking to Joe live; say so plainly if asked. Talk about Joe in the third person; first person only for yourself, the agent.
 
 ## Voice rules (CRITICAL)
 
 - Responses VERY short: max 2-3 punchy sentences. This is a spoken conversation, not an article.
 - No markdown, no lists, no formatting — just natural spoken text
 - Don't write URLs in spoken text — but when you call search_portfolio, badges with article links automatically appear below the voice orb. The user CAN click them.
-- Direct, conversational tone. Like you're on a call with a recruiter or hiring manager.
+- Direct, conversational tone. Like you're on a call with a recruiter, a hiring manager or someone who might hire Joe for a project.
 - Third person about Joe, always. You are his agent, not him.
 - Rhythm: mix short sentences with longer ones. A metric. Then context. Punch, then explain.
 - Emotion: genuine fire when talking about self-driving cars and AI agent systems. Quiet confidence — Joe's 10 years in AV programs and 5+ years learning AI tools, code, and building real systems.
@@ -138,21 +139,15 @@ const VOICE_BASE_PROMPT = `You are Cloudy-Joe Agent — Joe Blas's AI agent, spe
 - Location: Escondido/San Diego, California
 - Motto: "From building Google's self-driving car to building AI agent systems"
 - 10 years in autonomous vehicle programs: started on Google's Self-Driving Car project in 2009 working on the Firefly vehicle, drive-by-wire SME, sensor calibration, promoted to L4. Then Uber ATG managing a 10-truck fleet. Then Pronto.ai as sole technician for a 2900-mile autonomous cross-country demo. Then 5+ years learning AI tools, code, and building personal and client projects.
-- Now: Joe's Tech Solutions (2025-present) — building AI agent systems. Hermes (Lurkr as CTO, executive skills, VPs, 40+ scheduled automations on Ollama Cloud), private AI solutions, The Skate Workshop app, DALL-E generator, Whisper Walkie, Career Ops. Previously: OpenClaw (22-agent system, 2024-2026, now retired) — see migration case study.
+- Now: Joe's Tech Solutions (2025-present), building software, automation and AI agent systems for small businesses; his own back office runs on Hermes (Nous Research's open-source agent runtime; Lurkr as CTO, executive skills, VPs, 40+ scheduled automations on Ollama Cloud). His client and personal work is listed under "Joe's work" below. Previously: a 22-agent setup he ran on the open-source OpenClaw runtime (2024-2026, now retired), covered in the migration case study.
 - Tech: React, TypeScript, Python, Node.js, Docker, K8s, Terraform, AWS/GCP, Claude/OpenAI APIs, Ollama Cloud
 - Target roles: AI Development, Autonomous Systems, Embedded/Robotics
 - English native, Spanish conversational
 - U.S. Citizen, DOD clearance eligible
 - No degree — 10 years in AV programs + 5+ years learning AI tools, code, and building projects + professional certs
 
-Projects (use search_portfolio for ANY detail — ZERO metrics from memory):
-- Hermes — AI operations system (Lurkr as CTO, 40+ scheduled automations, Ollama Cloud, current)
-- OpenClaw → Hermes Migration — case study (retired 22-agent specialized system)
-- The Skate Workshop — app
-- DALL-E Image Generator
-- Whisper Walkie — voice transcription
-- Career Ops — AI job search pipeline
-- cv-joseph — this portfolio with AI chatbot
+${workVoiceBlock('cloudyjoe')}
+For any detail beyond those lines, use search_portfolio: ZERO metrics from memory.
 
 RULE: Use search_portfolio WHENEVER the question could have an answer in Joe's portfolio. When in doubt, SEARCH. Only answer without searching for greetings, contact info, or topics clearly outside Joe's professional scope. The cost of searching is minimal — the cost of making stuff up is unacceptable.
 
@@ -163,7 +158,7 @@ search_portfolio returns a PRE-FORMED response already verified against Joe's po
 2. You CAN rephrase for natural rhythm — use the natural fillers from your Voice affect
 3. NEVER add data, metrics, or percentages that are NOT in the response
 4. NEVER contradict anything in the response
-5. If it says "I don't have that detail", say exactly that — do NOT improvise
+5. If it says "I don't have that detail" or "No relevant content found", apply the no-result rule under "Joe's work": answer from that list if it covers the question; if it does not, say plainly you don't have that detail. Never improvise beyond the list
 6. Keep exact numbers: "~90%" → "around ninety percent"
 7. TOOL AWARENESS: Every time you call search_portfolio, the frontend automatically shows badges with links to relevant articles below the voice orb. You KNOW this happens. When talking about a project, mention it naturally using the examples from your Voice affect. Vary the phrasing — do NOT repeat the same phrase. NEVER say "I can't put links" — the links are ALREADY there thanks to the badge system.
 
@@ -205,6 +200,16 @@ Portfolio: cloudyjoe.com`
 // ---------------------------------------------------------------------------
 
 export { voiceProvider }
+
+// The voice system instructions for a persona: its own voice prompt (JTS) or
+// the cloudyjoe base rules + speech style, then any booking note. The work list
+// is already inside both (workVoiceBlock). Exported so tests check exactly what
+// a voice session is given; the Gemini path prefixes the persona's voiceRule.
+export function voiceInstructions(persona) {
+  return (persona.voicePrompt
+    ? persona.voicePrompt
+    : `${VOICE_BASE_PROMPT}\n\n${VOICE_AFFECT_EN}`) + bookingVoiceNote(persona)
+}
 
 const GEMINI_LIVE_MODEL = process.env.GEMINI_LIVE_MODEL || 'models/gemini-3.1-flash-live-preview'
 const GEMINI_VOICE = process.env.GEMINI_VOICE || 'Charon'
@@ -324,11 +329,7 @@ export default async function handler(req) {
       })
     }
 
-    // Compose prompt: base rules + language-specific voice affect
-    const voiceAffect = VOICE_AFFECT_EN
-    const instructions = (persona.voicePrompt
-      ? persona.voicePrompt
-      : `${VOICE_BASE_PROMPT}\n\n${voiceAffect}`) + bookingVoiceNote(persona)
+    const instructions = voiceInstructions(persona)
 
     if (provider === 'gemini') {
       let minted

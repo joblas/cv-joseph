@@ -8,6 +8,7 @@ import {
   containsFingerprint, LEAK_RESPONSE,
 } from './_shared/rag.js'
 import { getSystemPrompt } from './_shared/prompt.js'
+import { composeTextPrompt } from './_shared/work.js'
 import { captureLead, checkRateLimit } from './_shared/leads.js'
 import { BOOKING_TOOL_NAMES, bookingContext, bookingFallbackText, bookingTools, runBookingTool } from './_shared/booking.js'
 import { CHAT_MODEL, FAST_MODEL, CHAT_MAX_TOKENS, scaleTokens, baseUrlHost, createAnthropicClient, createWithin } from './_shared/models.js'
@@ -390,7 +391,7 @@ export default async function handler(req) {
           const prompt = await langfuse.getPrompt(persona.langfusePrompt, parseInt(overrideVersion), {
             type: 'text', cacheTtlSeconds: 0,
           })
-          systemPromptText = prompt.prompt
+          systemPromptText = composeTextPrompt(prompt.prompt, persona.id)
           promptVersion = prompt.version
         } catch {
           systemPromptText = persona.prompt
