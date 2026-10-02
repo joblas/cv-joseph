@@ -362,3 +362,28 @@ test("the resume-facing surfaces do not title him Forward Deployed Engineer", ()
       offenders.join("\n"),
   );
 });
+
+test("every career timeline carries the same entries", () => {
+  // The 2019-2025 stretch was closed on the main page but not on /about, which
+  // keeps its own copy of the timeline in src/about-i18n.ts. A recruiter reaching
+  // /about saw Pronto (2018-2019) jump straight to 2025: the same six-year gap,
+  // still live after the fix, because the fix only touched one of the two files.
+  //
+  // So the entries are pinned per surface rather than "somewhere in the repo".
+  // Adding a third timeline means adding it here, which is the point.
+  const SURFACES = ["src/i18n.ts", "src/about-i18n.ts"];
+  const REQUIRED: [string, string][] = [
+    ["Quadient", "the May 2025-present role"],
+    ["Independent &amp; Contract Work|Independent & Contract Work", "the 2019-2025 stretch"],
+    ["2019", "the start of that stretch"],
+  ];
+  const missing: string[] = [];
+  for (const rel of SURFACES) {
+    const text = readFileSync(join(ROOT, rel), "utf8");
+    for (const [needle, what] of REQUIRED) {
+      const found = needle.split("|").some((n) => text.includes(n));
+      if (!found) missing.push(`${rel} is missing ${what} (${needle.split("|")[0]})`);
+    }
+  }
+  assert.deepEqual(missing, [], `career timelines disagree across surfaces:\n${missing.join("\n")}`);
+});

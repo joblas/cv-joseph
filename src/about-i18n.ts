@@ -18,6 +18,8 @@ const _en = {
     timelineHeading: 'Experience',
     timeline: [
       { period: '2025–Present', role: 'Founder & AI Systems Developer', company: 'Joe\'s Tech Solutions LLC', desc: 'Building for small businesses — Private AI Setup, AI Operations, Custom Builds; 3 live client deployments. Hermes (Lurkr as CTO, executive skills, VPs, 40+ scheduled automations on Ollama Cloud), React Native apps, open-source AI tooling' },
+      { period: 'May 2025–Present', role: 'Field Service Technician', company: 'Quadient', desc: 'Install, maintain, and repair mailing and shipping systems at customer sites across a North County territory; on-site diagnosis of electro-mechanical and software faults' },
+      { period: '2019–2025', role: 'IT, Automation & Cloud', company: 'Independent & Contract Work', desc: 'IT, Linux, cloud, automation, and full-stack product work, including APIs, databases, and deployment tooling; contract field service at OvationCXM (2023–2025) deploying and troubleshooting customer systems' },
       { period: '2018–2019', role: 'Autonomous Systems Operations', company: 'Pronto.ai', desc: 'Sole technician — built entire fleet, 2,900-mile autonomous demo, zero critical failures' },
       { period: '2016–2018', role: 'Hardware Integration & Test Operations', company: 'Uber ATG (Otto)', desc: 'System integration for 10-truck fleet, ~90% uptime, drive-by-wire integration' },
       { period: '2009–2016', role: 'Program Manager (L4) / Fleet Technician', company: 'Google Self-Driving Car Project (Waymo)', desc: 'Built Firefly from ground up, drive-by-wire SME, calibration 9hr→60min, first driverless ride' },
