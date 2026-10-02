@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync, readdirSync, statSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
 // Career claims have to say the same thing everywhere they appear.
@@ -33,13 +33,6 @@ function walk(dir: string, out: string[] = []): string[] {
   return out;
 }
 
-// Files that intentionally record the OLD value, or are not about Joe's claims.
-const SKIP = [
-  join(ROOT, "tests"),
-  join(ROOT, "evals"),
-  join(ROOT, "chatbot-prompt.txt"), // walked, but see below
-];
-
 function sources(): string[] {
   return walk(ROOT).filter((f) => !f.includes("/tests/") && !f.includes("/evals/") && !f.includes("/node_modules/"));
 }
@@ -63,13 +56,23 @@ test("the Pronto.ai demo count is 10+, never 30+", () => {
   );
 });
 
-test("10+ is stated somewhere, so the claim did not simply vanish", () => {
+test("10+ is stated in every file that carries the claim, so it did not simply vanish", () => {
   // A guard that only forbids the wrong number would pass if the whole claim
   // were deleted. The honest version has to be present.
-  const stated = readAll().filter(({ text }) => /\b10\+\s*executive/i.test(text));
-  assert.ok(
-    stated.length >= 2,
-    `expected the 10+ figure in at least two files (page copy and the agent prompts); found ${stated.length}`,
+  //
+  // Pinned per file rather than as a "at least two files" floor: with a floor,
+  // deleting the claim from any one of the three still passed because the other
+  // two carried it, so the one place a reader actually looks could lose it
+  // silently. Each file below must state it.
+  const mustState = ["src/i18n.ts", "chatbot-prompt.txt", "public/llms.txt"];
+  const missing = mustState.filter(
+    (rel) => !/\b10\+\s*executive/i.test(readFileSync(join(ROOT, rel), "utf8")),
+  );
+  assert.deepEqual(
+    missing,
+    [],
+    "these files no longer state the corrected 10+ figure (the claim was dropped rather than fixed):\n" +
+      missing.join("\n"),
   );
 });
 
