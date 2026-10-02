@@ -680,6 +680,16 @@ const _translationsEn = {
       "Hi! I'm **Cloudy-Joe**, Joe's AI agent — not Joe himself. Ask me anything about his experience, projects, autonomous vehicles, AI.",
     error: 'Error sending. Please try again.',
     offline: 'Looks like you\'re offline. Check your connection and try again.',
+    stop: 'Stop',
+    retry: 'Try again',
+    dropped: 'The connection dropped before the answer finished.',
+    // What a slow reply is doing, under the typing indicator.
+    wait: {
+      searching: "Searching Joe's site…",
+      retrying: 'Taking another run at it…',
+      reconnecting: 'Connection dropped. Reconnecting…',
+      slow: 'Still working on it…',
+    },
     prompts: [
       {
         icon: 'briefcase',

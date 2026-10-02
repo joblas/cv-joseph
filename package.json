@@ -43,6 +43,7 @@
     "test:contact-email": "npm run cf:prep >/dev/null && tsx tests/contact-email.test.ts",
     "test:chat-resilience": "npm run cf:prep >/dev/null && tsx tests/chat-resilience.test.ts",
     "test:messages": "npm run cf:prep >/dev/null && tsx tests/messages.test.ts",
+    "test:agent-stream": "tsx --test tests/agent-stream.test.ts",
     "test:career-claims": "tsx tests/career-claims.test.ts"
   },
   "dependencies": {
