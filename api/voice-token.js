@@ -348,6 +348,9 @@ export default async function handler(req) {
         token: viaRelay ? await signVoiceTicket(minted.token) : minted.token,
         model: GEMINI_LIVE_MODEL,
         wsUrl: viaRelay || GEMINI_WS_URL,
+        // If the relay itself fails before the session starts, the widget tries
+        // Google's address once with the bare token: never worse than no relay.
+        ...(viaRelay ? { direct: { wsUrl: GEMINI_WS_URL, token: minted.token } } : {}),
         traceId,
         expiresAt: minted.expiresAt,
       }), {

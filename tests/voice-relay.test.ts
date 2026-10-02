@@ -80,7 +80,6 @@ const realFetch = globalThis.fetch;
 
 const { signVoiceTicket, verifyVoiceTicket } = await import("../functions/api-src/_shared/voice-ticket.js");
 const relay = (await import("../functions/api-src/voice-live.js")).default;
-const { GOOGLE_LIVE } = await import("../functions/api-src/voice-live.js");
 const voiceToken = (await import("../functions/api-src/voice-token.js")).default;
 
 async function connect(ticket: string | null, headers: Record<string, string> = { Upgrade: "websocket" }) {
@@ -100,10 +99,18 @@ test("a ticket this server signed opens; a forged, altered or bare one does not"
   assert.equal(await verifyVoiceTicket(ticket.slice(0, -1) + (ticket.endsWith("0") ? "1" : "0")), null);
   assert.equal(await verifyVoiceTicket("auth_tokens/abc123"), null);
   assert.equal(await verifyVoiceTicket("auth_tokens/abc123~" + "0".repeat(32)), null);
+  // the ticket key is derived for this purpose: an HMAC under the raw secret is not a ticket
+  const raw = await crypto.subtle.importKey("raw", new TextEncoder().encode("test-gemini-key"), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  const rawMac = new Uint8Array(await crypto.subtle.sign("HMAC", raw, new TextEncoder().encode("auth_tokens/abc123")));
+  const rawHex = Array.from(rawMac.slice(0, 16), (b) => b.toString(16).padStart(2, "0")).join("");
+  assert.equal(await verifyVoiceTicket(`auth_tokens/abc123~${rawHex}`), null);
   const key = process.env.GEMINI_API_KEY;
   delete process.env.GEMINI_API_KEY;
-  assert.equal(await verifyVoiceTicket(ticket), null, "no secret, no relay");
-  process.env.GEMINI_API_KEY = key;
+  try {
+    assert.equal(await verifyVoiceTicket(ticket), null, "no secret, no relay");
+  } finally {
+    process.env.GEMINI_API_KEY = key;
+  }
 });
 
 // --- /api/voice-token points a page that asks at the relay ---------------------------
@@ -119,11 +126,15 @@ test("a page that asks for the relay gets this site's address and a signed ticke
   assert.equal(data.wsUrl, "wss://cloudyjoe.com/api/voice-live");
   assert.equal(await verifyVoiceTicket(data.token), "auth_tokens/abc123");
   assert.ok(data.model);
+  // ...and Google's own address with the bare token, for the widget's one fallback if the relay fails
+  assert.match(data.direct.wsUrl, /^wss:\/\/generativelanguage\.googleapis\.com\/ws\/.*BidiGenerateContentConstrained$/);
+  assert.equal(data.direct.token, "auth_tokens/abc123");
 });
 test("an older page that does not ask still gets Google's address and the bare token", async () => {
   const { data } = await token({ lang: "en", sessionId: "s2" });
   assert.match(data.wsUrl, /^wss:\/\/generativelanguage\.googleapis\.com\//);
   assert.equal(data.token, "auth_tokens/abc123");
+  assert.equal(data.direct, undefined);
 });
 test("VOICE_RELAY=off turns the relay off for everyone", async () => {
   process.env.VOICE_RELAY = "off";
@@ -150,7 +161,8 @@ test("a signed ticket opens Google's constrained Live endpoint, and Google's soc
   const { res, browser } = await connect(await signVoiceTicket("auth_tokens/abc123"));
   assert.equal(res.status, 101);
   assert.equal(upstreamCalls.length, 1);
-  assert.equal(upstreamCalls[0].url, `${GOOGLE_LIVE}?access_token=${encodeURIComponent("auth_tokens/abc123")}`);
+  // Spelled out, not GOOGLE_LIVE: the relay must only ever reach the constrained endpoint.
+  assert.equal(upstreamCalls[0].url, `https://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContentConstrained?access_token=${encodeURIComponent("auth_tokens/abc123")}`);
   assert.equal(upstreamCalls[0].upgrade, "websocket");
   assert.equal(browser, handedBack, "the browser gets Google's own socket");
   assert.equal(handedBack!.accepted, false, "accepting it would make every frame this code's work");

@@ -1,14 +1,20 @@
 // The voice relay (api/voice-live.js) pipes only Google tokens this server
 // minted: /api/voice-token hands out `<token>~<signature>`, an HMAC of the
 // token under a server secret, so the relay cannot be borrowed as a free pipe
-// to Google by anyone holding a token of their own. The key is the Gemini API
-// key itself (never sent anywhere from here) unless VOICE_RELAY_SECRET is set.
+// to Google by anyone holding a token of their own. The secret is
+// VOICE_RELAY_SECRET, or else the Gemini API key (never sent anywhere from
+// here); either way tickets are signed with a key derived for this one purpose.
 const enc = new TextEncoder()
 const secret = () => process.env.VOICE_RELAY_SECRET || process.env.GEMINI_API_KEY || ''
 
+async function hmac(keyBytes, message) {
+  const key = await crypto.subtle.importKey('raw', keyBytes, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'])
+  return new Uint8Array(await crypto.subtle.sign('HMAC', key, enc.encode(message)))
+}
+
 async function signature(token) {
-  const key = await crypto.subtle.importKey('raw', enc.encode(secret()), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'])
-  const mac = new Uint8Array(await crypto.subtle.sign('HMAC', key, enc.encode(token)))
+  const ticketKey = await hmac(enc.encode(secret()), 'cloudyjoe voice relay ticket v1')
+  const mac = await hmac(ticketKey, token)
   return Array.from(mac.slice(0, 16), (b) => b.toString(16).padStart(2, '0')).join('')
 }
 
