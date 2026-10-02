@@ -372,10 +372,18 @@ test("every career timeline carries the same entries", () => {
   // So the entries are pinned per surface rather than "somewhere in the repo".
   // Adding a third timeline means adding it here, which is the point.
   const SURFACES = ["src/i18n.ts", "src/about-i18n.ts"];
+  // Entries are pinned by exact period string, not by a bare "2019". The first
+  // version of this test looked for "2019", which Pronto's "2018-2019" satisfies
+  // anywhere in the file, so a wrong start year (2020-2025) passed in BOTH files.
+  // Pinning the whole period is what makes date drift fail.
   const REQUIRED: [string, string][] = [
-    ["Quadient", "the May 2025-present role"],
+    ["Quadient", "the current role"],
     ["Independent &amp; Contract Work|Independent & Contract Work", "the 2019-2025 stretch"],
-    ["2019", "the start of that stretch"],
+    ["May 2025-Present|May 2025 - Present|May 2025\u2013Present", "Quadient's start"],
+    ["2019-2025|2019 - 2025|2019\u20132025", "the 2019-2025 period"],
+    ["2018-2019|2018 - 2019|2018\u20132019", "Pronto"],
+    ["2016-2018|2016 - 2018|2016\u20132018", "Uber ATG"],
+    ["2009-2016|2009 - 2016|2009\u20132016", "Google / Waymo"],
   ];
   const missing: string[] = [];
   for (const rel of SURFACES) {
@@ -383,6 +391,79 @@ test("every career timeline carries the same entries", () => {
     for (const [needle, what] of REQUIRED) {
       const found = needle.split("|").some((n) => text.includes(n));
       if (!found) missing.push(`${rel} is missing ${what} (${needle.split("|")[0]})`);
+    }
+    // Ordering, checked on the ENTRY MARKERS within the TIMELINE REGION only.
+    //
+    // Two earlier versions of this were wrong in opposite directions, and both are
+    // worth knowing about:
+    //   1. It looked for "2019-", "2018-" etc. Both files write periods with an en
+    //      dash ("2019\u20132025"), so every lookup missed, the list came back empty
+    //      and the loop never ran. A mutation that moved the 2019-2025 entry below
+    //      Pronto passed. A vacuous check is worse than none: it reads as coverage.
+    //   2. Marker positions were taken across the WHOLE FILE. "Pronto" and "Uber
+    //      ATG" also appear in the bio prose dozens of lines above the timeline, so
+    //      the real, correctly-ordered timeline reported as out of order.
+    // Slicing to the entries themselves avoids both failure modes.
+    // Ordering is checked only where order actually exists.
+    //
+    // NOT in src/i18n.ts by position: that file is a keyed object
+    // (experience.jts, experience.quadient, ...). Its file order carries no meaning
+    // and does not match what a visitor sees — the page order comes from the JSX in
+    // src/App.tsx. Asserting on the object's key order would test something nobody
+    // experiences. Three attempts at this check were wrong before this one:
+    //   1. year strings with a hyphen, which never matched (both files use en dashes)
+    //      so the loop never ran and any reordering passed;
+    //   2. marker positions across the whole file, where the company names also
+    //      appear in bio prose above the timeline, so the correct timeline failed;
+    //   3. assuming i18n.ts holds its entries in display order, which it does not.
+    // So: the timeline array for /about, and the render order in App.tsx for the
+    // main page. Those are the two places a reader can actually see a gap.
+    const ORDERS: [string, string[]][] = [
+      [
+        "src/about-i18n.ts",
+        // Anchor on the entry's `company:` field, not the bare name: the company
+        // names also occur in the bio prose above the timeline, which is what made
+        // the previous version fail on a correctly ordered file.
+        [
+          "company: 'Quadient'",
+          "company: 'Independent & Contract Work'",
+          "company: 'Pronto.ai'",
+          "company: 'Uber ATG (Otto)'",
+          "company: 'Google Self-Driving Car Project (Waymo)'",
+        ],
+      ],
+      [
+        "src/App.tsx",
+        [
+          // The </h3> is part of the anchor on purpose: the same expression also
+          // appears in an <img alt=> attribute just above, so matching the bare
+          // expression finds the decorative image line and the check can be fooled
+          // into measuring a move that does not reorder anything a reader sees.
+          "t.experience.jts.company}</h3>",
+          "t.experience.quadient.company}</h3>",
+          "t.experience.itAutomation.company}</h3>",
+          "t.experience.pronto.company}</h3>",
+          "t.experience.uberAtg.company}</h3>",
+          "t.experience.google.company}</h3>",
+        ],
+      ],
+    ];
+    for (const [rel, anchors] of ORDERS) {
+      const body = readFileSync(join(ROOT, rel), "utf8");
+      let prev = -1;
+      let prevName = "";
+      for (const anchor of anchors) {
+        const i = body.indexOf(anchor);
+        if (i === -1) {
+          missing.push(`${rel} has no "${anchor}" — cannot verify order`);
+          break;
+        }
+        if (i < prev) {
+          missing.push(`${rel} lists "${anchor}" after "${prevName}" — timeline is not newest-first`);
+        }
+        prev = i;
+        prevName = anchor;
+      }
     }
   }
   assert.deepEqual(missing, [], `career timelines disagree across surfaces:\n${missing.join("\n")}`);
