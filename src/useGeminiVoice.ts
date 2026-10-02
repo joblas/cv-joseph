@@ -31,6 +31,9 @@ interface Message {
 
 const INPUT_RATE = 16000;
 const OUTPUT_RATE = 24000;
+// A live session normally answers setup within a second or two; a socket still
+// silent at this point is treated as failed (and the relay falls back once).
+const CONNECT_TIMEOUT_MS = 20000;
 
 function base64ToInt16(b64: string): Int16Array {
   const binary = atob(b64);
@@ -345,7 +348,9 @@ export function useGeminiVoice() {
       const tokenRes = await fetch('/api/voice-token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ lang, sessionId }),
+        // relay: this page's security policy allows the site's own voice relay,
+        // which works where Google's address does not (a VPN, a filtered network).
+        body: JSON.stringify({ lang, sessionId, relay: true }),
       });
       if (!tokenRes.ok) {
         if (tokenRes.status === 429) { fail('rateLimited'); return; }
@@ -353,7 +358,7 @@ export function useGeminiVoice() {
         fail('connection');
         return;
       }
-      const { token, model, wsUrl, traceId } = await tokenRes.json();
+      const { token, model, wsUrl, traceId, direct } = await tokenRes.json();
       traceIdRef.current = traceId || null;
       if (!token || !wsUrl || !model) { fail('connection'); return; }
       if (!activeRef.current) return;
@@ -375,25 +380,49 @@ export function useGeminiVoice() {
       outAnalyserRef.current = outAnalyser;
       await Promise.all([captureCtx.resume(), playbackCtx.resume()]);
 
-      // 4. Live session — setup only; history and audio wait for setupComplete
+      // 4. Live session — setup only; history and audio wait for setupComplete.
+      //    Through the site's relay when the server offers one; if that socket
+      //    fails before the session starts (closed, errored, or silent for
+      //    CONNECT_TIMEOUT_MS), try Google's own address once with the bare token.
       historyRef.current = history;
-      const ws = new WebSocket(`${wsUrl}?access_token=${encodeURIComponent(token)}`);
-      wsRef.current = ws;
-      ws.onopen = () => { ws.send(JSON.stringify({ setup: { model } })); };
-      ws.onmessage = async (ev) => {
-        const raw = typeof ev.data === 'string' ? ev.data : await (ev.data as Blob).text();
-        try {
-          handleServerMessage(JSON.parse(raw) as Record<string, unknown>, ws);
-        } catch {
-          // ignore malformed frames
-        }
+      const open = (url: string, tok: string, fallback?: { wsUrl: string; token: string }) => {
+        let ready = false;
+        const ws = new WebSocket(`${url}?access_token=${encodeURIComponent(tok)}`);
+        wsRef.current = ws;
+        const lost = (e?: CloseEvent) => {
+          window.clearTimeout(readyTimer);
+          if (!activeRef.current || wsRef.current !== ws) return; // stopped, or already replaced
+          if (e) console.warn('[GeminiVoice] socket closed', e.code, e.reason);
+          if (!ready && fallback) {
+            ws.onclose = null;
+            ws.onerror = null;
+            try { ws.close(); } catch { /* already closed */ }
+            open(fallback.wsUrl, fallback.token);
+            return;
+          }
+          fail('connection');
+        };
+        const readyTimer = window.setTimeout(() => { if (!ready) lost(); }, CONNECT_TIMEOUT_MS);
+        ws.onopen = () => { ws.send(JSON.stringify({ setup: { model } })); };
+        ws.onmessage = async (ev) => {
+          const raw = typeof ev.data === 'string' ? ev.data : await (ev.data as Blob).text();
+          if (wsRef.current !== ws) return; // replaced by the fallback while this frame was read
+          let msg: Record<string, unknown>;
+          try {
+            msg = JSON.parse(raw) as Record<string, unknown>;
+          } catch {
+            return; // ignore malformed frames
+          }
+          if (msg.setupComplete) {
+            ready = true;
+            window.clearTimeout(readyTimer);
+          }
+          handleServerMessage(msg, ws);
+        };
+        ws.onerror = () => lost();
+        ws.onclose = (e) => lost(e);
       };
-      ws.onerror = () => { if (activeRef.current) fail('connection'); };
-      ws.onclose = (e) => {
-        if (!activeRef.current) return;
-        console.warn('[GeminiVoice] socket closed', e.code, e.reason);
-        fail('connection');
-      };
+      open(wsUrl, token, direct?.wsUrl && direct?.token ? direct : undefined);
 
       // 5. Session cap
       timerRef.current = window.setInterval(() => {

@@ -1,4 +1,5 @@
 import { Langfuse } from 'langfuse'
+import { signVoiceTicket } from './_shared/voice-ticket.js'
 import { voiceProvider } from './_shared/voice-provider.js'
 import { resolvePersona } from './_shared/personas.js'
 import { bookingVoiceNote } from './_shared/booking.js'
@@ -210,6 +211,19 @@ const GEMINI_VOICE = process.env.GEMINI_VOICE || 'Charon'
 const GEMINI_WS_URL =
   'wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContentConstrained'
 
+// The voice relay on this site (api/voice-live.js), for a page that asks for
+// it (`relay: true`): such a page's security policy allows the relay, and a
+// visitor on a VPN reaches it where Google's own address fails. A page that
+// does not ask (an older cached page) still gets Google's address.
+// VOICE_RELAY=off turns the relay off for everyone.
+function relayUrl(req) {
+  if (process.env.VOICE_RELAY === 'off') return null
+  const url = new URL('/api/voice-live', req.url)
+  url.protocol = url.protocol === 'http:' ? 'ws:' : 'wss:'
+  url.search = ''
+  return url.toString()
+}
+
 // Mint a single-use ephemeral token with the model, persona and tool locked in,
 // so the browser never sees the API key and cannot change the setup.
 async function createGeminiToken(instructions, persona) {
@@ -293,7 +307,7 @@ export default async function handler(req) {
 
   try {
     const body = await req.json()
-    const { lang = 'en', sessionId } = body
+    const { lang = 'en', sessionId, relay = false } = body
     const persona = resolvePersona(body, req)
 
     // Rate limiting
@@ -328,11 +342,15 @@ export default async function handler(req) {
         })
       }
       const traceId = await createVoiceTrace({ lang, sessionId, provider, ip, rateLimit, persona })
+      const viaRelay = relay === true ? relayUrl(req) : null
       return new Response(JSON.stringify({
         provider: 'gemini',
-        token: minted.token,
+        token: viaRelay ? await signVoiceTicket(minted.token) : minted.token,
         model: GEMINI_LIVE_MODEL,
-        wsUrl: GEMINI_WS_URL,
+        wsUrl: viaRelay || GEMINI_WS_URL,
+        // If the relay itself fails before the session starts, the widget tries
+        // Google's address once with the bare token: never worse than no relay.
+        ...(viaRelay ? { direct: { wsUrl: GEMINI_WS_URL, token: minted.token } } : {}),
         traceId,
         expiresAt: minted.expiresAt,
       }), {

@@ -98,6 +98,7 @@ jobs:
           npm run test:intent
           npm run test:contact-email
           npm run test:chat-resilience
+          npm run test:voice-relay
           npm run test:messages
           npm run test:agent-stream
           npm run test:model-bounds
