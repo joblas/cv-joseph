@@ -61,7 +61,7 @@
         },
         {
           "type": "llm_judge",
-          "criteria": "The response names Joe's three ways of working together — Private AI Setup, the Operations retainer and Custom Build (Google Maps Growth and the free tools may also appear) — and invents no other service, price or project timeline."
+          "criteria": "The response names Joe's three ways of working together (Private AI Setup, AI Operations and Custom Build) and invents no other service, price or project timeline."
         }
       ]
     },

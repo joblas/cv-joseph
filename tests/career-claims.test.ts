@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
+import { execFileSync } from "node:child_process";
 import { join } from "node:path";
 
 // Career claims have to say the same thing everywhere they appear.
@@ -33,8 +34,28 @@ function walk(dir: string, out: string[] = []): string[] {
   return out;
 }
 
+// Only tracked files. dist/ and functions/api/_prompt-fallback*.js are build
+// output (gitignored) regenerated from these sources — scanning them would flag
+// the stale copy of a file that was already fixed, and hand-editing build output
+// is not a fix. The build regenerates them from source.
+function tracked(): Set<string> {
+  const out = new Set<string>();
+  try {
+    const r = execFileSync("git", ["ls-files", "-z"], { cwd: ROOT, encoding: "utf8" });
+    for (const rel of r.split("\0")) if (rel) out.add(join(ROOT, rel));
+  } catch {
+    return new Set(); // no git (tarball): fall back to walking everything
+  }
+  return out;
+}
+
 function sources(): string[] {
-  return walk(ROOT).filter((f) => !f.includes("/tests/") && !f.includes("/evals/") && !f.includes("/node_modules/"));
+  const t = tracked();
+  const walked = walk(ROOT).filter(
+    (f) => !f.includes("/tests/") && !f.includes("/evals/") && !f.includes("/node_modules/"),
+  );
+  if (t.size === 0) return walked;
+  return walked.filter((f) => t.has(f));
 }
 
 function readAll(): { file: string; text: string }[] {
@@ -162,5 +183,40 @@ test("the 10+ figure is not written with an em dash around it", () => {
     offenders,
     [],
     "the corrected claims use an em dash; use a comma or a colon instead:\n" + offenders.join("\n"),
+  );
+});
+
+test("Google Maps Growth and the visibility audit are not sold anywhere", () => {
+  // Joe, 2026-10-01: "definitely going to be a product and service that I want to
+  // offer once it's actually vetted and proven that it works." Until then it is
+  // off every surface that sells work: the page, the agent prompts and llms.txt.
+  //
+  // The offer was pulled once before (2026-09-17) and came back on 09-19 under a
+  // new name, so this pins BOTH names rather than just the current one.
+  //
+  // Not a violation: the historical blog post recording the pull, and internal
+  // tooling (scripts/visibility-audit, scripts/gbp-ops) which runs no client work.
+  const ALLOWED = [
+    "/src/content/blog/killed-my-google-maps-growth-page.ts",
+    "/src/lib/doors.ts", // holds only the explanatory comment about the reversal
+  ];
+  const SELLS = /Google Maps Growth|visibility audit/i;
+  const offenders: string[] = [];
+  for (const { file, text } of readAll()) {
+    if (ALLOWED.some((a) => file.endsWith(a))) continue;
+    if (file.includes("/scripts/")) continue;
+    for (const line of text.split("\n")) {
+      // Skip comment lines: prose explaining the removal is not an offer.
+      const t = line.trim();
+      if (t.startsWith("//") || t.startsWith("*") || t.startsWith("#") || t.startsWith("/*")) continue;
+      if (SELLS.test(line) && /offer|sell|service|Growth|audit/i.test(line)) {
+        offenders.push(`${file}: ${t.slice(0, 80)}`);
+      }
+    }
+  }
+  assert.deepEqual(
+    offenders,
+    [],
+    "these files still sell the pulled offer:\n" + offenders.join("\n"),
   );
 });

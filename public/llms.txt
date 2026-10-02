@@ -23,7 +23,7 @@ Previously: 10 years as an autonomous vehicle systems specialist. Built Google's
 
 ## What Joe Does
 
-1. **Forward Deployed Engineering** — Custom software, AI agents, automation, and private AI for small businesses; Private AI Setup, AI Operations, Custom Builds, Google Maps Growth (joestechsolutions.com)
+1. **Custom Software & AI Systems** — Custom software, AI agents, automation, and private AI for small businesses; Private AI Setup, AI Operations, Custom Builds (joestechsolutions.com)
 2. **AI Systems** — Multi-agent operations (Hermes), full-stack AI apps, RAG, prompt engineering
 3. **Autonomous Systems background** — 10 years in AV programs, sensor integration, drive-by-wire, CAN/LIN, HIL testing
 
@@ -85,7 +85,7 @@ AI operations system I operate as CTO — models pinned per job on Ollama Cloud.
 ### Joe's Tech Solutions LLC (2025-Present) — Founder & AI Systems Developer
 - Operate Hermes (Nous Research's open-source agent runtime — Lurkr as CTO, C-suite skills, VPs, 40+ scheduled automations on Ollama Cloud) handling real business operations
 - Previously: OpenClaw (22-agent specialized system, 2024–2026) — migrated to Hermes
-- Client offerings at joestechsolutions.com: Private AI Setup (one-time 75-minute session, no subscription), AI Operations, Custom Builds, Google Maps Growth
+- Client offerings at joestechsolutions.com: Private AI Setup (one-time 75-minute session, no subscription), AI Operations, Custom Builds
 - Private AI runs on the client's own hardware (Ollama, Open WebUI, local automation stacks)
 - Ship production web and mobile apps: React, Next.js, React Native, TypeScript, Supabase
 - Created Whisper Walkie — open source push-to-talk voice typing (100% local)

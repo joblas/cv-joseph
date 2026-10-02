@@ -1516,7 +1516,7 @@ function App() {
               {t.careerHighlights.title}
             </h2>
             <p className="text-center text-muted-foreground mb-10 text-sm">
-              Two industry-defining milestones — the start and the frontier of the self-driving era.
+              Four moments that shaped the self-driving era — from the founding team to the frontier.
             </p>
           </AnimatedSection>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
@@ -1848,6 +1848,56 @@ function App() {
             </AnimatedSection>
           </div>
 
+          {/* Quadient */}
+          <AnimatedSection delay={0.4} className="mt-16">
+            <div className="mb-6">
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mb-2">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl overflow-hidden bg-white flex items-center justify-center shrink-0">
+                    <Briefcase className="w-5 h-5 text-muted-foreground" aria-hidden="true" />
+                  </div>
+                  <h3 className="font-display text-2xl font-bold">{t.experience.quadient.company}</h3>
+                </div>
+                <span className="text-sm text-muted-foreground">{t.experience.quadient.location}</span>
+              </div>
+              <p className="text-primary font-medium mb-1">{t.experience.quadient.role}</p>
+              <p className="text-sm text-muted-foreground mb-4">{t.experience.quadient.period}</p>
+              <ul className="text-sm text-muted-foreground space-y-1">
+                {t.experience.quadient.desc.map((d, i) => (
+                  <li key={i} className="flex items-start gap-2">
+                    <span className="text-primary mt-1">•</span>
+                    <span>{d}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </AnimatedSection>
+
+          {/* IT, Automation & Cloud (2019-2025) */}
+          <AnimatedSection delay={0.45} className="mt-16">
+            <div className="mb-6">
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mb-2">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl overflow-hidden bg-white flex items-center justify-center shrink-0">
+                    <Wrench className="w-5 h-5 text-muted-foreground" aria-hidden="true" />
+                  </div>
+                  <h3 className="font-display text-2xl font-bold">{t.experience.itAutomation.company}</h3>
+                </div>
+                <span className="text-sm text-muted-foreground">{t.experience.itAutomation.location}</span>
+              </div>
+              <p className="text-primary font-medium mb-1">{t.experience.itAutomation.role}</p>
+              <p className="text-sm text-muted-foreground mb-4">{t.experience.itAutomation.period}</p>
+              <ul className="text-sm text-muted-foreground space-y-1">
+                {t.experience.itAutomation.desc.map((d, i) => (
+                  <li key={i} className="flex items-start gap-2">
+                    <span className="text-primary mt-1">•</span>
+                    <span>{d}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </AnimatedSection>
+
           {/* Pronto.ai */}
           <AnimatedSection delay={0.5} className="mt-16">
             <div className="mb-6">
@@ -1868,7 +1918,14 @@ function App() {
               </div>
               <p className="text-primary font-medium mb-1">{t.experience.pronto.role}</p>
               <p className="text-sm text-muted-foreground mb-2">{t.experience.pronto.period}</p>
-              <p className="text-muted-foreground">{t.experience.pronto.desc}</p>
+              <ul className="text-sm text-muted-foreground space-y-2">
+                {t.experience.pronto.desc.map((d, i) => (
+                  <li key={i} className="flex items-start gap-2">
+                    <span className="text-primary mt-1">•</span>
+                    <span>{d}</span>
+                  </li>
+                ))}
+              </ul>
             </div>
             <div className="mt-6 p-6 rounded-2xl bg-gradient-to-br from-primary/10 to-accent/10 border border-primary/20">
               <div className="flex items-start gap-4">
@@ -1933,7 +1990,14 @@ function App() {
               </div>
               <p className="text-primary font-medium mb-1">{t.experience.uberAtg.role}</p>
               <p className="text-sm text-muted-foreground mb-2">{t.experience.uberAtg.period}</p>
-              <p className="text-muted-foreground">{t.experience.uberAtg.desc}</p>
+              <ul className="text-sm text-muted-foreground space-y-2">
+                {t.experience.uberAtg.desc.map((d, i) => (
+                  <li key={i} className="flex items-start gap-2">
+                    <span className="text-primary mt-1">•</span>
+                    <span>{d}</span>
+                  </li>
+                ))}
+              </ul>
 
               {/* Press coverage */}
               {t.experience.uberAtg.press.length > 0 && (
@@ -1994,7 +2058,14 @@ function App() {
               </div>
               <p className="text-accent font-medium mb-1">{t.experience.google.role}</p>
               <p className="text-sm text-muted-foreground mb-4">{t.experience.google.period}</p>
-              <p className="text-muted-foreground">{t.experience.google.desc}</p>
+              <ul className="text-sm text-muted-foreground space-y-2">
+                {t.experience.google.desc.map((d, i) => (
+                  <li key={i} className="flex items-start gap-2">
+                    <span className="text-primary mt-1">•</span>
+                    <span>{d}</span>
+                  </li>
+                ))}
+              </ul>
 
               {/* Press coverage */}
               {t.experience.google.press.length > 0 && (
