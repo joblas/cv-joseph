@@ -46,7 +46,8 @@
     "test:messages": "npm run cf:prep >/dev/null && tsx tests/messages.test.ts",
     "test:agent-stream": "tsx --test tests/agent-stream.test.ts",
     "test:model-bounds": "npm run cf:prep >/dev/null && tsx --test tests/model-bounds.test.ts",
-    "test:career-claims": "tsx tests/career-claims.test.ts"
+    "test:career-claims": "tsx tests/career-claims.test.ts",
+    "test:agent-knowledge": "npm run cf:prep >/dev/null && tsx tests/agent-knowledge.test.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.71.2",

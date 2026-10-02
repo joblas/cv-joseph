@@ -365,6 +365,26 @@
           "criteria": "The response names at least two of Joe's shipped projects (The Skate Workshop, RenFaire Directory, Cbarrgs Music, FixBot) with one concrete detail each. Merely pointing at /portfolio without naming projects is a FAILURE. Claiming there are no examples, or that the site does not cover Joe's work, is a FAILURE. Inventing a project not in that list (for example 'Turnover Agent') is a FAILURE."
         }
       ]
+    },
+    {
+      "id": "jts-shopify-merch-store",
+      "description": "JTS persona knows the Cbarrgs Shopify merch store (the JTS site names Cbarrgs) and keeps every other client anonymous.",
+      "input": "Can Joe build a Shopify store for a musician selling t-shirts and stickers?",
+      "lang": "en",
+      "assertions": [
+        {
+          "type": "contains",
+          "value": "Cbarrgs"
+        },
+        {
+          "type": "not_contains",
+          "value": "Willy"
+        },
+        {
+          "type": "llm_judge",
+          "criteria": "The response says yes and points to the Shopify merch store Joe set up for the artist Cbarrgs, with no sales or revenue figures and no price; it may offer email or the contact page for a quote."
+        }
+      ]
     }
   ]
 }

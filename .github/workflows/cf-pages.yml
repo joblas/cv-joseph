@@ -106,6 +106,10 @@ jobs:
           # facts repeated across the page, the chatbot prompt and llms.txt, so
           # they drift silently. This gate is why the check exists at all.
           npm run test:career-claims
+          # Joe's work reaches all four agent surfaces (each persona, text and
+          # voice) from one module, api/_shared/work.js, and the claims the
+          # 2026-10-02 audit refuted stay out of prompts, llms.txt and articles.
+          npm run test:agent-knowledge
       - name: Build (static site + Pages Functions)
         run: |
           npm run cf:prep   # api/ → functions/api-src/ (Workers shims), prompt module
