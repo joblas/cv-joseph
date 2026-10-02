@@ -26,7 +26,7 @@ const _translationsEn = {
         '*Complex systems* +that work in production+.',
       ],
     ],
-    why: "From Google's founding self-driving milestone to a Guinness World Record to production multi-agent AI — my career is a bridge between hardware and software. I helped build the AV industry. Now I run Joe's Tech Solutions as a forward deployed engineer — building the AI systems that run small businesses, on the same stack that runs my own.",
+    why: "From Google's founding self-driving milestone to a Guinness World Record to production multi-agent AI — my career is a bridge between hardware and software. I helped build the AV industry. Now I run Joe's Tech Solutions — building the AI systems that run small businesses, on the same stack that runs my own.",
     seeking: [
       'This still feels like day one.',
       'Same stack for my business and my clients.',
@@ -89,7 +89,7 @@ const _translationsEn = {
       ". Founder of Joe's Tech Solutions — custom software, AI agents, automation, and private AI, built on the same stack I run my own company on. That stack is Hermes: one orchestrator (Lurkr as CTO), executive skills, VPs, 40+ scheduled automations, Ollama Cloud models pinned per job. Ship full-stack apps: React, React Native, Next.js, TypeScript, Python.",
     p2: 'Previously: 10 years as an',
     p2Highlight: 'autonomous vehicle systems specialist',
-    p2End: ' at Google, Uber, and startups — followed by 5+ years learning AI tools, code, and building personal and client projects.',
+    p2End: ' at Google, Uber, and startups. Since 2019: contract field service and independent IT, cloud, and automation work, then founder of Joe\'s Tech Solutions building AI systems and full-stack apps.',
     cards: [
       {
         title: 'Builder Mindset',
@@ -278,7 +278,7 @@ const _translationsEn = {
       caseStudyUrl: '/hermes',
       caseStudyLabel: 'Case Study: OpenClaw → Hermes Migration',
       exit: 'Real AI For Real Businesses',
-      exitDesc: 'Forward deployed engineering for small businesses: Private AI Setup (a one-time 75-minute session — the client owns it, no subscription), AI Operations (monthly), Custom Builds (apps and agent systems), and Google Maps Growth. Private AI runs on the client\'s own hardware — data never leaves their setup.',
+      exitDesc: 'Building for small businesses: Private AI Setup (a one-time 75-minute session — the client owns it, no subscription), AI Operations (monthly), and Custom Builds (apps and agent systems). Private AI runs on the client\'s own hardware — data never leaves their setup.',
       highlights: [
         'Operate Hermes (Nous Research\'s open-source agent runtime) as an AI operations team — Lurkr as CTO, C-suite skills, VPs, 40+ scheduled automations handling real business operations',
         'Three live client deployments built and left running, watched around the clock by my own monitoring',
@@ -410,6 +410,28 @@ const _translationsEn = {
         metric: 'Platform',
         caseStudyUrl: '',
       },
+    },
+    quadient: {
+      company: 'Quadient',
+      location: 'San Diego North County, CA',
+      role: 'Field Service Technician',
+      period: 'May 2025 - Present · Field Service',
+      desc: [
+        'Install, maintain, and repair mailing and shipping systems, including postage meters and folder inserters, at customer sites across a North County territory.',
+        'Diagnose electro-mechanical and software faults on site and document each service call and resolution.',
+        "Act as the customer's technical point of contact from installation through ongoing service.",
+      ],
+    },
+    itAutomation: {
+      company: 'Independent & Contract Work',
+      location: 'San Diego, CA',
+      role: 'IT, Automation & Cloud',
+      period: '2019 - 2025 · IT / Automation',
+      desc: [
+        'IT, Linux, cloud, automation, and full-stack product work, including APIs, databases, and deployment tooling.',
+        'Contract field service at OvationCXM (2023 - 2025): deployed and configured customer systems, and troubleshot complex technical issues at enterprise sites.',
+        "Kept hands on the hardware side throughout, which is what made the move into AI systems a continuation rather than a restart.",
+      ],
     },
     google: {
       company: 'Google Self-Driving Car Project (Waymo)',

@@ -69,17 +69,24 @@ check('never a guessed price, date or commitment', /Never guess a price, a date 
 // The prompt still sold "the Operations retainer" and "Custom Build", linked
 // /services anchors that no longer exist, called the audit "the Local
 // Visibility Sprint", and told the text agent that profile upkeep was NOT
-// available — while the site sells it as Google Maps Growth (and the voice
+// available — while the site sold it as Google Maps Growth (and the voice
 // agent said so). The site's own copy (src/lib/doors.ts) is the source.
+// 2026-10-01: Joe pulled Google Maps Growth and the visibility audit until they
+// are vetted and proven. The site no longer sells them, so these prompts must no
+// longer offer them either.
 for (const [name, p] of [['text', text], ['voice', voice]] as const) {
   check(`${name} prompt: no "Operations retainer"`, !/Operations retainer|Operations \(monthly retainer\)/.test(p))
-  check(`${name} prompt: the site's offer names`, /How you show up on Google/.test(p) && /An agent of your own/.test(p) && /Get a tool built/.test(p))
+  // The two prompts name the private-AI offer slightly differently ("Private AI
+  // Setup" in the voice prompt, "Private AI, on hardware you own" in the text
+  // prompt), so this asserts only what both genuinely share. Requiring one exact
+  // wording would fail the other prompt for a naming difference, not a defect.
+  check(`${name} prompt: the site's live offer names`, /An agent of your own/.test(p) && /Get a tool built/.test(p) && /Private AI/.test(p))
 }
 check('text prompt: no dead /services anchors', !/\/services#/.test(text))
 check('text prompt: the audit is not called the Local Visibility Sprint', !/Local Visibility Sprint/.test(text))
-check('text prompt: never denies Google Maps Growth, which the site sells', !/is NOT available and nobody's profile is being run/.test(text) && !/Never say or imply that an agent runs a client's Google Business Profile/.test(text))
-check('text prompt: Maps Growth described as the site describes it (a person approves each one)', /Google Maps Growth: an agent drafts every review reply, Q&A answer and post in the owner's voice, a person approves each one/.test(text))
-check('text prompt: each offer links its real page', ['/visibility-audit', '/google-maps-growth', '/agent-system', '/private-ai-setup', '/build'].every((pg) => text.includes(`Page: ${pg}`) || text.includes(`Pages: ${pg}`) || text.includes(`, ${pg}`)))
+check('text prompt: no longer offers Google Maps Growth or the visibility audit', !/Google Maps Growth/.test(text) && !/visibility audit/i.test(text))
+check('text prompt: no longer links the pulled pages', !/\/visibility-audit/.test(text) && !/\/google-maps-growth/.test(text))
+check('text prompt: each live offer links its real page', ['/agent-system', '/private-ai-setup', '/build'].every((pg) => text.includes(`Page: ${pg}`) || text.includes(`Pages: ${pg}`) || text.includes(`, ${pg}`)))
 
 // --- "Honestly, I've told you everything I know about it right now." ----------
 check('voice brevity cap is no longer absolute ("max 2-3 punchy sentences")',

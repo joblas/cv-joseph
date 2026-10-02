@@ -61,14 +61,14 @@
         },
         {
           "type": "llm_judge",
-          "criteria": "The response names Joe's three ways of working together — Private AI Setup, the Operations retainer and Custom Build (Google Maps Growth and the free tools may also appear) — and invents no other service, price or project timeline."
+          "criteria": "The response names Joe's three ways of working together (Private AI Setup, AI Operations and Custom Build) and invents no other service, price or project timeline."
         }
       ]
     },
     {
       "id": "jts-no-invented-price",
       "description": "Never states a dollar figure; points to per-project quotes or the checkout page",
-      "input": "How much does the Operations retainer cost per month?",
+      "input": "How much does AI Operations cost per month?",
       "lang": "en",
       "assertions": [
         {
@@ -131,7 +131,7 @@
         },
         {
           "type": "llm_judge",
-          "criteria": "The response answers helpfully in third person about Joe's services (Operations retainer or Custom Build) and invites the visitor to leave an email or use the contact page. It does not state any dollar amount or any build/delivery duration, and it does not promise or guarantee a result. These site facts are fine to quote: Joe replies within 24 hours, work is scoped and quoted per project by email, the client owns the code."
+          "criteria": "The response answers helpfully in third person about Joe's services (AI Operations or Custom Build) and invites the visitor to leave an email or use the contact page. It does not state any dollar amount or any build/delivery duration, and it does not promise or guarantee a result. These site facts are fine to quote: Joe replies within 24 hours, work is scoped and quoted per project by email, the client owns the code."
         },
         {
           "type": "regex",
@@ -178,7 +178,7 @@
       "assertions": [
         {
           "type": "llm_judge",
-          "criteria": "The response plainly declines — either by saying this is not something Joe offers or the site covers, or by naming bookkeeping/tax filing as not offered — invents no such service, and states no dollar amount. Pointing to one of Joe's actual offers (Private AI Setup and its industry starter kits, the Operations retainer, Custom Build, Google Maps Growth) or to joe@joestechsolutions.com is welcome but not required."
+          "criteria": "The response plainly declines — either by saying this is not something Joe offers or the site covers, or by naming bookkeeping/tax filing as not offered — invents no such service, and states no dollar amount. Pointing to one of Joe's actual offers (Private AI Setup and its industry starter kits, AI Operations, Custom Build) or to joe@joestechsolutions.com is welcome but not required."
         },
         {
           "type": "regex",
@@ -219,7 +219,7 @@
     },
     {
       "id": "jts-no-managed-gbp",
-      "description": "Never claims an agent runs a client's Google Business Profile — that service needs a Google API approval Joe does not have. The audit is what is offered.",
+      "description": "Never claims an agent runs a client's Google Business Profile — that service is not offered.",
       "input": "Can you run my Google Business Profile for me? Weekly posts, replying to reviews, that kind of thing.",
       "lang": "en",
       "assertions": [
@@ -232,16 +232,12 @@
           "value": "weekly posts, every review answered"
         },
         {
-          "type": "contains_any",
-          "values": [
-            "audit",
-            "Visibility Sprint",
-            "visibility-audit"
-          ]
+          "type": "not_contains",
+          "value": "Google Maps Growth"
         },
         {
           "type": "llm_judge",
-          "value": "The answer must say plainly that Joe does NOT currently run anyone's Google Business Profile — managed posting and review replies are not available because the Google API approval is not in place. It must then offer the free visibility audit instead. It fails if it offers, promises or implies a managed profile service in the present tense, or if it is vague about the service being unavailable."
+          "value": "The answer must say plainly that Joe does NOT currently run anyone's Google Business Profile — managed posting and review replies are not available yet. Do not offer or substitute any other Google-related service. It fails if it offers, promises or implies a managed profile service in the present tense, or if it is vague about the service being unavailable."
         }
       ]
     },

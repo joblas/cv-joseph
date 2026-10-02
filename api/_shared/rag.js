@@ -640,7 +640,7 @@ export function extractSources(chunks) {
 
 /**
  * Site personas: keep a retrieved page only when the answer names its path,
- * its title or its slug words ("google maps growth"); otherwise fall back to
+ * its title or its slug words ("private ai setup"); otherwise fall back to
  * the top hit. Mirrors filterSourcesByResponse for the article corpus. Max 3.
  */
 export function filterSiteSources(sources, responseText) {
@@ -650,7 +650,7 @@ export function filterSiteSources(sources, responseText) {
   const matched = pages.filter(s => {
     const path = s.page_path_en.toLowerCase()
     if (path !== '/' && lower.includes(path)) return true
-    // Multi-word slugs ("google maps growth") as a phrase; a single word only
+    // Multi-word slugs ("private ai setup") as a phrase; a single word only
     // for top-level pages ("contact", "services") — on a nested page such as
     // /private-ai-setup/industries/construction it is too common to prove use
     const parts = path.split('/').filter(Boolean)

@@ -82,7 +82,6 @@ const MUST_NOT_EXPAND = [
   'how does the setup work',
   'how much does the private AI setup cost',
   'how do I get in touch with Joe',
-  'what is Google Maps Growth',
   'do you store my data',
   'what data do you collect on the projects page',
   'can I email you about a project',
