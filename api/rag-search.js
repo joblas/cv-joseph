@@ -1,4 +1,4 @@
-import { CHAT_MODEL, scaleTokens, createAnthropicClient } from './_shared/models.js'
+import { CHAT_MODEL, scaleTokens, createAnthropicClient, createWithin } from './_shared/models.js'
 import { resolvePersona } from './_shared/personas.js'
 import { Langfuse } from 'langfuse'
 import {
@@ -57,46 +57,65 @@ export function toSpokenText(text) {
     .trim()
 }
 
-// Tier-1 reasoning budget. Thinking models need more than the original 3 s;
-// past it the raw chunks are returned instead (sanitised below).
-const parsedReasonTimeout = parseInt(process.env.VOICE_REASON_TIMEOUT_MS || '', 10)
-const REASON_TIMEOUT_MS = Number.isInteger(parsedReasonTimeout) && parsedReasonTimeout > 0 ? parsedReasonTimeout : 3000
+// ONE time budget for the whole voice search, from the request's arrival: the
+// caller hears dead air until it answers. Until 2026-10-02 retrieval had a
+// 1500ms gate and reasoning a separate 3000ms race, so the worst case was
+// 4.5s, and the losing reasoning call kept running (and could be retried by
+// the SDK) after its answer was no longer wanted. Now reasoning runs only when
+// at least voiceReasonMinMs() of the budget is left, inside what is left
+// (createWithin: aborted at the limit, never retried), and otherwise the
+// caller hears the retrieved excerpts, exactly the old tier 2.
+//
+// The minimum is the reasoning call's own healthy length at effort "high"
+// (1.4-1.9s locally for a 4-5 sentence answer, an estimated 1.2-1.7s in
+// production): starting one with less left only buys silence followed by the
+// excerpts anyway. Tune both from the Server-Timing header.
+// VOICE_SEARCH_BUDGET_MS=0 never reasons. VOICE_REASON_TIMEOUT_MS, when set,
+// caps the reasoning call below what the budget leaves.
+const envMs = (name, fallback) => {
+  const raw = process.env[name]
+  if (raw === undefined || String(raw).trim() === '') return fallback
+  const n = Number(raw)
+  return Number.isFinite(n) && n >= 0 ? n : fallback
+}
+export const voiceSearchBudgetMs = () => envMs('VOICE_SEARCH_BUDGET_MS', 2500)
+export const voiceReasonMinMs = () => envMs('VOICE_REASON_MIN_MS', 1500)
+const voiceReasonCapMs = () => envMs('VOICE_REASON_TIMEOUT_MS', Infinity) || Infinity
 
-async function reasonWithClaude(query, formattedChunks, span, langfuse, persona) {
+async function reasonWithClaude(query, formattedChunks, span, langfuse, persona, ms) {
   const t0 = Date.now()
   const reasoningSpan = span?.span({ name: 'claude-reasoning', metadata: { query } })
 
   try {
     const { text: systemPromptText } = await getSystemPrompt(langfuse, persona)
+    const left = ms - (Date.now() - t0)
+    if (left <= 0) throw new Error('no time left to reason')
 
-    const response = await Promise.race([
-      client.messages.create({
-        model: CHAT_MODEL,
-        max_tokens: scaleTokens(300),
-        system: `${systemPromptText}\n\n${voiceOverride(persona)}`,
-        messages: [
-          { role: 'user', content: query },
-          {
-            role: 'assistant',
-            content: [{
-              type: 'tool_use',
-              id: 'voice_rag_call',
-              name: 'search_portfolio',
-              input: { query },
-            }],
-          },
-          {
-            role: 'user',
-            content: [{
-              type: 'tool_result',
-              tool_use_id: 'voice_rag_call',
-              content: formattedChunks,
-            }],
-          },
-        ],
-      }),
-      new Promise((_, reject) => setTimeout(() => reject(new Error(`Claude reasoning timeout (>${REASON_TIMEOUT_MS}ms)`)), REASON_TIMEOUT_MS)),
-    ])
+    const response = await createWithin(client, {
+      model: CHAT_MODEL,
+      max_tokens: scaleTokens(300),
+      system: `${systemPromptText}\n\n${voiceOverride(persona)}`,
+      messages: [
+        { role: 'user', content: query },
+        {
+          role: 'assistant',
+          content: [{
+            type: 'tool_use',
+            id: 'voice_rag_call',
+            name: 'search_portfolio',
+            input: { query },
+          }],
+        },
+        {
+          role: 'user',
+          content: [{
+            type: 'tool_result',
+            tool_use_id: 'voice_rag_call',
+            content: formattedChunks,
+          }],
+        },
+      ],
+    }, left)
 
     const answer = toSpokenText(response.content
       .filter(b => b.type === 'text')
@@ -128,6 +147,8 @@ async function reasonWithClaude(query, formattedChunks, span, langfuse, persona)
 // ---------------------------------------------------------------------------
 
 export default async function handler(req) {
+  // The search budget and the Server-Timing header count from here.
+  const arrived = Date.now()
   if (req.method !== 'POST') {
     return new Response('Method not allowed', { status: 405 })
   }
@@ -158,7 +179,20 @@ export default async function handler(req) {
     // IP alone), so one address is capped across both: a voice session
     // searches a handful of times, and 60 an hour is far past normal use.
     // Like chat's, it fails open — a limiter outage must not take voice down.
-    if (!(await checkRateLimit(req, 60))) {
+    const rl0 = Date.now()
+    const allowed = await checkRateLimit(req, 60)
+    const timing = { rl: Date.now() - rl0 }
+    // Where a voice search's time went (Server-Timing; integer ms and a tier
+    // name, no content): rl, retrieve, rerank, reason, total; tier = reasoned
+    // (the model's answer), chunks (the excerpts), empty, or failed.
+    const timed = (tier) => ({
+      'Content-Type': 'application/json',
+      'Server-Timing': [
+        ...Object.entries(timing).map(([k, v]) => `${k};dur=${Math.round(v)}`),
+        `total;dur=${Date.now() - arrived}`, `tier;desc=${tier}`,
+      ].join(', '),
+    })
+    if (!allowed) {
       return new Response(JSON.stringify({ error: 'rate_limited' }), {
         status: 429,
         headers: { 'Content-Type': 'application/json' },
@@ -183,10 +217,11 @@ export default async function handler(req) {
     }
     const ragSpan = trace?.span({ name: 'voice-rag', metadata: { query: searchQuery } })
 
-    const t0 = Date.now()
-
     try {
+      const r0 = Date.now()
       const ragResult = await searchPortfolio(searchQuery, ragSpan, client, persona)
+      timing.retrieve = Date.now() - r0
+      timing.rerank = ragResult.metrics?.rerankMs || 0
 
       // A FAILED retrieval must not be reported as an EMPTY one. searchPortfolio
       // swallows a Supabase error or timeout, sets degraded=true and returns no
@@ -201,7 +236,7 @@ export default async function handler(req) {
         if (langfuse) await langfuse.flushAsync()
         return new Response(JSON.stringify({ error: 'search_unavailable' }), {
           status: 503,
-          headers: { 'Content-Type': 'application/json' },
+          headers: timed('failed'),
         })
       }
 
@@ -219,11 +254,15 @@ export default async function handler(req) {
         },
       })
 
-      // Latency budget: skip Claude reasoning if RAG already took >1.5s
-      const ragElapsedMs = Date.now() - t0
-      const reasonedAnswer = (ragResult.chunks && ragElapsedMs <= 1500)
-        ? await reasonWithClaude(searchQuery, formattedChunks, trace, langfuse, persona)
-        : null
+      // Reason only with chunks to reason over and time to do it (see
+      // voiceSearchBudgetMs): what is left of the budget, capped.
+      const left = Math.min(voiceSearchBudgetMs() - (Date.now() - arrived), voiceReasonCapMs())
+      let reasonedAnswer = null
+      if (ragResult.chunks && voiceSearchBudgetMs() > 0 && left >= voiceReasonMinMs()) {
+        const q0 = Date.now()
+        reasonedAnswer = await reasonWithClaude(searchQuery, formattedChunks, trace, langfuse, persona, left)
+        timing.reason = Date.now() - q0
+      }
 
       // Tier 1: Claude + RAG → reasoned answer
       // Tier 2: RAG only (Claude failed) → raw chunks
@@ -266,7 +305,7 @@ export default async function handler(req) {
       if (langfuse) await langfuse.flushAsync()
 
       return new Response(JSON.stringify({ context, sources: filteredSources, currentPage }), {
-        headers: { 'Content-Type': 'application/json' },
+        headers: timed(reasonedAnswer ? 'reasoned' : ragResult.chunks ? 'chunks' : 'empty'),
       })
     } catch (err) {
       ragSpan?.end({ metadata: { error: err.message } })
@@ -277,7 +316,7 @@ export default async function handler(req) {
       // widget tells the model it couldn't look that up.
       return new Response(JSON.stringify({ error: 'search_unavailable' }), {
         status: 503,
-        headers: { 'Content-Type': 'application/json' },
+        headers: timed('failed'),
       })
     }
   } catch (error) {

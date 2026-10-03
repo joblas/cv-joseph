@@ -6,7 +6,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 const { createWithin } = await import("../functions/api-src/_shared/models.js");
-const { rerankChunks, LLM_RERANK_TIMEOUT_MS } = await import("../functions/api-src/_shared/rag.js");
+const { searchPortfolio } = await import("../functions/api-src/_shared/rag.js");
+const { getPersona } = await import("../functions/api-src/_shared/personas.js");
 const { buildBrief } = await import("../functions/api-src/_shared/leads.js");
 
 type Call = { params: Record<string, unknown>; options: { timeout?: number; maxRetries?: number; signal?: AbortSignal } };
@@ -50,16 +51,45 @@ test("createWithin puts its limits in the request options, never in the body", a
   assert.ok(calls[0].options.signal);
 });
 
-test("the site-search rerank falls back to the fused order at its limit, and sends no limits as body fields", async () => {
-  const { client, calls } = stalledClient();
-  const chunks = Array.from({ length: 6 }, (_, i) => ({ content: `chunk ${i}`, metadata: { article_id: `a${i}` } }));
-  const t = Date.now();
-  const result = await rerankChunks("query", chunks, client);
-  const ms = Date.now() - t;
-  assert.ok(ms >= LLM_RERANK_TIMEOUT_MS - 50 && ms < LLM_RERANK_TIMEOUT_MS + 1000, `took ${ms}ms`);
-  assert.ok(Array.isArray(result.chunks) && result.chunks.length > 0);
-  assert.equal(result.rerankedOrder, null);
-  assert.ok(!("timeout" in calls[0].params) && !("maxRetries" in calls[0].params));
+// The search itself makes no model call at all (2026-10-02). The cloudyjoe
+// corpus used to rerank with an LLM call on the thinking chat model (up to
+// 2.5s on every search); both corpora now rank with Voyage, or keep the fused
+// order when Voyage is down or unconfigured.
+test("a portfolio search makes no model call: documents (Voyage up, down, no key) and site", async () => {
+  const realFetch = globalThis.fetch;
+  const saved = { ...process.env };
+  Object.assign(process.env, {
+    SUPABASE_URL: "https://stub-cj.supabase.co", SUPABASE_SERVICE_ROLE_KEY: "stub",
+    JTS_SUPABASE_URL: "https://stub-jts.supabase.co", JTS_SUPABASE_ANON_KEY: "stub",
+  });
+  const docRows = Array.from({ length: 10 }, (_, i) => ({ id: i, content: `doc ${i}`, similarity: 0.9 - i * 0.01, metadata: { article_id: `a${i % 3}`, section_id: `s${i}` } }));
+  const siteRows = Array.from({ length: 10 }, (_, i) => ({ id: i, source: "page", url: `https://www.joestechsolutions.com/p${i % 3}`, title: `T${i}`, content: `site ${i}`, score: 0.9 - i * 0.01 }));
+  let voyageDown = false;
+  (globalThis as { fetch: unknown }).fetch = async (url: string) => {
+    const u = String(url);
+    const json = (b: unknown, status = 200) => new Response(JSON.stringify(b), { status, headers: { "content-type": "application/json" } });
+    if (u.includes("voyageai.com/v1/embeddings")) return voyageDown ? json({}, 500) : json({ data: [{ embedding: [0.1] }], usage: { total_tokens: 1 } });
+    if (u.includes("voyageai.com/v1/rerank")) return voyageDown ? json({}, 500) : json({ data: [0, 1, 2, 3, 4, 5].map((index) => ({ index, relevance_score: 0.5 })) });
+    if (u.startsWith("https://stub-cj.supabase.co/rest/v1/rpc/")) return json(docRows);
+    if (u.startsWith("https://stub-jts.supabase.co/rest/v1/rpc/")) return json(siteRows);
+    throw new Error(`unexpected fetch ${u}`);
+  };
+  try {
+    for (const [label, key, down, persona] of [
+      ["documents, Voyage up", "k", false, "cloudyjoe"], ["documents, Voyage down", "k", true, "cloudyjoe"],
+      ["documents, no Voyage key", "", false, "cloudyjoe"], ["site", "k", false, "jts"],
+    ] as const) {
+      if (key) process.env.VOYAGE_API_KEY = key; else delete process.env.VOYAGE_API_KEY;
+      voyageDown = down;
+      const { client, calls } = stalledClient();
+      const result = await searchPortfolio("tell me about hermes", null, client, getPersona(persona));
+      assert.equal(calls.length, 0, label);
+      assert.ok(Array.isArray(result.chunks) && result.chunks.length > 0, label);
+    }
+  } finally {
+    (globalThis as { fetch: unknown }).fetch = realFetch;
+    process.env = saved;
+  }
 });
 
 test("the lead summary gives up at its limit, so Joe's notice still goes", async () => {
