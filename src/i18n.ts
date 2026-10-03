@@ -20,7 +20,7 @@ const _translationsEn = {
     context: '+10 years in AV, then AI+code.',
     reflections: ['It works. It drives itself.', '...now what?'],
     hookParagraphs: [
-      ["I built Google's self-driving car. Then I automated an entire business with AI."],
+      ["I helped build Google's self-driving car. Then I automated an entire business with AI."],
       [
         "The thread is always the same.",
         '*Complex systems* +that work in production+.',
