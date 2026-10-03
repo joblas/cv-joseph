@@ -442,6 +442,12 @@ let decidedSummary = ''
   for (const phrase of ["part of the team that built Google's Firefly", 'cross-country autonomous demo, San Francisco to New York']) {
     check(`cloudyjoe voice still says "${phrase}"`, cjVoice.includes(phrase))
   }
+  // The model added "driverless" to the Otto run by itself on 2026-10-03, so
+  // both cloudyjoe surfaces carry Joe's rule in so many words.
+  for (const [where, text] of [['text', cjText], ['voice', cjVoice]] as const) {
+    check(`cloudyjoe ${where} tells the model never to call the Otto run driverless`,
+      text.includes('Never use the word "driverless" for it, and never call it a world first or a record.'))
+  }
   decidedSummary = `; ${DECIDED.length + 2} wording decisions hold on ${botSurfaces.length} bot surfaces (${ragSources.length} ragReady articles)`
   check('the cloudyjoe fallback line gives the email only',
     /the safe default is: "That's a great question for Joe directly — you can reach him at blasj408@gmail\.com\."/.test(read('chatbot-prompt.txt')))
