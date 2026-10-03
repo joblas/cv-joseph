@@ -251,6 +251,27 @@ const withinMs = async <T>(p: Promise<T>, ms: number) => {
     out !== HANG && Array.isArray(out?.chunks) && out.chunks.length > 0)
 }
 
+// --- 4b. The cloudyjoe (documents) embed is bounded too -------------------------
+// It had no limit at all until 2026-10-02: a Voyage connection accepted and
+// never answered held a chat search until the 55s first-words ceiling.
+{
+  resetEnv()
+  process.env.VOYAGE_API_KEY = 'stub-key'
+  process.env.SUPABASE_URL = 'https://stub-cj.supabase.co'
+  process.env.SUPABASE_SERVICE_ROLE_KEY = 'stub-service'
+  const docRows = () => Array.from({ length: 4 }, (_, i) => ({
+    id: i, content: `Keyword hit ${i}`, similarity: 0.5 - i * 0.01,
+    metadata: { article_id: `a${i}`, section_id: 's', section_anchor: '', page_path: `/a${i}`, article_slug: `a${i}` },
+  }))
+  const calls = stubFetch({ 'embeddings': () => HANG, '/rpc/keyword_search': docRows, '/rpc/hybrid_search': docRows })
+  const t = Date.now()
+  const out: any = await withinMs(searchPortfolio('tell me about hermes', null, null, getPersona('cloudyjoe')), 4000)
+  const ms = Date.now() - t
+  check('documents: a HUNG embed is cut at its budget and the search falls back to keyword mode',
+    out !== HANG && out.mode === 'keyword' && ms < EMBED_TIMEOUT_MS + 500 && Array.isArray(out.chunks) && out.chunks.length > 0
+    && calls.some((c) => c.url.includes('/rpc/keyword_search')) && !calls.some((c) => c.url.includes('/rpc/hybrid_search')))
+}
+
 // --- 5. The Supabase leg gets its OWN budget, not the embed’s leftovers ------
 // Measured directly rather than raced. An earlier version slept 1200ms in the
 // embed and 1500ms in Supabase and asserted "chunks came back" — which was

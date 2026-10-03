@@ -419,29 +419,44 @@ export const PORTFOLIO_TOOL = {
 // RAG: embed query via Voyage AI REST API (Edge-compatible)
 // ---------------------------------------------------------------------------
 
+// Bounded like the site corpus's embed (EMBED_TIMEOUT_MS). Until 2026-10-02
+// this call had no limit: a Voyage connection accepted and never answered held
+// a chat search until the 55s first-words ceiling, and a voice search until the
+// widget's own 10s timeout. A slow or failed embed falls back to keyword mode
+// (searchPortfolio's catch below).
 export async function embedQuery(query) {
   const t0 = Date.now()
-  const response = await fetch('https://api.voyageai.com/v1/embeddings', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${process.env.VOYAGE_API_KEY}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'voyage-3-lite',
-      input: query,
-    }),
-  })
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), EMBED_TIMEOUT_MS)
+  try {
+    const response = await fetch('https://api.voyageai.com/v1/embeddings', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${process.env.VOYAGE_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'voyage-3-lite',
+        input: query,
+      }),
+      signal: controller.signal,
+    })
 
-  if (!response.ok) {
-    throw new Error(`Voyage AI embedding failed: ${response.status}`)
-  }
+    if (!response.ok) {
+      throw new Error(`Voyage AI embedding failed: ${response.status}`)
+    }
 
-  const data = await response.json()
-  return {
-    embedding: data.data[0].embedding,
-    latencyMs: Date.now() - t0,
-    totalTokens: data.usage?.total_tokens || 0,
+    const data = await response.json()
+    return {
+      embedding: data.data[0].embedding,
+      latencyMs: Date.now() - t0,
+      totalTokens: data.usage?.total_tokens || 0,
+    }
+  } catch (err) {
+    if (err?.name === 'AbortError') throw new Error(`Voyage AI embedding timeout (>${EMBED_TIMEOUT_MS}ms)`)
+    throw err
+  } finally {
+    clearTimeout(timer)
   }
 }
 
