@@ -2,7 +2,7 @@ const _en = {
     slug: 'about',
     seo: {
       title: 'Joseph Blas | Autonomous Systems Operations & Integration Leader · Founder, Joe\'s Tech Solutions',
-      description: 'AI Developer and Autonomous Vehicle Systems Veteran based in San Diego, CA. 10 years building autonomous vehicles from the ground up, then 5+ years learning AI tools, code, and building personal and client projects. Now operates Hermes as CTO through Ollama Cloud model selection. No degree — all hands-on.',
+      description: 'AI Developer and Autonomous Vehicle Systems Veteran based in San Diego, CA. 10 years helping build autonomous vehicles, then 5+ years learning AI tools, code, and building personal and client projects. Now operates Hermes as CTO through Ollama Cloud model selection. No degree — all hands-on.',
     },
     heading: 'Joseph Blas',
     subtitle: 'Autonomous Systems Operations & Integration Leader · Founder, Joe\'s Tech Solutions',

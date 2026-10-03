@@ -447,7 +447,10 @@ let decidedSummary = ''
     // "the first commercial self-driving truck delivery" says it without "world's".
     [/world['’]?s first commercial|\bfirst commercial\b[^.\n]{0,40}\b(?:deliver(?:y|ies)|trucks?|haul)\b/i, '"world\'s first commercial delivery" for the Otto run'],
     // ...or as a world first without "commercial" (review of the homepage PR).
-    [/\bworld['’]?s first\b[^.\n]{0,60}\b(?:truck|freight|beer|budweiser|otto)\b/i, 'the Otto run as a world first'],
+    [/\b(?:world[-'’ ]?s?[- ]first|first[- ]ever)\b[^.\n]{0,60}\b(?:trucks?|trucking|freight|beer|budweiser|otto|deliver(?:y|ies))\b/i, 'the Otto run as a world first'],
+    // Joe 2026-10-03: "soften the hero and About meta too".
+    [/(?<!helped |helping )\b(?:built|building) Google['’]s self-driving car\b/i, '"built Google\'s self-driving car" (say he helped build it)'],
+    [/\bautonomous vehicles from the ground up\b/i, '"autonomous vehicles from the ground up" (say helping build)'],
     [/\b(?:otto|budweiser|beer|truck)\b[^.\n]{0,80}\bdriverless\b|\bdriverless\b[^.\n]{0,80}\b(?:otto|budweiser|beer|truck)/i, 'the Otto delivery as driverless (a driver was aboard)'],
   ]
   // Sentence-scoped: the line before a bullet, or a "2009-2016" span, does

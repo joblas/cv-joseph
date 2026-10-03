@@ -1528,7 +1528,7 @@ function App() {
                 car: Car,
                 mapPin: MapPin,
               }
-              const Icon = iconMap[item.icon] || Trophy
+              const Icon = iconMap[item.icon] || Flag
               return (
                 <AnimatedSection key={item.title} delay={i * 0.1}>
                   <div className="h-full p-5 md:p-6 rounded-2xl bg-card border border-border hover:border-primary/30 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/5 transition-all duration-200">
