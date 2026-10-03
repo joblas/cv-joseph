@@ -50,7 +50,62 @@ export async function createWithin(client, params, ms, { signal } = {}) {
   }
 }
 
+// How hard a thinking model thinks before it answers (the Messages API's
+// output_config.effort). glm-5.3-flash on Ollama Cloud defaults to "max" on
+// every call, which the code never asked for. Measured 2026-10-02 (provider
+// bench, n=3-6): at "high" the search decision came back in ~0.77s instead of
+// ~1.73s, the answer after a search started in ~0.65s instead of ~1.28s, and
+// voice reasoning finished in ~1.65s instead of ~2.31s. "low" skipped a needed
+// search 1 time in 3, so it is not the default.
+//
+// Read at call time. CHAT_EFFORT=max restores the old behaviour exactly as the
+// provider applied it; CHAT_EFFORT=default (or off, or empty) sends no field at
+// all. Never `thinking`: disabling it makes glm write its reasoning into the
+// visible text (see the header), and the provider ignores effort beside it.
+export function chatEffort() {
+  const raw = process.env.CHAT_EFFORT
+  if (raw === undefined) return 'high'
+  const value = String(raw).trim()
+  return value === '' || value === 'default' || value === 'off' ? null : value
+}
+
+// Set once a provider refuses the effort field (HTTP 400 naming it): a model
+// switched by env whose thinking levels lack the value (on/off-only models)
+// would otherwise fail every call and every visitor would get the error
+// message. From then on this isolate sends no effort.
+let effortRefused = false
+/** Tests only. */
+export function resetEffortRefusal() { effortRefused = false }
+
+const isMessagesPost = (url, init) =>
+  typeof url === 'string' && /\/v1\/messages(?:\?|$)/.test(url) && String(init?.method || '').toUpperCase() === 'POST' && typeof init?.body === 'string'
+
+// The one choke point for every model request this client makes: create and
+// stream alike (stream() runs through create), the tool decision, answers,
+// retries and fallbacks, voice reasoning, the lead brief and scoring. The field
+// goes in the request body here, at the fetch, so a refusal can be retried
+// without it whatever SDK helper made the call.
+async function effortFetch(url, init) {
+  const send = globalThis.fetch // resolved per call, unbound (Workers reject a foreign `this`)
+  const effort = effortRefused ? null : chatEffort()
+  if (!effort || !isMessagesPost(url, init)) return send(url, init)
+  let params
+  try { params = JSON.parse(init.body) } catch { return send(url, init) }
+  if (!params || typeof params !== 'object' || 'thinking' in params || 'output_config' in params) return send(url, init)
+  const res = await send(url, { ...init, body: JSON.stringify({ ...params, output_config: { effort } }) })
+  if (res.status !== 400) return res
+  const detail = await res.clone().text().catch(() => '')
+  if (!/think|effort|output_config/i.test(detail)) return res
+  effortRefused = true
+  console.error(`[models] the provider refused output_config.effort=${effort} (HTTP 400: ${detail.slice(0, 160)}); sending no effort from now on`)
+  return send(url, init)
+}
+
 export function createAnthropicClient() {
+  // Off Anthropic only: the field is for the thinking model behind
+  // ANTHROPIC_BASE_URL, and Anthropic's own models keep their defaults.
+  const host = baseUrlHost()
+  const foreign = Boolean(process.env.ANTHROPIC_BASE_URL) && !/(^|\.)anthropic\.com$/.test(host)
   return new Anthropic({
     // Bearer auth (ANTHROPIC_AUTH_TOKEN) is what Ollama Cloud expects. When it is
     // set, apiKey is null (not undefined: undefined re-reads ANTHROPIC_API_KEY
@@ -58,5 +113,6 @@ export function createAnthropicClient() {
     apiKey: process.env.ANTHROPIC_AUTH_TOKEN ? null : (process.env.ANTHROPIC_API_KEY || undefined),
     authToken: process.env.ANTHROPIC_AUTH_TOKEN || undefined,
     baseURL: process.env.ANTHROPIC_BASE_URL || undefined,
+    ...(foreign ? { fetch: effortFetch } : {}),
   })
 }

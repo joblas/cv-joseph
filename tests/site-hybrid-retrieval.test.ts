@@ -32,7 +32,7 @@
 // {id, source, url, title, content, priority, score} — what the RPC returns.
 import {
   searchPortfolio, voyageRerank,
-  EMBED_TIMEOUT_MS, RERANK_TIMEOUT_MS, SITE_SEARCH_TIMEOUT_MS, LLM_RERANK_TIMEOUT_MS,
+  EMBED_TIMEOUT_MS, RERANK_TIMEOUT_MS, SITE_SEARCH_TIMEOUT_MS,
 } from '../functions/api-src/_shared/rag.js'
 import { getPersona } from '../functions/api-src/_shared/personas.js'
 
@@ -247,8 +247,29 @@ const withinMs = async <T>(p: Promise<T>, ms: number) => {
   stubFetch({ 'embeddings': embedOK, '/rpc/': rpcRows, '/v1/rerank': () => HANG })
   const out: any = await withinMs(searchPortfolio('examples of his work', null, null, jts), 2500)
   check('a HUNG rerank does not hang the turn', out !== HANG)
-  check('a hung rerank still returns chunks (falls through to the LLM reranker)',
+  check('a hung rerank still returns chunks (the fused order stands)',
     out !== HANG && Array.isArray(out?.chunks) && out.chunks.length > 0)
+}
+
+// --- 4b. The cloudyjoe (documents) embed is bounded too -------------------------
+// It had no limit at all until 2026-10-02: a Voyage connection accepted and
+// never answered held a chat search until the 55s first-words ceiling.
+{
+  resetEnv()
+  process.env.VOYAGE_API_KEY = 'stub-key'
+  process.env.SUPABASE_URL = 'https://stub-cj.supabase.co'
+  process.env.SUPABASE_SERVICE_ROLE_KEY = 'stub-service'
+  const docRows = () => Array.from({ length: 4 }, (_, i) => ({
+    id: i, content: `Keyword hit ${i}`, similarity: 0.5 - i * 0.01,
+    metadata: { article_id: `a${i}`, section_id: 's', section_anchor: '', page_path: `/a${i}`, article_slug: `a${i}` },
+  }))
+  const calls = stubFetch({ 'embeddings': () => HANG, '/rpc/keyword_search': docRows, '/rpc/hybrid_search': docRows })
+  const t = Date.now()
+  const out: any = await withinMs(searchPortfolio('tell me about hermes', null, null, getPersona('cloudyjoe')), 4000)
+  const ms = Date.now() - t
+  check('documents: a HUNG embed is cut at its budget and the search falls back to keyword mode',
+    out !== HANG && out.mode === 'keyword' && ms < EMBED_TIMEOUT_MS + 500 && Array.isArray(out.chunks) && out.chunks.length > 0
+    && calls.some((c) => c.url.includes('/rpc/keyword_search')) && !calls.some((c) => c.url.includes('/rpc/hybrid_search')))
 }
 
 // --- 5. The Supabase leg gets its OWN budget, not the embed’s leftovers ------
@@ -359,51 +380,63 @@ check('the Supabase budget stays within a few seconds',
 // the sum stays inside what a visitor will wait through.
 check('the three budgets sum to under 5s',
   EMBED_TIMEOUT_MS + RERANK_TIMEOUT_MS + SITE_SEARCH_TIMEOUT_MS < 5000)
-check('the LLM fallback reranker budget stays within a few seconds',
-  LLM_RERANK_TIMEOUT_MS > 0 && LLM_RERANK_TIMEOUT_MS <= 3000)
 
-// --- 5d. The LLM fallback reranker is bounded too -------------------------------
-// When Voyage is unavailable the code falls through to rerankChunks, which
-// calls the Anthropic SDK. That SDK defaults to a 600 000 ms timeout with
-// maxRetries 2 — ten minutes of a held chat turn — and it was the last
-// unbounded call left in the retrieval path once both Voyage legs were capped.
-//
-// Asserted as the OPTION THE CODE SENDS rather than by timing, because a stub
-// client cannot implement the SDK's own timeout: a fake that hangs would hang
-// whether or not the fix is present, so a timing assertion here would prove
-// nothing either way.
+// --- 5d. Voyage down: the fused order, diversified, the named page pinned ------
+// Until 2026-10-02 a failed Voyage rerank fell through to an LLM rerank on the
+// thinking chat model: up to 2.5s more on a turn that was already degraded.
+// Now the fused order stands, still one chunk per page first, and a page the
+// visitor named is still pinned in front. No model call at all.
 {
   resetEnv()
   process.env.VOYAGE_API_KEY = 'stub-key'
-  // Voyage rerank 500s -> voyageRerank returns null -> the LLM path runs.
   stubFetch({ 'embeddings': embedOK, '/rpc/': rpcRows, '/v1/rerank': () => ({ __status: 500 }) })
-  // The request's limits belong in the SDK's options (2nd argument); written
-  // into the request body (1st) they never applied (review of PR #47).
-  let opts: any = null
-  let body: any = null
-  const fakeAnthropic = {
-    messages: {
-      create: async (b: any, o: any) => {
-        body = b
-        opts = o
-        return { content: [{ type: 'text', text: '0,1,2,3,4' }], usage: { input_tokens: 10, output_tokens: 5 } }
-      },
-    },
-  }
-  await searchPortfolio('examples of his work', null, fakeAnthropic, jts)
-  check('the LLM fallback reranker is actually reached', opts !== null)
-  check('...and is given an explicit timeout, not the SDK\u2019s 600s default',
-    typeof opts?.timeout === 'number' && opts.timeout > 0 && opts.timeout <= 3000 && opts.signal instanceof AbortSignal)
-  check('...in the request options, never as fields of the request body', body && !('timeout' in body) && !('maxRetries' in body))
-  // A timeout alone does not bound the CALL: the SDK retries while attempts
-  // remain, so maxRetries 2 would still permit ~3x the timeout plus backoff.
-  check('...and no retries, so the timeout bounds the call and not just one attempt',
-    opts?.maxRetries === 0)
+  const modelCalls: unknown[] = []
+  const recording = { messages: { create: async (b: unknown) => { modelCalls.push(b); throw new Error('no model call expected') } } }
+  const res: any = await searchPortfolio('what is on the contact page', null, recording, jts)
+  check('Voyage 500: no model call is made', modelCalls.length === 0)
+  check('...the named page is pinned in front', res.chunks?.[0]?.metadata?.page_path === '/contact' && res.chunks[0].metadata.named === true)
+  // The boost puts the four /contact rows on top of the fused order; diversify
+  // still lifts another page into second place (undiversified, it would be
+  // /contact four times before anything else).
+  check('...and the rest is the fused order, diversified (one chunk per page first)',
+    res.chunks.length === 5 && res.chunks[1]?.metadata?.page_path !== '/contact')
+  check('...reported as no rerank model', res.usage?.rerankModel === null)
+}
+
+// --- 5e. The cloudyjoe (documents) corpus ranks with Voyage too ---------------
+// It ranked with the LLM on every search (1.5-2.5s). Its chunks are bare
+// section text, so Voyage is given the article and section names with each,
+// and the bridged query the corpus was embedded with.
+{
+  resetEnv()
+  process.env.VOYAGE_API_KEY = 'stub-key'
+  process.env.SUPABASE_URL = 'https://stub-cj.supabase.co'
+  process.env.SUPABASE_SERVICE_ROLE_KEY = 'stub-service'
+  const ARTICLES = ['hermes', 'cbarrgs-agent', 'turnover-agent']
+  const docRows = () => Array.from({ length: 10 }, (_, i) => ({
+    id: i, content: `Section body ${i}`, similarity: 0.9 - i * 0.01,
+    metadata: { article_id: ARTICLES[i % 3], section_id: `s${i}`, section_anchor: '', page_path: `/${ARTICLES[i % 3]}`, article_slug: ARTICLES[i % 3] },
+  }))
+  // Voyage prefers three chunks of one article, then the others.
+  const rerankDocs = () => ({ data: [1, 4, 7, 0, 2, 3].map((index, r) => ({ index, relevance_score: 0.99 - r * 0.1 })) })
+  const calls = stubFetch({ 'embeddings': embedOK, '/rpc/hybrid_search': docRows, '/v1/rerank': rerankDocs })
+  const modelCalls: unknown[] = []
+  const recording = { messages: { create: async (b: unknown) => { modelCalls.push(b); throw new Error('no model call expected') } } }
+  const res: any = await searchPortfolio('a store for a musician selling t-shirts', null, recording, getPersona('cloudyjoe'))
+  const reranks = calls.filter((c) => c.url.includes('/v1/rerank'))
+  check('documents: Voyage reranks once, and no model call is made', reranks.length === 1 && modelCalls.length === 0)
+  check('...reading each chunk with its article and section names', reranks[0]?.body?.documents?.[0] === 'hermes — s0\nSection body 0')
+  check('...against the bridged query the corpus was embedded with',
+    String(reranks[0]?.body?.query).startsWith('a store for a musician selling t-shirts') && reranks[0]?.body?.query !== 'a store for a musician selling t-shirts')
+  check('...then diversified: one chunk per article first, despite Voyage\u2019s three-of-one ranking',
+    res.chunks?.length === 5 && new Set(res.chunks.slice(0, 3).map((c: any) => c.metadata.article_id)).size === 3
+    && res.chunks[0].content === 'Section body 1')
+  check('...and the rerank is reported as rerank-2.5', res.usage?.rerankModel === 'rerank-2.5')
 }
 
 // --- 6. voyageRerank degradation contract ---------------------------------------
-// null means "keep the fused order" — the caller falls through to the LLM
-// reranker on null, so [] would silently empty the context window instead.
+// null means "keep the fused order" — the caller keeps its own ranking on
+// null, so [] would silently empty the context window instead.
 const many = Array.from({ length: 10 }, (_, i) => ({ content: `chunk ${i}`, metadata: { title: `t${i}` } }))
 {
   resetEnv(); delete process.env.VOYAGE_API_KEY
@@ -443,7 +476,7 @@ const many = Array.from({ length: 10 }, (_, i) => ({ content: `chunk ${i}`, meta
 {
   // Every index unresolvable. After filtering, `ranked` is [] — which is TRUTHY,
   // so returning it would hand the caller an empty context window instead of
-  // falling through to the LLM reranker.
+  // the fused order.
   resetEnv(); process.env.VOYAGE_API_KEY = 'stub-key'
   stubFetch({ '/v1/rerank': () => ({ data: [{ index: 99, relevance_score: 0.9 }, { index: 42, relevance_score: 0.8 }] }) })
   check('all-invalid indices collapse to null, never []', (await voyageRerank('q', many)) === null)
@@ -462,4 +495,4 @@ const many = Array.from({ length: 10 }, (_, i) => ({ content: `chunk ${i}`, meta
 ;(globalThis as any).fetch = origFetch
 process.env = origEnv
 if (failed) { console.error(`\n${failed} check(s) failed`); process.exit(1) }
-console.log('ok — hybrid path end to end, 3 legs + LLM fallback bounded, named-page pinning, 7 degradation cases')
+console.log('ok — hybrid path end to end, 3 legs bounded, Voyage reranks both corpora (no model call), named-page pinning, 7 degradation cases')

@@ -2,7 +2,6 @@
 // Shared RAG pipeline — used by api/chat.js (text) and api/rag-search.js (voice)
 // ---------------------------------------------------------------------------
 
-import { FAST_MODEL, createWithin, scaleTokens } from './models.js'
 import { getPersona } from './personas.js'
 import { boundedFetch } from './bounded-fetch.js'
 import { expandWorkQuery, FACT_CARDS_ID, FACT_CARD_GUIDE_PREFIXES } from './work.js'
@@ -62,8 +61,6 @@ const SITE_EMBED_DIMS = 1024
 export const EMBED_TIMEOUT_MS = 800
 export const RERANK_TIMEOUT_MS = 700
 export const SITE_SEARCH_TIMEOUT_MS = 2500
-// The LLM reranker (rerankChunks) is the fallback when Voyage is unavailable.
-export const LLM_RERANK_TIMEOUT_MS = 2500
 
 async function embedSiteQuery(text, apiKey) {
   const controller = new AbortController()
@@ -88,16 +85,19 @@ async function embedSiteQuery(text, apiKey) {
   }
 }
 
-// The reranker the original site-assistant used. It reads the FULL chunk text,
-// unlike the LLM rerank further down, which sees the first 200 characters of
-// ten candidates and costs an entire model round trip — the single largest
-// contributor to time-to-first-token. Verified against the live API: asked for
-// "examples of his work", it ranks Skate Workshop copy above Terms of Service,
-// which is the exact confusion that produced the "I have no examples" answer.
+// The reranker for both corpora. It reads the FULL chunk text, unlike the LLM
+// rerank it replaced (removed 2026-10-02), which saw the first 200 characters
+// of ten candidates and cost an entire thinking-model round trip: 1.5-2.5s on
+// every cloudyjoe search, the single largest step before the answer's first
+// word. Verified against the live API: asked for "examples of his work", it
+// ranks Skate Workshop copy above Terms of Service, which is the exact
+// confusion that produced the "I have no examples" answer.
+//
+// `toText` is what Voyage reads for a chunk (the chunk's content by default).
 //
 // Returns null when there is no key or too few candidates to matter, so the
 // caller keeps the fused order — the same way the original degraded.
-export async function voyageRerank(query, chunks, topK = 6) {
+export async function voyageRerank(query, chunks, topK = 6, toText = (c) => c.content) {
   const key = process.env.VOYAGE_API_KEY
   if (!key || chunks.length <= topK) return null
   const controller = new AbortController()
@@ -109,11 +109,12 @@ export async function voyageRerank(query, chunks, topK = 6) {
       body: JSON.stringify({
         model: SITE_RERANK_MODEL,
         query,
-        // NOT `${c.metadata.title}\n${c.content}` — voyageRerank runs only on the
-        // site path, where siteChunkToDocument has already built content as
-        // `${title}\n${content}`. Prefixing again sent every title twice,
-        // diluting the signal and paying for the duplicate tokens.
-        documents: chunks.map((c) => c.content),
+        // Site chunks: NOT `${c.metadata.title}\n${c.content}` —
+        // siteChunkToDocument has already built content as `${title}\n${content}`.
+        // Prefixing again sent every title twice, diluting the signal and paying
+        // for the duplicate tokens. Document chunks are bare section text, so
+        // their caller passes a `toText` that names the article (documentText).
+        documents: chunks.map(toText),
         top_k: topK,
       }),
       signal: controller.signal,
@@ -419,29 +420,44 @@ export const PORTFOLIO_TOOL = {
 // RAG: embed query via Voyage AI REST API (Edge-compatible)
 // ---------------------------------------------------------------------------
 
+// Bounded like the site corpus's embed (EMBED_TIMEOUT_MS). Until 2026-10-02
+// this call had no limit: a Voyage connection accepted and never answered held
+// a chat search until the 55s first-words ceiling, and a voice search until the
+// widget's own 10s timeout. A slow or failed embed falls back to keyword mode
+// (searchPortfolio's catch below).
 export async function embedQuery(query) {
   const t0 = Date.now()
-  const response = await fetch('https://api.voyageai.com/v1/embeddings', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${process.env.VOYAGE_API_KEY}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'voyage-3-lite',
-      input: query,
-    }),
-  })
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), EMBED_TIMEOUT_MS)
+  try {
+    const response = await fetch('https://api.voyageai.com/v1/embeddings', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${process.env.VOYAGE_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'voyage-3-lite',
+        input: query,
+      }),
+      signal: controller.signal,
+    })
 
-  if (!response.ok) {
-    throw new Error(`Voyage AI embedding failed: ${response.status}`)
-  }
+    if (!response.ok) {
+      throw new Error(`Voyage AI embedding failed: ${response.status}`)
+    }
 
-  const data = await response.json()
-  return {
-    embedding: data.data[0].embedding,
-    latencyMs: Date.now() - t0,
-    totalTokens: data.usage?.total_tokens || 0,
+    const data = await response.json()
+    return {
+      embedding: data.data[0].embedding,
+      latencyMs: Date.now() - t0,
+      totalTokens: data.usage?.total_tokens || 0,
+    }
+  } catch (err) {
+    if (err?.name === 'AbortError') throw new Error(`Voyage AI embedding timeout (>${EMBED_TIMEOUT_MS}ms)`)
+    throw err
+  } finally {
+    clearTimeout(timer)
   }
 }
 
@@ -531,59 +547,16 @@ export async function searchDocumentsByKeyword(queryText) {
 }
 
 // ---------------------------------------------------------------------------
-// RAG: re-rank top-10 → top-3 with Haiku
+// RAG: rerank helpers
 // ---------------------------------------------------------------------------
 
-export async function rerankChunks(query, chunks, anthropicClient) {
-  if (chunks.length <= 3) return { chunks, latencyMs: 0, rerankedOrder: null, usage: null }
-
-  const t0 = Date.now()
-  try {
-    const numbered = chunks.slice(0, 10).map((c, i) =>
-      `[${i}] ${c.content.slice(0, 200)}`
-    ).join('\n')
-
-    // Bounded, not retried, body included (createWithin). The Anthropic SDK
-    // defaults to a 600s timeout with 2 retries, so an unhealthy-but-responsive
-    // provider could hold a chat turn for ten minutes. Safe to cap: the catch
-    // below falls back to the fused order, so exceeding this degrades ranking
-    // quality rather than failing the turn, and past ~2.5s the ranking is not
-    // worth waiting for. Until 2026-10-02 the cap was written into the request
-    // BODY (`timeout`, `maxRetries` beside `model`), where the SDK never read
-    // it: the bound did not exist (review of PR #47).
-    const response = await createWithin(anthropicClient, {
-      model: FAST_MODEL,
-      max_tokens: scaleTokens(150),
-      messages: [{
-        role: 'user',
-        content: `Query: "${query}"\nRank these chunks by relevance. Return ONLY the top 5 IDs as comma-separated numbers (most relevant first):\n${numbered}`,
-      }],
-    }, LLM_RERANK_TIMEOUT_MS)
-
-    // Thinking models put a `thinking` block before the text block.
-    const text = response.content.filter(b => b.type === 'text').map(b => b.text).join('')
-    const ids = text.match(/\d+/g)?.map(Number).filter(n => n < chunks.length) || []
-
-    const ranked = ids.slice(0, 5).map(i => chunks[i])
-    // Fill up to 5 if Haiku returned fewer
-    while (ranked.length < 5 && ranked.length < chunks.length) {
-      const next = chunks.find(c => !ranked.includes(c))
-      if (next) ranked.push(next)
-      else break
-    }
-
-    // Diversify: ensure each distinct article has at least one representative
-    const diversified = diversifyByArticle(ranked)
-
-    return {
-      chunks: diversified, latencyMs: Date.now() - t0, rerankedOrder: ids.slice(0, 5),
-      usage: { input_tokens: response.usage?.input_tokens || 0, output_tokens: response.usage?.output_tokens || 0 },
-    }
-  } catch {
-    // Fallback: use original order with diversity
-    const diversified = diversifyByArticle(chunks.slice(0, 5))
-    return { chunks: diversified, latencyMs: Date.now() - t0, rerankedOrder: null, usage: null }
-  }
+// What Voyage reads for a cloudyjoe (documents) chunk. Those chunks are bare
+// section text (scripts/export-chunks.ts), so without the article and section
+// names a reranker cannot tell which project a paragraph is about.
+export function documentText(chunk) {
+  const meta = chunk?.metadata || {}
+  const head = [meta.article_id, meta.section_id].filter(Boolean).join(' — ')
+  return head ? `${head}\n${chunk.content}` : chunk.content
 }
 
 /** Pick up to 5 chunks ensuring every distinct article gets at least 1 slot */
@@ -871,51 +844,41 @@ export async function searchPortfolio(query, trace, anthropicClient, persona = g
       return result
     }
 
-    // 3. Re-rank.
+    // 3. Re-rank, with Voyage on both corpora (one ~100-400ms call that reads
+    // the full chunk text; 700ms cap). Until 2026-10-02 the cloudyjoe corpus
+    // always ranked with an LLM call on the thinking chat model (up to 2.5s,
+    // 200-character previews), and on the voice path that pushed retrieval past
+    // the reasoning step's start gate, so callers got raw chunks. Voyage
+    // returns null with no key, too few candidates (6 or fewer) or a failure,
+    // and the fused order stands.
     //
-    // The site corpus reranks with Voyage: one ~100ms API call that reads the
-    // full chunk text. The LLM reranker below is the fallback — it costs a
-    // model round trip and sees only the first 200 characters of ten
-    // candidates, which on a 1-CPU-second budget is the difference between a
-    // fast answer and a slow one. Voyage returns null with no key or too few
-    // candidates, and we fall through to the old path unchanged.
+    // The documents corpus ranks with the bridged query (expandDocumentsQuery,
+    // the same text it was embedded with): ranked on the visitor's words alone,
+    // "a store for a musician selling t-shirts" could demote the Cbarrgs chunk
+    // the bridge found.
     const t0Rerank = Date.now()
-    const voyaged = result.mode === 'site' ? await voyageRerank(query, filteredChunks) : null
-    const rerankGen = voyaged
-      ? trace?.generation({ name: 'reranking', model: SITE_RERANK_MODEL, metadata: { query } })
-      : trace?.generation({ name: 'reranking', model: FAST_MODEL, metadata: { query } })
-    // diversifyByArticle is NOT optional on this path. The old site path always
-    // ran it, so a /portfolio answer was guaranteed one chunk per distinct page.
-    // Voyage ranks purely by relevance and will happily return six chunks of a
-    // single case study — a regression on exactly the "examples of his work"
-    // query this change exists to fix, and worst on voice, where rag-search.js
-    // speaks the chunks verbatim.
-    const rerankResult = voyaged
-      ? { chunks: diversifyByArticle(voyaged), latencyMs: Date.now() - t0Rerank, rerankedOrder: null,
-          usage: null, rerankModel: SITE_RERANK_MODEL }
-      : await rerankChunks(query, filteredChunks, anthropicClient)
+    const rankQuery = result.mode === 'site' ? query : (expanded?.semantic || query)
+    const ranked = filteredChunks.length > 5
+      ? await voyageRerank(rankQuery, filteredChunks, 6, result.mode === 'site' ? undefined : documentText)
+      : null
+    // diversifyByArticle is NOT optional. The old site path always ran it, so a
+    // /portfolio answer was guaranteed one chunk per distinct page. Voyage ranks
+    // purely by relevance and will happily return six chunks of a single case
+    // study — a regression on exactly the "examples of his work" query this
+    // exists to fix, and worst on voice, where rag-search.js speaks the chunks
+    // verbatim.
+    const rerankResult = { chunks: diversifyByArticle(ranked ?? filteredChunks.slice(0, 5)), latencyMs: Date.now() - t0Rerank }
     result.metrics.rerankMs = rerankResult.latencyMs
-    result.usage.rerankModel = rerankResult.rerankModel || FAST_MODEL
-    if (rerankResult.usage) {
-      result.usage.rerankInputTokens = rerankResult.usage.input_tokens
-      result.usage.rerankOutputTokens = rerankResult.usage.output_tokens
+    result.usage.rerankModel = ranked ? SITE_RERANK_MODEL : null
+    if (ranked) {
+      trace?.generation({ name: 'reranking', model: SITE_RERANK_MODEL, metadata: { query: rankQuery } })
+        ?.end({ metadata: { latencyMs: rerankResult.latencyMs } })
     }
-    rerankGen?.end({
-      usage: {
-        input: rerankResult.usage?.input_tokens || 0,
-        output: rerankResult.usage?.output_tokens || 0,
-      },
-      metadata: {
-        rerankedOrder: rerankResult.rerankedOrder,
-        latencyMs: rerankResult.latencyMs,
-      },
-    })
 
     result.chunks = rerankResult.chunks
 
-    // Site mode: the LLM rerank only sees 200-char previews and at times drops
-    // the very page the query named ("What is the Private AI Setup?" →
-    // /private-ai-setup); pin those back in front.
+    // Site mode: a reranker can drop the very page the query named ("What is
+    // the Private AI Setup?" → /private-ai-setup); pin those back in front.
     // Per page, one chunk, and only for pages the rerank did not keep, so the
     // rerank's own picks survive when the named page was already in them.
     if (result.mode === 'site') {
@@ -1071,7 +1034,10 @@ export const PROMPT_FINGERPRINTS = [
 
 export const LEAK_RESPONSE = 'That information is part of my internal design. The project source code is public on GitHub if you are interested in the architecture.'
 
+// Lowered once: every chunk of every answer is checked (reply-text.js).
+const FINGERPRINTS_LOWER = PROMPT_FINGERPRINTS.map(fp => fp.toLowerCase())
+
 export function containsFingerprint(text) {
   const lower = text.toLowerCase()
-  return PROMPT_FINGERPRINTS.some(fp => lower.includes(fp.toLowerCase()))
+  return FINGERPRINTS_LOWER.some(fp => lower.includes(fp))
 }

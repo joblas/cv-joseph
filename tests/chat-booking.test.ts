@@ -3,8 +3,9 @@
  * inspects the raw model requests it sends.
  */
 // How /api/chat wires the booking tools in (api/chat.js). The handler makes
-// one non-streaming "tool decision" call, runs whatever tools the model asked
-// for, then streams the reply. What this guards:
+// one streamed first call with the tools (since 2026-10-02 it is the answer
+// itself when no tool is needed), runs whatever tools the model asked for,
+// then streams the reply. What this guards:
 //
 // - Booking tools are offered ONLY when booking is configured, and only to
 //   the JTS persona. Unconfigured, the tool list is exactly what it was.
@@ -70,6 +71,20 @@ const sse = (text: string) => {
     + ev('message_stop', {})
 }
 const json = (b: unknown, status = 200) => new Response(JSON.stringify(b), { status, headers: { 'content-type': 'application/json' } })
+// The first call's content blocks as the provider streams them.
+const decisionSse = (blocks: any[], stop: string) => {
+  const ev = (type: string, data: any) => `event: ${type}\ndata: ${JSON.stringify({ type, ...data })}\n\n`
+  return ev('message_start', { message: { id: 'msg_d', type: 'message', role: 'assistant', model: 'stub', content: [], stop_reason: null, usage: { input_tokens: 1, output_tokens: 0 } } })
+    + blocks.map((b, index) => b.type === 'tool_use'
+      ? ev('content_block_start', { index, content_block: { type: 'tool_use', id: b.id, name: b.name, input: {} } })
+        + ev('content_block_delta', { index, delta: { type: 'input_json_delta', partial_json: JSON.stringify(b.input ?? {}) } })
+        + ev('content_block_stop', { index })
+      : ev('content_block_start', { index, content_block: { type: 'text', text: '' } })
+        + ev('content_block_delta', { index, delta: { type: 'text_delta', text: b.text } })
+        + ev('content_block_stop', { index })).join('')
+    + ev('message_delta', { delta: { stop_reason: stop }, usage: { output_tokens: 5 } })
+    + ev('message_stop', {})
+}
 
 ;(globalThis as any).fetch = async (url: any, init: any = {}) => {
   const u = String(url instanceof Request ? url.url : url)
@@ -78,16 +93,16 @@ const json = (b: unknown, status = 200) => new Response(JSON.stringify(b), { sta
   try { body = JSON.parse(raw) } catch { /* not JSON */ }
   if (u.startsWith('http://127.0.0.1:9/v1/messages')) {
     modelCalls.push(body)
-    if (!body.stream) {
-      // The tool decision, or any other non-streaming call (reranking etc.).
-      if (body.tools && mode.decisionFails) return json({ type: 'error', error: { type: 'invalid_request_error', message: 'stub decision failure' } }, 400)
-      if (body.tools) {
-        return json({ id: 'msg_d', type: 'message', role: 'assistant', model: 'stub',
-          stop_reason: mode.decision.some((b) => b.type === 'tool_use') ? 'tool_use' : 'end_turn',
-          content: mode.decision, usage: { input_tokens: 1, output_tokens: 1 } })
+    // The first call carries the tools (streamed); answers and the fallback do not.
+    if (Array.isArray(body.tools)) {
+      if (mode.decisionFails) return json({ type: 'error', error: { type: 'invalid_request_error', message: 'stub decision failure' } }, 400)
+      const stop = mode.decision.some((b) => b.type === 'tool_use') ? 'tool_use' : 'end_turn'
+      if (!body.stream) {
+        return json({ id: 'msg_d', type: 'message', role: 'assistant', model: 'stub', stop_reason: stop, content: mode.decision, usage: { input_tokens: 1, output_tokens: 1 } })
       }
-      return json({ type: 'error', error: { type: 'invalid_request_error', message: 'stub' } }, 400)
+      return new Response(decisionSse(mode.decision, stop), { headers: { 'content-type': 'text/event-stream' } })
     }
+    if (!body.stream) return json({ type: 'error', error: { type: 'invalid_request_error', message: 'stub' } }, 400)
     if (mode.streamFailures > 0) {
       mode.streamFailures--
       return json({ type: 'error', error: { type: 'invalid_request_error', message: 'stream stub failure' } }, 400)
@@ -129,8 +144,8 @@ async function chat(text: string, persona = 'jts', origin = 'https://www.joestec
     body: JSON.stringify({ persona, messages: [{ role: 'user', content: text }], lang: 'en', sessionId: SESSION, currentPage: '/' }),
   }))
   const out = await res.text()
-  const decision = modelCalls.find((c) => !c.stream && c.tools)
-  const streams = modelCalls.filter((c) => c.stream)
+  const decision = modelCalls.find((c) => Array.isArray(c.tools))
+  const streams = modelCalls.filter((c) => c.stream && !Array.isArray(c.tools))
   const system = (decision?.system || streams[0]?.system || []).map((b: any) => b.text).join('\n')
   return { res, out, decision, streams, system }
 }

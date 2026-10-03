@@ -24,6 +24,7 @@ import { useVoiceMode } from './useVoiceMode';
 import { useGeminiVoice } from './useGeminiVoice';
 import VoiceOrb from './VoiceOrb';
 import { askAgent } from './agent-stream';
+import { drainStep, TYPING_TICK_MS } from './typing';
 
 interface RagSource {
   article_id: string;
@@ -326,7 +327,7 @@ export default function FloatingChat({}: FloatingChatProps) {
   const navigate = useNavigate();
   const location = useLocation();
 
-  /** Drain fullTextRef character-by-character for smooth typing effect */
+  /** Drain fullTextRef as typing: a sixth of the backlog per tick (src/typing.ts) */
   const startDrain = () => {
     if (drainTimerRef.current) return; // already draining
     drainTimerRef.current = setInterval(() => {
@@ -334,7 +335,7 @@ export default function FloatingChat({}: FloatingChatProps) {
       const pos = drainPosRef.current;
 
       if (pos < full.length) {
-        drainPosRef.current = pos + 1;
+        drainPosRef.current = pos + drainStep(full.length - pos);
 
         const currentText = full.slice(0, drainPosRef.current);
         const sources = pendingRagSourcesRef.current;
@@ -358,7 +359,7 @@ export default function FloatingChat({}: FloatingChatProps) {
         setIsStreaming(false);
       }
       // pos === full.length but stream active — wait for more text
-    }, 30);
+    }, TYPING_TICK_MS);
   };
 
   // Voice mode handlers

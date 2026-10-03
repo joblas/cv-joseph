@@ -157,8 +157,11 @@ async function callChat(input: string, lang: 'es' | 'en', conversation?: Convers
           const data = JSON.parse(line.slice(6))
           if (currentEvent === 'rag-sources' && Array.isArray(data)) {
             ragSources = data
-          } else if (data.text) {
-            fullText += data.text
+          } else if (typeof data.text === 'string') {
+            // A replace swaps the whole answer: "" clears words written before
+            // a search or a retry, and a correction or a blocked leak is the
+            // answer itself. Appending it would grade text the visitor never saw.
+            fullText = data.replace ? data.text : fullText + data.text
           }
         } catch {
           // Skip malformed JSON

@@ -42,8 +42,8 @@ process.env.ANTHROPIC_API_KEY = 'stub-anthropic'
 delete process.env.ANTHROPIC_AUTH_TOKEN
 
 let failed = 0
-function check(name: string, cond: boolean) {
-  if (!cond) { console.error(`  ✗ ${name}`); failed++ }
+function check(name: string, cond: boolean, detail = '') {
+  if (!cond) { console.error(`  ✗ ${name}${detail ? ` — ${detail}` : ''}`); failed++ }
 }
 
 // Unique text that can only reach `context` by travelling the real retrieval
@@ -76,7 +76,8 @@ const cardRow = () => ({
 })
 
 // Per-case knobs.
-const mode = { site: 'rows' as 'rows' | 'empty' | 'fail' | 'hang', cj: 'rows' as 'rows' | 'card', limitOk: true, limitHang: false, model: 'fail' as 'fail' | 'answer' }
+const mode = { site: 'rows' as 'rows' | 'empty' | 'fail' | 'hang', siteDelayMs: 0, cj: 'rows' as 'rows' | 'card', limitOk: true, limitHang: false, model: 'fail' as 'fail' | 'answer' | 'hang' }
+let modelAbortedAt = 0
 const sent: { url: string; body: any }[] = []
 ;(globalThis as any).fetch = async (url: string, init: any) => {
   const u = String(url)
@@ -96,11 +97,16 @@ const sent: { url: string; body: any }[] = []
       return new Promise((_res, rej) => init?.signal?.addEventListener('abort', () => { const e: any = new Error('aborted'); e.name = 'AbortError'; rej(e) }))
     }
     if (mode.site === 'fail') return json({ message: 'upstream down' }, 503)
+    if (mode.siteDelayMs) await new Promise((r) => setTimeout(r, mode.siteDelayMs))
     return json(mode.site === 'empty' ? [] : siteRows())
   }
   if (u.startsWith('https://stub-cj.supabase.co/rest/v1/rpc/')) return json(mode.cj === 'card' ? [cardRow(), ...cjRows().slice(0, 5)] : cjRows())
   // The reasoning model. 'fail' is a non-retryable 400, so the SDK gives up at
   // once and the handler speaks the retrieved chunks; 'answer' is a real reply.
+  if (mode.model === 'hang') {
+    // A reasoning call that would outlast the budget: it ends only when aborted.
+    return new Promise((_res, rej) => init?.signal?.addEventListener('abort', () => { modelAbortedAt = Date.now(); const e: any = new Error('aborted'); e.name = 'AbortError'; rej(e) }))
+  }
   if (mode.model === 'answer') {
     return json({ id: 'msg_1', type: 'message', role: 'assistant', model: 'stub', stop_reason: 'end_turn',
       content: [{ type: 'text', text: REASONED }], usage: { input_tokens: 1, output_tokens: 1 } })
@@ -110,7 +116,7 @@ const sent: { url: string; body: any }[] = []
 
 check('tracing is genuinely off for this run (production’s state)', !process.env.LANGFUSE_PUBLIC_KEY)
 const { default: handler } = await import('../functions/api-src/rag-search.js')
-const reset = () => { mode.site = 'rows'; mode.cj = 'rows'; mode.limitOk = true; mode.limitHang = false; mode.model = 'fail'; sent.length = 0 }
+const reset = () => { mode.site = 'rows'; mode.siteDelayMs = 0; mode.cj = 'rows'; mode.limitOk = true; mode.limitHang = false; mode.model = 'fail'; sent.length = 0; modelAbortedAt = 0 }
 const post = (body: Record<string, unknown>, origin = 'https://www.joestechsolutions.com', extra: Record<string, string> = {}) =>
   handler(new Request('https://cloudyjoe.com/api/rag-search', {
     method: 'POST', headers: { 'Content-Type': 'application/json', Origin: origin, ...extra }, body: JSON.stringify(body),
@@ -160,7 +166,7 @@ const withinMs = async <T,>(p: Promise<T>, ms: number): Promise<T | 'HUNG'> => {
   check('cloudyjoe: a fact card reaches the spoken fallback', res.status === 200 && ctx.includes(CARD_MARKER))
   check('...without its guide lines (nothing for the voice model to read aloud)',
     !/Answers questions like|Wording rule|Do not say or imply|Twilio|curated fact card/.test(ctx))
-  // (The first model call is the LLM rerank, which sees short previews only.)
+  // (Nothing but the reasoning step calls the model: the search ranks with Voyage.)
   check('...while the reasoning model was handed the whole card, wording rule included',
     sent.some((s) => s.url.includes('127.0.0.1:9') && JSON.stringify(s.body).includes(CARD_MARKER) && JSON.stringify(s.body).includes('Wording rule: Do not say or imply')))
 }
@@ -194,6 +200,52 @@ const withinMs = async <T,>(p: Promise<T>, ms: number): Promise<T | 'HUNG'> => {
     check(`${persona}: ...under a system prompt that carries the work list's Shopify line`,
       !!shop && system.includes(work.renderTextLine(shop, persona)) && system.includes('shopify.cbarrgs.com'))
   }
+}
+
+// --- 3c. One time budget for the whole search (2026-10-02) ---------------------
+// It was a 1500ms gate on retrieval plus a separate 3000ms race for reasoning
+// (worst case 4.5s of dead air), and the losing reasoning call kept running.
+{
+  const RS: any = await import('../functions/api-src/rag-search.js')
+  const saved = { ...process.env }
+  for (const k of ['VOICE_SEARCH_BUDGET_MS', 'VOICE_REASON_MIN_MS', 'VOICE_REASON_TIMEOUT_MS']) delete process.env[k]
+  check('the voice search budget is 2.5s, and reasoning needs 1.5s of it left to start (the call\u2019s own healthy length)',
+    RS.voiceSearchBudgetMs() === 2500 && RS.voiceReasonMinMs() === 1500)
+
+  // Retrieval that leaves less than the minimum: the excerpts, no model call.
+  reset(); mode.model = 'answer'; mode.siteDelayMs = 300
+  Object.assign(process.env, { VOICE_SEARCH_BUDGET_MS: '600', VOICE_REASON_MIN_MS: '400' })
+  let res = await post({ query: 'private AI setup', traceId: null, persona: 'jts' })
+  let body: any = await res.json()
+  check('retrieval that leaves too little of the budget: no reasoning call, the caller hears the excerpts',
+    res.status === 200 && !sent.some((s) => s.url.includes('127.0.0.1:9')) && String(body.context).includes(SITE_MARKER) && !String(body.context).includes(REASONED))
+  check('...and the Server-Timing header says so', /tier;desc=chunks/.test(res.headers.get('Server-Timing') || ''))
+
+  // Reasoning that outlasts the budget is aborted at it, and the excerpts go.
+  reset(); mode.model = 'hang'
+  Object.assign(process.env, { VOICE_SEARCH_BUDGET_MS: '900', VOICE_REASON_MIN_MS: '100' })
+  const t = Date.now()
+  const late = await withinMs(post({ query: 'private AI setup', traceId: null, persona: 'jts' }), 6000)
+  const ms = Date.now() - t
+  body = late === 'HUNG' ? {} : await late.json()
+  check('a reasoning call that outlasts the budget is aborted (the provider sees the cancel), not left running',
+    late !== 'HUNG' && modelAbortedAt > 0 && modelAbortedAt - t < 900 + 400)
+  check('...and the caller gets the excerpts within the budget', late !== 'HUNG' && late.status === 200 && String(body.context).includes(SITE_MARKER) && ms < 900 + 400, `${ms}ms`)
+
+  // VOICE_SEARCH_BUDGET_MS=0: never reason.
+  reset(); mode.model = 'answer'
+  Object.assign(process.env, { VOICE_SEARCH_BUDGET_MS: '0' })
+  res = await post({ query: 'private AI setup', traceId: null, persona: 'jts' })
+  body = await res.json()
+  check('VOICE_SEARCH_BUDGET_MS=0 makes no model call at all', res.status === 200 && !sent.some((s) => s.url.includes('127.0.0.1:9')) && String(body.context).includes(SITE_MARKER))
+  process.env = saved
+
+  // The default budget, with fast retrieval: the reasoned answer, timed.
+  reset(); mode.model = 'answer'
+  res = await post({ query: 'private AI setup', traceId: null, persona: 'jts' })
+  const timing = res.headers.get('Server-Timing') || ''
+  check('Server-Timing names where the time went (integer ms per step, the tier, no content)',
+    /^rl;dur=\d+, retrieve;dur=\d+, rerank;dur=\d+, reason;dur=\d+, total;dur=\d+, tier;desc=reasoned$/.test(timing), timing)
 }
 
 // --- 4. A genuinely EMPTY search, and a FAILED one, are told apart ------------

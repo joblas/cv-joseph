@@ -57,7 +57,7 @@ User message → FloatingChat.tsx → api/chat.js (Cloudflare Pages Functions; V
                                     ├── Agentic RAG (if needed):
                                     │     ├── Voyage embeddings (optional) — else keyword search over the same corpus
                                     │     ├── Supabase pgvector (semantic) + full-text (BM25)
-                                    │     └── FAST_MODEL (reranking + diversification)
+                                    │     └── Voyage rerank-2.5 (when configured) + diversification
                                     ├── CHAT_MODEL (streaming generation)
                                     ├── Langfuse tracing (every span with cost)
                                     └── waitUntil → FAST_MODEL scoring (0ms added latency)

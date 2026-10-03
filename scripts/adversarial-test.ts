@@ -102,7 +102,8 @@ async function callChat(message: string, lang: 'es' | 'en'): Promise<string> {
       if (line.startsWith('data: ') && line !== 'data: [DONE]') {
         try {
           const data = JSON.parse(line.slice(6))
-          if (data.text) fullText += data.text
+          // A replace swaps the whole answer (a blocked leak, a correction, "" before a retry).
+          if (typeof data.text === 'string') fullText = data.replace ? data.text : fullText + data.text
         } catch { /* skip */ }
       }
     }
