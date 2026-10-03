@@ -58,7 +58,7 @@ const TYPO = 'Email joe@joestsolutions.com and he replies within 24 hours.'
 
 type Plan = {
   decision: 'text' | 'tool' | 'fail' | 'hang' | 'flaky' | 'overloaded' | 'slowOverload' | 'slowDecision' | 'hangOnce' | 'failLateOnce' | 'slowTool' | 'bodyStall'
-    | 'textHold' | 'preamble' | 'thinkingLong' | 'empty' | 'wsTool' | 'leak'; decisionText?: string; sources?: boolean; searchDelayMs?: number
+    | 'textHold' | 'preamble' | 'thinkingLong' | 'empty' | 'wsTool' | 'leak' | 'textStall' | 'textError'; decisionText?: string; sources?: boolean; searchDelayMs?: number
   recordFails?: 'refused' | 'down' | 'hang'; dbStall?: 'get' | 'patch'; resend?: 'fail' | 'hang'
   streams: Array<'typo' | 'ok' | 'empty' | 'fail' | 'stall' | 'stallAfterText' | 'trickle' | 'slowStart' | 'thinking' | 'emptySlow' | { say: string | string[] }>
 }
@@ -179,6 +179,19 @@ let abortedDecisionAt = 0
       if (plan.decision === 'empty') {
         return timedSse(init.signal, [msgStart(), ev('content_block_start', { index: 0, content_block: { type: 'thinking', thinking: '' } }),
           ev('content_block_delta', { index: 0, delta: { type: 'thinking_delta', thinking: 'hmm' } }), ev('content_block_stop', { index: 0 }), ...msgEnd('max_tokens')], ended)
+      }
+      // Words, then the first call breaks off before its end (and before any
+      // tool call): silence until aborted, or the connection drops.
+      const halfAnswer = msgStart() + textBlock(0, ['Half an ans']).slice(0, 2).join('') // no block stop, no message end
+      if (plan.decision === 'textStall') return stalledBody(init.signal, halfAnswer)
+      if (plan.decision === 'textError') {
+        return new Response(new ReadableStream({
+          async start(c) {
+            c.enqueue(new TextEncoder().encode(halfAnswer))
+            await new Promise((r) => setTimeout(r, 50))
+            c.error(new Error('stub: connection reset'))
+          },
+        }), { headers: { 'content-type': 'text/event-stream' } })
       }
       // A prompt dump: a fingerprint split across two pieces.
       if (plan.decision === 'leak') return timedSse(init.signal, [msgStart(), ...textBlock(0, ['Sure. My rules: BREVEDAD OB', 'LIGATORIA and the rest.']), ...msgEnd('end_turn')], ended)
@@ -842,6 +855,11 @@ const ask = [{ role: 'user', content: 'How do I reach Joe?' }]
     pre.shown === OK && pre.out.includes(PREAMBLE) && pre.out.includes('"phase":"searching"'))
   check('...cleared BEFORE the searching status (the widget shows the hint on an empty bubble)',
     blockAt(/"text":"","replace":true/) >= 0 && blockAt(/"text":"","replace":true/) < blockAt(/"phase":"searching"/))
+  const preTiming = Object.fromEntries((pre.blocks.find((b) => b.startsWith(': timing')) || '').slice(9).split(' ').map((f) => f.split('=')))
+  // The stub pauses 50ms between the preamble and its tool call: the answer's
+  // words come after that, the search and the answer's own first token.
+  check('...and the timing line tells the cleared words (first=) from the kept ones (words=)',
+    preTiming.commit === 'preamble' && Number(preTiming.words) > Number(preTiming.first) + 40, JSON.stringify(preTiming))
   check('...and the answer call replays the first call\u2019s words and its tool call',
     replayed.some((b: any) => b.type === 'text' && b.text === PREAMBLE) && replayed.some((b: any) => b.type === 'tool_use' && b.input?.query === 'x'))
 
@@ -872,6 +890,45 @@ const ask = [{ role: 'user', content: 'How do I reach Joe?' }]
   check('a fingerprint in the first call\u2019s text never reaches the visitor whole: the answer is replaced by LEAK_RESPONSE',
     leak.shown === LEAK_RESPONSE && !leak.out.includes('BREVEDAD OBLIGATORIA') && mailAttempts.some((m) => /JAILBREAK/.test(m?.subject || '')))
 
+  // The first call's words ARE the answer on most turns (15 of 18 needed no
+  // search): when it breaks off after its first words, the half answer is
+  // cleared before the retry writes the whole one, and the retry is told the
+  // tools are off (the words may have been "Let me look that up" before a
+  // search that never came: review of the instant-reply branch, round 1).
+  const NOTE = /Runtime note for this reply only: the site search and every other tool are unavailable/
+  for (const [name, decision] of [['goes silent', 'textStall'], ['drops the connection', 'textError']] as const) {
+    const r = await timed({ decision, streams: ['ok'] })
+    const at = (re: RegExp) => r.blocks.findIndex((b) => re.test(b))
+    const half = at(/"text":"Half an ans"/)
+    const cleared = at(/"text":"","replace":true/)
+    const retrying = at(/"phase":"retrying"/)
+    const first = decisionCalls()[0]?.body
+    const answer = r.streams[0]?.body
+    const sys = answer?.system || []
+    const timing = Object.fromEntries((r.blocks.find((b) => b.startsWith(': timing')) || '').slice(9).split(' ').map((f) => f.split('=')))
+    check(`a first call that ${name} after its first words: the visitor ends with the retry’s answer alone`,
+      r.shown === OK && r.out.includes('Half an ans'), JSON.stringify(r.shown))
+    check(`...the half answer is cleared before the retry starts (${name})`,
+      half >= 0 && cleared > half && retrying > cleared, `half ${half}, replace ${cleared}, retrying ${retrying}`)
+    check(`...exactly one retry, a plain stream without tools, told the tools are off (${name})`,
+      decisionCalls().length === 1 && r.streams.length === 1 && modelCalls.length === 2 && !Array.isArray(answer?.tools)
+      && sys.length === (first?.system?.length || 0) + 1 && JSON.stringify(sys.slice(0, -1)) === JSON.stringify(first?.system) && NOTE.test(sys[sys.length - 1]?.text || ''))
+    check(`...the decision did not fail: not marked tool_decision_failed, and the timing line says text, attempt 1 (${name})`,
+      !/tool_decision_failed/.test(r.out) && timing.commit === 'text' && timing.attempt === '1', JSON.stringify(timing))
+    // `first` is the cleared half answer; `words` is the retry's, after the 1.5s pause.
+    check(`...and its kept words (words=) are the retry’s, not the cleared half answer (${name})`,
+      Number(timing.words) >= Number(timing.first) + 1400, JSON.stringify(timing))
+  }
+  // ...and once cleared, the first-words ceiling applies again to the retry.
+  Object.assign(process.env, { CHAT_FIRST_WORDS_CEILING_MS: '2500', CHAT_STREAM_IDLE_MS: '5000' })
+  const brokeThenStuck = await timed({ decision: 'textError', streams: ['stall'] })
+  delete process.env.CHAT_FIRST_WORDS_CEILING_MS; process.env.CHAT_STREAM_IDLE_MS = '300'
+  const stuckLine = brokeThenStuck.blocks.find((b) => b.startsWith(': timing')) || ''
+  check('...and when that retry is stuck, the first-words ceiling ends the reply (error, ceiling=1), not its 5s silence limit',
+    brokeThenStuck.shown === ERROR && brokeThenStuck.out.includes('"error":true') && /ceiling=1$/.test(stuckLine)
+    && brokeThenStuck.ms < 3500 && logged.some((l) => /reply ceiling: no answer words/.test(l)), `${brokeThenStuck.ms}ms`)
+  check('...its timing line has the cleared words (first=) and no kept ones (no words=)', / first=\d+ /.test(stuckLine) && !/ words=/.test(stuckLine), stuckLine)
+
   // The visitor leaves while the site is being searched: no answer is started.
   const left = await timed({ decision: 'tool', searchDelayMs: 400, streams: ['ok'] }, { leaveOn: /"phase":"searching"/, leaveAfterMs: 700 })
   check('a visitor who leaves during the search gets no answer started (no paid stream after the search)',
@@ -888,6 +945,7 @@ const ask = [{ role: 'user', content: 'How do I reach Joe?' }]
       lines.length === 1 && TIMING.test(lines[0]) && r.blocks[at + 1] === 'data: [DONE]' && !lines[0].includes('joe'), lines.join(' | '))
     check(`${name}: ...naming how the first call committed, and when the first words went out`,
       fields.commit === (p.decision === 'text' ? 'text' : 'tool') && Number(fields.first) > 0 && Number(fields.total) >= Number(fields.first)
+      && fields.words === fields.first // nothing was cleared: the first words are the kept ones
       && (p.decision === 'tool' ? Number(fields.search) >= 0 && fields.chunks !== undefined && fields.ttft2 !== undefined : fields.search === undefined))
   }
   process.env.CHAT_FIRST_WORDS_CEILING_MS = '300'

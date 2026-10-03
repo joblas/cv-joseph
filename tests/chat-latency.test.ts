@@ -17,6 +17,10 @@
 // would flake): the first words arrive before the first call has finished
 // writing; how many model calls ran; that no LLM rerank ran; that a visitor
 // who leaves stops every call; that nothing is shown the model did not write.
+// And no added wait: each step starts within 100ms of the event it waits on
+// in the fake world (the rate limit, the first call's end, the search's last
+// answer, the model's first word), measured against that world's own clock,
+// so a slow runner stretches both sides alike.
 // LATENCY_REPORT=1 prints the milliseconds for the PR (and LATENCY_SCALE
 // stretches every delay). The same file, copied onto the code before this
 // change, is how the "before" numbers were taken; it fails there, by design.
@@ -58,7 +62,7 @@ type Persona = keyof typeof ORIGIN
 
 type ChatRun = {
   connected: number; searching: number; firstWords: number; done: number; firstWordsAt: number
-  shown: string; replaced: boolean; timing: Record<string, string>; outcome: any; leftAt: number
+  shown: string; replaced: boolean; timing: Record<string, string>; outcome: any; leftAt: number; t0: number
 }
 // One visitor turn through the real widget parser. Times are ms from the click.
 async function chatTurn(persona: Persona, question: string, scripts: Partial<Record<Kind, ModelScript>>,
@@ -67,7 +71,7 @@ async function chatTurn(persona: Persona, question: string, scripts: Partial<Rec
   background.length = 0
   logged.length = 0
   const t0 = Date.now()
-  const run: ChatRun = { connected: -1, searching: -1, firstWords: -1, done: -1, firstWordsAt: 0, shown: '', replaced: false, timing: {}, outcome: null, leftAt: 0 }
+  const run: ChatRun = { connected: -1, searching: -1, firstWords: -1, done: -1, firstWordsAt: 0, shown: '', replaced: false, timing: {}, outcome: null, leftAt: 0, t0 }
   let wire = ''
   const stop = new AbortController()
   if (leaveAtMs) setTimeout(() => { run.leftAt = Date.now(); stop.abort() }, leaveAtMs * SCALE)
@@ -120,7 +124,7 @@ async function chatTurn(persona: Persona, question: string, scripts: Partial<Rec
   return run
 }
 
-type VoiceRun = { total: number; status: number; context: string; tier: string; serverTiming: string }
+type VoiceRun = { total: number; endAt: number; status: number; context: string; tier: string; serverTiming: string }
 async function voiceSearch(persona: Persona, query: string, scripts: Partial<Record<Kind, ModelScript>>, services: Partial<Services> = {}): Promise<VoiceRun> {
   setWorld(scripts, services)
   const t0 = Date.now()
@@ -129,9 +133,10 @@ async function voiceSearch(persona: Persona, query: string, scripts: Partial<Rec
     body: JSON.stringify({ query, traceId: null, currentPage: '/', persona }),
   }))
   const body: any = await res.json()
-  const total = Date.now() - t0
+  const endAt = Date.now()
+  const total = endAt - t0
   const context = String(body.context ?? '')
-  return { total, status: res.status, context, tier: context.includes('REASONED-MARKER') ? 'reasoned' : context ? 'chunks' : 'none', serverTiming: res.headers.get('Server-Timing') || '' }
+  return { total, endAt, status: res.status, context, tier: context.includes('REASONED-MARKER') ? 'reasoned' : context ? 'chunks' : 'none', serverTiming: res.headers.get('Server-Timing') || '' }
 }
 
 const words = (n: number, tag: string) => `${tag} ${Array.from({ length: n - 1 }, (_, i) => `w${i}`).join(' ')}`
@@ -143,6 +148,10 @@ const systemText = (c: any) => (Array.isArray(c?.body?.system) ? c.body.system[0
 const toolResultText = (c: any) => JSON.stringify(c?.body?.messages?.[c.body.messages.length - 1]?.content ?? '')
 const rows: string[][] = []
 const ms = (n: number) => (n < 0 ? '—' : String(Math.round(n / SCALE)))
+// No added wait: a step starts within this long of what it waits on (see the header).
+const PROMPTLY = 100 * SCALE
+// The last fake service answer at or before `at`.
+const lastServiceEndBefore = (at: number) => Math.max(0, ...serviceCalls.filter((s) => s.endAt && s.endAt <= at).map((s) => s.endAt))
 
 // --- S1/S2: no search. The first call IS the answer. -------------------------------
 for (const [id, persona, question, n] of [
@@ -157,6 +166,11 @@ for (const [id, persona, question, n] of [
     r.firstWordsAt > 0 && !!first?.endAt && r.firstWordsAt < first.endAt - 150 * SCALE,
     `first words ${r.firstWordsAt - (first?.endAt ?? 0)}ms relative to the first call's end`)
   check(`${id}: never before the model wrote them`, !!first?.firstTextAt && r.firstWordsAt >= first.firstTextAt)
+  check(`${id}: ...and as soon as it wrote them (nothing held back)`, r.firstWordsAt - first.firstTextAt < PROMPTLY,
+    `${r.firstWordsAt - first.firstTextAt}ms after the model's first word`)
+  const limiter = serviceCalls.find((s) => s.url.includes('check_chat_rate_limit'))
+  check(`${id}: the first call starts right after the rate limit (no wait before it)`,
+    !!limiter?.endAt && !!first?.startAt && first.startAt - limiter.endAt < PROMPTLY, `${first?.startAt - (limiter?.endAt ?? 0)}ms after the rate limit answered`)
   check(`${id}: one model call, and no search`, calls.length === 1 && r.searching < 0, `${calls.length} calls`)
   check(`${id}: the model got the persona's own prompt`, systemText(first) === getPersona(persona).prompt)
   check(`${id}: the timing line agrees with the visitor's clock`,
@@ -175,6 +189,15 @@ for (const [id, persona, question, marker] of [
   check(`${id}: "searching" is shown before the first words`, r.searching >= 0 && r.searching < r.firstWords)
   check(`${id}: the answer call holds the corpus the search found (truth)`, toolResultText(answerCall).includes(marker.slice(0, 20)))
   check(`${id}: never before the model wrote them`, !!answerCall?.firstTextAt && r.firstWordsAt >= answerCall.firstTextAt)
+  const first = ofKind('first')[0]
+  const searchStart = Math.min(...serviceCalls.filter((s) => s.at >= (first?.startAt ?? 0)).map((s) => s.at))
+  check(`${id}: the search starts as soon as the first call has asked for it`, !!first?.endAt && searchStart - first.endAt < PROMPTLY,
+    `${searchStart - (first?.endAt ?? 0)}ms after the first call ended`)
+  check(`${id}: the answer call starts as soon as the search is done`, !!answerCall?.startAt && answerCall.startAt - lastServiceEndBefore(answerCall.startAt) < PROMPTLY,
+    `${answerCall?.startAt - lastServiceEndBefore(answerCall?.startAt ?? 0)}ms after the search's last answer`)
+  check(`${id}: the answer streams: its first words arrive while it is still writing, as soon as written`,
+    !!answerCall?.endAt && r.firstWordsAt < answerCall.endAt - 150 * SCALE && r.firstWordsAt - answerCall.firstTextAt < PROMPTLY,
+    `first words ${r.firstWordsAt - (answerCall?.endAt ?? 0)}ms relative to the answer call's end, ${r.firstWordsAt - (answerCall?.firstTextAt ?? 0)}ms after its first word`)
   check(`${id}: the search makes no model call (Voyage ranks; no LLM rerank)`, ofKind('rerank').length === 0 && calls.length === 2,
     calls.map((c) => c.kind).join(','))
   check(`${id}: Voyage reranked the candidates once`, serviceCalls.filter((s) => s.url.includes('/v1/rerank')).length === 1)
@@ -210,6 +233,10 @@ if (SCALE !== 1) Object.assign(process.env, { VOICE_SEARCH_BUDGET_MS: String(250
   vrows.push(['V1', 'jts, fast retrieval', ms(v1.total), v1.tier])
   check('V1: a fast search is answered by the reasoning model', v1.status === 200 && v1.tier === 'reasoned')
   check('V1: and says where its time went (Server-Timing)', /tier;desc=reasoned/.test(v1.serverTiming), v1.serverTiming)
+  const reasonV1 = ofKind('reason')[0]
+  check('V1: reasoning starts as soon as retrieval is done, and the answer goes back as soon as it is written',
+    !!reasonV1?.endAt && reasonV1.startAt - lastServiceEndBefore(reasonV1.startAt) < PROMPTLY && v1.endAt - reasonV1.endAt < PROMPTLY,
+    `reasoning ${reasonV1?.startAt - lastServiceEndBefore(reasonV1?.startAt ?? 0)}ms after retrieval, answer ${v1.endAt - (reasonV1?.endAt ?? 0)}ms after reasoning`)
 
   const v2 = await voiceSearch('cloudyjoe', 'Hermes', {})
   vrows.push(['V2', 'cloudyjoe', ms(v2.total), v2.tier])

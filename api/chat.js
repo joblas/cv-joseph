@@ -264,7 +264,10 @@ function firstToSpeak(makeStream, {
 
 // One comment line before [DONE] that says where this reply's time went
 // (integer ms, counts and enums; no content). Every widget skips ':' lines.
-// first = request arrival to the first visible words; total = to [DONE].
+// first = request arrival to the first visible words; words = to the first
+// words the visitor KEPT (the first text after the last clear: words written
+// before a search, or half an answer before a retry, are cleared, so on those
+// replies `first` is not when the answer began); total = to [DONE].
 function timingLine(t, t0) {
   t.total = Date.now() - t0
   const fields = Object.entries(t)
@@ -572,6 +575,7 @@ function respondNow(answer, { persona, onFailure, t0 = Date.now() }) {
   let gone = false
   let ended = false // the reply was ended early (a ceiling): nothing more goes out
   let firstWordsAt = 0
+  let keptWordsAt = 0 // the first words since the last clear (timingLine's `words`)
   const stopTimers = () => {
     clearInterval(heartbeat)
     clearTimeout(wordsCeiling)
@@ -596,7 +600,7 @@ function respondNow(answer, { persona, onFailure, t0 = Date.now() }) {
       // The timing line (streamResponse's, see timingLine) for a reply that
       // ends here instead: `ceiling=1` or `error=1`, so the slowest replies are
       // not the ones with no data.
-      const timing = (flag) => `: timing ${firstWordsAt ? `first=${firstWordsAt - t0} ` : ''}total=${Date.now() - t0} ${flag}=1\n\n`
+      const timing = (flag) => `: timing ${firstWordsAt ? `first=${firstWordsAt - t0} ` : ''}${keptWordsAt ? `words=${keptWordsAt - t0} ` : ''}total=${Date.now() - t0} ${flag}=1\n\n`
       // Whatever hangs inside, the reply ends: the error message, then [DONE].
       const giveUp = (why) => {
         if (ended || gone) return
@@ -636,12 +640,14 @@ function respondNow(answer, { persona, onFailure, t0 = Date.now() }) {
           const chunk = decoder.decode(value, { stream: true })
           if (/"text":"[^"]/.test(chunk)) {
             if (!firstWordsAt) firstWordsAt = Date.now()
+            if (!keptWordsAt) keptWordsAt = Date.now()
             if (wordsCeiling) {
               clearTimeout(wordsCeiling)
               wordsCeiling = null
             }
-          } else if (!wordsCeiling && !ended && /"text":"","replace":true/.test(chunk)) {
-            armWordsCeiling()
+          } else if (/"text":"","replace":true/.test(chunk)) {
+            keptWordsAt = 0
+            if (!wordsCeiling && !ended) armWordsCeiling()
           }
           send(value)
         }
@@ -687,6 +693,9 @@ function respondNow(answer, { persona, onFailure, t0 = Date.now() }) {
 // - Nothing committed (a hang, two failures, a refusal, an empty output): the
 //   reply is written without tools, told so (toolsUnavailableNote), with the
 //   usual retry and fallback.
+// - Committed to text, then broke off: the words are cleared and the retry
+//   is written without tools, told so too (the words may have been a
+//   preamble to a search that never came).
 //
 // Every attempt's text goes through replyText (reply-text.js): a leak is
 // caught before it is sent, and a misspelled contact address is corrected
@@ -720,7 +729,7 @@ function streamResponse({
   // The timing line's fields, in order (timingLine). Values are set as the
   // reply goes; a field that does not apply is never set.
   const t = {
-    first: undefined, total: undefined, rl: timing.rl, prompt: timing.prompt,
+    first: undefined, words: undefined, total: undefined, rl: timing.rl, prompt: timing.prompt,
     call1: undefined, commit: 'none', hedge1: undefined, retry1: undefined,
     search: undefined, embed: undefined, retrieve: undefined, rerank: undefined, chunks: undefined,
     ttft2: undefined, attempt: undefined, fallback: 0, stop: undefined,
@@ -756,12 +765,15 @@ function streamResponse({
         if (!text) return
         const now = Date.now()
         if (t.first === undefined) t.first = now - t0
+        if (t.words === undefined) t.words = now - t0
         if (answerStartedAt && t.ttft2 === undefined) t.ttft2 = now - answerStartedAt
         onScreen += text
         emit(`data: ${JSON.stringify({ text })}\n\n`)
       }
       const sendReplace = (text) => {
         onScreen = text
+        // Cleared: the words kept so far are gone. Replaced with words: those count.
+        t.words = text ? (t.words ?? Date.now() - t0) : undefined
         emit(`data: ${JSON.stringify({ text, replace: true })}\n\n`)
       }
       const status = (phase) => emit(`event: status\ndata: ${JSON.stringify({ phase })}\n\n`)
@@ -918,11 +930,16 @@ function streamResponse({
             result = { msg: outcome.answered, end: ending(reply, outcome.answered) }
           } else if (outcome.broke) {
             // Attempt 0 of the answer failed midway: attempt 1 is a plain
-            // stream (no tools, same system), then the fallback.
+            // stream (no tools), then the fallback. Words written before a
+            // tool call look like an answer until the tool_use block arrives,
+            // so the broken text may have been "Let me look that up": the
+            // retry runs without tools and is told so, like a failed decision
+            // (no claimed search, no offered or booked times).
             t.commit = 'text'
             lastError = outcome.broke
             logFailure(0, lastError)
             firstAttempt = 1
+            answerSystem = [...systemBlocks, { type: 'text', text: toolsUnavailableNote(persona) }]
             if (!(await betweenAttempts())) skipRetries = true
           } else if (outcome.tool) {
             t.commit = state.preamble ? 'preamble' : 'tool'

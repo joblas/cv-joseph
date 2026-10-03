@@ -37,7 +37,7 @@ export const JTS_MARKER = 'JTS-CORPUS-MARKER: the Private AI Setup installs loca
 export const CJ_MARKER = 'CJ-CORPUS-MARKER: Hermes runs the back office of Joe’s Tech Solutions.'
 
 export const calls: Call[] = []
-export const serviceCalls: { url: string; at: number; abortedAt: number }[] = []
+export const serviceCalls: { url: string; at: number; endAt: number; abortedAt: number }[] = []
 const world: { scripts: Partial<Record<Kind, ModelScript>>; services: Services } = { scripts: {}, services: { ...DEFAULT_SERVICES } }
 export function setWorld(scripts: Partial<Record<Kind, ModelScript>>, services: Partial<Services> = {}) {
   world.scripts = scripts
@@ -171,21 +171,23 @@ export async function fakeFetch(url: any, init: any = {}): Promise<Response> {
     signal?.addEventListener('abort', () => { if (!call.endAt && !call.abortedAt) call.abortedAt = Date.now() }, { once: true })
     return modelResponse(call, world.scripts[kind] ?? DEFAULT_SCRIPTS[kind], signal)
   }
-  const svc = { url: u, at: Date.now(), abortedAt: 0 }
+  const svc = { url: u, at: Date.now(), endAt: 0, abortedAt: 0 }
   serviceCalls.push(svc)
   signal?.addEventListener('abort', () => { svc.abortedAt = Date.now() }, { once: true })
   const s = world.services
-  if (u.includes('/rest/v1/rpc/check_chat_rate_limit')) { await delay(s.limiterMs, signal); return json(true) }
+  // When each answer went back, so a test can see what the handler did next and when.
+  const answered = (res: Response) => { svc.endAt = Date.now(); return res }
+  if (u.includes('/rest/v1/rpc/check_chat_rate_limit')) { await delay(s.limiterMs, signal); return answered(json(true)) }
   if (u.includes('voyageai.com/v1/embeddings')) {
     await delay(s.embedMs, signal)
-    return json({ data: [{ embedding: Array(1024).fill(0.01) }], usage: { total_tokens: 8 } })
+    return answered(json({ data: [{ embedding: Array(1024).fill(0.01) }], usage: { total_tokens: 8 } }))
   }
   if (u.includes('voyageai.com/v1/rerank')) {
     await delay(s.rerankMs, signal)
-    return json({ data: [0, 1, 2, 3, 4, 5].map((index, r) => ({ index, relevance_score: 0.9 - r * 0.1 })), usage: { total_tokens: 100 } })
+    return answered(json({ data: [0, 1, 2, 3, 4, 5].map((index, r) => ({ index, relevance_score: 0.9 - r * 0.1 })), usage: { total_tokens: 100 } }))
   }
-  if (u.startsWith('https://stub-jts.supabase.co/rest/v1/rpc/')) { await delay(s.jtsRpcMs, signal); return json(jtsRows()) }
-  if (u.startsWith('https://stub-cj.supabase.co/rest/v1/rpc/')) { await delay(s.cjRpcMs, signal); return json(cjRows()) }
-  if (u.startsWith('https://stub-cj.supabase.co/') || u.startsWith('https://stub-jts.supabase.co/')) return json([])
+  if (u.startsWith('https://stub-jts.supabase.co/rest/v1/rpc/')) { await delay(s.jtsRpcMs, signal); return answered(json(jtsRows())) }
+  if (u.startsWith('https://stub-cj.supabase.co/rest/v1/rpc/')) { await delay(s.cjRpcMs, signal); return answered(json(cjRows())) }
+  if (u.startsWith('https://stub-cj.supabase.co/') || u.startsWith('https://stub-jts.supabase.co/')) return answered(json([]))
   throw new Error(`fake world: unexpected fetch ${u}`)
 }
