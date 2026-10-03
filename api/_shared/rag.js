@@ -1034,7 +1034,10 @@ export const PROMPT_FINGERPRINTS = [
 
 export const LEAK_RESPONSE = 'That information is part of my internal design. The project source code is public on GitHub if you are interested in the architecture.'
 
+// Lowered once: every chunk of every answer is checked (reply-text.js).
+const FINGERPRINTS_LOWER = PROMPT_FINGERPRINTS.map(fp => fp.toLowerCase())
+
 export function containsFingerprint(text) {
   const lower = text.toLowerCase()
-  return PROMPT_FINGERPRINTS.some(fp => lower.includes(fp.toLowerCase()))
+  return FINGERPRINTS_LOWER.some(fp => lower.includes(fp))
 }

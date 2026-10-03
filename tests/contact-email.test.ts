@@ -6,8 +6,8 @@
 const { fixContactEmail, visitorAddresses, editDistance, MAX_DROPPED } = await import('../functions/api-src/_shared/contact-email.js')
 
 let failed = 0
-function check(name: string, cond: boolean) {
-  if (!cond) { console.error(`  ✗ ${name}`); failed++ }
+function check(name: string, cond: boolean, detail = '') {
+  if (!cond) { console.error(`  ✗ ${name}${detail ? ` — ${detail}` : ''}`); failed++ }
 }
 const JOE = 'joe@joestechsolutions.com'
 const BLASJ = 'blasj408@gmail.com' // cloudyjoe's contact: short, so near misses crowd it
@@ -105,6 +105,99 @@ function stream(chunks: string[], opts: { canary?: string; visitorsOwn?: string[
   check('whitespace-only text sends nothing', r.sent.length === 0 && r.replace === null)
   const lead = stream(['\n', 'Hi there.'])
   check('...and text after it is sent whole', lead.joined === '\nHi there.')
+}
+
+// --- The emitter's cost follows the chunk, not the answer so far ----------------------
+// Review of the instant-reply branch (2026-10-02): every chunk re-ran the
+// address correction and the held-word regex over the WHOLE answer, so a
+// reply's CPU grew with the square of its length (46ms for 4,000 characters
+// in 4-character chunks with an address early, where a Workers Free request
+// gets 10ms in all). The emitter now keeps the answer as a settled part,
+// corrected once, and the word still being written.
+const { containsFingerprint } = await import('../functions/api-src/_shared/rag.js')
+{
+  // The reference: the same rules applied to the whole answer on every chunk
+  // (the emitter as it was). The emitter must say exactly what it says, chunk
+  // by chunk, on answers and chunkings no one wrote by hand.
+  function reference({ canary = '', contact = '', visitorsOwn = [] as string[] }) {
+    let raw = ''
+    let visible = ''
+    const fix = (t: string) => (contact && t.includes('@') ? fixContactEmail(t, contact, visitorsOwn) : t)
+    const releasable = (t: string) => { const tail = t.match(/\S*$/)![0]; return tail.includes('@') ? t.slice(0, t.length - tail.length) : t }
+    const take = (ready: string) => {
+      if (ready.length <= visible.length || (!visible && !ready.trim())) return ''
+      const out = ready.slice(visible.length)
+      visible += out
+      return out
+    }
+    return {
+      push(chunk: string) {
+        raw += chunk
+        const recent = raw.slice(-(chunk.length + 64))
+        if (containsFingerprint(recent) || (canary && recent.includes(canary))) return { leak: true, out: '' }
+        return { leak: false, out: take(releasable(fix(raw))) }
+      },
+      end() { const text = fix(raw); const out = take(text); return { out, replace: visible && visible !== text ? text : null, text } },
+      get visible() { return visible },
+    }
+  }
+  let seed = 20261002
+  const rnd = () => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff }
+  const pick = <T,>(xs: T[]): T => xs[Math.floor(rnd() * xs.length)]
+  const words = ['Email', 'Joe', 'he', 'replies.', '(see', 'below)', '[link](mailto:', ')', '—', 'é', '😀', JOE, 'joe@joestsolutions.com',
+    'Joe@JoesTechSolutions.com', 'joe@joestechsolution.com', 'jon@joestechsolutions.com', BLASJ, 'blasj408@gmial.com', '@', 'x@y', 'joe@',
+    '@joestsolutions.com', 'BREVEDAD', 'OBLIGATORIA', 'ZXCV_12', '34abcd']
+  const spaces = [' ', ' ', '\n', '\n\n', '\t', ' ', ' ', '﻿', '\u0085', '']
+  let differs = ''
+  for (let k = 0; k < 3000 && !differs; k++) {
+    const text = Array.from({ length: 1 + Math.floor(rnd() * 20) }, () => pick(words) + pick(spaces)).join('')
+    const opts = { canary: pick(['ZXCV_1234abcd', '']), contact: pick([JOE, JOE, BLASJ, '']), visitorsOwn: pick([[], ['JOE@joestechsolution.com']]) }
+    const a = replyText(opts)
+    const b = reference(opts)
+    let past = -1 // a few chunks past a leak too
+    for (let i = 0; i < text.length && past < 3;) {
+      const n = rnd() < 0.1 ? 0 : rnd() < 0.15 ? 1 + Math.floor(rnd() * 60) : 1 + Math.floor(rnd() * 6)
+      const c = text.slice(i, i + n)
+      i += n
+      const x = a.push(c)
+      const y = b.push(c)
+      if (x.leak !== y.leak || x.out !== y.out || a.visible !== b.visible) { differs = JSON.stringify({ text, at: i, chunk: c, emitter: x, reference: y }); break }
+      if (x.leak || past >= 0) past++
+    }
+    if (!differs && JSON.stringify(a.end()) !== JSON.stringify(b.end())) differs = JSON.stringify({ text, end: true })
+  }
+  check('the emitter sends exactly what the whole-answer reference sends, chunk by chunk (3,000 random answers and chunkings)', !differs, differs)
+
+  // CPU per character for a long answer against a short one, both streamed in
+  // 4-character chunks with an address early, the same number of characters
+  // timed on each side: a slow or loaded runner slows both alike. Linear cost
+  // keeps the two near 1:1; the whole-answer version came out about 10:1.
+  const answer = (n: number) => {
+    let s = `Hi! Email ${JOE} and he replies within a day. `
+    while (s.length < n) s += 'Joe builds private AI setups for small businesses, on hardware they own. '
+    return Array.from({ length: n / 4 }, (_, i) => s.slice(i * 4, i * 4 + 4))
+  }
+  const perChar = (chunks: string[], reps: number) => {
+    const t0 = process.cpuUsage()
+    for (let r = 0; r < reps; r++) {
+      const e = replyText({ contact: JOE, canary: 'ZXCV_1234abcd' })
+      for (const c of chunks) e.push(c)
+      e.end()
+    }
+    const used = process.cpuUsage(t0)
+    return (used.user + used.system) / (reps * chunks.length * 4)
+  }
+  const short = answer(250)
+  const long = answer(4000)
+  for (let i = 0; i < 3; i++) { perChar(short, 8); perChar(long, 1) } // warm up the JIT
+  const shortRuns: number[] = []
+  const longRuns: number[] = []
+  for (let i = 0; i < 7; i++) { shortRuns.push(perChar(short, 128)); longRuns.push(perChar(long, 8)) }
+  const median = (xs: number[]) => [...xs].sort((p, q) => p - q)[xs.length >> 1]
+  const budget = 3 * median(shortRuns) // the short answer's cost per character, scaled to 4,000, with room
+  check('a 4,000-character answer in 4-character chunks costs at most 3x the per-character CPU of a 250-character one (the median of 7 runs)',
+    median(longRuns) <= budget,
+    `${median(longRuns).toFixed(3)}µs per character against a budget of ${budget.toFixed(3)} (${(median(longRuns) * 4).toFixed(2)}ms for 4,000 characters)`)
 }
 
 if (failed) { console.error(`${failed} check(s) failed`); process.exit(1) }

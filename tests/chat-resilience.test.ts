@@ -58,7 +58,7 @@ const TYPO = 'Email joe@joestsolutions.com and he replies within 24 hours.'
 
 type Plan = {
   decision: 'text' | 'tool' | 'fail' | 'hang' | 'flaky' | 'overloaded' | 'slowOverload' | 'slowDecision' | 'hangOnce' | 'failLateOnce' | 'slowTool' | 'bodyStall'
-    | 'textHold' | 'preamble' | 'thinkingLong' | 'empty' | 'wsTool' | 'leak' | 'textStall' | 'textError'; decisionText?: string; sources?: boolean; searchDelayMs?: number
+    | 'textHold' | 'preamble' | 'thinkingLong' | 'empty' | 'wsTool' | 'leak' | 'textStall' | 'textError' | 'wsStall' | 'toolStall'; decisionText?: string; sources?: boolean; searchDelayMs?: number
   recordFails?: 'refused' | 'down' | 'hang'; dbStall?: 'get' | 'patch'; resend?: 'fail' | 'hang'
   streams: Array<'typo' | 'ok' | 'empty' | 'fail' | 'stall' | 'stallAfterText' | 'trickle' | 'slowStart' | 'thinking' | 'emptySlow' | { say: string | string[] }>
 }
@@ -134,7 +134,7 @@ let abortedDecisionAt = 0
     if (isBrief) return json({ id: 'b', type: 'message', role: 'assistant', model: 'stub', stop_reason: 'end_turn', content: [{ type: 'text', text: 'Who: Pat\nNeed: a website\nTimeline: soon' }], usage: { input_tokens: 1, output_tokens: 1 } })
     if (isDecision) {
       if (plan.decision === 'fail') return json({ type: 'error', error: { type: 'invalid_request_error', message: 'stub decision failure' } }, 400)
-      if (['hang', 'hangOnce', 'bodyStall', 'slowDecision'].includes(plan.decision)) init.signal?.addEventListener('abort', () => { abortedDecisions++; abortedDecisionAt = Date.now() })
+      if (['hang', 'hangOnce', 'bodyStall', 'slowDecision', 'wsStall', 'toolStall'].includes(plan.decision)) init.signal?.addEventListener('abort', () => { abortedDecisions++; abortedDecisionAt = Date.now() })
       // Headers arrive, then the body never does (the SDK's own timeout stops at the headers).
       if (plan.decision === 'bodyStall') return stalledBody(init.signal)
       if (plan.decision === 'hang') return stalledCall(init.signal)
@@ -169,6 +169,16 @@ let abortedDecisionAt = 0
       if (plan.decision === 'preamble') return timedSse(init.signal, [msgStart(), ...textBlock(0, [PREAMBLE]), 50, ...toolBlock(1), ...msgEnd('tool_use')], ended)
       // Only whitespace, then the search.
       if (plan.decision === 'wsTool') return timedSse(init.signal, [msgStart(), ...textBlock(0, ['\n\n']), ...toolBlock(1), ...msgEnd('tool_use')], ended)
+      // Only whitespace, then nothing until aborted. Once: the raced second
+      // request answers in plain text.
+      if (plan.decision === 'wsStall') {
+        plan.decision = 'text'
+        return stalledBody(init.signal, msgStart() + textBlock(0, ['\n\n']).slice(0, 2).join(''))
+      }
+      // A tool call starts and its input begins, then nothing until aborted.
+      // (The input's first piece arrives after the commit, so the stream's
+      // silence limit is the answer's, 5s in that check, not the decision's.)
+      if (plan.decision === 'toolStall') return stalledBody(init.signal, msgStart() + toolBlock(0).slice(0, 2).join(''))
       // Thinking out loud for 400ms (an event every 50ms), then the answer.
       if (plan.decision === 'thinkingLong') {
         return timedSse(init.signal, [msgStart(), ev('content_block_start', { index: 0, content_block: { type: 'thinking', thinking: '' } }),
@@ -846,6 +856,11 @@ const ask = [{ role: 'user', content: 'How do I reach Joe?' }]
   check('...with exactly one model call, and no searching status', modelCalls.length === 1 && !fast.out.includes('"phase":"searching"'))
   check('the first call may BE the answer: it gets the whole answer budget (no silent 768-token cut)',
     decisionCalls()[0]?.body?.max_tokens === CHAT_MAX_TOKENS && decisionCalls()[0]?.body?.stream === true)
+  // call1= is the first call's time to commit: on a plain answer, its first
+  // visible word, not the end of the call 300ms later.
+  const fastTiming = Object.fromEntries((fast.blocks.find((b) => b.startsWith(': timing')) || '').slice(9).split(' ').map((f) => f.split('=')))
+  check('...and the timing line times the first call to its first words (call1= no later than first=), not to its end',
+    Number(fastTiming.call1) >= 0 && Number(fastTiming.call1) <= Number(fastTiming.first), JSON.stringify(fastTiming))
 
   const pre = await timed({ decision: 'preamble', streams: ['ok'] })
   const blockAt = (re: RegExp) => pre.blocks.findIndex((b) => re.test(b))
@@ -885,6 +900,36 @@ const ask = [{ role: 'user', content: 'How do I reach Joe?' }]
   const beforeSearch = ws.out.slice(0, ws.out.indexOf('"phase":"searching"'))
   check('whitespace before a tool call sends nothing (no text, no replace)',
     ws.shown === OK && ws.out.includes('"phase":"searching"') && !/"text":/.test(beforeSearch))
+
+  // Whitespace is not an answer: the first call commits on its first VISIBLE
+  // word (or a tool call). One that writes "\n\n" and then goes silent is still
+  // undecided, so it is raced like any silent request, and the second's answer
+  // is the visitor's. Committed on the whitespace, it would have been a broken
+  // answer: cleared, a 1.5s pause, a retry.
+  Object.assign(process.env, { CHAT_DECISION_HEDGE_MS: '100', CHAT_DECISION_TIMEOUT_MS: '5000' })
+  abortedDecisions = 0
+  const wsStall = await timed({ decision: 'wsStall', decisionText: OK, streams: [] })
+  const wsStallAborted = abortedDecisions
+  Object.assign(process.env, { CHAT_DECISION_HEDGE_MS: '60000', CHAT_DECISION_TIMEOUT_MS: '300' })
+  check('a first call that writes only whitespace, then stalls, is raced: the second request\u2019s answer is shown in under 1s, no retry',
+    decisionCalls().length === 2 && wsStall.shown === OK && wsStall.ms < 1000 && !wsStall.out.includes('"phase":"retrying"')
+    && !/tool_decision_failed/.test(wsStall.out) && logged.some((l) => /tool decision slow \(\d+ms\), racing a second request/.test(l)),
+    `${decisionCalls().length} first call(s), ${wsStall.ms}ms, shown ${JSON.stringify(wsStall.shown)}`)
+  check('...and the stalled one is cancelled', wsStallAborted === 1, `${wsStallAborted} cancelled`)
+
+  // A tool call that starts and never finishes is read only until the
+  // decision's limit (pump's drain timer), not for the stream's whole silence
+  // limit (5s here, the answer's: it applies once the call has committed),
+  // and the answer comes without tools.
+  process.env.CHAT_STREAM_IDLE_MS = '5000'
+  abortedDecisions = 0
+  const toolStall = await timed({ decision: 'toolStall', streams: ['ok'] })
+  const toolStallAborted = abortedDecisions
+  process.env.CHAT_STREAM_IDLE_MS = '300'
+  check('a tool call that starts and then stalls ends at the decision limit: the answer comes without tools, well before the 5s silence limit',
+    toolStall.shown === OK && /"reason":"tool_decision_failed"/.test(toolStall.out) && toolStall.ms < 1500 && toolStallAborted === 1
+    && decisionCalls().length === 1 && toolStall.streams.length === 1 && !Array.isArray(toolStall.streams[0].body.tools),
+    `${toolStall.ms}ms, ${toolStallAborted} cancelled, shown ${JSON.stringify(toolStall.shown)}`)
 
   const leak = await timed({ decision: 'leak', streams: [] })
   check('a fingerprint in the first call\u2019s text never reaches the visitor whole: the answer is replaced by LEAK_RESPONSE',
@@ -947,10 +992,18 @@ const ask = [{ role: 'user', content: 'How do I reach Joe?' }]
       fields.commit === (p.decision === 'text' ? 'text' : 'tool') && Number(fields.first) > 0 && Number(fields.total) >= Number(fields.first)
       && fields.words === fields.first // nothing was cleared: the first words are the kept ones
       && (p.decision === 'tool' ? Number(fields.search) >= 0 && fields.chunks !== undefined && fields.ttft2 !== undefined : fields.search === undefined))
+    // call1= is the first call's time to commit; on a plain answer that commit
+    // is its first visible word, so it can be no later than first=.
+    check(`${name}: ...and how long the first call took to commit (call1=)`,
+      Number(fields.call1) >= 0 && (p.decision !== 'text' || Number(fields.call1) <= Number(fields.first)), JSON.stringify(fields))
   }
-  process.env.CHAT_FIRST_WORDS_CEILING_MS = '300'
+  // The decision's own limit stays out of the way: at the suite's 300ms it
+  // raced this 300ms ceiling, and on a loaded box it sometimes fired first,
+  // so the answer written without tools came before the ceiling did (7 of 60
+  // runs in review).
+  Object.assign(process.env, { CHAT_FIRST_WORDS_CEILING_MS: '300', CHAT_DECISION_TIMEOUT_MS: '5000' })
   const ceilingLine = await timed({ decision: 'hang', streams: [] })
-  delete process.env.CHAT_FIRST_WORDS_CEILING_MS
+  delete process.env.CHAT_FIRST_WORDS_CEILING_MS; process.env.CHAT_DECISION_TIMEOUT_MS = '300'
   check('a reply the ceiling ends carries a timing line too (ceiling=1), so the slowest replies are measured',
     ceilingLine.blocks.filter((b) => b.startsWith(': timing')).length === 1 && /^: timing total=\d+ ceiling=1$/.test(ceilingLine.blocks.find((b) => b.startsWith(': timing')) || ''))
 }
