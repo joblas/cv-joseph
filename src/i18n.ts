@@ -67,7 +67,7 @@ const _translationsEn = {
       {
         icon: 'trophy',
         title: 'The autonomous beer run.',
-        desc: "Helped carry out Otto's October 2016 autonomous beer delivery in Colorado (Otto → Uber ATG).",
+        desc: "Helped carry out Otto's October 2016 autonomous beer delivery in Colorado (Uber ATG).",
       },
       {
         icon: 'car',
