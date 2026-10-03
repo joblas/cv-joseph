@@ -98,6 +98,15 @@ function stream(chunks: string[], opts: { canary?: string; visitorsOwn?: string[
     r.leakAt === 2 && !r.joined.includes(fp) && !r.joined.includes(fp.slice(8)))
   const canary = stream(['ok ', 'internal_ref: ZXCV_12', '34abcd'])
   check('...and so is the canary', canary.leakAt === 2 && !canary.joined.includes('ZXCV_1234abcd'))
+  // Token-sized chunks: the longest fingerprint (22 characters) in eight
+  // pieces, the last one a single character. The chunk that completes it sees
+  // only itself and the window before it, so this fails for any window under 21.
+  const long = PROMPT_FINGERPRINTS.find((f) => f === 'Instrucciones CRÍTICAS')!
+  const pieces = ['Sure: ', ...Array.from({ length: Math.ceil(long.length / 3) }, (_, i) => long.slice(i * 3, i * 3 + 3)), ' and the rest']
+  const split8 = stream(pieces)
+  check('a fingerprint streamed in 3-character chunks is caught on the chunk that completes it, before it is sent',
+    long.length === 22 && pieces.length === 10 && split8.leakAt === 8 && !split8.joined.toLowerCase().includes(long.toLowerCase()),
+    JSON.stringify({ leakAt: split8.leakAt, joined: split8.joined }))
   check('LEAK_RESPONSE is a real sentence (what the caller sends instead)', LEAK_RESPONSE.length > 40)
 }
 {
@@ -141,32 +150,76 @@ const { containsFingerprint } = await import('../functions/api-src/_shared/rag.j
       get visible() { return visible },
     }
   }
+  // mulberry32: exact 32-bit integer math, so every seed gives its own
+  // stream. The first version, (seed * 1103515245 + 12345) & 0x7fffffff, ran
+  // in floating point: the product passed 2^53 and lost its low bits, every
+  // seed fell into one cycle of 10,466 draws, and its "3,000 answers" were 136
+  // distinct texts, none with a whole fingerprint or the canary in it (review
+  // round 1, 2026-10-03). A leak window cut to 12 characters passed it.
   let seed = 20261002
-  const rnd = () => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff }
+  const rnd = () => {
+    seed = (seed + 0x6d2b79f5) | 0
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed)
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
+  }
   const pick = <T,>(xs: T[]): T => xs[Math.floor(rnd() * xs.length)]
   const words = ['Email', 'Joe', 'he', 'replies.', '(see', 'below)', '[link](mailto:', ')', '—', 'é', '😀', JOE, 'joe@joestsolutions.com',
     'Joe@JoesTechSolutions.com', 'joe@joestechsolution.com', 'jon@joestechsolutions.com', BLASJ, 'blasj408@gmial.com', '@', 'x@y', 'joe@',
     '@joestsolutions.com', 'BREVEDAD', 'OBLIGATORIA', 'ZXCV_12', '34abcd']
+  // Whole secrets, one word each, so random chunkings split them three, four,
+  // eight ways. Drawn for about one word in 30: roughly one answer in four
+  // leaks, the rest run the address path to the end.
+  const secrets = ['BREVEDAD OBLIGATORIA', 'Instrucciones CRÍTICAS', 'instrucciones críticas', 'ZXCV_1234abcd']
+  const SECRET_RE = /brevedad obligatoria|instrucciones críticas|ZXCV_1234abcd/gi
   const spaces = [' ', ' ', '\n', '\n\n', '\t', ' ', ' ', '﻿', '\u0085', '']
+  const ANSWERS = 3000
   let differs = ''
-  for (let k = 0; k < 3000 && !differs; k++) {
-    const text = Array.from({ length: 1 + Math.floor(rnd() * 20) }, () => pick(words) + pick(spaces)).join('')
+  const distinct = new Set<string>()
+  let leaked = 0
+  let leakedAcross3 = 0 // the secret that set off the leak spans 3 or more chunks
+  let leakedLong = 0 // ...and is a fingerprint of 20 or more characters
+  for (let k = 0; k < ANSWERS && !differs; k++) {
+    const text = Array.from({ length: 1 + Math.floor(rnd() * 20) }, () => (rnd() < 1 / 30 ? pick(secrets) : pick(words)) + pick(spaces)).join('')
+    distinct.add(text)
     const opts = { canary: pick(['ZXCV_1234abcd', '']), contact: pick([JOE, JOE, BLASJ, '']), visitorsOwn: pick([[], ['JOE@joestechsolution.com']]) }
     const a = replyText(opts)
     const b = reference(opts)
+    const starts: number[] = [] // where each non-empty chunk starts in the answer
     let past = -1 // a few chunks past a leak too
     for (let i = 0; i < text.length && past < 3;) {
       const n = rnd() < 0.1 ? 0 : rnd() < 0.15 ? 1 + Math.floor(rnd() * 60) : 1 + Math.floor(rnd() * 6)
       const c = text.slice(i, i + n)
-      i += n
+      if (c) starts.push(i)
+      i += c.length
       const x = a.push(c)
       const y = b.push(c)
       if (x.leak !== y.leak || x.out !== y.out || a.visible !== b.visible) { differs = JSON.stringify({ text, at: i, chunk: c, emitter: x, reference: y }); break }
+      if (x.leak && past < 0) {
+        leaked++
+        // The secret this chunk completed: the first one that ends inside it
+        // (the canary counts only when it is this answer's canary).
+        const hit = [...text.slice(0, i).matchAll(SECRET_RE)]
+          .find((m) => m.index! + m[0].length > i - c.length && (opts.canary || !m[0].startsWith('ZXCV')))
+        if (hit) {
+          const spans = 1 + starts.filter((s) => s > hit.index! && s < hit.index! + hit[0].length).length
+          if (spans >= 3) { leakedAcross3++; if (hit[0].length >= 20) leakedLong++ }
+        }
+      }
       if (x.leak || past >= 0) past++
     }
     if (!differs && JSON.stringify(a.end()) !== JSON.stringify(b.end())) differs = JSON.stringify({ text, end: true })
   }
-  check('the emitter sends exactly what the whole-answer reference sends, chunk by chunk (3,000 random answers and chunkings)', !differs, differs)
+  check(`the emitter sends exactly what the whole-answer reference sends, chunk by chunk (${ANSWERS.toLocaleString('en-US')} random answers and chunkings)`, !differs, differs)
+  // A fuzz proves nothing about a path it never takes. These fail if the
+  // generator collapses again or the secrets stop being split. (Counted only
+  // over a full run: a difference above stops the loop early.)
+  if (!differs) {
+    check('...the random answers are distinct', distinct.size >= ANSWERS * 0.95, `${distinct.size} distinct of ${ANSWERS}`)
+    check('...and they take the leak path often, with secrets split across 3 or more chunks',
+      leaked >= ANSWERS / 10 && leakedAcross3 >= ANSWERS / 20 && leakedLong >= ANSWERS / 40,
+      `${leaked} leaked, ${leakedAcross3} across 3+ chunks, ${leakedLong} of those a fingerprint of 20+ characters`)
+  }
 
   // CPU per character for a long answer against a short one, both streamed in
   // 4-character chunks with an address early, the same number of characters
