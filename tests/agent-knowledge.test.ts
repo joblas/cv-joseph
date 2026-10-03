@@ -396,7 +396,7 @@ for (const { label, text } of scanned) {
     check(`${label}: no ${what}${m ? ` (found "${m[0]}")` : ''}`, !m)
   }
 }
-// --- (iii-b) Joe's 2026-10-02 decisions on contact and AV wording, bot surfaces only ---
+// --- (iii-b) Joe's 2026-10-02 decisions on contact and AV wording ---
 // Joe's own answers (2026-10-02): no phone number anywhere the bot speaks from
 // (email only); "part of the team that built Firefly", never "built Firefly
 // from the ground up", and Firefly never dated to 2009 (the vehicle came later);
@@ -407,9 +407,12 @@ for (const { label, text } of scanned) {
 // Scope: what the bot is handed or retrieves. The prompts, the voice prompt
 // file, personas and the work list raw; public/llms.txt (written for AI
 // agents); every article source the registry marks ragReady; and the composed
-// prompts, search-tool strings and fact cards. NOT src/i18n.ts or
-// src/about-i18n.ts: the visible homepage and About copy are Joe's separate
-// call, and they still carry some of these phrases on purpose.
+// prompts, search-tool strings and fact cards.
+// And the visible site copy: on 2026-10-03 Joe said "match the homepage wording
+// to the bot too", so src/i18n.ts (homepage), src/about-i18n.ts (About page)
+// and index.html (the home page's static meta and FAQ structured data) carry
+// the same AV wording. The phone rule stays on the bot surfaces: it was a
+// decision about where the bot speaks from, not about the site.
 let decidedSummary = ''
 {
   const { articleRegistry }: any = await import('../src/articles/registry.ts')
@@ -417,9 +420,12 @@ let decidedSummary = ''
   check(`the registry still marks the article sources ragReady (got ${ragSources.length}; none would pass every ban vacuously)`, ragSources.length >= 7)
   const BOT_FILES = ['chatbot-prompt.txt', 'jts-prompt.txt', 'api/voice-token.js', 'api/_shared/personas.js', 'api/_shared/work.js',
     'public/llms.txt', ...ragSources]
-  for (const rel of ['src/i18n.ts', 'src/about-i18n.ts']) check(`${rel} (visible site copy) is not a bot surface here`, !BOT_FILES.includes(rel))
+  const SITE_FILES = ['src/i18n.ts', 'src/about-i18n.ts', 'index.html']
+  // Raw source as a reader sees it: in a single-quoted string "Google's" is
+  // stored as Google\'s, which no apostrophe pattern below would match.
+  const source = (rel: string) => read(rel).replace(/\\'/g, "'")
   const botSurfaces: { label: string; text: string }[] = [
-    ...BOT_FILES.map((rel) => ({ label: rel, text: read(rel) })),
+    ...BOT_FILES.map((rel) => ({ label: rel, text: source(rel) })),
     ...consumers.map((c) => ({ label: `${c.id} ${c.mode} (composed)`, text: c.text })),
     ...PERSONAS.map((id) => {
       const t = persona(id).searchTool
@@ -427,21 +433,26 @@ let decidedSummary = ''
     }),
     { label: 'fact cards', text: factCardChunks().map((c: any) => c.content).join('\n') },
   ]
-  const DECIDED: [RegExp, string][] = [
-    [/\(?\b408\)?[\s.-]*401[\s.-]*9943\b|\b4084019943\b/, "Joe's phone number (email only)"],
-    [/guinness/i, 'a Guinness World Record for the Otto delivery (no source)'],
+  const siteSurfaces = SITE_FILES.map((rel) => ({ label: rel, text: source(rel) }))
+  for (const rel of ['src/i18n.ts', 'src/about-i18n.ts']) {
+    check(`${rel} (visible site copy) is scanned for the AV wording`, siteSurfaces.some((s) => s.label === rel && s.text.length > 1000))
+  }
+  const PHONE: [RegExp, string] = [/\(?\b408\)?[\s.-]*401[\s.-]*9943\b|\b4084019943\b/, "Joe's phone number (email only)"]
+  const AV_WORDING: [RegExp, string][] = [
+    [/guinness|\bworld[- ]records?\b/i, 'a Guinness World Record for the Otto delivery (no source)'],
     [/\b2,900\b|\b2900[\s-]*miles?\b/i, 'the 2,900-mile Pronto figure (say cross-country, San Francisco to New York)'],
     [/levandowsk|\banthony\s+l\b/i, "Pronto.ai's founder by name"],
     [/firefly[^.\n]{0,80}\bground[- ]up\b|\bground[- ]up\b[^.\n]{0,80}firefly/i, '"built Firefly from the ground up" (part of the team that built Firefly)'],
-    [/world['’]?s first commercial/i, '"world\'s first commercial delivery" for the Otto run'],
+    // "the first commercial self-driving truck delivery" says it without "world's".
+    [/world['’]?s first commercial|\bfirst commercial\b[^.\n]{0,40}\b(?:deliver(?:y|ies)|trucks?|haul)\b/i, '"world\'s first commercial delivery" for the Otto run'],
     [/\b(?:otto|budweiser|beer|truck)\b[^.\n]{0,80}\bdriverless\b|\bdriverless\b[^.\n]{0,80}\b(?:otto|budweiser|beer|truck)/i, 'the Otto delivery as driverless (a driver was aboard)'],
   ]
   // Sentence-scoped: the line before a bullet, or a "2009-2016" span, does
   // not date Firefly; "started in 2009 working on the Firefly vehicle" does.
   const sentencesOf = (text: string) => text.split(/(?<=[.;!?])\s+|\n/)
   const DATED_2009 = /\b2009\b(?!\s*(?:-|–|—|to)\s*(?:20)?\d\d\b)/
-  for (const { label, text } of botSurfaces) {
-    for (const [re, what] of DECIDED) {
+  const checkAvWording = (label: string, text: string) => {
+    for (const [re, what] of AV_WORDING) {
       const m = text.match(re)
       check(`${label}: no ${what}${m ? ` (found "${m[0]}")` : ''}`, !m)
     }
@@ -454,6 +465,12 @@ let decidedSummary = ''
         /part of the team that\s+$/i.test(text.slice(Math.max(0, m.index! - 30), m.index)))
     }
   }
+  for (const { label, text } of botSurfaces) {
+    const m = text.match(PHONE[0])
+    check(`${label}: no ${PHONE[1]}${m ? ` (found "${m[0]}")` : ''}`, !m)
+    checkAvWording(label, text)
+  }
+  for (const { label, text } of siteSurfaces) checkAvWording(label, text)
   // Fixed, not dropped: the cloudyjoe agent still knows the three highlights,
   // in Joe's wording.
   const cjText = consumers.find((c) => c.id === 'cloudyjoe' && c.mode === 'text')?.text ?? ''
@@ -464,13 +481,22 @@ let decidedSummary = ''
   for (const phrase of ["part of the team that built Google's Firefly", 'cross-country autonomous demo, San Francisco to New York']) {
     check(`cloudyjoe voice still says "${phrase}"`, cjVoice.includes(phrase))
   }
+  // And so do the homepage and the About page.
+  const siteText = (rel: string) => siteSurfaces.find((s) => s.label === rel)?.text ?? ''
+  for (const phrase of ["Part of the team that built Google's Firefly", "Otto's October 2016 autonomous beer delivery in Colorado", 'cross-country']) {
+    check(`src/i18n.ts still says "${phrase}"`, siteText('src/i18n.ts').includes(phrase))
+  }
+  for (const phrase of ["part of the team that built Google's Firefly", 'San Francisco to New York']) {
+    check(`src/about-i18n.ts still says "${phrase}"`, siteText('src/about-i18n.ts').includes(phrase))
+  }
   // The model added "driverless" to the Otto run by itself on 2026-10-03, so
   // both cloudyjoe surfaces carry Joe's rule in so many words.
   for (const [where, text] of [['text', cjText], ['voice', cjVoice]] as const) {
     check(`cloudyjoe ${where} tells the model never to call the Otto run driverless`,
       text.includes('Never use the word "driverless" for it, and never call it a world first or a record.'))
   }
-  decidedSummary = `; ${DECIDED.length + 2} wording decisions hold on ${botSurfaces.length} bot surfaces (${ragSources.length} ragReady articles)`
+  decidedSummary = `; ${AV_WORDING.length + 3} wording decisions hold on ${botSurfaces.length} bot surfaces (${ragSources.length} ragReady articles)` +
+    `, the ${AV_WORDING.length + 2} AV ones on ${siteSurfaces.length} site copy files`
   check('the cloudyjoe fallback line gives the email only',
     /the safe default is: "That's a great question for Joe directly — you can reach him at blasj408@gmail\.com\."/.test(read('chatbot-prompt.txt')))
 }
