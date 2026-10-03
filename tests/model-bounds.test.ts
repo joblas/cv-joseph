@@ -69,3 +69,100 @@ test("the lead summary gives up at its limit, so Joe's notice still goes", async
   assert.equal(brief, null);
   assert.ok(Date.now() - t < 600);
 });
+
+// --- Thinking effort (CHAT_EFFORT) -------------------------------------------------
+// glm-5.3-flash defaults to effort "max" on every call; "high" roughly halves the
+// search decision and the first words after a search (provider bench, 2026-10-02).
+// One choke point (the client's fetch) sets it on every request: create and
+// stream alike. Never `thinking`: disabled thinking leaks reasoning into the text.
+const { createAnthropicClient, chatEffort, resetEffortRefusal } = await import("../functions/api-src/_shared/models.js");
+
+type Body = { stream?: boolean; output_config?: { effort?: string }; [k: string]: unknown };
+type Sent = { url: string; body: Body };
+function stubModel(refuseEffort = false) {
+  const sent: Sent[] = [];
+  const ev = (type: string, data: Record<string, unknown>) => `event: ${type}\ndata: ${JSON.stringify({ type, ...data })}\n\n`;
+  (globalThis as { fetch: unknown }).fetch = async (url: string, init: { body: string }) => {
+    const body = JSON.parse(init.body) as Body;
+    sent.push({ url: String(url), body });
+    if (refuseEffort && body.output_config) {
+      return new Response(JSON.stringify({ type: "error", error: { type: "invalid_request_error", message: 'think value "high" is not supported for this model' } }), { status: 400, headers: { "content-type": "application/json" } });
+    }
+    if (body.stream) {
+      return new Response(ev("message_start", { message: { id: "m", type: "message", role: "assistant", model: "stub", content: [], stop_reason: null, usage: { input_tokens: 1, output_tokens: 0 } } })
+        + ev("content_block_start", { index: 0, content_block: { type: "text", text: "" } }) + ev("content_block_delta", { index: 0, delta: { type: "text_delta", text: "hi" } })
+        + ev("content_block_stop", { index: 0 }) + ev("message_delta", { delta: { stop_reason: "end_turn" }, usage: { output_tokens: 1 } }) + ev("message_stop", {}),
+      { headers: { "content-type": "text/event-stream" } });
+    }
+    return new Response(JSON.stringify({ id: "m", type: "message", role: "assistant", model: "stub", stop_reason: "end_turn", content: [{ type: "text", text: "hi" }], usage: { input_tokens: 1, output_tokens: 1 } }), { headers: { "content-type": "application/json" } });
+  };
+  return sent;
+}
+async function bothKinds(baseUrl = "http://127.0.0.1:9") {
+  process.env.ANTHROPIC_BASE_URL = baseUrl;
+  process.env.ANTHROPIC_API_KEY = "stub";
+  delete process.env.ANTHROPIC_AUTH_TOKEN;
+  const client = createAnthropicClient();
+  const params = { model: "m", max_tokens: 16, messages: [{ role: "user" as const, content: "hi" }] };
+  await client.messages.create(params);
+  await client.messages.stream(params).finalMessage();
+  await createWithin(client, params, 5000);
+}
+
+test("every model request (create, stream, bounded create) carries effort high, and never `thinking`", async () => {
+  delete process.env.CHAT_EFFORT;
+  resetEffortRefusal();
+  const sent = stubModel();
+  await bothKinds();
+  assert.equal(chatEffort(), "high");
+  assert.equal(sent.length, 3);
+  for (const s of sent) {
+    assert.equal(s.body.output_config?.effort, "high", JSON.stringify(s.body));
+    assert.ok(!("thinking" in s.body));
+  }
+  assert.ok(sent[1].body.stream === true);
+});
+
+test("CHAT_EFFORT=max restores the provider's old level; CHAT_EFFORT=default sends no field", async () => {
+  resetEffortRefusal();
+  process.env.CHAT_EFFORT = "max";
+  let sent = stubModel();
+  await bothKinds();
+  assert.ok(sent.every((s) => s.body.output_config?.effort === "max"));
+  for (const off of ["default", "off", ""]) {
+    process.env.CHAT_EFFORT = off;
+    sent = stubModel();
+    await bothKinds();
+    assert.ok(sent.every((s) => !("output_config" in s.body) && !("thinking" in s.body)), `CHAT_EFFORT=${JSON.stringify(off)}`);
+  }
+  delete process.env.CHAT_EFFORT;
+});
+
+test("Anthropic's own endpoint gets no effort field (its models keep their defaults)", async () => {
+  delete process.env.CHAT_EFFORT;
+  resetEffortRefusal();
+  const sent = stubModel();
+  await bothKinds("https://api.anthropic.com");
+  assert.equal(sent.length, 3);
+  assert.ok(sent.every((s) => !("output_config" in s.body)));
+});
+
+test("a provider that refuses the effort (a model switched by env) is asked again without it, and never sent it again", async () => {
+  delete process.env.CHAT_EFFORT;
+  resetEffortRefusal();
+  const logged: string[] = [];
+  const realError = console.error;
+  console.error = (...a: unknown[]) => { logged.push(a.map(String).join(" ")); };
+  try {
+    const sent = stubModel(true);
+    await bothKinds();
+    // create: refused, then retried without it; after that nothing carries it.
+    assert.equal(sent.length, 4);
+    assert.equal(sent[0].body.output_config?.effort, "high");
+    assert.ok(sent.slice(1).every((s) => !("output_config" in s.body)));
+    assert.ok(logged.some((l) => /refused output_config\.effort=high \(HTTP 400/.test(l)));
+  } finally {
+    console.error = realError;
+    resetEffortRefusal();
+  }
+});
