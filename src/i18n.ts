@@ -2,7 +2,7 @@ const _seoEn = {
   title:
     'Joseph Blas | Autonomous Systems Operations & Integration Leader · Founder, Joe\'s Tech Solutions',
   description:
-    'Autonomous systems operations and integration leader, and founder of Joe\'s Tech Solutions — custom software, AI agents, automation, and private AI for small businesses, built on the same stack he runs his own company on. Helped build the self-driving car industry, from Google\'s founding 100,000-mile milestone to a Guinness World Record for the first commercial self-driving truck delivery. Now runs Hermes: one orchestrator, 40+ scheduled automations, Ollama Cloud models pinned per job.',
+    'Autonomous systems operations and integration leader, and founder of Joe\'s Tech Solutions — custom software, AI agents, automation, and private AI for small businesses, built on the same stack he runs his own company on. Helped build the self-driving car industry, from Google\'s founding 100,000-mile milestone to Otto\'s October 2016 autonomous beer delivery in Colorado. Now runs Hermes: one orchestrator, 40+ scheduled automations, Ollama Cloud models pinned per job.',
 };
 
 export const seo = _seoEn;
@@ -26,7 +26,7 @@ const _translationsEn = {
         '*Complex systems* +that work in production+.',
       ],
     ],
-    why: "From Google's founding self-driving milestone to a Guinness World Record to production multi-agent AI — my career is a bridge between hardware and software. I helped build the AV industry. Now I run Joe's Tech Solutions — building the AI systems that run small businesses, on the same stack that runs my own.",
+    why: "From Google's founding self-driving milestone to Otto's autonomous beer delivery to production multi-agent AI — my career is a bridge between hardware and software. I helped build the AV industry. Now I run Joe's Tech Solutions — building the AI systems that run small businesses, on the same stack that runs my own.",
     seeking: [
       'This still feels like day one.',
       'Same stack for my business and my clients.',
@@ -65,14 +65,14 @@ const _translationsEn = {
         desc: "Part of the original Google team that hit Larry Page's 100,000-mile no-incident milestone — the result that green-lit the self-driving car project.",
       },
       {
-        icon: 'trophy',
-        title: 'Guinness World Record.',
-        desc: "Helped execute the world's first commercial delivery by a self-driving truck (Otto → Uber ATG, 2016) — a driverless Budweiser haul across Colorado.",
+        icon: 'truck',
+        title: 'The autonomous beer run.',
+        desc: "Helped carry out Otto's October 2016 autonomous beer delivery in Colorado (Uber ATG).",
       },
       {
         icon: 'car',
-        title: 'Built the future from scratch.',
-        desc: "Part of the team that built Google's Firefly — a ground-up, fully-electric autonomous vehicle with no steering wheel or pedals.",
+        title: "Google's Firefly.",
+        desc: "Part of the team that built Google's Firefly — a fully custom, all-electric autonomous vehicle with no steering wheel or pedals.",
       },
       {
         icon: 'mapPin',
@@ -464,7 +464,7 @@ const _translationsEn = {
       role: 'Hardware Integration & Test Operations',
       period: '2016 - 2018 · Autonomous Vehicles',
       desc: [
-        "Helped execute the world's first commercial delivery by a self-driving truck — a Guinness World Record driverless Budweiser haul across Colorado (Oct 2016).",
+        "Helped carry out Otto's October 2016 autonomous beer delivery in Colorado.",
         'Led technician team installing wiring harnesses and mounting compute + sensors onto a 10-truck autonomous fleet, maintaining ~90% uptime.',
         'Installed newly-developed drive-by-wire systems and wheel-encoder infrastructure; vetted a manufacturing vendor in Juárez for scaled harness production.',
         'Primary field-to-engineering liaison: daily failure triage, root cause analysis, and resolution through the Otto → Uber acquisition.',
@@ -487,12 +487,12 @@ const _translationsEn = {
       period: '2018 - 2019 · Autonomous Vehicles',
       desc: [
         'Original sub-10-person team. Sole technician — owned end-to-end fleet integration, validation, and test campaign execution under rapid iteration.',
-        'Supported the 2,900-mile San Francisco → New York autonomous demo with zero critical failures and zero hands on the wheel.',
+        'Supported the cross-country San Francisco → New York autonomous demo with zero critical failures and zero hands on the wheel.',
         'Conducted 10+ executive and investor demonstrations as primary field-to-engineering liaison.',
       ],
       tesauro: {
-        title: '2,900-Mile Cross-Country Demo',
-        desc: 'Supported a 2,900-mile cross-country autonomous demonstration with zero critical failures. Conducted 10+ executive and investor demonstrations.',
+        title: 'Cross-Country Autonomous Demo',
+        desc: 'Supported a cross-country autonomous demonstration, San Francisco to New York, with zero critical failures. Conducted 10+ executive and investor demonstrations.',
         videoUrl: 'https://vimeo.com/prontoai',
         videoLabel: 'Watch Demo Video',
       },

@@ -85,10 +85,11 @@ const PROOF_POINTS: ProofPoint[] = [
     terms: ['Firefly', 'drive-by-wire', 'sensor calibration'],
   },
   {
-    // No mileage figure: the bio's 2,900 and the public record's ~3,099
-    // disagree, so the agent surfaces say "cross-country, San Francisco to
-    // New York" (Joe, 2026-10-02). tests/agent-knowledge.test.ts bans the
-    // figure on every bot surface, so this check must not require it.
+    // No mileage figure: the old bio's 2,900 and the public record's ~3,099
+    // disagreed, so the agent surfaces say "cross-country, San Francisco to
+    // New York" (Joe, 2026-10-02), and the site copy says the same since
+    // 2026-10-03. tests/agent-knowledge.test.ts bans the figure on every bot
+    // surface and in the site copy, so this check must not require it.
     source: 'i18n.ts → experience → Pronto / Uber',
     terms: ['Pronto', 'cross-country', 'San Francisco to New York', 'autonomous'],
   },
