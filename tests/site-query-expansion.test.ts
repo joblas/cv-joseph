@@ -157,8 +157,14 @@ for (const phantom of ['Fairway']) {
 }
 // /portfolio says "Live on iOS via TestFlight with Android builds rolling";
 // /portfolio/skate-workshop says "Development is paused". Because a curated
-// fact outranks a retrieved page, neither wording may be hard-coded.
-for (const claim of ['Android builds rolling', 'Live on iOS', 'paused', 'Paused']) {
+// fact outranks a retrieved page, neither wording could be hard-coded while the
+// two pages disagreed. The 2026-10-02 audit settled it against the primary
+// record (the v3 repo, EAS builds, the App Store and Play lookups): TestFlight
+// beta only, never submitted to a store, development paused. "Paused" is now a
+// curated fact (api/_shared/work.js), so only the refuted wording stays banned;
+// tests/agent-knowledge.test.ts pins "TestFlight beta" (and "paused" for Skate)
+// in every surface's line for both apps, and bans store-release wording.
+for (const claim of ['Android builds rolling', 'Live on iOS']) {
   check(`text prompt does not hard-code disputed status "${claim}"`, !(jts.prompt || '').includes(claim))
   check(`voice prompt does not hard-code disputed status "${claim}"`, !(jts.voicePrompt || '').includes(claim))
 }

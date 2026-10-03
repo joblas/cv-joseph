@@ -5,6 +5,7 @@
 import { FAST_MODEL, createWithin, scaleTokens } from './models.js'
 import { getPersona } from './personas.js'
 import { boundedFetch } from './bounded-fetch.js'
+import { expandWorkQuery, FACT_CARDS_ID, FACT_CARD_GUIDE_PREFIXES } from './work.js'
 
 // ---------------------------------------------------------------------------
 // Cost tracking per span
@@ -310,6 +311,29 @@ export function expandSiteQuery(query) {
   return additions.length ? `${q} ${additions.join(' ')}` : q
 }
 
+// The cloudyjoe corpus has the same blind spot from the other side: a visitor
+// asks for "a store for a musician selling t-shirts" and the case study says
+// "Cbarrgs" and "merch". The bridge lives with the facts it points at
+// (api/_shared/work.js, each item's `expand`). Only the EMBEDDING gets the
+// added words. hybrid_search's keyword leg gets the visitor's words unchanged:
+// appended OR terms switch ts_rank to its OR formula, which cuts a full
+// match's keyword score several-fold (see expandWorkQuery).
+export function expandDocumentsQuery(query) {
+  return expandWorkQuery(query)
+}
+
+// Keyword-only retrieval (no embedding provider): the visitor's words first.
+// keyword_search already falls back from an AND match to any single word, so
+// the bridge terms are tried only when no row shares even one word with the
+// question; tried first, they would always find their own item's rows and the
+// visitor's own any-word fallback would never run.
+async function keywordSearchWithBridge(query, expanded) {
+  const first = await searchDocumentsByKeyword(query)
+  if (first.chunks.length || !expanded?.terms.length) return first
+  const second = await searchDocumentsByKeyword(expanded.semantic)
+  return { ...second, latencyMs: first.latencyMs + second.latencyMs, bridged: true }
+}
+
 // The RPC gets the EXPANDED query; boostNamedPages gets the ORIGINAL one.
 // Feeding the expanded string to both would make every case-study page count as
 // "named" for any work question, flattening the boost exactly when it fires.
@@ -591,7 +615,15 @@ export function diversifyByArticle(ranked) {
 // RAG: format chunks for tool_result + extract sources for badges
 // ---------------------------------------------------------------------------
 
-export function formatChunksForContext(chunks) {
+// `spoken`: the text goes to the voice model to be read out (the voice search's
+// raw-chunk fallback), so a fact card loses its guide lines (retrieval phrasings,
+// wording rule, provenance). Everywhere else the model sees the whole card.
+const stripCardGuides = (content) => String(content ?? '')
+  .split('\n')
+  .filter((line) => !FACT_CARD_GUIDE_PREFIXES.some((p) => line.trimStart().startsWith(p)))
+  .join('\n')
+
+export function formatChunksForContext(chunks, { spoken = false } = {}) {
   return chunks.map((c, i) => {
     const meta = c.metadata || {}
     // Site personas label by corpus (`kind`), never by section id: cloudyjoe's
@@ -600,8 +632,11 @@ export function formatChunksForContext(chunks) {
       ? (meta.section_id === 'faq'
         ? `[Curated FAQ: ${meta.title || meta.article_id}]`
         : `[From the site page: ${meta.page_path || meta.article_id}]`)
-      : meta.article_id ? `[From your article: ${meta.article_id}, section: ${meta.section_id}]` : ''
-    return `--- Your content ${i + 1} ${source} ---\n${c.content}`
+      : meta.article_id === FACT_CARDS_ID
+        ? `[Curated fact card: ${meta.section_id}]`
+        : meta.article_id ? `[From Joe's article: ${meta.article_id}, section: ${meta.section_id}]` : ''
+    const content = spoken && meta.article_id === FACT_CARDS_ID ? stripCardGuides(c.content) : c.content
+    return `--- Your content ${i + 1} ${source} ---\n${content}`
   }).join('\n\n')
 }
 
@@ -609,7 +644,14 @@ export function extractSources(chunks) {
   const seenArticles = new Set()
   const sources = []
   for (const c of chunks) {
-    const meta = c.metadata || {}
+    let meta = c.metadata || {}
+    // A fact card (scripts/export-chunks.ts) badges as the cloudyjoe article it
+    // belongs to; a card with no article has no page to link, so no badge.
+    if (meta.article_id === FACT_CARDS_ID) {
+      const route = ARTICLE_ROUTES[meta.badge_article_id]
+      if (!route) continue
+      meta = { article_id: meta.badge_article_id, section_id: 'main', section_anchor: '', page_path: route.page_path_en, article_slug: route.page_path_en.slice(1) }
+    }
     // One badge per article — keep the highest-ranked section (first occurrence)
     if (seenArticles.has(meta.article_id)) continue
     seenArticles.add(meta.article_id)
@@ -666,7 +708,7 @@ export const ARTICLE_KEYWORDS = {
   'hermes':               ['hermes', 'openclaw', 'lurkr'],
   'turnover-agent':       ['turnover', 'nick', 'airbnb', 'vrbo', 'short-term rental', 'short-term-rental', 'property manager'],
   'archive-beta-loop':    ['archive', 'salon', 'van '],
-  'cbarrgs-agent':        ['cbarrgs', 'musician'],
+  'cbarrgs-agent':        ['cbarrgs', 'musician', 'merch', 'shopify'],
   'skate-workshop-loop':  ['skate', 'willy'],
 }
 
@@ -763,12 +805,17 @@ export async function searchPortfolio(query, trace, anthropicClient, persona = g
     mode: persona.rag.kind === 'site_chunks' ? 'site' : hasEmbeddings(persona) ? 'hybrid' : 'keyword',
   }
 
+  // The cloudyjoe corpus embeds with the work bridge applied (see
+  // expandDocumentsQuery); the site corpus expands inside siteChunkSearch.
+  const expanded = result.mode === 'site' ? null : expandDocumentsQuery(query)
+  if (expanded?.matched.length) result.expandedFor = expanded.matched
+
   // 1. Embed (hybrid mode only)
   let embedding
   if (result.mode === 'hybrid') {
-    const embeddingGen = trace?.generation({ name: 'embedding', model: 'voyage-3-lite', metadata: { query } })
+    const embeddingGen = trace?.generation({ name: 'embedding', model: 'voyage-3-lite', metadata: { query, expanded: expanded?.semantic } })
     try {
-      const embResult = await embedQuery(query)
+      const embResult = await embedQuery(expanded.semantic)
       embedding = embResult.embedding
       result.metrics.embeddingMs = embResult.latencyMs
       result.usage.embeddingTokens = embResult.totalTokens
@@ -793,7 +840,7 @@ export async function searchPortfolio(query, trace, anthropicClient, persona = g
       ? await siteChunkSearch(query, persona)
       : result.mode === 'hybrid'
         ? await searchDocuments(query, embedding)
-        : await searchDocumentsByKeyword(query)
+        : await keywordSearchWithBridge(query, expanded)
     result.metrics.retrievalMs = searchResult.latencyMs
     // The site path embeds inside siteChunkSearch (its own budget), so its
     // usage surfaces here rather than in the `hybrid` block above.

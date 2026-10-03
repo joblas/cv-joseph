@@ -61,8 +61,22 @@ const cjRows = () => Array.from({ length: 6 }, (_, i) => ({
   metadata: { article_id: 'agent-fleet', section_id: `s${i}`, section_anchor: '', article_slug_en: 'agent-fleet', page_path_en: '/agent-fleet' },
 }))
 
+// A curated fact card (api/_shared/work.js workFactCards) as the cloudyjoe
+// corpus stores it: the fact, then guide lines that steer retrieval and the
+// reasoning model but must never be read aloud.
+const CARD_MARKER = 'Joe built and runs a turnover assistant for a short-term-rental manager'
+const cardRow = () => ({
+  id: 900, similarity: 0.95,
+  content: ['Turnover Agent (short-term-rental turnovers).', `${CARD_MARKER}.`,
+    'Answers questions like: Can Joe automate cleaner scheduling for an Airbnb?',
+    'Page: https://cloudyjoe.com/turnover-agent',
+    'Wording rule: Do not say or imply: "Twilio"; "plain SMS for cleaners".',
+    'Source: curated fact card, checked 2026-10-02.'].join('\n'),
+  metadata: { article_id: 'work-facts', section_id: 'turnover-agent', badge_article_id: 'turnover-agent' },
+})
+
 // Per-case knobs.
-const mode = { site: 'rows' as 'rows' | 'empty' | 'fail' | 'hang', limitOk: true, limitHang: false, model: 'fail' as 'fail' | 'answer' }
+const mode = { site: 'rows' as 'rows' | 'empty' | 'fail' | 'hang', cj: 'rows' as 'rows' | 'card', limitOk: true, limitHang: false, model: 'fail' as 'fail' | 'answer' }
 const sent: { url: string; body: any }[] = []
 ;(globalThis as any).fetch = async (url: string, init: any) => {
   const u = String(url)
@@ -84,7 +98,7 @@ const sent: { url: string; body: any }[] = []
     if (mode.site === 'fail') return json({ message: 'upstream down' }, 503)
     return json(mode.site === 'empty' ? [] : siteRows())
   }
-  if (u.startsWith('https://stub-cj.supabase.co/rest/v1/rpc/')) return json(cjRows())
+  if (u.startsWith('https://stub-cj.supabase.co/rest/v1/rpc/')) return json(mode.cj === 'card' ? [cardRow(), ...cjRows().slice(0, 5)] : cjRows())
   // The reasoning model. 'fail' is a non-retryable 400, so the SDK gives up at
   // once and the handler speaks the retrieved chunks; 'answer' is a real reply.
   if (mode.model === 'answer') {
@@ -96,7 +110,7 @@ const sent: { url: string; body: any }[] = []
 
 check('tracing is genuinely off for this run (production’s state)', !process.env.LANGFUSE_PUBLIC_KEY)
 const { default: handler } = await import('../functions/api-src/rag-search.js')
-const reset = () => { mode.site = 'rows'; mode.limitOk = true; mode.limitHang = false; mode.model = 'fail'; sent.length = 0 }
+const reset = () => { mode.site = 'rows'; mode.cj = 'rows'; mode.limitOk = true; mode.limitHang = false; mode.model = 'fail'; sent.length = 0 }
 const post = (body: Record<string, unknown>, origin = 'https://www.joestechsolutions.com', extra: Record<string, string> = {}) =>
   handler(new Request('https://cloudyjoe.com/api/rag-search', {
     method: 'POST', headers: { 'Content-Type': 'application/json', Origin: origin, ...extra }, body: JSON.stringify(body),
@@ -134,6 +148,23 @@ const withinMs = async <T,>(p: Promise<T>, ms: number): Promise<T | 'HUNG'> => {
   check('cloudyjoe: the model gets its own corpus’ content', typeof body.context === 'string' && body.context.includes(CJ_MARKER))
 }
 
+// --- 2b. A fact card in the raw-chunk fallback is spoken without its guides ----
+// The voice model reads the fallback aloud, so a card's "Answers questions
+// like:", "Wording rule:" and provenance lines must not reach it; the
+// reasoning model, which obeys them, still gets the whole card.
+{
+  reset(); mode.cj = 'card'
+  const res = await post({ query: 'can it text my cleaners', traceId: null, currentPage: '/' }, 'https://cloudyjoe.com')
+  const body: any = await res.json()
+  const ctx = String(body.context)
+  check('cloudyjoe: a fact card reaches the spoken fallback', res.status === 200 && ctx.includes(CARD_MARKER))
+  check('...without its guide lines (nothing for the voice model to read aloud)',
+    !/Answers questions like|Wording rule|Do not say or imply|Twilio|curated fact card/.test(ctx))
+  // (The first model call is the LLM rerank, which sees short previews only.)
+  check('...while the reasoning model was handed the whole card, wording rule included',
+    sent.some((s) => s.url.includes('127.0.0.1:9') && JSON.stringify(s.body).includes(CARD_MARKER) && JSON.stringify(s.body).includes('Wording rule: Do not say or imply')))
+}
+
 // --- 3. The reasoning step actually runs without a trace ---------------------
 // With the model stub failing, every case above takes the raw-chunk fallback,
 // so a change that silently skipped reasoning whenever traceId is missing
@@ -143,6 +174,26 @@ const withinMs = async <T,>(p: Promise<T>, ms: number): Promise<T | 'HUNG'> => {
   const res = await post({ query: 'what do I get', traceId: null, currentPage: '/', persona: 'jts' })
   const body: any = await res.json()
   check('the reasoned answer is used when traceId is null', res.status === 200 && String(body.context).includes(REASONED))
+}
+
+// --- 3b. The reasoning step is handed Joe's work list -------------------------
+// The persona prompt it reasons under is the composed one (api/_shared/work.js),
+// so an empty or thin search can still be answered from the list. Test 2b's
+// card marker cannot pin this: the card reaches the model in the tool result
+// either way. Here the system text itself must carry the Shopify line.
+{
+  const work: any = await import('../functions/api-src/_shared/work.js')
+  const shop = work.WORK_ITEMS.find((i: any) => i.id === 'cbarrgs-shop')
+  for (const [persona, origin] of [['jts', 'https://www.joestechsolutions.com'], ['cloudyjoe', 'https://cloudyjoe.com']] as const) {
+    reset(); mode.model = 'answer'
+    const res = await post({ query: 'can he build a store for a musician', traceId: null, currentPage: '/', persona }, origin)
+    // The reasoning request is the one that replays the search_portfolio call.
+    const reasoning = sent.find((s) => s.url.includes('127.0.0.1:9') && JSON.stringify(s.body?.messages ?? '').includes('voice_rag_call'))
+    const system = typeof reasoning?.body?.system === 'string' ? reasoning.body.system : JSON.stringify(reasoning?.body?.system ?? '')
+    check(`${persona}: the reasoning step ran`, res.status === 200 && !!reasoning)
+    check(`${persona}: ...under a system prompt that carries the work list's Shopify line`,
+      !!shop && system.includes(work.renderTextLine(shop, persona)) && system.includes('shopify.cbarrgs.com'))
+  }
 }
 
 // --- 4. A genuinely EMPTY search, and a FAILED one, are told apart ------------

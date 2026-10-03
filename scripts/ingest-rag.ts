@@ -28,6 +28,7 @@ import { createHash } from 'node:crypto'
 import { createClient } from '@supabase/supabase-js'
 import Anthropic from '@anthropic-ai/sdk'
 import { articleRegistry } from '../src/articles/registry.ts'
+import { FACT_CARDS_ID } from '../api/_shared/work.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const root = resolve(__dirname, '..')
@@ -357,9 +358,15 @@ async function main() {
     const splitChunks = chunks.flatMap(splitChunk)
     console.log(`     → ${splitChunks.length} chunks after splitting`)
 
-    // Contextual retrieval summaries
+    // Contextual retrieval summaries. Not for the work fact cards: a card is
+    // already a one-item summary, and its first 500 characters can include its
+    // "Wording rule: Do not say or imply ..." line, so a generated summary
+    // could restate a banned claim as fact, and the spoken fallback would read
+    // the summary aloud (only the card's own guide lines are stripped there).
     const articleTitle = article?.title || articleId
-    const enrichedTexts = await addContextualSummaries(splitChunks, articleTitle, anthropic)
+    const enrichedTexts = articleId === FACT_CARDS_ID
+      ? splitChunks.map(c => c.content)
+      : await addContextualSummaries(splitChunks, articleTitle, anthropic)
 
     // Embed
     console.log(`     → Embedding ${enrichedTexts.length} chunks...`)

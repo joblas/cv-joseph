@@ -108,6 +108,27 @@
           "flags": "s"
         }
       ]
+    },
+    {
+      "id": "voice-shopify-merch-store",
+      "description": "Voice search for the 2026-10-02 miss. Passes fully once the work-facts cards are ingested by a manual rag:sync; until then it depends on retrieval reaching the Cbarrgs article.",
+      "input": "Can Joe build a Shopify store for a musician selling t-shirts and stickers?",
+      "lang": "en",
+      "mode": "voice",
+      "assertions": [
+        {
+          "type": "contains_any",
+          "values": [
+            "shopify",
+            "cbarrgs",
+            "merch"
+          ]
+        },
+        {
+          "type": "not_contains",
+          "value": "don't have that detail"
+        }
+      ]
     }
   ]
 }

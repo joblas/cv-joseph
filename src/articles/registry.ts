@@ -126,8 +126,8 @@ export const articleRegistry: ArticleConfig[] = [
     heroImage: 'https://cloudyjoe.com/career-ops/hero-career-ops.webp',
     component: () => import('../CareerOps.tsx'),
     seoMeta: {
-      datePublished: '2026-03-17',
-      dateModified: '2026-04-07',
+      datePublished: '2026-04-07',
+      dateModified: '2026-10-02',
       keywords: ['ai job search', 'ai job search tool', 'ai powered job search', 'ai resume builder', 'ai resume', 'multi agent system', 'multi agent orchestration', 'automated job application', 'ATS-optimized resume', 'Claude Code', 'batch processing', 'HITL', 'job search automation', 'career-ops', 'ai auto apply', 'agente ia', 'crear cv con ia', 'automatizacion con ia', 'sistema multiagente', 'busqueda de empleo ia'],
       articleType: 'TechArticle',
       articleTags: 'multi-agent,job search,Claude Code,ATS,batch processing,HITL,automation,Playwright',
@@ -142,7 +142,6 @@ export const articleRegistry: ArticleConfig[] = [
       citation: [
         { '@type': 'WebPage', name: 'Anthropic Claude Code Documentation', url: 'https://docs.anthropic.com/en/docs/claude-code' },
         { '@type': 'WebPage', name: 'Playwright Browser Automation Documentation', url: 'https://playwright.dev/docs/intro' },
-        { '@type': 'DiscussionForumPosting', name: 'I built an AI job search system with Claude Code — r/ClaudeAI (250+ upvotes)', url: 'https://www.reddit.com/r/ClaudeAI/comments/1sd2f37/i_built_an_ai_job_search_system_with_claude_code/' },
       ],
       mentions: [
         { '@type': 'SoftwareApplication', name: 'Claude Code', url: 'https://claude.ai' },
@@ -150,7 +149,6 @@ export const articleRegistry: ArticleConfig[] = [
         { '@type': 'SoftwareApplication', name: 'Puppeteer', url: 'https://pptr.dev' },
         { '@type': 'SoftwareApplication', name: 'Node.js', url: 'https://nodejs.org' },
       ],
-      discussionUrl: 'https://www.reddit.com/r/SideProject/comments/1rw1lg4/i_automated_my_job_search_with_ai_agents_516/',
       relatedLink: 'https://github.com/santifer/career-ops',
     },
   },
@@ -161,7 +159,7 @@ export const articleRegistry: ArticleConfig[] = [
     title: 'OpenClaw → Hermes Migration',
     seo: {
       title: 'I Retired a 22-Agent AI System. Here\'s Why. | Joseph Blas',
-      description: 'Case study: how I migrated OpenClaw (22 specialized agents, 4 directors, 1 CTO) to Hermes (composable workers behind C-suite + VPs, 40+ scheduled automations). The lesson: design for composability, not specialization.',
+      description: 'Case study: how I migrated my setup on the open-source OpenClaw runtime (22 specialized agents, 4 directors, 1 CTO) to Hermes (composable workers behind C-suite + VPs, 40+ scheduled automations). The lesson: design for composability, not specialization.',
     },
     sectionLabels: {
       'org-chart': 'Org Chart',
@@ -191,7 +189,7 @@ export const articleRegistry: ArticleConfig[] = [
         { '@type': 'SoftwareApplication', name: 'Hermes', url: 'https://github.com/NousResearch/hermes-agent', applicationCategory: 'Agent Runtime' },
         { '@type': 'Thing', name: 'Multi-Agent AI Systems' },
       ],
-      extra: { proficiencyLevel: 'Expert', dependencies: 'Hermes, OpenClaw (retired), n8n, Claude API, Telegram, Slack, GitHub, Stripe, Tailscale, systemd, Ollama, MemPalace' },
+      extra: { proficiencyLevel: 'Expert', dependencies: 'Hermes, OpenClaw (retired), n8n, Claude API, Telegram, Slack, GitHub, Tailscale, systemd, Ollama, MemPalace' },
       citation: [
         { '@type': 'WebPage', name: 'Hermes agent runtime on GitHub', url: 'https://github.com/NousResearch/hermes-agent' },
         { '@type': 'WebPage', name: 'Original blog post: 22-Agent AI Team Architecture (superseded by this case study)', url: 'https://www.joestechsolutions.com/blog/22-agent-ai-team-architecture' },
@@ -247,7 +245,7 @@ export const articleRegistry: ArticleConfig[] = [
         { '@type': 'Thing', name: 'LLM Agents' },
         { '@type': 'Thing', name: 'Short-Term Rental Operations' },
       ],
-      extra: { proficiencyLevel: 'Expert', dependencies: 'Python, FastAPI, python-telegram-bot, Supabase, Twilio, Ollama Cloud, Anthropic, Docker, Caddy' },
+      extra: { proficiencyLevel: 'Expert', dependencies: 'Python, FastAPI, python-telegram-bot, Supabase, Ollama Cloud, Anthropic, Docker, Caddy' },
       citation: [
         { '@type': 'WebPage', name: 'FastAPI Documentation', url: 'https://fastapi.tiangolo.com' },
         { '@type': 'WebPage', name: 'python-telegram-bot Documentation', url: 'https://docs.python-telegram-bot.org' },
@@ -256,7 +254,6 @@ export const articleRegistry: ArticleConfig[] = [
       mentions: [
         { '@type': 'SoftwareApplication', name: 'FastAPI', url: 'https://fastapi.tiangolo.com' },
         { '@type': 'SoftwareApplication', name: 'Supabase', url: 'https://supabase.com' },
-        { '@type': 'SoftwareApplication', name: 'Twilio', url: 'https://www.twilio.com' },
         { '@type': 'SoftwareApplication', name: 'Docker', url: 'https://www.docker.com' },
         { '@type': 'SoftwareApplication', name: 'Caddy', url: 'https://caddyserver.com' },
         { '@type': 'SoftwareApplication', name: 'Ollama', url: 'https://ollama.com' },
@@ -269,7 +266,7 @@ export const articleRegistry: ArticleConfig[] = [
     title: 'Archive Beta Loop',
     seo: {
       title: 'The Archive Beta Loop: Client Texts Become Shipped Features',
-      description: 'Case study: a client\'s Telegram messages become shipped app features through an always-on agent loop — 20 issues, 13 PRs, median fix in under 14 minutes.',
+      description: 'Case study: an agent loop turns a client\'s Telegram messages into shipped app features. As of Sep 1, 2026: 20 issues, 13 PRs, median fix under 14 minutes.',
     },
     sectionLabels: {
       'the-client': 'The Client',

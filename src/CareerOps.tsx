@@ -60,7 +60,7 @@ function buildJsonLd() {
     alternativeHeadline: t.seo.title,
     description: t.seo.description,
     datePublished: '2026-04-07',
-    dateModified: '2026-04-07',
+    dateModified: '2026-10-02',
     keywords: [
       'multi-agent job search', 'job search automation', 'Claude Code', 'ATS-optimized CV',
       'ai resume builder', 'ai resume', 'ai powered job search', 'multi agent system',
@@ -93,7 +93,7 @@ export default function CareerOps() {
     description: t.seo.description,
     image: 'https://cloudyjoe.com/career-ops/og-career-ops.webp',
     publishedTime: '2026-04-07',
-    modifiedTime: '2026-04-07',
+    modifiedTime: '2026-10-02',
     articleTags: 'multi-agent,job search,Claude Code,ATS,batch processing,HITL,automation',
     jsonLd: buildJsonLd(),
   })
@@ -116,7 +116,7 @@ export default function CareerOps() {
         src="/career-ops/hero-career-ops-1400w.webp"
         srcSet="/career-ops/hero-career-ops-1400w.webp 1400w, /career-ops/hero-career-ops.webp 3024w"
         sizes="(max-width: 768px) 100vw, 768px"
-        alt={'Career Pipeline: tracker dashboard with 516 evaluated offers, scores 4.0-4.5, companies like Datadog, Langfuse, OpenAI, LangChain'}
+        alt={'Career-Ops tracker dashboard, a screenshot from santifer\'s original write-up of his own job search (not Joe\'s pipeline)'}
         className="w-full rounded-2xl mb-8"
         width={1400}
         height={875}
@@ -170,7 +170,7 @@ export default function CareerOps() {
           src="/career-ops/scan.webp"
           hdSrc="/career-ops/scan.webp"
           alt={'Scan mode in action: Claude Code agent launching DailyRemote search with 8 queries, reading pipeline.md and scan-history.tsv for dedup'}
-          caption={'Scan mode: background agent searching AI/LLM offers on DailyRemote with automatic dedup'}
+          caption={'Scan mode, from santifer\'s original Career-Ops write-up: background agent searching AI/LLM offers with automatic dedup'}
           width={1400} height={800}
         />
 
@@ -188,35 +188,32 @@ export default function CareerOps() {
         <DiagramZoom
           src="/career-ops/datadog.webp"
           hdSrc="/career-ops/datadog.webp"
-          alt={'Real evaluation: Datadog Staff AI Builder, MCP Services — Score 4.55/5, archetype AI Platform + Agentic Workflows, role summary with 7 dimensions'}
-          caption={'Real evaluation: Datadog Staff AI Builder — score 4.55/5, detected archetype, structured role summary'}
+          alt={'An evaluation report from santifer\'s own job search (his screenshot): score, archetype and role summary'}
+          caption={'An evaluation report from santifer\'s own search (his screenshot): score, detected archetype, structured role summary'}
           width={1400} height={800}
         />
         <DiagramZoom
           src="/career-ops/report1.webp"
           hdSrc="/career-ops/report1.webp"
           alt={'CV Match: table of 6 JD requirements mapped against CV proof points with strength rating (Strong/Very Strong/Moderate)'}
-          caption={'Block B) CV Match: each JD requirement mapped against real CV proof points'}
+          caption={'Block B) CV Match (santifer\'s screenshot): each JD requirement mapped against CV proof points'}
           width={1400} height={800}
         />
         <DiagramZoom
           src="/career-ops/report2.webp"
           hdSrc="/career-ops/report2.webp"
           alt={'CV Match (cont.) + Gaps and Mitigation: requirements 7-10 and gap analysis with severity and mitigation plan'}
-          caption={'CV Match (cont.) + Gaps: the system identifies gaps and proposes mitigation with severity'}
+          caption={'CV Match (cont.) + Gaps (santifer\'s screenshot): the system identifies gaps and proposes mitigation with severity'}
           width={1400} height={800}
         />
         <DiagramZoom
           src="/career-ops/report3.webp"
           hdSrc="/career-ops/report3.webp"
           alt={'Gaps (cont.) + Level and Strategy: IC5 level detection, "Sell Staff without lying" plan with experience framing'}
-          caption={'Block C) Level and Strategy: seniority detection + honest positioning plan'}
+          caption={'Block C) Level and Strategy (santifer\'s screenshot): seniority detection + honest positioning plan'}
           width={1400} height={800}
         />
 
-        <H3>{s.scoring.distribution.heading}</H3>
-        <MetricsGrid items={s.scoring.distribution.items} columns={4} />
-        <Callout>{s.scoring.callout}</Callout>
 
         {/* ================================================================ */}
         {/*  PIPELINE                                                        */}
@@ -270,14 +267,14 @@ export default function CareerOps() {
             src="/career-ops/pdf-wave-cv.webp"
             hdSrc="/career-ops/pdf-wave-cv.webp"
             alt={'Personalized CV for Wave: rewritten summary, competencies adapted to Voice AI + Multi-Agent, bullets reordered by relevance'}
-            caption={'ATS-optimized CV'}
+            caption={'ATS-optimized CV (santifer\'s example)'}
             width={700} height={900}
           />
           <DiagramZoom
             src="/career-ops/pdf-wave-cover.webp"
             hdSrc="/career-ops/pdf-wave-cover.webp"
             alt={'Cover letter for Wave: gradient header, voice + WhatsApp proof point, links to case studies and dashboard'}
-            caption={'Personalized cover letter'}
+            caption={'Personalized cover letter (santifer\'s example)'}
             width={700} height={900}
           />
         </div>

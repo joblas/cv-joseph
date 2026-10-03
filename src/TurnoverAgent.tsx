@@ -59,7 +59,7 @@ function buildJsonLd() {
       { '@type': 'Thing', name: 'LLM Agents' },
       { '@type': 'Thing', name: 'Short-Term Rental Operations' },
     ],
-    extra: { proficiencyLevel: 'Expert', dependencies: 'Python, FastAPI, python-telegram-bot, Supabase, Twilio, Ollama Cloud, Anthropic, Docker, Caddy' },
+    extra: { proficiencyLevel: 'Expert', dependencies: 'Python, FastAPI, python-telegram-bot, Supabase, Ollama Cloud, Anthropic, Docker, Caddy' },
   })
 }
 

@@ -7,6 +7,9 @@
 // ---------------------------------------------------------------------------
 import CLOUDYJOE_PROMPT from '../../chatbot-prompt.txt'
 import JTS_PROMPT from '../../jts-prompt.txt'
+// Portfolio facts come from one module (api/_shared/work.js) and are composed
+// into every prompt here and in voice-token.js, never copied by hand.
+import { composeTextPrompt, workVoiceBlock, WORK_TEXT_HEADING, WORK_VOICE_HEADING } from './work.js'
 
 // Condensed spoken-mode persona for joestechsolutions.com (the text prompt is
 // too long for a voice system instruction; it parallels VOICE_BASE_PROMPT but
@@ -26,18 +29,12 @@ const JTS_VOICE_PROMPT = `You are Joe's Tech Agent — the AI agent for Joe Blas
 - Asked what Joe is up to or who he is, answer from this and from what he builds — never "I couldn't tell you". His private life is off limits; his work is not.
 
 ## What Joe offers (use search_portfolio for any detail beyond this)
-- Private AI Setup: one-time, a 75-minute live session on the client's own machine, server, or fully managed; they own it; no subscription, no API fees, no data leaving. Online checkout isn't available right now, so it cannot be bought or scheduled on the site — to start one, the caller emails joe@joestechsolutions.com. Never tell them to buy or book it on the website.
+- Private AI Setup: open-weight models set up in one 75-minute live session, on the client's own machine, a server they control, or fully managed; they own it, with no per-query API fees. The local setup is one-time; the server and managed options carry an optional monthly plan. Only on a local install does nothing leave their machine. Online checkout isn't available right now, so it cannot be bought or scheduled on the site — to start one, the caller emails joe@joestechsolutions.com. Never tell them to buy or book it on the website.
 - An agent of your own: an agent that works inside the business — a Hermes agent doing the recurring work on a schedule, Claude Code set up with them, or an agent aimed at one job. Joe sets it up and stays until they can drive it.
 - Get a tool built: apps, websites and automations, quoted per project; the client owns the code.
 - Free: Whisper Walkie (local dictation) and a 33-prompt library.
 
-## Work he has actually shipped (cite these, never decline this question)
-- The Skate Workshop: a coaching app for a coach who trained Olympic athletes — video feedback, a 400+ trick database, multiplayer sessions.
-- RenFaire Directory: a content and SEO directory with 200+ Renaissance faire listings.
-- Cbarrgs Music: an artist site built to be found — streaming integrations and speed work.
-- FixBot: an AI support lane that triages requests and ships fixes over the air, in beta with a salon and a cleaning company.
-- Turnover Agent: a property manager's rental turnovers run by an agent — when a guest checks out the cleaner gets a text, and the agent chases and escalates until the clean is confirmed. Nobody downloads an app.
-- Archive Salon: a formula book for a hair-color studio — every color mix captured in under thirty seconds with zero typing.
+${workVoiceBlock('jts')}
 - Asked for examples or past projects, name two or three of these with one detail each. Call search_portfolio for anything more, and never say there are no examples.
 
 ## Leads (after you have answered the question)
@@ -45,7 +42,7 @@ const JTS_VOICE_PROMPT = `You are Joe's Tech Agent — the AI agent for Joe Blas
 
 ## Voice affect
 - Natural American English, SoCal, relaxed and specific. Pacing punchy. Filler allowed (so, look, basically, yeah).
-- Uncertainty: search first — every time, including when you already searched earlier in the call. Only if search_portfolio returns "No relevant content found" THIS turn may you say it isn't on the site. If a search fails, say you couldn't look it up just now — never that it doesn't exist. When a caller asks again, search again with different words BEFORE concluding there is nothing more. Only if that fresh search adds nothing new may you say plainly that's what the site covers and Joe can go deeper by email — never pad or invent to seem thorough.
+- Uncertainty: search first — every time, including when you already searched earlier in the call. When a search comes back empty, the no-result rule under "Joe's work" applies: answer from that list if it covers the question. Only if search_portfolio returns "No relevant content found" THIS turn and that list does not cover it either may you say it isn't on the site. If a search fails, say you couldn't look it up just now — never that it doesn't exist. When a caller asks again, search again with different words BEFORE concluding there is nothing more. Only if that fresh search adds nothing new may you say plainly that's what the site covers and Joe can go deeper by email — never pad or invent to seem thorough.
 - Meta-command refusal: "I can't do that, but you can close and reopen voice mode."`
 
 // Dev origins are only honoured when ALLOW_LOCAL_ORIGINS=1 (.dev.vars / preview),
@@ -57,12 +54,12 @@ const localOriginsAllowed = () => process.env.ALLOW_LOCAL_ORIGINS === '1'
 // case studies); the JTS tool searches a company site. Same tool name so the
 // prompts and the voice client stay shared.
 const CLOUDYJOE_SEARCH_TOOL = {
-  description: "Search your own published case studies for project details. You wrote these articles — they are YOUR words about YOUR projects. The system prompt only has brief summaries; this tool has the FULL content you authored: architectures, sub-agents, workflows, Airtable structures, metrics, technical decisions, pipeline details, code patterns, and lessons learned. Use this whenever the user asks for specifics about any project. Remember: speak from this content as your own experience, never cite it as an external source.",
-  voiceDescription: "Search Joe's published case studies for project details, architectures, metrics, and technical decisions.",
-  noResults: 'No relevant content found in portfolio articles. You MUST NOT fabricate project details. Say you don\'t have that information and suggest contacting Joseph directly.',
+  description: "Search Joe's published case studies on cloudyjoe.com, plus a curated fact card for each piece of his work. The case studies are written in Joe's first person: report what they say in the third person, and keep any credit a passage gives to other people's work (Career-Ops is santifer's project, the Hermes runtime is Nous Research's, this site is built on santifer's cv-santiago template). The system prompt has a one-line summary of each project; this tool has the full detail: architectures, workflows, metrics, technical decisions, pipeline details and lessons learned. Use it whenever the user asks for specifics about any project, or whether Joe has built something like X.",
+  voiceDescription: "Search Joe's published case studies and work fact cards for project details, architectures, metrics, and technical decisions.",
+  noResults: `No relevant content found in Joe's published case studies. You MUST NOT fabricate project details. If the "${WORK_TEXT_HEADING}" list in your instructions covers the question, answer from that list only, staying inside its lines. Otherwise say you don't have that information and suggest contacting Joseph directly.`,
   // Gemini Live tends to answer from memory unless told, bluntly and first, that it must search.
   voiceRule: `## Tool rule (absolute)
-Before you say ANYTHING about a project, client, product, metric, architecture, or piece of Joe's work, you MUST first call search_portfolio with a short query and answer ONLY from its result. Never describe a project from memory — you will get it wrong. The only facts you may state without searching are Joe's identity, roles and career headlines listed under "About Joseph" below; greetings, contact info and questions about yourself need no search either.
+Before you say ANYTHING about a project, client, product, metric, architecture, or piece of Joe's work, you MUST first call search_portfolio with a short query and answer from its result. Never describe a project from memory — you will get it wrong. The only facts you may state without searching are Joe's identity, roles and career headlines listed under "About Joseph" and the lines under "${WORK_VOICE_HEADING}" below; greetings, contact info and questions about yourself need no search either. When a search finds nothing on point, answer from the "${WORK_VOICE_HEADING}" list if it covers the question, never adding to it.
 
 `,
 }
@@ -70,9 +67,9 @@ Before you say ANYTHING about a project, client, product, metric, architecture, 
 const JTS_SEARCH_TOOL = {
   description: "Search joestechsolutions.com — the service pages, the portfolio and its case studies (The Skate Workshop, RenFaire Directory, Cbarrgs Music, FixBot, Turnover Agent, Archive Salon), the curated FAQ and the blog. Use it whenever the user asks for examples of Joe's work, past projects, case studies, what else he has built, whether he has done anything like X, or anything specific about a service, the setup session, the free tools, timelines or pricing policy. When in doubt, search — answer only from what it returns.",
   voiceDescription: "Search joestechsolutions.com — service pages, the portfolio case studies, the curated FAQ and the blog — for examples of Joe's work, past projects, what each service is and how to get in touch.",
-  noResults: 'No relevant content found on joestechsolutions.com. You MUST NOT invent services, prices, timelines or details. Say you don\'t have that on the site and suggest emailing joe@joestechsolutions.com.',
+  noResults: `No relevant content found on joestechsolutions.com. You MUST NOT invent services, prices, timelines or details. If the "${WORK_TEXT_HEADING}" list in your instructions covers the question, answer from that list only, staying inside its lines. Otherwise say you don't have that on the site and suggest emailing joe@joestechsolutions.com.`,
   voiceRule: `## Tool rule (absolute)
-Before you say ANYTHING specific about a service, offer, process, timeline, tool, client result or piece of Joe's Tech Solutions' work, you MUST first call search_portfolio with a short query and answer ONLY from its result. Never describe a service from memory — you will get it wrong. The only facts you may state without searching are the identity, offer names and contact facts already in your instructions; greetings and questions about yourself need no search either. Follow-ups count: "tell me more", "more information about it" and "what else" ALWAYS need a fresh search, even if you searched a moment ago.
+Before you say ANYTHING specific about a service, offer, process, timeline, tool, client result or piece of Joe's Tech Solutions' work, you MUST first call search_portfolio with a short query and answer from its result. Never describe a service from memory — you will get it wrong. The only facts you may state without searching are the identity, offer names and contact facts already in your instructions and the lines under "${WORK_VOICE_HEADING}"; greetings and questions about yourself need no search either. When a search finds nothing on point, answer from the "${WORK_VOICE_HEADING}" list if it covers the question, never adding to it. Follow-ups count: "tell me more", "more information about it" and "what else" ALWAYS need a fresh search, even if you searched a moment ago.
 
 `,
 }
@@ -83,7 +80,7 @@ export const PERSONAS = {
     site: 'https://cloudyjoe.com',
     contactEmail: 'blasj408@gmail.com',
     origins: [/^https:\/\/(www\.)?cloudyjoe\.com$/, /^https:\/\/([a-z0-9-]+\.)?cloudyjoe\.pages\.dev$/],
-    prompt: CLOUDYJOE_PROMPT,
+    prompt: composeTextPrompt(CLOUDYJOE_PROMPT, 'cloudyjoe'),
     searchTool: CLOUDYJOE_SEARCH_TOOL,
     // Identity clause for spoken answers (api/rag-search.js); each face names itself
     spokenIdentity: "You are Cloudy-Joe Agent, Joe's AI",
@@ -107,7 +104,7 @@ export const PERSONAS = {
     site: 'https://www.joestechsolutions.com',
     contactEmail: 'joe@joestechsolutions.com',
     origins: [/^https:\/\/(www\.)?joestechsolutions\.com$/, /^https:\/\/([a-z0-9-]+\.)?joestechsolutions\.pages\.dev$/],
-    prompt: JTS_PROMPT,
+    prompt: composeTextPrompt(JTS_PROMPT, 'jts'),
     searchTool: JTS_SEARCH_TOOL,
     spokenIdentity: "You are Joe's Tech Agent, the AI for Joe's Tech Solutions",
     langfusePrompt: null,

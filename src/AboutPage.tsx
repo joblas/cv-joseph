@@ -218,7 +218,8 @@ export default function AboutPage() {
           ))}
         </section>
 
-        {/* Community */}
+        {/* Community (rendered only when it has entries) */}
+        {t.community.length > 0 && (
         <section className="mb-10">
           <h2 className="font-display text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
             <Users className="w-4 h-4 text-primary" />
@@ -242,6 +243,7 @@ export default function AboutPage() {
             ))}
           </div>
         </section>
+        )}
 
         {/* FAQ */}
         <section className="mb-10">

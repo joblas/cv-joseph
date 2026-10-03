@@ -230,7 +230,13 @@ export default async function handler(req) {
       // Tier 3: both failed → handled by catch below
       // Both tiers are spoken verbatim by the voice model, so the raw-chunk
       // fallback must honour the no-markdown contract too.
-      const context = toSpokenText(reasonedAnswer || formattedChunks)
+      // A fact card's guide lines (retrieval phrasings, wording rule) steer the
+      // reasoning model above but must never be read aloud, so the spoken
+      // fallback formats the chunks without them.
+      const spokenChunks = ragResult.chunks
+        ? formatChunksForContext(ragResult.chunks, { spoken: true })
+        : formattedChunks
+      const context = toSpokenText(reasonedAnswer || spokenChunks)
 
       // Filter sources to articles mentioned in the answer (same logic as chat.js)
       const responseText = reasonedAnswer || ''

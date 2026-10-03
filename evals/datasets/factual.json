@@ -188,6 +188,29 @@
           "value": "not available"
         }
       ]
+    },
+    {
+      "id": "work-shopify-merch-store",
+      "description": "The 2026-10-02 miss: Joe set up the artist Cbarrgs's Shopify merch store. The answer is yes, with that example (api/_shared/work.js).",
+      "input": "Can Joe build a Shopify store for a musician selling t-shirts and stickers?",
+      "lang": "en",
+      "assertions": [
+        {
+          "type": "contains_any",
+          "values": [
+            "shopify.cbarrgs.com",
+            "Cbarrgs"
+          ]
+        },
+        {
+          "type": "not_contains",
+          "value": "don't have that detail"
+        },
+        {
+          "type": "llm_judge",
+          "criteria": "The response says yes and cites the Shopify merch store Joe set up for the artist Cbarrgs (t-shirts, a pin, stickers). It gives no sales, order or revenue figures and invents no other store."
+        }
+      ]
     }
   ]
 }
