@@ -65,14 +65,14 @@ const _translationsEn = {
         desc: "Part of the original Google team that hit Larry Page's 100,000-mile no-incident milestone — the result that green-lit the self-driving car project.",
       },
       {
-        icon: 'trophy',
+        icon: 'truck',
         title: 'The autonomous beer run.',
         desc: "Helped carry out Otto's October 2016 autonomous beer delivery in Colorado (Uber ATG).",
       },
       {
         icon: 'car',
-        title: 'No wheel, no pedals.',
-        desc: "Part of the team that built Google's Firefly — a fully custom, fully-electric autonomous vehicle with no steering wheel or pedals.",
+        title: "Google's Firefly.",
+        desc: "Part of the team that built Google's Firefly — a fully custom, all-electric autonomous vehicle with no steering wheel or pedals.",
       },
       {
         icon: 'mapPin',

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo, useReducer, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'motion/react'
-import { Mail, ExternalLink, Briefcase, GraduationCap, Award, Wrench, Users, Globe, Bot, Zap, Cloud, Layers, Layout, BadgeCheck, FolderGit2, Sparkles, Download, Github, Shield, FileText, GitBranch, GitFork, Star, Terminal, Lock, Network, Image, Timer, SkipForward, ThumbsUp, MessageCircle, Share2, ChevronRight, List, ArrowUp, Newspaper, Flag, Cpu, Trophy, Rocket, Car, MapPin, Smartphone, Server, Mic, Search, DollarSign, Workflow } from 'lucide-react'
+import { Mail, ExternalLink, Briefcase, GraduationCap, Award, Wrench, Users, Globe, Bot, Zap, Cloud, Layers, Layout, BadgeCheck, FolderGit2, Sparkles, Download, Github, Shield, FileText, GitBranch, GitFork, Star, Terminal, Lock, Network, Image, Timer, SkipForward, ThumbsUp, MessageCircle, Share2, ChevronRight, List, ArrowUp, Newspaper, Flag, Cpu, Trophy, Rocket, Car, MapPin, Truck, Smartphone, Server, Mic, Search, DollarSign, Workflow } from 'lucide-react'
 import { translations, seo } from './i18n'
 import { useHomeSeo } from './articles/use-article-seo'
 import { getTechIcon } from './tech-icons'
@@ -1524,6 +1524,7 @@ function App() {
               const iconMap: Record<string, typeof Flag> = {
                 rocket: Rocket,
                 trophy: Trophy,
+                truck: Truck,
                 car: Car,
                 mapPin: MapPin,
               }

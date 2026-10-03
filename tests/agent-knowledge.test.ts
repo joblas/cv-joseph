@@ -74,11 +74,12 @@ for (const id of PERSONAS) {
 // Every "above" left in a prompt file must be one of these, none of which means
 // the work list (review of #52: rule 2's "not stated above" would have put the
 // list's own facts off limits once the list moved below it).
-const ABOVE_OK = [/migration story above/, /HARD GUARDRAILS above/, /three questions above/, /"all of the above"/, /"everything above"/, /"write all above"/]
+const ABOVE_OK = [/migration story above$/, /HARD GUARDRAILS above$/, /three questions above$/, /"all of the above$/, /"everything above$/, /"write all above$/]
 for (const file of ['chatbot-prompt.txt', 'jts-prompt.txt']) {
   const text = read(file)
   // Context comes from the text itself, not the match, so two nearby uses each keep their own.
-  const stray = [...text.matchAll(/\babove\b/gi)].map((m) => text.slice(Math.max(0, m.index! - 40), m.index! + 20)).filter((ctx) => !ABOVE_OK.some((re) => re.test(ctx)))
+  // Each allowed pattern must END at this "above", so a nearby allowed phrase can't cover a stray one.
+  const stray = [...text.matchAll(/\babove\b/gi)].map((m) => text.slice(Math.max(0, m.index! - 40), m.index! + 5)).filter((ctx) => !ABOVE_OK.some((re) => re.test(ctx)))
   check(`${file} has no "above" that could mean the work list (found: ${JSON.stringify(stray)})`, stray.length === 0)
 }
 
@@ -445,6 +446,8 @@ let decidedSummary = ''
     [/firefly[^.\n]{0,80}\bground[- ]up\b|\bground[- ]up\b[^.\n]{0,80}firefly/i, '"built Firefly from the ground up" (part of the team that built Firefly)'],
     // "the first commercial self-driving truck delivery" says it without "world's".
     [/world['’]?s first commercial|\bfirst commercial\b[^.\n]{0,40}\b(?:deliver(?:y|ies)|trucks?|haul)\b/i, '"world\'s first commercial delivery" for the Otto run'],
+    // ...or as a world first without "commercial" (review of the homepage PR).
+    [/\bworld['’]?s first\b[^.\n]{0,60}\b(?:truck|freight|beer|budweiser|otto)\b/i, 'the Otto run as a world first'],
     [/\b(?:otto|budweiser|beer|truck)\b[^.\n]{0,80}\bdriverless\b|\bdriverless\b[^.\n]{0,80}\b(?:otto|budweiser|beer|truck)/i, 'the Otto delivery as driverless (a driver was aboard)'],
   ]
   // Sentence-scoped: the line before a bullet, or a "2009-2016" span, does
