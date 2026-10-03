@@ -138,7 +138,7 @@ check('neither prompt names a location the site does not', !/Escondido/.test(voi
 // six, and that /portfolio held "all of them" when it lists four.
 check('text prompt carries no stale project count', !/The four projects|none of the four/.test(text))
 check('text prompt no longer claims /portfolio holds every project', !/All of them together: \/portfolio/.test(text))
-check('text prompt sends people to each project\u2019s own page', /Each project's own page is linked above/.test(text))
+check('text prompt sends people to each project\u2019s own page', /Each project's own page is linked in the work list at the end of these instructions/.test(text))
 
 // MatrAIx run r5 (2026-09-27): visitors who opened with "what does it cost / how
 // long" got "quoted per project" and a call link, and nothing to move on with;
