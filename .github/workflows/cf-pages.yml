@@ -109,6 +109,11 @@ jobs:
           npm run test:intent
           npm run test:contact-email
           npm run test:chat-resilience
+          # Instant first words (2026-10-02): the offline latency harness. The
+          # real handlers against a fake world with fixed delays; it checks
+          # structure (first words before the first call ends, model-call
+          # counts, no LLM rerank, aborts reach every call), never a ms budget.
+          npm run test:latency
           npm run test:voice-relay
           npm run test:messages
           npm run test:agent-stream
