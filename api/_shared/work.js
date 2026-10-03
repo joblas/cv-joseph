@@ -564,8 +564,10 @@ export function renderVoiceLine(item, personaId) {
   return [`- ${pick(item.name, personaId)}: ${pick(item.short, personaId)}`, avoidNote(item, 'voice')].filter(Boolean).join(' ')
 }
 
-// Bold, not a markdown heading: both prompts nest it inside an existing
-// section, and a heading there would re-parent everything after it.
+// Bold, not a markdown heading, like the prompts' other section titles. The
+// block is the LAST thing in each text prompt (the marker is each prompt file's
+// last line): Ollama Cloud caches only an unchanged prefix, and this list is
+// the part that changes most, so an edit here keeps the rest cached.
 export function workTextBlock(personaId) {
   return [
     `**${WORK_TEXT_HEADING} (curated facts, checked ${WORK_AS_OF}):**`,
@@ -576,7 +578,7 @@ export function workTextBlock(personaId) {
     '',
     `Credit where it is due: ${creditsFor(personaId).map((c) => c.text).join(' ')}`,
     '',
-    // Items last: each prompt continues the list right after the block.
+    // Items last: the block ends its prompt, so a new item changes only the tail.
     ...workItemsFor(personaId).map((item) => renderTextLine(item, personaId)),
   ].join('\n')
 }

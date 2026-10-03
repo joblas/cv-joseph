@@ -60,6 +60,28 @@ check('four consumers loaded (an empty one would pass every "absent" check vacuo
   consumers.length === 4 && consumers.every((c) => c.text.length > 5000))
 check('no consumer still carries the unreplaced work marker', consumers.every((c) => !c.text.includes(work.WORK_MARKER)))
 
+// The work list is the LAST thing in each text prompt (2026-10-03). Ollama Cloud
+// caches a prompt only up to its first changed token, and work.js is the part
+// that changes most: placed early (11% into jts, 21% into cloudyjoe) every new
+// item threw away most of the cached prompt. At the end, an edit there keeps
+// everything before it. Nothing may refer to the list as "above" any more.
+for (const id of PERSONAS) {
+  const text = persona(id).prompt.trimEnd()
+  check(`the ${id} text prompt ends with the work list`, text.endsWith(work.workTextBlock(id).trimEnd()))
+  check(`the ${id} prompt file keeps the work marker as its last line`,
+    read(id === 'cloudyjoe' ? 'chatbot-prompt.txt' : 'jts-prompt.txt').trimEnd().endsWith(work.WORK_MARKER))
+}
+// Every "above" left in a prompt file must be one of these, none of which means
+// the work list (review of #52: rule 2's "not stated above" would have put the
+// list's own facts off limits once the list moved below it).
+const ABOVE_OK = [/migration story above/, /HARD GUARDRAILS above/, /three questions above/, /"all of the above"/, /"everything above"/, /"write all above"/]
+for (const file of ['chatbot-prompt.txt', 'jts-prompt.txt']) {
+  const text = read(file)
+  // Context comes from the text itself, not the match, so two nearby uses each keep their own.
+  const stray = [...text.matchAll(/\babove\b/gi)].map((m) => text.slice(Math.max(0, m.index! - 40), m.index! + 20)).filter((ctx) => !ABOVE_OK.some((re) => re.test(ctx)))
+  check(`${file} has no "above" that could mean the work list (found: ${JSON.stringify(stray)})`, stray.length === 0)
+}
+
 // --- (i) every included item reaches all four consumers -----------------------
 // Hardcoded on purpose: this list is the spec, not a mirror of the module, so
 // dropping an item from work.js (or slipping an unaudited one in) fails here.
@@ -644,7 +666,7 @@ check('cloudyjoe voice no longer parrots "I don\'t have that detail" without che
 check('jts voice: "not on the site" only after an empty search AND the list does not cover it',
   /No relevant content found" THIS turn and that list does not cover it either/.test(persona('jts').voicePrompt))
 check('cloudyjoe text fallback line checks the work list first',
-  /If search_portfolio finds nothing on point, answer from the work list above/.test(read('chatbot-prompt.txt')))
+  /If search_portfolio finds nothing on point, answer from the "Work Joe has actually shipped" list at the end/.test(read('chatbot-prompt.txt')))
 
 // --- (v) retrieval: the cloudyjoe query bridge ---------------------------------------
 // The bridge feeds the EMBEDDING only. The keyword leg keeps the visitor's
