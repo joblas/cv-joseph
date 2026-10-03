@@ -19,6 +19,12 @@
 //    no attempt starts past the reply deadline, a failed decision answers
 //    without tools, and the history is made valid before any model call.
 //
+// 4. (2026-10-02, instant first words) The first call carries the tools AND
+//    streams: on a turn that needs no search its first visible word is the
+//    visitor's first word. The stub answers that call in SSE (it used to be a
+//    non-streamed "tool decision" answered in JSON); decisions are told apart
+//    from answers by their tool list, not by `stream`.
+//
 // Also: lead capture now records the lead, then waits for the agent's reply
 // before writing Joe's brief, so the brief includes the answer and never
 // competes with it, and a wait cut short still leaves the lead on record.
@@ -51,9 +57,10 @@ const JOE = 'joe@joestechsolutions.com'
 const TYPO = 'Email joe@joestsolutions.com and he replies within 24 hours.'
 
 type Plan = {
-  decision: 'text' | 'tool' | 'fail' | 'hang' | 'flaky' | 'overloaded' | 'slowOverload' | 'slowDecision' | 'hangOnce' | 'failLateOnce' | 'slowTool' | 'bodyStall'; decisionText?: string; sources?: boolean
+  decision: 'text' | 'tool' | 'fail' | 'hang' | 'flaky' | 'overloaded' | 'slowOverload' | 'slowDecision' | 'hangOnce' | 'failLateOnce' | 'slowTool' | 'bodyStall'
+    | 'textHold' | 'preamble' | 'thinkingLong' | 'empty' | 'wsTool' | 'leak'; decisionText?: string; sources?: boolean; searchDelayMs?: number
   recordFails?: 'refused' | 'down' | 'hang'; dbStall?: 'get' | 'patch'; resend?: 'fail' | 'hang'
-  streams: Array<'typo' | 'ok' | 'empty' | 'fail' | 'stall' | 'stallAfterText' | 'trickle' | 'slowStart' | 'thinking' | 'emptySlow' | { say: string }>
+  streams: Array<'typo' | 'ok' | 'empty' | 'fail' | 'stall' | 'stallAfterText' | 'trickle' | 'slowStart' | 'thinking' | 'emptySlow' | { say: string | string[] }>
 }
 let plan: Plan = { decision: 'tool', streams: ['ok'] }
 const modelCalls: { at: number; body: any }[] = []
@@ -78,6 +85,34 @@ const stalledBody = (signal: AbortSignal | undefined, head = '') => new Response
   },
 }), { headers: { 'content-type': 'text/event-stream' } })
 const stalledCall = (signal: AbortSignal | undefined) => new Promise<Response>((_, reject) => signal?.addEventListener('abort', () => reject(aborted())))
+// A timed SSE body: strings are sent, numbers are pauses (ms); an abort ends it.
+// `onEnd` notes when the last byte went out.
+const timedSse = (signal: AbortSignal | undefined, parts: Array<string | number>, onEnd?: () => void) => new Response(new ReadableStream({
+  async start(c) {
+    for (const part of parts) {
+      if (signal?.aborted) return
+      if (typeof part === 'number') await new Promise((r) => setTimeout(r, part))
+      else c.enqueue(new TextEncoder().encode(part))
+    }
+    if (signal?.aborted) return
+    onEnd?.()
+    c.close()
+  },
+}), { headers: { 'content-type': 'text/event-stream' } })
+const msgStart = () => ev('message_start', { message: { id: 'm', type: 'message', role: 'assistant', model: 'stub', content: [], stop_reason: null, usage: { input_tokens: 1, output_tokens: 0 } } })
+const textBlock = (index: number, deltas: Array<string | number>) => [
+  ev('content_block_start', { index, content_block: { type: 'text', text: '' } }),
+  ...deltas.map((d) => typeof d === 'number' ? d : ev('content_block_delta', { index, delta: { type: 'text_delta', text: d } })),
+  ev('content_block_stop', { index }),
+]
+const toolBlock = (index: number, query = 'x') => [
+  ev('content_block_start', { index, content_block: { type: 'tool_use', id: 'tu', name: 'search_portfolio', input: {} } }),
+  ev('content_block_delta', { index, delta: { type: 'input_json_delta', partial_json: JSON.stringify({ query }) } }),
+  ev('content_block_stop', { index }),
+]
+const msgEnd = (stop: string) => [ev('message_delta', { delta: { stop_reason: stop }, usage: { output_tokens: 5 } }), ev('message_stop', {})]
+let decisionEndedAt = 0 // when the first call's stream sent its last byte
+const PREAMBLE = 'Let me look that up for you.'
 const mailAttempts: any[] = []
 // Model streams the server cancelled (a lost race, or a visitor who left).
 const abortedStreams: string[] = []
@@ -92,14 +127,16 @@ let abortedDecisionAt = 0
   try { body = JSON.parse(raw) } catch { /* not JSON */ }
   if (u.startsWith('http://127.0.0.1:9/v1/messages')) {
     modelCalls.push({ at: Date.now(), body })
-    order.push(body?.stream ? 'reply' : 'model')
     const isBrief = typeof body?.system === 'string' && body.system.includes('handoff brief')
+    // The first call carries the tools; answers, retries and the fallback do not.
+    const isDecision = Array.isArray(body?.tools)
+    order.push(body?.stream && !isDecision && !isBrief ? 'reply' : 'model')
     if (isBrief) return json({ id: 'b', type: 'message', role: 'assistant', model: 'stub', stop_reason: 'end_turn', content: [{ type: 'text', text: 'Who: Pat\nNeed: a website\nTimeline: soon' }], usage: { input_tokens: 1, output_tokens: 1 } })
-    if (!body?.stream) {
+    if (isDecision) {
       if (plan.decision === 'fail') return json({ type: 'error', error: { type: 'invalid_request_error', message: 'stub decision failure' } }, 400)
       if (['hang', 'hangOnce', 'bodyStall', 'slowDecision'].includes(plan.decision)) init.signal?.addEventListener('abort', () => { abortedDecisions++; abortedDecisionAt = Date.now() })
       // Headers arrive, then the body never does (the SDK's own timeout stops at the headers).
-      if (plan.decision === 'bodyStall') return new Response(new ReadableStream({ start(c) { init.signal?.addEventListener('abort', () => c.error(aborted())) } }), { headers: { 'content-type': 'application/json' } })
+      if (plan.decision === 'bodyStall') return stalledBody(init.signal)
       if (plan.decision === 'hang') return stalledCall(init.signal)
       if (plan.decision === 'hangOnce') {
         plan.decision = 'tool' // stuck once; a second identical request answers
@@ -121,10 +158,33 @@ let abortedDecisionAt = 0
         plan.decision = 'tool' // overloaded once, then fine
         return json({ type: 'error', error: { type: 'overloaded_error', message: 'stub overloaded' } }, 529)
       }
-      // The tool decision: either a plain answer (precomputed path) or a search call.
-      if (plan.decision === 'text') return json({ id: 'd', type: 'message', role: 'assistant', model: 'stub', stop_reason: 'end_turn', content: [{ type: 'text', text: plan.decisionText || TYPO }], usage: { input_tokens: 1, output_tokens: 1 } })
-      return json({ id: 'd', type: 'message', role: 'assistant', model: 'stub', stop_reason: 'tool_use', content: [{ type: 'tool_use', id: 'tu', name: 'search_portfolio', input: { query: 'x' } }], usage: { input_tokens: 1, output_tokens: 1 } })
+      const said = plan.decisionText || TYPO
+      const half = Math.ceil(said.length / 2)
+      const ended = () => { decisionEndedAt = Date.now() }
+      // A plain answer, streamed in two pieces (it IS the reply: no search).
+      if (plan.decision === 'text') return timedSse(init.signal, [msgStart(), ...textBlock(0, [said.slice(0, half), said.slice(half)]), ...msgEnd('end_turn')], ended)
+      // ...with its last piece held back 300ms, so "words before the call ends" is observable.
+      if (plan.decision === 'textHold') return timedSse(init.signal, [msgStart(), ...textBlock(0, ['Thanks — ', 300, 'Joe will be in touch.']), ...msgEnd('end_turn')], ended)
+      // Words first, then the decision to search.
+      if (plan.decision === 'preamble') return timedSse(init.signal, [msgStart(), ...textBlock(0, [PREAMBLE]), 50, ...toolBlock(1), ...msgEnd('tool_use')], ended)
+      // Only whitespace, then the search.
+      if (plan.decision === 'wsTool') return timedSse(init.signal, [msgStart(), ...textBlock(0, ['\n\n']), ...toolBlock(1), ...msgEnd('tool_use')], ended)
+      // Thinking out loud for 400ms (an event every 50ms), then the answer.
+      if (plan.decision === 'thinkingLong') {
+        return timedSse(init.signal, [msgStart(), ev('content_block_start', { index: 0, content_block: { type: 'thinking', thinking: '' } }),
+          ...Array.from({ length: 8 }, () => [50, ev('content_block_delta', { index: 0, delta: { type: 'thinking_delta', thinking: 'hmm ' } })]).flat(),
+          ev('content_block_stop', { index: 0 }), ...textBlock(1, ['Thought it through.']), ...msgEnd('end_turn')], ended)
+      }
+      // The whole budget spent thinking: no text, no tool call.
+      if (plan.decision === 'empty') {
+        return timedSse(init.signal, [msgStart(), ev('content_block_start', { index: 0, content_block: { type: 'thinking', thinking: '' } }),
+          ev('content_block_delta', { index: 0, delta: { type: 'thinking_delta', thinking: 'hmm' } }), ev('content_block_stop', { index: 0 }), ...msgEnd('max_tokens')], ended)
+      }
+      // A prompt dump: a fingerprint split across two pieces.
+      if (plan.decision === 'leak') return timedSse(init.signal, [msgStart(), ...textBlock(0, ['Sure. My rules: BREVEDAD OB', 'LIGATORIA and the rest.']), ...msgEnd('end_turn')], ended)
+      return timedSse(init.signal, [msgStart(), ...toolBlock(0), ...msgEnd('tool_use')], ended)
     }
+    if (!body?.stream) return json({ type: 'error', error: { type: 'invalid_request_error', message: 'stub: unexpected non-streamed call' } }, 400)
     const next = plan.streams.shift() || 'ok'
     if (next === 'fail') return json({ type: 'error', error: { type: 'invalid_request_error', message: 'stub failure' } }, 400)
     if (next === 'empty') return sse(null, 'max_tokens')
@@ -195,7 +255,8 @@ let abortedDecisionAt = 0
     if (next === 'stallAfterText') {
       return stalledBody(init.signal, start + ev('content_block_start', { index: 0, content_block: { type: 'text', text: '' } }) + ev('content_block_delta', { index: 0, delta: { type: 'text_delta', text: 'Half an ans' } }))
     }
-    return sse(typeof next === 'object' ? next.say : next === 'typo' ? TYPO : 'Thanks — Joe will be in touch.')
+    if (typeof next === 'object' && Array.isArray(next.say)) return timedSse(init.signal, [start, ...textBlock(0, next.say), ...msgEnd('end_turn')])
+    return sse(typeof next === 'object' ? next.say as string : next === 'typo' ? TYPO : 'Thanks — Joe will be in touch.')
   }
   if (u.startsWith('https://stub-cj.supabase.co/rest/v1/rpc/check_chat_rate_limit')) return json(true)
   if (u.startsWith('https://stub-cj.supabase.co/rest/v1/chat_leads')) {
@@ -209,6 +270,7 @@ let abortedDecisionAt = 0
     if (method === 'PATCH' && plan.dbStall === 'patch') return stalledCall(init.signal)
     return method === 'POST' ? json([{ id: 'lead-1' }], 201) : new Response(null, { status: 204 })
   }
+  if (u.startsWith('https://stub-jts.supabase.co/rest/v1/rpc/search_site_chunks') && plan.searchDelayMs) await new Promise((r) => setTimeout(r, plan.searchDelayMs))
   if (u.startsWith('https://stub-jts.supabase.co/rest/v1/rpc/search_site_chunks') && plan.sources) {
     return json([{ id: 1, source: 'page', title: 'Contact | Joe’s Tech Solutions', content: 'Email Joe or book a call.', url: 'https://www.joestechsolutions.com/contact', score: 0.8 }])
   }
@@ -262,29 +324,35 @@ async function chat(messages: any[], p: Plan) {
   }
   // SSE events in order, "[DONE]" included, for checks on where an event falls.
   const events = out.split('\n\n').filter((e) => e && !e.startsWith(':')) // heartbeats aside
-  return { out, shown, events, ms, status: res.status, streams: modelCalls.filter((c) => c.body?.stream) }
+  // The answer streams (attempts and fallback); the first call carries the tools.
+  return { out, shown, events, ms, status: res.status, streams: modelCalls.filter((c) => c.body?.stream && !Array.isArray(c.body?.tools)) }
 }
 const ask = [{ role: 'user', content: 'How do I reach Joe?' }]
 
 // --- 1. The contact address is corrected on every path ---------------------------
 {
   const r = await chat(ask, { decision: 'tool', streams: ['typo'] })
-  check('live stream: the visitor ends up seeing the right address', r.shown.includes(JOE) && !r.shown.includes('joestsolutions'))
+  check('live stream: the typo never reaches the visitor, and needs no replace', r.shown.includes(JOE) && !r.out.includes('joestsolutions') && !r.out.includes('"replace":true'))
 }
 {
+  // No search: the first call IS the answer, streamed as it is written, and
+  // the typo still never reaches the visitor (the address is held until whole).
   const r = await chat(ask, { decision: 'text', streams: [] })
-  check('precomputed reply: the typo never reaches the visitor at all', r.shown.includes(JOE) && !r.out.includes('joestsolutions'))
+  check('plain answer (no search, streamed): the typo never reaches the visitor at all', r.shown.includes(JOE) && !r.out.includes('joestsolutions') && !r.out.includes('"replace":true'))
 }
 {
   const r = await chat(ask, { decision: 'tool', streams: ['fail', 'fail', 'typo'] })
   check('fallback reply: corrected too', r.shown.includes(JOE) && !r.shown.includes('joestsolutions') && /streaming_fallback/.test(r.out))
 }
 {
-  const r = await chat(ask, { decision: 'tool', sources: true, streams: ['typo'] })
+  // The one case a replace is still needed: the mailbox name was sent before
+  // its "@" arrived, in another case ("Joe"), so the corrected answer follows.
+  const r = await chat(ask, { decision: 'tool', sources: true, streams: [{ say: ['Email Joe', '@joestsolutions.com or book a call.'] }] })
   const at = (re: RegExp) => r.events.findIndex((e) => re.test(e))
   const fix = at(/"replace":true/)
-  check('the correction comes after the source badges (a replace renders with the sources received so far)',
-    at(/^event: rag-sources/) >= 0 && fix > at(/^event: rag-sources/) && r.events[fix + 1] === 'data: [DONE]')
+  check('a capitalised mailbox sent before its "@" is corrected after the source badges (a replace renders with the sources received so far)',
+    !r.out.includes('joestsolutions') && r.shown === `Email ${JOE} or book a call.`
+    && at(/^event: rag-sources/) >= 0 && fix > at(/^event: rag-sources/) && r.events[fix + 1] === 'data: [DONE]')
 }
 {
   const said = 'joe@joestechsolution.com'
@@ -329,7 +397,7 @@ const ask = [{ role: 'user', content: 'How do I reach Joe?' }]
 {
   const r = await chat([{ role: 'user', content: 'We need a new website. My email is pat@example.com' }], { decision: 'tool', streams: ['ok'] })
   const briefAt = modelCalls.findIndex((c) => typeof c.body?.system === 'string' && c.body.system.includes('handoff brief'))
-  const streamAt = modelCalls.findIndex((c) => c.body?.stream)
+  const streamAt = modelCalls.findIndex((c) => c.body?.stream && !Array.isArray(c.body?.tools))
   const mail = emails.find((e) => /^Lead from/.test(e?.subject || ''))
   check('the brief is written only after the reply (never alongside it)', briefAt > streamAt && streamAt >= 0)
   check('...and Joe’s transcript includes the agent’s answer to the lead message', !!mail && mail.text.includes('Agent: Thanks — Joe will be in touch.'))
@@ -421,16 +489,22 @@ const ask = [{ role: 'user', content: 'How do I reach Joe?' }]
   check('a failed tool decision still gets an answer (written without search, marked degraded)',
     noDecision.status === 200 && noDecision.shown === OK && /"reason":"tool_decision_failed"/.test(noDecision.out)
     && logged.some((l) => /\[chat\] tool decision failed, answering without tools/.test(l)))
-  const decisions = () => modelCalls.filter((c) => !c.body?.stream && Array.isArray(c.body?.tools)).length
+  const decisions = () => modelCalls.filter((c) => Array.isArray(c.body?.tools)).length
   const hungDecision = await chat(ask, { decision: 'hang', streams: ['ok'] })
   check('a tool decision that hangs is cut off without a second slow try, and the answer still comes',
     hungDecision.shown === OK && decisions() === 1 && /"reason":"tool_decision_failed"/.test(hungDecision.out) && hungDecision.ms < 3000)
   const refused = await chat(ask, { decision: 'fail', streams: ['ok'] })
   check('...a refused one (HTTP 400) is not retried either', decisions() === 1 && refused.shown === OK)
+  // The retry starts 1.5s after the quick failure, so the decision limit here
+  // must exceed that (production: 25s). The old JSON stub answered the retry
+  // at once, before the 1ms its createWithin had left could cut it; a streamed
+  // first call is held to its limit for real.
+  process.env.CHAT_DECISION_TIMEOUT_MS = '3000'
   const flaky = await chat(ask, { decision: 'flaky', streams: ['ok'] })
   check('...but an overloaded one is retried once, and the search still runs',
     decisions() === 2 && flaky.shown === OK && !/tool_decision_failed/.test(flaky.out) && logged.some((l) => /tool decision failed \(HTTP 529\), retrying once/.test(l)))
   const down = await chat(ask, { decision: 'overloaded', streams: ['ok'] })
+  process.env.CHAT_DECISION_TIMEOUT_MS = '300'
   check('...once only: a decision that keeps failing gets exactly two tries, then the answer without tools', decisions() === 2 && down.shown === OK && /tool_decision_failed/.test(down.out))
   process.env.CHAT_DECISION_TIMEOUT_MS = '1000'; process.env.CHAT_DECISION_QUICK_MS = '200'
   const slowFail = await chat(ask, { decision: 'slowOverload', streams: ['ok'] })
@@ -504,7 +578,7 @@ const ask = [{ role: 'user', content: 'How do I reach Joe?' }]
 // is alive every few seconds, and a stuck request is raced by a second one.
 {
   const OK = 'Thanks — Joe will be in touch.'
-  const decisionCalls = () => modelCalls.filter((c) => !c.body?.stream && Array.isArray(c.body?.tools)).length
+  const decisionCalls = () => modelCalls.filter((c) => Array.isArray(c.body?.tools)).length
   async function firstBytes(p: Plan) {
     plan = p; modelCalls.length = 0; logged.length = 0; background.length = 0; abortedStreams.length = 0
     const t = Date.now()
@@ -526,9 +600,12 @@ const ask = [{ role: 'user', content: 'How do I reach Joe?' }]
     return { firstMs, first: dec.decode(first.value), out, ms: Date.now() - t }
   }
 
-  process.env.CHAT_HEARTBEAT_MS = '100'
+  // An 800ms decision needs a limit above 800ms. (The old JSON stub ignored the
+  // abort at the suite's 300ms limit and answered anyway; a streamed first
+  // call is held to its limit.)
+  Object.assign(process.env, { CHAT_HEARTBEAT_MS: '100', CHAT_DECISION_TIMEOUT_MS: '2000' })
   const slow = await firstBytes({ decision: 'slowDecision', streams: ['ok'] })
-  delete process.env.CHAT_HEARTBEAT_MS
+  delete process.env.CHAT_HEARTBEAT_MS; process.env.CHAT_DECISION_TIMEOUT_MS = '300'
   check('the reply starts at once, before a slow tool decision is done', slow.firstMs < 300 && slow.first.startsWith(': connected') && slow.ms >= 800)
   check('...and says it is alive on every heartbeat while it waits', (slow.out.match(/^: ping$/gm) || []).length >= 5)
   check('...tells the widget when the site is being searched', slow.out.includes('event: status\ndata: {"phase":"searching"}'))
@@ -627,7 +704,7 @@ const ask = [{ role: 'user', content: 'How do I reach Joe?' }]
   const OK = 'Thanks — Joe will be in touch.'
   const { getPersona } = await import('../functions/api-src/_shared/personas.js')
   const ERROR = getPersona('jts').errorMessage
-  const decisionCalls = () => modelCalls.filter((c) => !c.body?.stream && Array.isArray(c.body?.tools)).length
+  const decisionCalls = () => modelCalls.filter((c) => Array.isArray(c.body?.tools)).length
 
   abortedDecisions = 0
   const stalledBody = await chat(ask, { decision: 'bodyStall', streams: ['ok'] })
@@ -697,6 +774,127 @@ const ask = [{ role: 'user', content: 'How do I reach Joe?' }]
   Object.assign(process.env, { CHAT_DECISION_HEDGE_MS: '60000', CHAT_DECISION_TIMEOUT_MS: '300' })
   check('a visitor who leaves during the tool decision cancels it at once, and no second request starts',
     abortedDecisions === 1 && abortedDecisionAt - leftAt < 60 && decisionCalls() === 1, `cancelled ${abortedDecisionAt - leftAt}ms after leaving`)
+}
+
+// --- 8. Instant first words: the first call streams (2026-10-02) -------------------------
+// It ran without streaming: on a turn with no search the visitor waited for the
+// WHOLE answer, thinking included, then watched it dripped out. Now the first
+// call (tools on) streams, and its first visible word is the visitor's.
+{
+  const OK = 'Thanks — Joe will be in touch.'
+  const { getPersona } = await import('../functions/api-src/_shared/personas.js')
+  const { CHAT_MAX_TOKENS } = await import('../functions/api-src/_shared/models.js')
+  const { LEAK_RESPONSE } = await import('../functions/api-src/_shared/rag.js')
+  const ERROR = getPersona('jts').errorMessage
+  const decisionCalls = () => modelCalls.filter((c) => Array.isArray(c.body?.tools))
+  // The reply as it arrives, with the time each piece came in.
+  async function timed(p: Plan, opts: { leaveOn?: RegExp; leaveAfterMs?: number } = {}) {
+    plan = p; modelCalls.length = 0; logged.length = 0; background.length = 0; abortedStreams.length = 0; decisionEndedAt = 0; mailAttempts.length = 0
+    const t = Date.now()
+    const res = await handler(new Request('https://cloudyjoe.com/api/chat', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', Origin: 'https://www.joestechsolutions.com', 'cf-connecting-ip': '203.0.113.6' },
+      body: JSON.stringify({ persona: 'jts', messages: ask, lang: 'en', sessionId: `s-${Math.random()}`, currentPage: '/' }),
+    }))
+    const reader = res.body!.getReader()
+    const dec = new TextDecoder()
+    let out = ''
+    let firstTextAt = 0
+    let leftAt = 0
+    for (;;) {
+      const r = await within(reader.read(), 'the reply')
+      if (r === HUNG || r.done) break
+      const piece = dec.decode(r.value, { stream: true })
+      if (!firstTextAt && /data: \{"text":"[^"]/.test(piece)) firstTextAt = Date.now()
+      out += piece
+      if (opts.leaveOn && opts.leaveOn.test(out)) {
+        leftAt = Date.now()
+        await reader.cancel()
+        await new Promise((r) => setTimeout(r, opts.leaveAfterMs ?? 300))
+        break
+      }
+    }
+    await within(Promise.all(background), 'the background work')
+    let shown = ''
+    for (const line of out.split('\n')) {
+      if (!line.startsWith('data: ') || line.includes('[DONE]')) continue
+      try { const d = JSON.parse(line.slice(6)); if (typeof d.text === 'string') shown = d.replace ? d.text : shown + d.text } catch { /* not JSON */ }
+    }
+    const blocks = out.split('\n\n').filter(Boolean)
+    return { out, shown, blocks, firstTextAt, leftAt, ms: Date.now() - t, streams: modelCalls.filter((c) => c.body?.stream && !Array.isArray(c.body?.tools)) }
+  }
+
+  // Limits above the 300ms the stub holds the last piece back.
+  Object.assign(process.env, { CHAT_DECISION_TIMEOUT_MS: '2000', CHAT_STREAM_IDLE_MS: '2000' })
+  const fast = await timed({ decision: 'textHold', streams: [] })
+  Object.assign(process.env, { CHAT_DECISION_TIMEOUT_MS: '300', CHAT_STREAM_IDLE_MS: '300' })
+  check('no search: the first words reach the visitor while the first call is still writing (before its stream ends)',
+    fast.shown === OK && fast.firstTextAt > 0 && decisionEndedAt > 0 && fast.firstTextAt < decisionEndedAt - 150,
+    `first text ${fast.firstTextAt - decisionEndedAt}ms relative to the call's end`)
+  check('...with exactly one model call, and no searching status', modelCalls.length === 1 && !fast.out.includes('"phase":"searching"'))
+  check('the first call may BE the answer: it gets the whole answer budget (no silent 768-token cut)',
+    decisionCalls()[0]?.body?.max_tokens === CHAT_MAX_TOKENS && decisionCalls()[0]?.body?.stream === true)
+
+  const pre = await timed({ decision: 'preamble', streams: ['ok'] })
+  const blockAt = (re: RegExp) => pre.blocks.findIndex((b) => re.test(b))
+  const answerCall = pre.streams[0]?.body
+  const replayed = answerCall?.messages?.[answerCall.messages.length - 2]?.content || []
+  check('words before a search are cleared: the visitor ends with the answer only',
+    pre.shown === OK && pre.out.includes(PREAMBLE) && pre.out.includes('"phase":"searching"'))
+  check('...cleared BEFORE the searching status (the widget shows the hint on an empty bubble)',
+    blockAt(/"text":"","replace":true/) >= 0 && blockAt(/"text":"","replace":true/) < blockAt(/"phase":"searching"/))
+  check('...and the answer call replays the first call\u2019s words and its tool call',
+    replayed.some((b: any) => b.type === 'text' && b.text === PREAMBLE) && replayed.some((b: any) => b.type === 'tool_use' && b.input?.query === 'x'))
+
+  // A cleared preamble must not leave the visitor on dots with no limit.
+  Object.assign(process.env, { CHAT_FIRST_WORDS_CEILING_MS: '700', CHAT_STREAM_IDLE_MS: '5000' })
+  const cleared = await timed({ decision: 'preamble', streams: ['stall'] })
+  delete process.env.CHAT_FIRST_WORDS_CEILING_MS; process.env.CHAT_STREAM_IDLE_MS = '300'
+  check('...and once cleared, the first-words ceiling applies again (from the request\u2019s start)',
+    cleared.shown === ERROR && cleared.out.includes('"error":true') && cleared.ms < 1500 && logged.some((l) => /reply ceiling: no answer words/.test(l)), `${cleared.ms}ms`)
+
+  Object.assign(process.env, { CHAT_DECISION_HEDGE_MS: '150', CHAT_DECISION_TIMEOUT_MS: '2000' })
+  const thinker = await timed({ decision: 'thinkingLong', streams: [] })
+  Object.assign(process.env, { CHAT_DECISION_HEDGE_MS: '60000', CHAT_DECISION_TIMEOUT_MS: '300' })
+  check('a first call thinking out loud past the race point is alive: not raced',
+    thinker.shown === 'Thought it through.' && decisionCalls().length === 1 && !logged.some((l) => /racing a second request/.test(l)))
+
+  const empty = await timed({ decision: 'empty', streams: ['ok'] })
+  check('a first call that spends its budget thinking (no text, no tool): answered without tools, with twice the budget',
+    empty.shown === OK && /"reason":"tool_decision_failed"/.test(empty.out) && empty.streams.length === 1
+    && empty.streams[0].body.max_tokens === CHAT_MAX_TOKENS * 2 && !Array.isArray(empty.streams[0].body.tools))
+
+  const ws = await timed({ decision: 'wsTool', streams: ['ok'] })
+  const beforeSearch = ws.out.slice(0, ws.out.indexOf('"phase":"searching"'))
+  check('whitespace before a tool call sends nothing (no text, no replace)',
+    ws.shown === OK && ws.out.includes('"phase":"searching"') && !/"text":/.test(beforeSearch))
+
+  const leak = await timed({ decision: 'leak', streams: [] })
+  check('a fingerprint in the first call\u2019s text never reaches the visitor whole: the answer is replaced by LEAK_RESPONSE',
+    leak.shown === LEAK_RESPONSE && !leak.out.includes('BREVEDAD OBLIGATORIA') && mailAttempts.some((m) => /JAILBREAK/.test(m?.subject || '')))
+
+  // The visitor leaves while the site is being searched: no answer is started.
+  const left = await timed({ decision: 'tool', searchDelayMs: 400, streams: ['ok'] }, { leaveOn: /"phase":"searching"/, leaveAfterMs: 700 })
+  check('a visitor who leaves during the search gets no answer started (no paid stream after the search)',
+    left.leftAt > 0 && left.streams.length === 0, `${left.streams.length} answer stream(s)`)
+
+  // The timing line: one per reply, right before [DONE], numbers and names only.
+  const TIMING = /^: timing( [a-z0-9]+=[a-z0-9]+)+$/
+  for (const [name, p] of [['a plain answer', { decision: 'text', decisionText: OK, streams: [] }], ['a search answer', { decision: 'tool', streams: ['ok'] }]] as const) {
+    const r = await timed(p as Plan)
+    const lines = r.blocks.filter((b) => b.startsWith(': timing'))
+    const at = r.blocks.indexOf(lines[0])
+    const fields = Object.fromEntries((lines[0] || '').slice(9).split(' ').map((f) => f.split('=')))
+    check(`${name}: exactly one timing line, immediately before [DONE], with no content in it`,
+      lines.length === 1 && TIMING.test(lines[0]) && r.blocks[at + 1] === 'data: [DONE]' && !lines[0].includes('joe'), lines.join(' | '))
+    check(`${name}: ...naming how the first call committed, and when the first words went out`,
+      fields.commit === (p.decision === 'text' ? 'text' : 'tool') && Number(fields.first) > 0 && Number(fields.total) >= Number(fields.first)
+      && (p.decision === 'tool' ? Number(fields.search) >= 0 && fields.chunks !== undefined && fields.ttft2 !== undefined : fields.search === undefined))
+  }
+  process.env.CHAT_FIRST_WORDS_CEILING_MS = '300'
+  const ceilingLine = await timed({ decision: 'hang', streams: [] })
+  delete process.env.CHAT_FIRST_WORDS_CEILING_MS
+  check('a reply the ceiling ends carries a timing line too (ceiling=1), so the slowest replies are measured',
+    ceilingLine.blocks.filter((b) => b.startsWith(': timing')).length === 1 && /^: timing total=\d+ ceiling=1$/.test(ceilingLine.blocks.find((b) => b.startsWith(': timing')) || ''))
 }
 
 {
