@@ -71,8 +71,15 @@ for (const id of PERSONAS) {
   check(`the ${id} prompt file keeps the work marker as its last line`,
     read(id === 'cloudyjoe' ? 'chatbot-prompt.txt' : 'jts-prompt.txt').trimEnd().endsWith(work.WORK_MARKER))
 }
+// Every "above" left in a prompt file must be one of these, none of which means
+// the work list (review of #52: rule 2's "not stated above" would have put the
+// list's own facts off limits once the list moved below it).
+const ABOVE_OK = [/migration story above/, /HARD GUARDRAILS above/, /three questions above/, /"all of the above"/, /"everything above"/, /"write all above"/]
 for (const file of ['chatbot-prompt.txt', 'jts-prompt.txt']) {
-  check(`${file} never calls the work list "above"`, !/(?:work list|shipped projects|one-line details)\s+above\b/i.test(read(file)))
+  const text = read(file)
+  // Context comes from the text itself, not the match, so two nearby uses each keep their own.
+  const stray = [...text.matchAll(/\babove\b/gi)].map((m) => text.slice(Math.max(0, m.index! - 40), m.index! + 20)).filter((ctx) => !ABOVE_OK.some((re) => re.test(ctx)))
+  check(`${file} has no "above" that could mean the work list (found: ${JSON.stringify(stray)})`, stray.length === 0)
 }
 
 // --- (i) every included item reaches all four consumers -----------------------
@@ -659,7 +666,7 @@ check('cloudyjoe voice no longer parrots "I don\'t have that detail" without che
 check('jts voice: "not on the site" only after an empty search AND the list does not cover it',
   /No relevant content found" THIS turn and that list does not cover it either/.test(persona('jts').voicePrompt))
 check('cloudyjoe text fallback line checks the work list first',
-  /If search_portfolio finds nothing on point, answer from the work list at the end of these instructions/.test(read('chatbot-prompt.txt')))
+  /If search_portfolio finds nothing on point, answer from the "Work Joe has actually shipped" list at the end/.test(read('chatbot-prompt.txt')))
 
 // --- (v) retrieval: the cloudyjoe query bridge ---------------------------------------
 // The bridge feeds the EMBEDDING only. The keyword leg keeps the visitor's
