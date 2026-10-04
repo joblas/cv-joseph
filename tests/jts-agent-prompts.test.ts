@@ -152,28 +152,52 @@ check('text prompt: product names come with what they do', /never name a product
 // Joe's voice test on 2026-10-04: a visitor wanted an LLM wired into Unreal
 // Engine for a VR game, and the agent closed with "game engines specifically
 // aren't in his work". Joe: he researches and builds things he has not built
-// yet, and the agent should make the visitor want that build.
+// yet, and the agent should make the visitor want that build. Every check reads
+// the one "New kinds of builds" bullet, so wording elsewhere can't satisfy it.
+const ruleOf = (p: string) => p.match(/^- New kinds of builds[^\n]*/m)?.[0] || ''
+const { NO_RESULT_RULE } = await import('../functions/api-src/_shared/work.js')
 for (const [name, p] of [['voice', voice], ['text', text]] as const) {
-  check(`${name} prompt: Joe takes on builds he has never done before`,
-    /Joe takes on (builds|projects) he has never done before/.test(p) && /researches what('s| is) new to him and builds it/.test(p))
-  check(`${name} prompt: name what carries over, then move to the project`,
-    /carr(y|ies) over/.test(p) && /Sound like you want the build/.test(p))
-  check(`${name} prompt: lead with what Joe brings, and never size up their setup unseen`,
-    /lead with what Joe brings/.test(p) && /never judge their hardware/.test(p))
-  // Replays found two stretches: a booking flow the directory never had, and
-  // "low-latency integration" credited to the self-driving years.
-  check(`${name} prompt: carry-overs come only from listed work, unstretched`,
-    /only from (that|the "Joe's work") list and the offers/.test(p) && /self-driving years/.test(p))
-  check(`${name} prompt: still no promise of feasibility, method or date`,
-    /never promise it can be done, how, or by when/.test(p))
-  // The carry-over example must point at work the agent may state.
-  check(`${name} prompt: the carry-over example names listed work`,
-    p.includes('Whisper Walkie') && /Private AI Setup/.test(p))
+  const rule = ruleOf(p)
+  check(`${name} prompt has one "New kinds of builds" rule, scoped to software, automation and AI`,
+    rule.length > 400 && /\(software, automation and AI( work)?\)/.test(rule) && p.split('- New kinds of builds').length === 2)
+  check(`${name} rule: Joe takes on work he hasn't done and researches it, said in the agent's own words`,
+    /takes on kinds of work he hasn't done before and researches what's new to him; say that in your own words/.test(rule))
+  // Review of #55: the model echoed every quoted label and slogan back to visitors
+  // ("that's not a no", "researches what's new and builds it"), once as
+  // "'can Joe build this?' is never a no", a promise for Joe.
+  check(`${name} rule carries no quotable slogan or blanket promise`,
+    !/not a no|and builds it|hasn't built that yet"|can Joe build this/i.test(rule))
+  check(`${name} rule: never says Joe takes every build, never promises it can be done`,
+    /(don't tell them|Never say) Joe takes every build/.test(rule) && /never promise it can be done, how, or by when/.test(rule))
+  check(`${name} rule: carry-overs only from the work list and the offers`,
+    /only from the (work list at the end|"Joe's work" list) and the offers/.test(rule))
+  // Review of #55 (B1): replies called the Private AI Setup work "he has
+  // shipped"; the work list forbids implying any client has received one.
+  check(`${name} rule: an offer is called an offer, never client work`,
+    /an offer is called an offer/.test(rule) && /work done for a client/.test(rule) && /the Private AI Setup offer/.test(rule))
+  // Replays found "booking flows" on the faire directory and "low-latency
+  // integration" credited to the self-driving years.
+  check(`${name} rule: nothing stretched into a skill it doesn't show`, /stretched into a (feature or )?skill it doesn't show/.test(rule))
+  check(`${name} rule: the carry-over example names listed work`, rule.includes('Whisper Walkie') && /chat and voice agent on his sites|voice agent you are/.test(rule))
+  check(`${name} rule: keen, and never sizes up their setup unseen`,
+    /Be keen on it: lead with what Joe could bring/.test(rule) && /never judge their (hardware|setup)/.test(rule))
+  check(`${name} rule: no bare no up front`, /don't open (the reply )?with a bare no/i.test(rule))
 }
-check('text prompt: a new kind of project is never "something the site doesn\u2019t cover"',
-  /is not a no, so never open the reply with a flat no/.test(text) && /never "something the site doesn't cover"/.test(text) && /A project Joe hasn't done before is not such a question/.test(text))
-check('voice prompt: the rule holds when a search finds nothing, and never opens with "no"',
-  /even when a search finds nothing on point/.test(voice) && /never answer "no" or "the site doesn't show that"/.test(voice))
+// The text agent reads aloud nowhere: "the voice agent you are" told a typing visitor "the voice chat you're using".
+check('text rule says "the chat and voice agent on his sites", not "the voice agent you are"',
+  /the chat and voice agent on his sites, this one included/.test(ruleOf(text)) && !/voice agent you are/.test(ruleOf(text)))
+// The voice prompt mentions self-driving nowhere else; a fact learned from a "never" invites trouble.
+check('voice rule leaves the self-driving years out', !/self-driving/.test(ruleOf(voice)))
+// Review of #55 (B3): HARD GUARDRAIL 2's "say plainly that the site does not
+// cover it" fired on "has he built X?" and produced the phrase Joe disliked.
+check('guardrail 2 hands a new kind of build to the new-build rule',
+  /say plainly that the site does not cover it and offer to pass the question to Joe\. A kind of build Joe hasn't done yet is not that/.test(text))
+check('the search bullet no longer reserves "anything the site does not offer" for the guardrails',
+  !/anything the site does not offer/.test(text) && /services the site does not offer/.test(text))
+check('the safe default hands a new kind of build to the new-build rule',
+  /A project Joe hasn't done before is not such a question: it is a possible build, handled under "New kinds of builds"/.test(text))
+check('voice rule holds when a search finds nothing, and never says "the site doesn’t show that"',
+  /even when a search finds nothing on point/.test(ruleOf(voice)) && /never "the site doesn't show that"/.test(ruleOf(voice)))
 check('the empty-search tool result points a build question at the new-build rule',
   /unless they are asking whether Joe could build something/.test(jts.searchTool.noResults))
 // The voice agent offered to "send it over to Joe". Voice has no lead tool:
@@ -185,6 +209,8 @@ check('voice prompt sends the email to the chat box, where lead capture runs',
   /type their email in this same chat/.test(voice))
 check('voice prompt never claims to pass anything to Joe itself',
   /never say you will send, pass or forward anything to Joe yourself/.test(voice))
+check('the shared voice no-result rule no longer promises a follow-up from Joe',
+  !/offer to have Joe follow up/.test(NO_RESULT_RULE.voice) && !/offer to have Joe follow up/.test(voice))
 
 if (failed) { console.error(`\n${failed} check(s) failed`); process.exit(1) }
 console.log('ok — prompts carry none of the transcript’s failures')
