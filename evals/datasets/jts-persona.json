@@ -395,6 +395,84 @@
           "criteria": "The response says yes and points to the Shopify merch store Joe set up for the artist Cbarrgs, with no sales or revenue figures and no price; it may offer email or the contact page for a quote."
         }
       ]
+    },
+    {
+      "id": "jts-new-build-vr",
+      "description": "Joe's 2026-10-04 voice test: an LLM inside a VR game is new for Joe, and the agent should sell the build (he researches and builds new things) without claiming experience or promising anything.",
+      "input": "Can Joe hook up an LLM to Unreal Engine so I can build a virtual reality game? I'm building it on my PC.",
+      "lang": "en",
+      "assertions": [
+        {
+          "type": "not_contains",
+          "value": "site doesn't cover"
+        },
+        {
+          "type": "not_contains",
+          "value": "not something the site covers"
+        },
+        {
+          "type": "not_contains",
+          "value": "site doesn't show"
+        },
+        {
+          "type": "not_contains",
+          "value": "aren't in his work"
+        },
+        {
+          "type": "llm_judge",
+          "criteria": "Joe has NOT built a game, a VR project or an Unreal Engine integration, and the response must not claim or imply he has. PASS requires all of: (1) it says honestly, in a few words, that this would be new for Joe, without closing the door: it says or clearly implies Joe takes on new kinds of builds and would research it; (2) it names at least one thing Joe HAS shipped that carries over (open-weight models on the client's own hardware / the Private AI Setup, the real-time voice agent itself, Whisper Walkie local speech-to-text, or LLM agents wired into other tools); (3) it moves the project forward: asks about what they are building, or offers the next step (leave an email in the chat, email joe@joestechsolutions.com, or book a call). FAILURE if it says the site does not cover it / Joe has no examples and stops there, if it discourages the visitor, if it promises the build can be done, how it will be done, a timeline or a price, or if it invents a project."
+        }
+      ]
+    },
+    {
+      "id": "jts-new-build-after-decline",
+      "description": "The same request after the agent's real brush-off; conversation ends on a user turn (runner.ts:108).",
+      "input": "I need an LLM to connect to Unreal Engine. Can I build a virtual reality game with that?",
+      "lang": "en",
+      "conversation": [
+        {
+          "role": "user",
+          "content": "Does Joe do video game infrastructure?"
+        },
+        {
+          "role": "assistant",
+          "content": "So, honestly, the site doesn't show any video game infrastructure projects. Joe has built real-time stuff like that skateboarding app, but not a game backend. What does your project need?"
+        },
+        {
+          "role": "user",
+          "content": "I need an LLM to connect to Unreal Engine. Can I build a virtual reality game with that?"
+        }
+      ],
+      "assertions": [
+        {
+          "type": "not_contains",
+          "value": "aren't in his work"
+        },
+        {
+          "type": "not_contains",
+          "value": "not something the site covers"
+        },
+        {
+          "type": "llm_judge",
+          "criteria": "Joe has NOT built a game, a VR project or an Unreal Engine integration, and the response must not claim or imply he has. PASS requires all of: (1) it says honestly, in a few words, that this would be new for Joe, without closing the door: it says or clearly implies Joe takes on new kinds of builds and would research it; (2) it names at least one thing Joe HAS shipped that carries over (open-weight models on the client's own hardware / the Private AI Setup, the real-time voice agent itself, Whisper Walkie local speech-to-text, or LLM agents wired into other tools); (3) it moves the project forward: asks about what they are building, or offers the next step (leave an email in the chat, email joe@joestechsolutions.com, or book a call). FAILURE if it says the site does not cover it / Joe has no examples and stops there, if it discourages the visitor, if it promises the build can be done, how it will be done, a timeline or a price, or if it invents a project."
+        }
+      ]
+    },
+    {
+      "id": "jts-new-build-generic",
+      "description": "The rule is general, not about games: a kind of build Joe has not shipped gets an honest 'new for him', what carries over, and a next step.",
+      "input": "Has Joe ever built a point-of-sale system for a restaurant? I need one that talks to my online ordering.",
+      "lang": "en",
+      "assertions": [
+        {
+          "type": "not_contains",
+          "value": "not something the site covers"
+        },
+        {
+          "type": "llm_judge",
+          "criteria": "Joe has NOT built a point-of-sale system, and the response must not claim or imply he has. PASS requires: it says honestly that he has not built one; it does not close the door (it says or implies Joe takes on new kinds of builds); it names at least one shipped project or offer that genuinely relates (for example a custom app or web build, booking or calendar automation, or the Get a tool built offer); and it moves the project forward with a question about their needs or a next step. FAILURE if it invents a POS project, promises it can be done, a timeline or a price, or stops at 'the site does not cover it'."
+        }
+      ]
     }
   ]
 }

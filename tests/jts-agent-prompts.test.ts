@@ -148,5 +148,37 @@ check('text prompt: a price question still moves forward (scoping questions, nev
   // ...and it stays inside the intake rule: one question at a time, three in all.
   && /the single most useful thing that quote depends on/.test(text) && /counts toward the three questions above/.test(text))
 check('text prompt: product names come with what they do', /never name a product or tool \(a Hermes agent/.test(text))
+// --- "So, honestly, the site doesn't show any video game infrastructure projects."
+// Joe's voice test on 2026-10-04: a visitor wanted an LLM wired into Unreal
+// Engine for a VR game, and the agent closed with "game engines specifically
+// aren't in his work". Joe: he researches and builds things he has not built
+// yet, and the agent should make the visitor want that build.
+for (const [name, p] of [['voice', voice], ['text', text]] as const) {
+  check(`${name} prompt: Joe takes on builds he has never done before`,
+    /Joe takes on (builds|projects) he has never done before/.test(p) && /researches what('s| is) new to him and builds it/.test(p))
+  check(`${name} prompt: name what carries over, then move to the project`,
+    /carr(y|ies) over/.test(p) && /Sound like you want the build/.test(p))
+  check(`${name} prompt: still no promise of feasibility, method or date`,
+    /never promise it can be done, how, or by when/.test(p))
+  // The carry-over example must point at work the agent may state.
+  check(`${name} prompt: the carry-over example names listed work`,
+    p.includes('Whisper Walkie') && /Private AI Setup/.test(p))
+}
+check('text prompt: a new kind of project is never "something the site doesn\u2019t cover"',
+  /is not a no/.test(text) && /never "something the site doesn't cover"/.test(text) && /A project Joe hasn't done before is not such a question/.test(text))
+check('voice prompt: the rule holds when a search finds nothing',
+  /even when a search finds nothing on point/.test(voice) && /never "the site doesn't show that"/.test(voice))
+check('the empty-search tool result points a build question at the new-build rule',
+  /unless they are asking whether Joe could build something/.test(jts.searchTool.noResults))
+// The voice agent offered to "send it over to Joe". Voice has no lead tool:
+// a spoken email reaches nobody (voice-trace.js only traces); a typed one
+// reaches Joe with the voice turns, which the widget adds to the chat history.
+check('voice prompt no longer asks for an email out loud',
+  !/ask for their email address so Joe can reply/.test(voice) && /Never ask them to say their email out loud/.test(voice))
+check('voice prompt sends the email to the chat box, where lead capture runs',
+  /type their email in this same chat/.test(voice))
+check('voice prompt never claims to pass anything to Joe itself',
+  /never say you will send, pass or forward anything to Joe yourself/.test(voice))
+
 if (failed) { console.error(`\n${failed} check(s) failed`); process.exit(1) }
 console.log('ok — prompts carry none of the transcript’s failures')
