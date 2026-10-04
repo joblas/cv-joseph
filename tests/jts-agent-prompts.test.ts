@@ -158,6 +158,12 @@ for (const [name, p] of [['voice', voice], ['text', text]] as const) {
     /Joe takes on (builds|projects) he has never done before/.test(p) && /researches what('s| is) new to him and builds it/.test(p))
   check(`${name} prompt: name what carries over, then move to the project`,
     /carr(y|ies) over/.test(p) && /Sound like you want the build/.test(p))
+  check(`${name} prompt: lead with what Joe brings, and never size up their setup unseen`,
+    /lead with what Joe brings/.test(p) && /never judge their hardware/.test(p))
+  // Replays found two stretches: a booking flow the directory never had, and
+  // "low-latency integration" credited to the self-driving years.
+  check(`${name} prompt: carry-overs come only from listed work, unstretched`,
+    /only from (that|the "Joe's work") list and the offers/.test(p) && /self-driving years/.test(p))
   check(`${name} prompt: still no promise of feasibility, method or date`,
     /never promise it can be done, how, or by when/.test(p))
   // The carry-over example must point at work the agent may state.
@@ -165,9 +171,9 @@ for (const [name, p] of [['voice', voice], ['text', text]] as const) {
     p.includes('Whisper Walkie') && /Private AI Setup/.test(p))
 }
 check('text prompt: a new kind of project is never "something the site doesn\u2019t cover"',
-  /is not a no/.test(text) && /never "something the site doesn't cover"/.test(text) && /A project Joe hasn't done before is not such a question/.test(text))
-check('voice prompt: the rule holds when a search finds nothing',
-  /even when a search finds nothing on point/.test(voice) && /never "the site doesn't show that"/.test(voice))
+  /is not a no, so never open the reply with a flat no/.test(text) && /never "something the site doesn't cover"/.test(text) && /A project Joe hasn't done before is not such a question/.test(text))
+check('voice prompt: the rule holds when a search finds nothing, and never opens with "no"',
+  /even when a search finds nothing on point/.test(voice) && /never answer "no" or "the site doesn't show that"/.test(voice))
 check('the empty-search tool result points a build question at the new-build rule',
   /unless they are asking whether Joe could build something/.test(jts.searchTool.noResults))
 // The voice agent offered to "send it over to Joe". Voice has no lead tool:
