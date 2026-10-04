@@ -466,7 +466,7 @@
     },
     {
       "id": "jts-new-build-generic",
-      "description": "The rule is general, not about games: a kind of build Joe has not shipped gets an honest 'new for him', what carries over, and a next step.",
+      "description": "The rule is general, not about games: a kind of build Joe has not shipped gets an honest 'new for him', what carries over, and a next step. \"Has he ever built X?\" may be answered \"No, not yet\" before the forward path; only \"can Joe…?\" (the VR cases) bans an opening no.",
       "input": "Has Joe ever built a point-of-sale system for a restaurant? I need one that talks to my online ordering.",
       "lang": "en",
       "assertions": [
@@ -479,11 +479,6 @@
           "type": "regex",
           "pattern": "^(?![\\s\\S]*(not a ['\"“‘]?no\\b|never a no|takes (on )?every build))",
           "flags": "i"
-        },
-        {
-          "type": "regex",
-          "pattern": "^(?!\\s*\\**No\\b)",
-          "flags": ""
         },
         {
           "type": "llm_judge",

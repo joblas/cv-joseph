@@ -168,7 +168,7 @@ for (const [name, p] of [['voice', voice], ['text', text]] as const) {
   check(`${name} rule carries no quotable slogan or blanket promise`,
     !/not a no|and builds it|hasn't built that yet"|can Joe build this/i.test(rule))
   check(`${name} rule: never says Joe takes every build, never promises it can be done`,
-    /(don't tell them|Never say) Joe takes every build/.test(rule) && /never promise it can be done, how, or by when/.test(rule))
+    /(don't tell them|never say) Joe takes every build/i.test(rule) && /never promise it can be done, how, or by when/.test(rule))
   check(`${name} rule: carry-overs only from the work list and the offers`,
     /only from the (work list at the end|"Joe's work" list) and the offers/.test(rule))
   // Review of #55 (B1): replies called the Private AI Setup work "he has
@@ -181,9 +181,13 @@ for (const [name, p] of [['voice', voice], ['text', text]] as const) {
   check(`${name} rule: the carry-over example names listed work`, rule.includes('Whisper Walkie') && /chat and voice agent on his sites|voice agent you are/.test(rule))
   check(`${name} rule: keen, and never sizes up their setup unseen`,
     /Be keen on it: lead with what Joe could bring/.test(rule) && /never judge their (hardware|setup)/.test(rule))
-  check(`${name} rule: no bare no up front`, /don't open (the reply )?with a bare no/i.test(rule))
+  // The POS replay opened "No —" three times out of three; "not yet" is the honest answer that keeps going.
+  check(`${name} rule: "not yet", never a bare "no"`, /"not yet" fits; a bare "no" (does not|doesn't)/.test(rule))
+  check(`${name} rule: never calls the build a sure fit`, /or call it a sure fit/.test(rule))
 }
 // The text agent reads aloud nowhere: "the voice agent you are" told a typing visitor "the voice chat you're using".
+// A replay echoed the rule's own contrast clause: "treat it as something Joe would look into rather than something the site can't cover".
+check('text rule carries no "the site doesn\u2019t cover" contrast for the model to echo', !/site doesn't cover/.test(ruleOf(text)))
 check('text rule says "the chat and voice agent on his sites", not "the voice agent you are"',
   /the chat and voice agent on his sites, this one included/.test(ruleOf(text)) && !/voice agent you are/.test(ruleOf(text)))
 // The voice prompt mentions self-driving nowhere else; a fact learned from a "never" invites trouble.
