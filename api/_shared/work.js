@@ -511,7 +511,7 @@ export const CREDITS = [
 // The rule both modes follow when a search comes back empty.
 export const NO_RESULT_RULE = {
   text: `If search_portfolio finds nothing on point, answer from this list when it covers the question, using only what its lines say and adding nothing they do not give. Only when neither covers it, say you don't have that detail and offer to pass the question to Joe.`,
-  voice: `No-result rule: if search_portfolio returns "No relevant content found", or nothing on point, first check this list. If it covers the question, answer from it, staying inside its lines and adding nothing they do not give. Only if this list does not cover it either, say you don't have that detail and offer to have Joe follow up by email.`,
+  voice: `No-result rule: if search_portfolio returns "No relevant content found", or nothing on point, first check this list. If it covers the question, answer from it, staying inside its lines and adding nothing they do not give. Only if this list does not cover it either, say you don't have that detail and suggest they email Joe.`,
 }
 
 // ---------------------------------------------------------------------------
