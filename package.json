@@ -49,6 +49,7 @@
     "test:typing": "tsx --test tests/typing.test.ts",
     "test:model-bounds": "npm run cf:prep >/dev/null && tsx --test tests/model-bounds.test.ts",
     "test:career-claims": "tsx tests/career-claims.test.ts",
+    "test:validate-prerender": "tsx tests/validate-prerender.test.ts",
     "test:agent-knowledge": "npm run cf:prep >/dev/null && tsx tests/agent-knowledge.test.ts",
     "test:rag-export": "tsx --tsconfig tsconfig.app.json tests/rag-export.test.ts"
   },

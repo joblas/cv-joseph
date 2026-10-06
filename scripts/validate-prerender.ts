@@ -16,7 +16,9 @@ import { articleRegistry, type ArticleConfig } from '../src/articles/registry.ts
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const root = resolve(__dirname, '..')
-const dist = resolve(root, 'dist')
+// PRERENDER_DIST lets tests/validate-prerender.test.ts point the checks at a
+// fixture tree; the build always uses dist/.
+const dist = process.env.PRERENDER_DIST ? resolve(process.env.PRERENDER_DIST) : resolve(root, 'dist')
 
 // ---------------------------------------------------------------------------
 // Types
@@ -24,6 +26,91 @@ const dist = resolve(root, 'dist')
 
 type Severity = 'error' | 'warn'
 interface Issue { severity: Severity; msg: string; skill?: string }
+
+// ---------------------------------------------------------------------------
+// Checks shared by article pages and the plain pages (privacy)
+// ---------------------------------------------------------------------------
+
+// A broken link is an ERROR, not a warning: warnings never fail the build, and
+// 404 links from #36 shipped while this check only warned.
+function checkInternalLinks(html: string): Issue[] {
+  const issues: Issue[] = []
+  const linkMatches = html.match(/<a\s[^>]*href="(\/[^"#]*)"/g) || []
+  for (const tag of linkMatches) {
+    const hrefMatch = tag.match(/href="(\/[^"#]*)"/)
+    if (!hrefMatch) continue
+    const href = hrefMatch[1]
+    // Skip special paths (API, ops dashboard). /privacy is NOT skipped: it is a
+    // prerendered page now, so a link to it must resolve like any other.
+    if (href.startsWith('/api/') || href.startsWith('/ops') || href === '/privacidad') continue
+    // Check if file exists: dist/{path}/index.html or dist/{path}
+    const cleanPath = href.replace(/\/$/, '') || ''
+    const candidate1 = resolve(dist, cleanPath.slice(1), 'index.html')
+    const candidate2 = resolve(dist, cleanPath.slice(1))
+    if (!existsSync(candidate1) && !existsSync(candidate2)) {
+      issues.push({
+        severity: 'error',
+        msg: `Broken internal link: ${href}`,
+        skill: '/seo technical',
+      })
+    }
+  }
+  return issues
+}
+
+// og:image must be an https URL, and when it is on this site the file must be
+// in dist/. Four article share cards pointed at images that were never
+// committed and 404'd live, and nothing here looked.
+function checkOgImage(html: string): Issue[] {
+  const issues: Issue[] = []
+  const ogImageMatch = html.match(/<meta\s+property="og:image"\s+content="([^"]*)"/)
+  if (!ogImageMatch) return issues
+  const ogUrl = ogImageMatch[1]
+  if (!ogUrl || !ogUrl.startsWith('https://')) {
+    issues.push({
+      severity: 'warn',
+      msg: `og:image URL invalid or not HTTPS: "${ogUrl}"`,
+      skill: '/seo images',
+    })
+    return issues
+  }
+  const SITE = 'https://cloudyjoe.com/'
+  if (ogUrl.startsWith(SITE)) {
+    const rel = ogUrl.slice(SITE.length).split(/[?#]/)[0]
+    if (!rel || !existsSync(resolve(dist, rel))) {
+      issues.push({
+        severity: 'error',
+        msg: `og:image file missing: dist/${rel} (from ${ogUrl})`,
+        skill: '/og-image',
+      })
+    }
+  }
+  return issues
+}
+
+// Plain prerendered pages that are not articles. The article checks (JSON-LD,
+// word count, published_time) do not apply; existence, canonical, og:image and
+// internal links do.
+function validatePlainPage(slug: string): Issue[] {
+  const issues: Issue[] = []
+  const htmlPath = resolve(dist, slug, 'index.html')
+  if (!existsSync(htmlPath)) {
+    issues.push({ severity: 'error', msg: `Prerendered HTML not found: dist/${slug}/index.html` })
+    return issues
+  }
+  const html = readFileSync(htmlPath, 'utf-8')
+  if (!/<title>[^<]+<\/title>/.test(html)) issues.push({ severity: 'error', msg: 'Title tag not found' })
+  const canonicalMatch = html.match(/<link\s+rel="canonical"\s+href="([^"]*)"/)
+  if (!canonicalMatch) {
+    issues.push({ severity: 'error', msg: 'Canonical tag not found', skill: '/seo technical' })
+  } else if (canonicalMatch[1] !== `https://cloudyjoe.com/${slug}`) {
+    issues.push({ severity: 'error', msg: `Canonical doesn't match slug: ${canonicalMatch[1]}`, skill: '/seo technical' })
+  }
+  if (!html.includes('og:image')) issues.push({ severity: 'error', msg: 'og:image missing', skill: '/seo page' })
+  issues.push(...checkOgImage(html))
+  issues.push(...checkInternalLinks(html))
+  return issues
+}
 
 // ---------------------------------------------------------------------------
 // Per-article HTML checks
@@ -181,25 +268,7 @@ function validatePrerenderHtml(id: string, slug: string): Issue[] {
   }
 
   // 13. Broken internal links
-  const linkMatches = html.match(/<a\s[^>]*href="(\/[^"#]*)"/g) || []
-  for (const tag of linkMatches) {
-    const hrefMatch = tag.match(/href="(\/[^"#]*)"/)
-    if (!hrefMatch) continue
-    const href = hrefMatch[1]
-    // Skip special paths (API, ops dashboard, SPA-only utility pages)
-    if (href.startsWith('/api/') || href.startsWith('/ops') || href === '/privacidad' || href === '/privacy') continue
-    // Check if file exists: dist/{path}/index.html or dist/{path}
-    const cleanPath = href.replace(/\/$/, '') || ''
-    const candidate1 = resolve(dist, cleanPath.slice(1), 'index.html')
-    const candidate2 = resolve(dist, cleanPath.slice(1))
-    if (!existsSync(candidate1) && !existsSync(candidate2)) {
-      issues.push({
-        severity: 'warn',
-        msg: `Broken internal link: ${href}`,
-        skill: '/seo technical',
-      })
-    }
-  }
+  issues.push(...checkInternalLinks(html))
 
   // 14. Word count minimum
   const fullStripped = html.replace(/<script[\s\S]*?<\/script>/gi, '').replace(/<style[\s\S]*?<\/style>/gi, '').replace(/<[^>]+>/g, ' ')
@@ -226,18 +295,8 @@ function validatePrerenderHtml(id: string, slug: string): Issue[] {
     }
   }
 
-  // 16. OG image format check
-  const ogImageMatch = html.match(/<meta\s+property="og:image"\s+content="([^"]*)"/)
-  if (ogImageMatch) {
-    const ogUrl = ogImageMatch[1]
-    if (!ogUrl || !ogUrl.startsWith('https://')) {
-      issues.push({
-        severity: 'warn',
-        msg: `og:image URL invalid or not HTTPS: "${ogUrl}"`,
-        skill: '/seo images',
-      })
-    }
-  }
+  // 16. OG image format check + the file it names exists
+  issues.push(...checkOgImage(html))
 
   return issues
 }
@@ -465,6 +524,14 @@ for (const article of articleRegistry) {
   }
 }
 
+// Plain pages (not in the article registry)
+const PLAIN_PAGES = ['privacy']
+for (const slug of PLAIN_PAGES) {
+  const issues = validatePlainPage(slug)
+  if (issues.length > 0) printIssues(issues, slug)
+  else console.log(`\x1b[32m✓\x1b[0m ${slug} — clean`)
+}
+
 // Cross-article checks
 const crossIssues: Issue[] = []
 
@@ -619,7 +686,7 @@ if (globalIssues.length > 0) {
   console.log(`\n\x1b[32m✓\x1b[0m Global files — clean`)
 }
 
-console.log(`\nPages: ${articleRegistry.filter(a => a.type !== 'bridge').length} | Errors: ${totalErrors} | Warnings: ${totalWarnings}\n`)
+console.log(`\nPages: ${articleRegistry.filter(a => a.type !== 'bridge').length + PLAIN_PAGES.length} | Errors: ${totalErrors} | Warnings: ${totalWarnings}\n`)
 
 if (totalErrors > 0) {
   console.error('\x1b[31m✗ Prerender validation failed. Fix errors before deploying.\x1b[0m\n')
