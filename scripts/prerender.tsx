@@ -24,7 +24,7 @@ import GlobalNav from '../src/GlobalNav.tsx';
 import { articleRegistry, type ArticleConfig } from '../src/articles/registry.ts';
 import { buildArticleJsonLd } from '../src/articles/json-ld.ts';
 import AboutPage from '../src/AboutPage.tsx';
-import PrivacyPolicy from '../src/PrivacyPolicy.tsx';
+import PrivacyPolicy, { PRIVACY_DESCRIPTION } from '../src/PrivacyPolicy.tsx';
 import { aboutContent } from '../src/about-i18n.ts';
 import { seo } from '../src/i18n.ts';
 import { chatbotContent } from '../src/chatbot-i18n.ts';
@@ -260,7 +260,7 @@ try {
 const privacyPage = indexHtml
   .replace('<div id="root"></div>', `<div id="root">${privacyRenderedHtml}</div>`)
   .replace(/<title>[^<]*<\/title>/, '<title>Privacy Policy | cloudyjoe.com</title>')
-  .replace(/<meta name="description" content="[^"]*" \/>/, '<meta name="description" content="How cloudyjoe.com handles data: no tracking cookies, no analytics, contact details for requests." />')
+  .replace(/<meta name="description" content="[^"]*" \/>/, `<meta name="description" content="${esc(PRIVACY_DESCRIPTION)}" />`)
   .replace(/<link rel="canonical" href="[^"]*" \/>/, '<link rel="canonical" href="https://cloudyjoe.com/privacy" />')
   .replace(/<meta property="og:url" content="[^"]*" \/>/, '<meta property="og:url" content="https://cloudyjoe.com/privacy" />')
   .replace(/<meta property="og:title" content="[^"]*" \/>/, '<meta property="og:title" content="Privacy Policy | cloudyjoe.com" />')
