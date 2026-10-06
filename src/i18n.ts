@@ -352,7 +352,7 @@ const _translationsEn = {
           },
           {
             icon: 'zap',
-            text: 'Over-the-air beta loop: a client text becomes a shipped fix, median 13.8 minutes',
+            text: 'Over-the-air beta loop: a client text becomes a merged fix, median 13.8 minutes',
           },
         ],
         soldWith: 'Case Study: Client Texts Become Shipped Features',
