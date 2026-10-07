@@ -3,6 +3,8 @@ import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { join } from "node:path";
+import { translations } from "../src/i18n.ts";
+import { aboutContent } from "../src/about-i18n.ts";
 
 // Career claims have to say the same thing everywhere they appear.
 //
@@ -127,15 +129,24 @@ function readAll(): { file: string; text: string }[] {
 test("the Pronto.ai demo count is 10+, never 30+", () => {
   // Correct per Joe's resumes: 10+ executive and investor demonstrations.
   // "30+" was the old, inflated figure.
+  //
+  // Every stated demo count is captured and must be 10, not just the literal
+  // "30+ executive". The first version forbade only that one string, so "25+
+  // executive" and "10+ executive and 30+ investor demonstrations" both passed.
+  // The lookahead lets the second number in that sentence be captured too,
+  // instead of being swallowed by the first match.
+  const DEMO = /(\d+)\+(?=\s*(?:executive|investor)\b[^.\n]*?\bdemo)/gi;
   const wrong: string[] = [];
   for (const { file, text } of readAll()) {
-    if (/\b30\+\s*executive/i.test(text)) wrong.push(file);
-    if (/\b30\+\s*executive\/investor/i.test(text)) wrong.push(file);
+    if (/\b30\+\s*executive/i.test(text)) wrong.push(`${file}: 30+ executive`);
+    for (const m of text.matchAll(DEMO)) {
+      if (m[1] !== "10") wrong.push(`${file}: ${m[1]}+ ${text.slice(m.index! + m[0].length, m.index! + m[0].length + 40).trim()}`);
+    }
   }
   assert.deepEqual(
     wrong,
     [],
-    "these files still claim 30+ demonstrations (the correct figure is 10+):\n" + wrong.join("\n"),
+    "these files state a demo count other than 10+ (the correct figure is 10+):\n" + wrong.join("\n"),
   );
 });
 
@@ -201,11 +212,24 @@ test("the superseded titles are gone", () => {
 });
 
 test("Joe's Tech Solutions dates are 2025 to present, not 2023", () => {
+  // The homepage card keeps company and period in separate fields
+  // (experience.jts.company, then .period three lines down), which no
+  // same-sentence regex can connect: with the card set to "2023 - Present" the
+  // text scan below still passed. So the rendered values are pinned by importing
+  // the modules, and the text scan stays for prose.
+  const period = (p: string) => p.split("\u00b7")[0].trim().replace(/\s*[-\u2013]\s*/g, "-");
+  assert.equal(period(translations.experience.jts.period), "2025-Present", "src/i18n.ts experience.jts.period");
+  const aboutJts = aboutContent.timeline.find((e) => e.company === "Joe's Tech Solutions LLC");
+  assert.ok(aboutJts, "src/about-i18n.ts timeline has no Joe's Tech Solutions LLC entry");
+  assert.equal(period(aboutJts.period), "2025-Present", "src/about-i18n.ts Joe's Tech Solutions period");
+
   const wrong: string[] = [];
   for (const { file, text } of readAll()) {
     // 2023 is only legal as the OvationCXM period, which is a separate question
     // and deliberately left alone pending Joe's answer.
-    const re = /Joe'?s Tech Solutions[^.\n]{0,80}?(2023)/gi;
+    // The apostrophe may be straight, curly (\u2019), escaped in a TS string
+    // (Joe\\'s), or missing.
+    const re = /Joe\\?['\u2019]?s Tech Solutions[^.\n]{0,80}?(2023)/gi;
     if (re.test(text)) wrong.push(file);
   }
   assert.deepEqual(
@@ -264,6 +288,15 @@ test("no em dash is introduced into career copy", () => {
   //   - public/llms.txt section headers, where "### Name (dates) - Role" with an em
   //     dash is that file's own convention (14 of its 25 headers)
   //   - lines whose dash count did not increase, i.e. dashes that were already there
+  //
+  // Counted per DASH on the changed lines, per diff hunk, against the merge-base.
+  // The first version counted LINES carrying a dash across the whole file, so a
+  // second dash on a line that already had one changed nothing and passed, and it
+  // compared against the tip of origin/main, which moves under a branch. A hunk
+  // that rewrites a dashed line and keeps its one dash nets zero; a hunk that adds
+  // one more fails.
+  //
+  // public/llms.txt is scanned too, except its "### " section headers.
   const EM = "\u2014";
   const CAREER = [
     "src/i18n.ts",
@@ -271,43 +304,60 @@ test("no em dash is introduced into career copy", () => {
     "chatbot-prompt.txt",
     "jts-prompt.txt",
     "index.html",
+    "public/llms.txt",
   ];
+  const dashes = (l: string) => l.split(EM).length - 1;
   const offenders: string[] = [];
-  for (const rel of CAREER) {
-    const now = readFileSync(join(ROOT, rel), "utf8").split("\n");
-    // A baseline is REQUIRED. An earlier version skipped the file when the baseline
-    // could not be read, and that silently disabled the whole check: this worktree's
-    // origin/main was weeks stale, the counts moved DOWN (dashes removed while fixing
-    // other things), and the guard reported green while a planted em dash passed.
-    // If origin/main is missing entirely - which happens with a shallow CI checkout -
-    // say so and fail, rather than look like coverage that is not there.
-    if (!hasRef("origin/main")) {
-      offenders.push(
-        `${rel}: cannot check - origin/main is not available in this checkout. ` +
-          `The guard needs a baseline; run with full history (fetch-depth: 0).`,
-      );
-      continue;
-    }
-    let before: string[];
+  // A baseline is REQUIRED. An earlier version skipped the file when the baseline
+  // could not be read, and that silently disabled the whole check: this worktree's
+  // origin/main was weeks stale, the counts moved DOWN (dashes removed while fixing
+  // other things), and the guard reported green while a planted em dash passed.
+  // If origin/main is missing entirely - which happens with a shallow CI checkout -
+  // say so and fail, rather than look like coverage that is not there.
+  let base = "";
+  if (hasRef("origin/main")) {
     try {
-      before = execFileSync("git", ["show", `origin/main:${rel}`], {
+      base = execFileSync("git", ["merge-base", "HEAD", "origin/main"], { cwd: ROOT, encoding: "utf8" }).trim();
+    } catch {
+      base = "";
+    }
+  }
+  if (!base) {
+    offenders.push(
+      `cannot check - no merge-base with origin/main in this checkout. ` +
+        `The guard needs a baseline; run with full history (fetch-depth: 0).`,
+    );
+  } else {
+    for (const rel of CAREER) {
+      // Working tree against the merge-base, so uncommitted edits count too.
+      const diff = execFileSync("git", ["diff", "-U0", "--no-color", "--no-ext-diff", base, "--", rel], {
         cwd: ROOT,
         encoding: "utf8",
-      }).split("\n");
-    } catch {
-      continue; // file is new on this branch - nothing to compare against
-    }
-    const beforeCount = before.filter((l) => l.includes(EM)).length;
-    const nowCount = now.filter((l) => l.includes(EM)).length;
-    if (nowCount > beforeCount) {
-      const added = now.filter((l) => l.includes(EM));
-      offenders.push(
-        `${rel}: em dashes went from ${beforeCount} to ${nowCount}. Lines now carrying one:\n` +
-          added
-            .slice(0, 5)
-            .map((l) => `    ${l.trim().slice(0, 110)}`)
-            .join("\n"),
-      );
+      });
+      const skip = (l: string) => rel === "public/llms.txt" && l.startsWith("### ");
+      let added = 0;
+      let removed = 0;
+      let lines: string[] = [];
+      const flush = () => {
+        if (added > removed) {
+          offenders.push(
+            `${rel}: a hunk adds ${added - removed} em dash(es). Lines:\n` +
+              lines.map((l) => `    ${l.trim().slice(0, 110)}`).join("\n"),
+          );
+        }
+        added = 0;
+        removed = 0;
+        lines = [];
+      };
+      for (const line of diff.split("\n")) {
+        if (line.startsWith("@@")) flush();
+        else if (line.startsWith("+++") || line.startsWith("---")) continue;
+        else if (line.startsWith("+") && !skip(line.slice(1))) {
+          added += dashes(line);
+          if (dashes(line)) lines.push(line.slice(1));
+        } else if (line.startsWith("-") && !skip(line.slice(1))) removed += dashes(line);
+      }
+      flush();
     }
   }
   assert.deepEqual(
@@ -449,99 +499,108 @@ test("every career timeline carries the same entries", () => {
   //
   // So the entries are pinned per surface rather than "somewhere in the repo".
   // Adding a third timeline means adding it here, which is the point.
-  const SURFACES = ["src/i18n.ts", "src/about-i18n.ts"];
+  // The two surfaces: src/i18n.ts (homepage cards) and src/about-i18n.ts (/about).
   // Entries are pinned by exact period string, not by a bare "2019". The first
   // version of this test looked for "2019", which Pronto's "2018-2019" satisfies
   // anywhere in the file, so a wrong start year (2020-2025) passed in BOTH files.
   // Pinning the whole period is what makes date drift fail.
-  const REQUIRED: [string, string][] = [
-    ["Quadient", "the current role"],
-    ["Independent &amp; Contract Work|Independent & Contract Work", "the 2019-2025 stretch"],
-    ["May 2025-Present|May 2025 - Present|May 2025\u2013Present", "Quadient's start"],
-    ["2019-2025|2019 - 2025|2019\u20132025", "the 2019-2025 period"],
-    ["2018-2019|2018 - 2019|2018\u20132019", "Pronto"],
-    ["2016-2018|2016 - 2018|2016\u20132018", "Uber ATG"],
-    ["2009-2016|2009 - 2016|2009\u20132016", "Google / Waymo"],
+  //
+  // And pinned as company + period PAIRS read from the modules themselves. The
+  // second version checked only that each period string appeared somewhere in
+  // the file, so swapping the Quadient and Independent periods, or setting Uber
+  // to "2017 - 2018" (while "2016 - 2018" survived in prose), still passed.
+  const PAIRS: [keyof typeof translations.experience, string, string][] = [
+    ["jts", "Joe's Tech Solutions LLC", "2025-Present"],
+    ["quadient", "Quadient", "May 2025-Present"],
+    ["itAutomation", "Independent & Contract Work", "2019-2025"],
+    ["pronto", "Pronto.ai", "2018-2019"],
+    ["uberAtg", "Uber ATG (Otto)", "2016-2018"],
+    ["google", "Google Self-Driving Car Project (Waymo)", "2009-2016"],
   ];
+  // "2016 - 2018 · Autonomous Vehicles" and "2016\u20132018" both -> "2016-2018".
+  const period = (p: string) => p.split("\u00b7")[0].trim().replace(/\s*[-\u2013]\s*/g, "-");
   const missing: string[] = [];
-  for (const rel of SURFACES) {
-    const text = readFileSync(join(ROOT, rel), "utf8");
-    for (const [needle, what] of REQUIRED) {
-      const found = needle.split("|").some((n) => text.includes(n));
-      if (!found) missing.push(`${rel} is missing ${what} (${needle.split("|")[0]})`);
-    }
-    // Ordering, checked on the ENTRY MARKERS within the TIMELINE REGION only.
-    //
-    // Two earlier versions of this were wrong in opposite directions, and both are
-    // worth knowing about:
-    //   1. It looked for "2019-", "2018-" etc. Both files write periods with an en
-    //      dash ("2019\u20132025"), so every lookup missed, the list came back empty
-    //      and the loop never ran. A mutation that moved the 2019-2025 entry below
-    //      Pronto passed. A vacuous check is worse than none: it reads as coverage.
-    //   2. Marker positions were taken across the WHOLE FILE. "Pronto" and "Uber
-    //      ATG" also appear in the bio prose dozens of lines above the timeline, so
-    //      the real, correctly-ordered timeline reported as out of order.
-    // Slicing to the entries themselves avoids both failure modes.
-    // Ordering is checked only where order actually exists.
-    //
-    // NOT in src/i18n.ts by position: that file is a keyed object
-    // (experience.jts, experience.quadient, ...). Its file order carries no meaning
-    // and does not match what a visitor sees — the page order comes from the JSX in
-    // src/App.tsx. Asserting on the object's key order would test something nobody
-    // experiences. Three attempts at this check were wrong before this one:
-    //   1. year strings with a hyphen, which never matched (both files use en dashes)
-    //      so the loop never ran and any reordering passed;
-    //   2. marker positions across the whole file, where the company names also
-    //      appear in bio prose above the timeline, so the correct timeline failed;
-    //   3. assuming i18n.ts holds its entries in display order, which it does not.
-    // So: the timeline array for /about, and the render order in App.tsx for the
-    // main page. Those are the two places a reader can actually see a gap.
-    const ORDERS: [string, string[]][] = [
+  for (const [key, company, want] of PAIRS) {
+    const card = translations.experience[key] as { company?: string; period?: string };
+    if (card.company !== company) missing.push(`src/i18n.ts experience.${key}.company is "${card.company}", expected "${company}"`);
+    if (period(card.period ?? "") !== want) missing.push(`src/i18n.ts experience.${key} (${company}) period is "${card.period}", expected ${want}`);
+    const entry = aboutContent.timeline.find((e) => e.company === company);
+    if (!entry) missing.push(`src/about-i18n.ts timeline has no "${company}" entry`);
+    else if (period(entry.period) !== want) missing.push(`src/about-i18n.ts "${company}" period is "${entry.period}", expected ${want}`);
+  }
+  const extra = aboutContent.timeline.filter((e) => !PAIRS.some(([, c]) => c === e.company)).map((e) => e.company);
+  if (extra.length) missing.push(`src/about-i18n.ts timeline has entries this test does not pin: ${extra.join(", ")}`);
+  // Ordering, checked on the ENTRY MARKERS within the TIMELINE REGION only.
+  //
+  // Two earlier versions of this were wrong in opposite directions, and both are
+  // worth knowing about:
+  //   1. It looked for "2019-", "2018-" etc. Both files write periods with an en
+  //      dash ("2019\u20132025"), so every lookup missed, the list came back empty
+  //      and the loop never ran. A mutation that moved the 2019-2025 entry below
+  //      Pronto passed. A vacuous check is worse than none: it reads as coverage.
+  //   2. Marker positions were taken across the WHOLE FILE. "Pronto" and "Uber
+  //      ATG" also appear in the bio prose dozens of lines above the timeline, so
+  //      the real, correctly-ordered timeline reported as out of order.
+  // Slicing to the entries themselves avoids both failure modes.
+  // Ordering is checked only where order actually exists.
+  //
+  // NOT in src/i18n.ts by position: that file is a keyed object
+  // (experience.jts, experience.quadient, ...). Its file order carries no meaning
+  // and does not match what a visitor sees — the page order comes from the JSX in
+  // src/App.tsx. Asserting on the object's key order would test something nobody
+  // experiences. Three attempts at this check were wrong before this one:
+  //   1. year strings with a hyphen, which never matched (both files use en dashes)
+  //      so the loop never ran and any reordering passed;
+  //   2. marker positions across the whole file, where the company names also
+  //      appear in bio prose above the timeline, so the correct timeline failed;
+  //   3. assuming i18n.ts holds its entries in display order, which it does not.
+  // So: the timeline array for /about, and the render order in App.tsx for the
+  // main page. Those are the two places a reader can actually see a gap.
+  const ORDERS: [string, string[]][] = [
+    [
+      "src/about-i18n.ts",
+      // Anchor on the entry's `company:` field, not the bare name: the company
+      // names also occur in the bio prose above the timeline, which is what made
+      // the previous version fail on a correctly ordered file.
       [
-        "src/about-i18n.ts",
-        // Anchor on the entry's `company:` field, not the bare name: the company
-        // names also occur in the bio prose above the timeline, which is what made
-        // the previous version fail on a correctly ordered file.
-        [
-          "company: 'Quadient'",
-          "company: 'Independent & Contract Work'",
-          "company: 'Pronto.ai'",
-          "company: 'Uber ATG (Otto)'",
-          "company: 'Google Self-Driving Car Project (Waymo)'",
-        ],
+        "company: 'Quadient'",
+        "company: 'Independent & Contract Work'",
+        "company: 'Pronto.ai'",
+        "company: 'Uber ATG (Otto)'",
+        "company: 'Google Self-Driving Car Project (Waymo)'",
       ],
+    ],
+    [
+      "src/App.tsx",
       [
-        "src/App.tsx",
-        [
-          // The </h3> is part of the anchor on purpose: the same expression also
-          // appears in an <img alt=> attribute just above, so matching the bare
-          // expression finds the decorative image line and the check can be fooled
-          // into measuring a move that does not reorder anything a reader sees.
-          "t.experience.jts.company}</h3>",
-          "t.experience.quadient.company}</h3>",
-          "t.experience.itAutomation.company}</h3>",
-          "t.experience.pronto.company}</h3>",
-          "t.experience.uberAtg.company}</h3>",
-          "t.experience.google.company}</h3>",
-        ],
+        // The </h3> is part of the anchor on purpose: the same expression also
+        // appears in an <img alt=> attribute just above, so matching the bare
+        // expression finds the decorative image line and the check can be fooled
+        // into measuring a move that does not reorder anything a reader sees.
+        "t.experience.jts.company}</h3>",
+        "t.experience.quadient.company}</h3>",
+        "t.experience.itAutomation.company}</h3>",
+        "t.experience.pronto.company}</h3>",
+        "t.experience.uberAtg.company}</h3>",
+        "t.experience.google.company}</h3>",
       ],
-    ];
-    for (const [rel, anchors] of ORDERS) {
-      const body = readFileSync(join(ROOT, rel), "utf8");
-      let prev = -1;
-      let prevName = "";
-      for (const anchor of anchors) {
-        const i = body.indexOf(anchor);
-        if (i === -1) {
-          missing.push(`${rel} has no "${anchor}" — cannot verify order`);
-          break;
-        }
-        if (i < prev) {
-          missing.push(`${rel} lists "${anchor}" after "${prevName}" — timeline is not newest-first`);
-        }
-        prev = i;
-        prevName = anchor;
+    ],
+  ];
+  for (const [rel, anchors] of ORDERS) {
+    const body = readFileSync(join(ROOT, rel), "utf8");
+    let prev = -1;
+    let prevName = "";
+    for (const anchor of anchors) {
+      const i = body.indexOf(anchor);
+      if (i === -1) {
+        missing.push(`${rel} has no "${anchor}" — cannot verify order`);
+        break;
       }
+      if (i < prev) {
+        missing.push(`${rel} lists "${anchor}" after "${prevName}" — timeline is not newest-first`);
+      }
+      prev = i;
+      prevName = anchor;
     }
   }
   assert.deepEqual(missing, [], `career timelines disagree across surfaces:\n${missing.join("\n")}`);

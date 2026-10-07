@@ -229,8 +229,8 @@ export const articleRegistry: ArticleConfig[] = [
     type: 'case-study',
     ragReady: true,
     i18nFile: 'src/turnover-agent-i18n.ts',
-    ogImage: 'https://cloudyjoe.com/articles/turnover-agent/og-turnover-agent.webp',
-    heroImage: 'https://cloudyjoe.com/articles/turnover-agent/hero-turnover-agent.webp',
+    // og/hero images were never committed (they 404'd live); the share card
+    // falls back to the site card until real ones land in public/articles/turnover-agent/.
     component: () => import('../TurnoverAgent.tsx'),
     seoMeta: {
       datePublished: '2026-09-01',
@@ -238,7 +238,7 @@ export const articleRegistry: ArticleConfig[] = [
       keywords: ['LLM agent', 'tool calling agent', 'Telegram bot', 'operations agent', 'short-term rental automation', 'turnover management', 'iCal automation', 'Airbnb calendar sync', 'escalation automation', 'FastAPI', 'Supabase', 'self-healing infrastructure', 'LLM fallback chain', 'property management AI', 'client case study', 'AI agent for small business'],
       articleType: 'TechArticle',
       articleTags: 'LLM agent,Telegram,operations,short-term rentals,FastAPI,Supabase,watchdogs,client work',
-      images: ['https://cloudyjoe.com/articles/turnover-agent/og-turnover-agent.webp'],
+      images: ['https://cloudyjoe.com/og-joseph-blas.webp'],
       about: [
         { '@type': 'SoftwareApplication', name: 'FastAPI', url: 'https://fastapi.tiangolo.com', applicationCategory: 'Web Framework' },
         { '@type': 'SoftwareApplication', name: 'Supabase', url: 'https://supabase.com', applicationCategory: 'Database' },
@@ -284,8 +284,8 @@ export const articleRegistry: ArticleConfig[] = [
     type: 'case-study',
     ragReady: true,
     i18nFile: 'src/archive-beta-loop-i18n.ts',
-    ogImage: 'https://cloudyjoe.com/articles/archive-beta-loop/og-archive-beta-loop.webp',
-    heroImage: 'https://cloudyjoe.com/articles/archive-beta-loop/hero-archive-beta-loop.webp',
+    // og/hero images were never committed (they 404'd live); the share card
+    // falls back to the site card until real ones land in public/articles/archive-beta-loop/.
     component: () => import('../ArchiveBetaLoop.tsx'),
     seoMeta: {
       datePublished: '2026-09-01',
@@ -293,7 +293,7 @@ export const articleRegistry: ArticleConfig[] = [
       keywords: ['autonomous agent', 'agentic development loop', 'Claude Code', 'AI feedback loop', 'over-the-air updates', 'expo-updates', 'EAS', 'test-driven development', 'human in the loop', 'AI guardrails', 'prompt injection defense', 'self-healing infrastructure', 'beta feedback automation', 'agent pre-authorization', 'Telegram bot feedback', 'solo founder AI'],
       articleType: 'TechArticle',
       articleTags: 'autonomous agents,Claude Code,OTA updates,TDD,guardrails,human-in-the-loop,beta feedback',
-      images: ['https://cloudyjoe.com/articles/archive-beta-loop/og-archive-beta-loop.webp'],
+      images: ['https://cloudyjoe.com/og-joseph-blas.webp'],
       about: [
         { '@type': 'SoftwareApplication', name: 'Claude Code', url: 'https://claude.ai', applicationCategory: 'AI Agent' },
         { '@type': 'SoftwareApplication', name: 'Expo Application Services', url: 'https://expo.dev', applicationCategory: 'Mobile CI/CD' },
@@ -333,8 +333,8 @@ export const articleRegistry: ArticleConfig[] = [
     type: 'case-study',
     ragReady: true,
     i18nFile: 'src/cbarrgs-agent-i18n.ts',
-    ogImage: 'https://cloudyjoe.com/articles/cbarrgs-agent/og-cbarrgs-agent.webp',
-    heroImage: 'https://cloudyjoe.com/articles/cbarrgs-agent/hero-cbarrgs-agent.webp',
+    // og/hero images were never committed (they 404'd live); the share card
+    // falls back to the site card until real ones land in public/articles/cbarrgs-agent/.
     component: () => import('../CbarrgsAgent.tsx'),
     seoMeta: {
       datePublished: '2026-09-01',
@@ -342,7 +342,7 @@ export const articleRegistry: ArticleConfig[] = [
       keywords: ['AI agent for clients', 'Claude Code agent', 'Telegram bot agent', 'website maintenance automation', 'coding agent', 'AI agent operations', 'agent charter', 'artist website', 'musician website', 'systemd watchdog', 'tmux', 'Cloudflare Pages', 'agent guardrails', 'llms.txt', 'AI for small business'],
       articleType: 'TechArticle',
       articleTags: 'AI agents,client work,Claude Code,Telegram,tmux,systemd,Cloudflare Pages,guardrails',
-      images: ['https://cloudyjoe.com/articles/cbarrgs-agent/og-cbarrgs-agent.webp'],
+      images: ['https://cloudyjoe.com/og-joseph-blas.webp'],
       about: [
         { '@type': 'SoftwareApplication', name: 'Claude Code', url: 'https://claude.ai', applicationCategory: 'AI Agent' },
         { '@type': 'Thing', name: 'AI Agent Operations' },
@@ -385,8 +385,8 @@ export const articleRegistry: ArticleConfig[] = [
     type: 'case-study',
     ragReady: true,
     i18nFile: 'src/skate-workshop-loop-i18n.ts',
-    ogImage: 'https://cloudyjoe.com/articles/skate-workshop-loop/og-skate-workshop-loop.webp',
-    heroImage: 'https://cloudyjoe.com/articles/skate-workshop-loop/hero-loop-diagram.webp',
+    // og/hero images were never committed (they 404'd live); the share card
+    // falls back to the site card until real ones land in public/articles/skate-workshop-loop/.
     component: () => import('../SkateWorkshopLoop.tsx'),
     seoMeta: {
       datePublished: '2026-09-02',
@@ -394,7 +394,7 @@ export const articleRegistry: ArticleConfig[] = [
       keywords: ['agentic development loop', 'Claude Code', 'Slack bot', 'Supabase edge functions', 'GitHub Actions', 'OTA updates', 'Expo EAS Update', 'bug triage automation', 'webhook security', 'HMAC signature verification', 'human in the loop', 'React Native', 'TestFlight beta', 'agent ops', 'dead loop postmortem'],
       articleType: 'TechArticle',
       articleTags: 'agent loop,Claude Code,Slack,Supabase,edge functions,OTA,CI/CD,HITL',
-      images: ['https://cloudyjoe.com/articles/skate-workshop-loop/og-skate-workshop-loop.webp'],
+      images: ['https://cloudyjoe.com/og-joseph-blas.webp'],
       about: [
         { '@type': 'SoftwareApplication', name: 'Claude Code', url: 'https://claude.ai', applicationCategory: 'AI Agent' },
         { '@type': 'SoftwareApplication', name: 'Supabase', url: 'https://supabase.com', applicationCategory: 'Backend Platform' },
