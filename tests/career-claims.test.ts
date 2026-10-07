@@ -546,3 +546,51 @@ test("every career timeline carries the same entries", () => {
   }
   assert.deepEqual(missing, [], `career timelines disagree across surfaces:\n${missing.join("\n")}`);
 });
+
+test("copy accuracy: no overstated loop stat, uptime claim, or retired stack in the diagrams", () => {
+  // Three claims a reader could check and find false (CV-B, 2026-10-06):
+  //   - "a client text becomes a shipped fix, median 13.8 minutes". The metric is
+  //     report -> MERGED fix (archive-beta-loop-i18n.ts: "Median report -> merged
+  //     fix"), and the case study's own FAQ says it does not measure report to
+  //     on-her-phone. "Shipped" overstates it.
+  //   - "Uptime has been continuous since launch with zero outages, running on
+  //     Cloudflare's edge network". The site ran on Vercel until September 2026,
+  //     and commit 8a30099 records /api/chat returning 404 on Cloudflare.
+  //   - the architecture diagram narration "Results are reranked by Haiku". The
+  //     reranker is Voyage rerank-2.5 (api/_shared/rag.js); models.js says "On a
+  //     foreign endpoint there is no Haiku". Voice runs on Gemini Live, not OpenAI
+  //     Realtime.
+  //
+  // Scope differs from readAll() on purpose: evals/ is included, because the
+  // quality dataset carried the "shipped fix" line as a model answer to imitate,
+  // and public/chatbot/ holds the diagram pages. Tracked files only.
+  // The last two entries are scoped to the diagram pages: elsewhere "Haiku
+  // reranking" and "OpenAI Realtime" appear as dated history (the chatbot build
+  // timeline's March entries) and in the ops price table, which are separate
+  // questions from what the diagram says runs now.
+  const DIAGRAMS = "/public/chatbot/";
+  const BANNED: [RegExp, string, string?][] = [
+    [/shipped fix,? (?:in )?(?:a )?median/i, "the 13.8-minute median is report to MERGED fix"],
+    [/zero outages/i, "the site moved from Vercel in September 2026 and had a recorded /api outage"],
+    [/re-?ranked (?:by|with) Haiku|reordenan con Haiku/i, "the reranker is Voyage rerank-2.5"],
+    [/Haiku re-?rank/i, "the reranker is Voyage rerank-2.5", DIAGRAMS],
+    [/OpenAI Realtime/i, "voice runs on Gemini Live", DIAGRAMS],
+  ];
+  const t = tracked();
+  const dirs = ["src", "evals", join("public", "chatbot")];
+  const files = dirs.flatMap((d) => walk(join(ROOT, d))).filter((f) => t.size === 0 || t.has(f));
+  assert.ok(files.length > 0, "no files scanned: the guard would pass vacuously");
+  const offenders: string[] = [];
+  for (const f of files) {
+    const text = flat(readFileSync(f, "utf8"));
+    for (const [re, why, only] of BANNED) {
+      if (only && !f.includes(only)) continue;
+      const m = text.match(re);
+      if (m && m.index !== undefined) {
+        const i = Math.max(0, m.index - 40);
+        offenders.push(`${f.replace(ROOT, "")}: ...${text.slice(i, i + 120)}... (${why})`);
+      }
+    }
+  }
+  assert.deepEqual(offenders, [], "inaccurate copy still present:\n" + offenders.join("\n"));
+});

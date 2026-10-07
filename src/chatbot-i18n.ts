@@ -336,7 +336,7 @@ Production
         items: [
           {
             q: 'Is this production-grade or just a demo?',
-            a: 'It is real production, not a demo. The chatbot has been active since January 26, 2026, serving daily organic traffic from portfolio visitors, recruiters, and hiring managers. Every conversation is traced in Langfuse with full observability: input tokens, output tokens, latency per span, cost breakdown, and quality scores. A CI gate running 71 automated tests blocks any deployment where a single test fails — the same quality bar you would expect from a production SaaS service. The 6-layer security defense catches real jailbreak attempts, with email alerts firing within seconds of detection. Uptime has been continuous since launch with zero outages, running on Cloudflare\'s edge network. You can verify this right now by opening the chat widget on this page.',
+            a: 'It is real production, not a demo. The chatbot has been active since January 26, 2026, serving daily organic traffic from portfolio visitors, recruiters, and hiring managers. Every conversation is traced in Langfuse with full observability: input tokens, output tokens, latency per span, cost breakdown, and quality scores. A CI gate running 71 automated tests blocks any deployment where a single test fails — the same quality bar you would expect from a production SaaS service. The 6-layer security defense catches real jailbreak attempts, with email alerts firing within seconds of detection. It was hosted on Vercel from launch and moved to Cloudflare Pages in September 2026. You can verify this right now by opening the chat widget on this page.',
           },
           {
             q: 'How much did it cost to build?',
