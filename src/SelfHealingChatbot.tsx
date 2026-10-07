@@ -520,7 +520,7 @@ export default function SelfHealingChatbot() {
           ctaHref="https://linkedin.com/in/joseph-blas"
           external
           secondaryLabel={t.cta.labelSecondary}
-          secondaryHref="mailto:hola@cloudyjoe.com"
+          secondaryHref="mailto:blasj408@gmail.com"
         />
       </article>
 
