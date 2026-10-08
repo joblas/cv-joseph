@@ -201,9 +201,9 @@ const _translationsEn = {
       },
       {
         title: 'The Skate Workshop',
-        badge: 'Live · TestFlight',
+        badge: 'TestFlight beta · paused',
         badgeBuilding: '',
-        desc: 'Full-stack React Native mobile app for Olympic-level skateboarding coach Willy Santos. 19-table Supabase backend, live push notifications, 4,900+ trick-obstacle training combinations, 175 automated tests. Live on iOS via TestFlight; Android builds rolling.',
+        desc: 'Full-stack React Native mobile app for Olympic-level skateboarding coach Willy Santos. 19-table Supabase backend, live push notifications, 140 tricks and 4,952 trick-and-obstacle combinations, 175 automated tests. TestFlight beta on iOS, development paused; not submitted to the App Store or Google Play.',
         tech: ['React Native', 'TypeScript', 'Supabase', 'Expo'],
         link: 'theskateworkshop.app',
       },
@@ -285,7 +285,7 @@ const _translationsEn = {
         'Private AI on the client\'s own hardware — Ollama, Open WebUI, local automation; no data leaves their setup',
         'Ship production web and mobile apps: React, Next.js, React Native, TypeScript, Supabase',
         'Created Whisper Walkie — open source push-to-talk voice typing tool (100% local processing)',
-        'Built The Skate Workshop — React Native app for Olympic coach Willy Santos (19-table Supabase backend, push notifications, live on iOS via TestFlight, Android builds rolling)',
+        'Built The Skate Workshop — React Native app for Olympic coach Willy Santos (19-table Supabase backend, push notifications; TestFlight beta on iOS, development paused)',
         'Cloud Infrastructure — Terraform multicloud (AWS/GCP), Kubernetes, Anthos/GKE',
       ],
       trustedBy: {
@@ -365,7 +365,7 @@ const _translationsEn = {
         items: [
           {
             icon: 'smartphone',
-            text: 'The Skate Workshop: React Native app on a 19-table Supabase backend (live on iOS via TestFlight, Android rolling)',
+            text: 'The Skate Workshop: React Native app on a 19-table Supabase backend (TestFlight beta on iOS, development paused)',
           },
           {
             icon: 'image',
@@ -388,8 +388,8 @@ const _translationsEn = {
       },
       gpts: {
         title: 'Skate Workshop',
-        desc: 'React Native app — 19-table backend, push notifications, 4,900+ trick combos',
-        metric: 'Live · TestFlight',
+        desc: 'React Native app — 19-table backend, push notifications, 4,952 trick combos',
+        metric: 'TestFlight beta',
         caseStudyUrl: '',
       },
       reservas: {
