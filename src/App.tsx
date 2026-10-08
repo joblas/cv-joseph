@@ -1482,7 +1482,7 @@ function App() {
                 {hydrated && <span className="inline-block w-[3px] h-[0.85em] bg-primary ml-1 rounded-sm translate-y-[2px]" style={{ animation: 'blink 1s step-end infinite' }} />}
               </h1>
               <p className="text-lg md:text-xl text-muted-foreground mb-4">
-                {t.greeting} <BeamPill>self-healing</BeamPill> {t.role}
+                {t.greeting} <BeamPill>field-tested</BeamPill> {t.role}
               </p>
 
               <div className="flex flex-wrap justify-center md:justify-start gap-3">
