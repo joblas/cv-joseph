@@ -195,7 +195,7 @@ const _translationsEn = {
         badgeBuilding: '',
         desc: 'AI operations system I run as CTO. Executive skills, VPs, 40+ scheduled automations, Ollama Cloud models pinned per job. Built on Nous Research\'s open-source Hermes agent. Migrated from OpenClaw in 2026.',
         tech: ['Hermes', 'Ollama Cloud', 'Multi-Agent', 'Model Routing', 'Skills', 'MemPalace'],
-        link: 'https://github.com/NousResearch/hermes-agent',
+        link: 'github.com/NousResearch/hermes-agent',
         caseStudyUrl: '/hermes',
         caseStudyLabel: 'Case Study: OpenClaw → Hermes Migration',
       },
@@ -229,7 +229,7 @@ const _translationsEn = {
         badgeBuilding: '',
         desc: 'Push-to-talk voice typing tool with 100% local processing. No data sent to the cloud.',
         tech: ['Python', 'Whisper', 'Local Processing'],
-        link: 'github.com/joblas/whisper-walkie',
+        link: 'github.com/joestechsolutions/whisper-walkie',
       },
       {
         title: 'Cloud Infrastructure',
@@ -402,7 +402,7 @@ const _translationsEn = {
         title: 'Whisper Walkie',
         desc: 'Push-to-talk voice typing tool — 100% local Whisper processing, zero cloud dependency',
         metric: 'Open src',
-        caseStudyUrl: 'https://github.com/joblas/whisper-walkie',
+        caseStudyUrl: 'https://github.com/joestechsolutions/whisper-walkie',
       },
       genAI: {
         title: 'Cloud Infra',

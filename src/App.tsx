@@ -2908,21 +2908,29 @@ function App() {
                   const isAlt = group % 2 === 1
                   return (
                   <AnimatedSection key={i} delay={0.1 + i * 0.05}>
-                    <a
-                      href={cert.url}
-                      target="_blank"
-                      rel="noopener noreferrer nofollow"
-                      className={`flex items-center gap-4 p-4 hover:border-accent/30 transition-colors duration-200 group cursor-pointer ${isAlt ? 'bg-muted/40' : 'bg-card'}`}
-                    >
-                      <span className="text-sm font-mono text-accent font-medium">{cert.year}</span>
-                      <div className="flex-1">
-                        <p className="font-medium group-hover:text-accent transition-colors">{cert.title}</p>
-                        <p className="text-sm text-muted-foreground">{cert.org}</p>
-                      </div>
-                      <div className="opacity-60 group-hover:opacity-100 transition-opacity">
-                        <CertLogo logo={cert.logo} />
-                      </div>
-                    </a>
+                    {(() => {
+                      // No verified certificate URL -> plain row, not a dead link (href="" reloads the page).
+                      const rowClass = `flex items-center gap-4 p-4 transition-colors duration-200 group ${isAlt ? 'bg-muted/40' : 'bg-card'}`
+                      const body = (
+                        <>
+                          <span className="text-sm font-mono text-accent font-medium">{cert.year}</span>
+                          <div className="flex-1">
+                            <p className="font-medium group-hover:text-accent transition-colors">{cert.title}</p>
+                            <p className="text-sm text-muted-foreground">{cert.org}</p>
+                          </div>
+                          <div className="opacity-60 group-hover:opacity-100 transition-opacity">
+                            <CertLogo logo={cert.logo} />
+                          </div>
+                        </>
+                      )
+                      return cert.url ? (
+                        <a href={cert.url} target="_blank" rel="noopener noreferrer nofollow" className={`${rowClass} hover:border-accent/30 cursor-pointer`}>
+                          {body}
+                        </a>
+                      ) : (
+                        <div className={rowClass}>{body}</div>
+                      )
+                    })()}
                   </AnimatedSection>
                   )
                 })}
