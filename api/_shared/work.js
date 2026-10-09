@@ -451,7 +451,7 @@ export const WORK_ITEMS = [
     name: 'Whisper Walkie (local dictation)',
     kind: 'open source',
     verdict: 'INCLUDE_WITH_CARE',
-    line: "Whisper Walkie is Joe's open-source (MIT) push-to-talk dictation app for Windows, macOS and Linux. It transcribes speech locally with OpenAI's open Whisper models through the faster-whisper library. Released in March 2026, it is now feature-frozen, in maintenance mode.",
+    line: "Whisper Walkie is Joe's open-source (MIT) push-to-talk dictation app for Windows, macOS and Linux. It transcribes speech locally with OpenAI's open Whisper models through the faster-whisper library. Released in March 2026, it is no longer actively developed.",
     short: "Whisper Walkie is Joe's open-source push-to-talk dictation app; it transcribes locally with OpenAI's open Whisper models through faster-whisper.",
     avoid: ['any download count or popularity', 'that nothing leaves the machine in his other products'],
     pages: { jts: '/whisper-walkie' },

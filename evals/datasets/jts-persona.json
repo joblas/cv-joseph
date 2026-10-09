@@ -259,7 +259,7 @@
             "Cbarrgs",
             "FixBot",
             "Turnover Agent",
-            "Archive"
+            "Salon Formula App"
           ]
         },
         {
@@ -280,7 +280,7 @@
         },
         {
           "type": "llm_judge",
-          "criteria": "The response names at least two of Joe's shipped projects (The Skate Workshop, RenFaire Directory, Cbarrgs Music and its Shopify merch store, FixBot, Turnover Agent, Archive Salon) with one concrete detail each. Merely pointing at /portfolio without naming projects is a FAILURE. Claiming there are no examples, or that the site does not cover Joe's work, is a FAILURE. Inventing a project that is not on Joe's work list (the projects above, Whisper Walkie, the Prompt Library, the Private AI Setup offer and the remote Hermes agent install) is a FAILURE."
+          "criteria": "The response names at least two of Joe's shipped projects (The Skate Workshop, RenFaire Directory, Cbarrgs Music and its Shopify merch store, FixBot, Turnover Agent, Salon Formula App) with one concrete detail each. Merely pointing at /portfolio without naming projects is a FAILURE. Claiming there are no examples, or that the site does not cover Joe's work, is a FAILURE. Inventing a project that is not on Joe's work list (the projects above, Whisper Walkie, the Prompt Library, the Private AI Setup offer and the remote Hermes agent install) is a FAILURE."
         }
       ]
     },
@@ -298,7 +298,7 @@
             "Cbarrgs",
             "FixBot",
             "Turnover Agent",
-            "Archive"
+            "Salon Formula App"
           ]
         },
         {
@@ -319,7 +319,7 @@
         },
         {
           "type": "llm_judge",
-          "criteria": "The response names at least two of Joe's shipped projects (The Skate Workshop, RenFaire Directory, Cbarrgs Music and its Shopify merch store, FixBot, Turnover Agent, Archive Salon) with one concrete detail each. Merely pointing at /portfolio without naming projects is a FAILURE. Claiming there are no examples, or that the site does not cover Joe's work, is a FAILURE. Inventing a project that is not on Joe's work list (the projects above, Whisper Walkie, the Prompt Library, the Private AI Setup offer and the remote Hermes agent install) is a FAILURE."
+          "criteria": "The response names at least two of Joe's shipped projects (The Skate Workshop, RenFaire Directory, Cbarrgs Music and its Shopify merch store, FixBot, Turnover Agent, Salon Formula App) with one concrete detail each. Merely pointing at /portfolio without naming projects is a FAILURE. Claiming there are no examples, or that the site does not cover Joe's work, is a FAILURE. Inventing a project that is not on Joe's work list (the projects above, Whisper Walkie, the Prompt Library, the Private AI Setup offer and the remote Hermes agent install) is a FAILURE."
         }
       ]
     },
@@ -351,7 +351,7 @@
             "Cbarrgs",
             "FixBot",
             "Turnover Agent",
-            "Archive"
+            "Salon Formula App"
           ]
         },
         {
@@ -372,7 +372,7 @@
         },
         {
           "type": "llm_judge",
-          "criteria": "The response names at least two of Joe's shipped projects (The Skate Workshop, RenFaire Directory, Cbarrgs Music and its Shopify merch store, FixBot, Turnover Agent, Archive Salon) with one concrete detail each. Merely pointing at /portfolio without naming projects is a FAILURE. Claiming there are no examples, or that the site does not cover Joe's work, is a FAILURE. Inventing a project that is not on Joe's work list (the projects above, Whisper Walkie, the Prompt Library, the Private AI Setup offer and the remote Hermes agent install) is a FAILURE."
+          "criteria": "The response names at least two of Joe's shipped projects (The Skate Workshop, RenFaire Directory, Cbarrgs Music and its Shopify merch store, FixBot, Turnover Agent, Salon Formula App) with one concrete detail each. Merely pointing at /portfolio without naming projects is a FAILURE. Claiming there are no examples, or that the site does not cover Joe's work, is a FAILURE. Inventing a project that is not on Joe's work list (the projects above, Whisper Walkie, the Prompt Library, the Private AI Setup offer and the remote Hermes agent install) is a FAILURE."
         }
       ]
     },

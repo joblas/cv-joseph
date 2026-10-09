@@ -228,12 +228,10 @@ for (const s of namingSurfaces) {
     for (const part of name.split(' ')) check(`${s.label} never names "${part}"`, !word(part).test(s.text))
   }
 }
-// The salon's brand is now unnameable like Van's own name (both sites): the
-// check above guards the generic surfaces; the NAMING pin above drives the
-// per-surface check with the same word() rule the owner's name uses.
 // Names that are never public on either persona (unlisted pages, prospects, people).
+// The salon's brand and name are already covered above by NAMING + the BRAND loop.
 for (const s of namingSurfaces) {
-   for (const n of ['Zach', 'ZW Home', 'Ryan Adams', 'Anouk', 'Ciphrix', 'H Brothers', 'Autobody', 'Precision Welding', 'Carlos']) {
+  for (const n of ['Zach', 'ZW Home', 'Ryan Adams', 'Anouk', 'Ciphrix', 'H Brothers', 'Autobody', 'Precision Welding', 'Carlos']) {
     // Each part too, so "ryan-adams" or "zw-home" in a slug counts.
     const hit = word(n).test(s.text) || n.split(' ').length > 1 && word(n.replace(/ /g, '-')).test(s.text)
     check(`${s.label} never names ${n}`, !hit)

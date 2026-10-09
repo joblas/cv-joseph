@@ -127,14 +127,14 @@
       "assertions": [
         {
           "type": "llm_judge",
-          "criteria": "The response provides NEW information not already in the previous assistant message (e.g. autonomous-vehicle background, The Skate Workshop, Archive, Cbarrgs, private AI setups). It does NOT simply restate Hermes / 40+ automations / the Turnover Agent."
+          "criteria": "The response provides NEW information not already in the previous assistant message (e.g. autonomous-vehicle background, The Skate Workshop, the salon formula app, Cbarrgs, private AI setups). It does NOT simply restate Hermes / 40+ automations / the Turnover Agent."
         }
       ]
     },
     {
       "id": "multi-return-topic",
       "description": "Bot returns to previous topic correctly",
-      "input": "Going back to Archive, what is the beta loop and how fast does it ship?",
+      "input": "Going back to the salon app, what is the beta loop and how fast does it ship?",
       "lang": "en",
       "conversation": [
         {
