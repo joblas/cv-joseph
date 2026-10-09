@@ -25,7 +25,7 @@ import {
   ToolList,
   Timeline,
 } from './articles/content-types'
-import { archiveBetaLoopContent } from './archive-beta-loop-i18n'
+import { salonBetaLoopContent } from './salon-beta-loop-i18n'
 
 // ---------------------------------------------------------------------------
 // Stack icons
@@ -46,7 +46,7 @@ const stackIcons: Record<string, React.ReactNode> = {
 // buildJsonLd
 // ---------------------------------------------------------------------------
 function buildJsonLd() {
-  const t = archiveBetaLoopContent
+  const t = salonBetaLoopContent
   return buildArticleJsonLd({
     url: `https://cloudyjoe.com/${t.slug}`,
     headline: t.header.h1,
@@ -60,7 +60,7 @@ function buildJsonLd() {
       'human in the loop', 'AI guardrails', 'prompt injection defense', 'self-healing infrastructure',
       'beta feedback automation', 'agent pre-authorization',
     ],
-    images: ['https://cloudyjoe.com/articles/archive-beta-loop/og-archive-beta-loop.webp'],
+    images: ['https://cloudyjoe.com/articles/salon-beta-loop/og-salon-beta-loop.webp'],
     breadcrumbHome: t.nav.breadcrumbHome,
     breadcrumbCurrent: t.nav.breadcrumbCurrent,
     faq: t.faq.items,
@@ -78,14 +78,14 @@ function buildJsonLd() {
 // ===========================================================================
 // MAIN COMPONENT
 // ===========================================================================
-export default function ArchiveBetaLoop() {
-  const t = archiveBetaLoopContent
+export default function SalonBetaLoop() {
+  const t = salonBetaLoopContent
 
   useArticleSeo({
     slug: t.slug,
     title: t.seo.title,
     description: t.seo.description,
-    image: 'https://cloudyjoe.com/articles/archive-beta-loop/og-archive-beta-loop.webp',
+    image: 'https://cloudyjoe.com/articles/salon-beta-loop/og-salon-beta-loop.webp',
     publishedTime: '2026-09-01',
     modifiedTime: '2026-09-01',
     articleTags: 'autonomous agents,Claude Code,OTA updates,TDD,guardrails,human-in-the-loop,beta feedback',
@@ -107,8 +107,8 @@ export default function ArchiveBetaLoop() {
       />
 
       <img
-        src="/articles/archive-beta-loop/hero-archive-beta-loop.webp"
-        alt={'The Archive beta loop: a Telegram message from the client on the left, the merged pull request and over-the-air update it produced on the right'}
+        src="/articles/salon-beta-loop/hero-salon-beta-loop.webp"
+        alt={'The salon beta loop: a Telegram message from the client on the left, the merged pull request and over-the-air update it produced on the right'}
         className="w-full rounded-2xl mb-8"
         width={1400}
         height={875}
@@ -147,8 +147,8 @@ export default function ArchiveBetaLoop() {
         }))} />
 
         <DiagramZoom
-          src="/articles/archive-beta-loop/loop-architecture.webp"
-          hdSrc="/articles/archive-beta-loop/loop-architecture.webp"
+          src="/articles/salon-beta-loop/loop-architecture.webp"
+          hdSrc="/articles/salon-beta-loop/loop-architecture.webp"
           alt={'Architecture diagram: Telegram bot to always-on Claude Code session to labeled GitHub issue, splitting into a test-first OTA fix path and a needs-joe pull request path'}
           caption={'The loop end to end: her message becomes an issue, then either a shipped fix or a PR waiting on me'}
           width={1400} height={800}
@@ -182,8 +182,8 @@ export default function ArchiveBetaLoop() {
         <Prose>{s.numbers.detail}</Prose>
 
         <DiagramZoom
-          src="/articles/archive-beta-loop/ota-timeline.webp"
-          hdSrc="/articles/archive-beta-loop/ota-timeline.webp"
+          src="/articles/salon-beta-loop/ota-timeline.webp"
+          hdSrc="/articles/salon-beta-loop/ota-timeline.webp"
           alt={'The production update channel: one store binary followed by ten over-the-air update groups, each labeled with the feedback issues it closed'}
           caption={'One binary, ten over-the-air updates — each group message names the issues it closed'}
           width={1400} height={800}
@@ -279,7 +279,7 @@ export default function ArchiveBetaLoop() {
         />
       </article>
 
-      <ArticleFooter editorId="article-footer" utmCampaign="archive-beta-loop" />
+      <ArticleFooter editorId="article-footer" utmCampaign="salon-beta-loop" />
     </ArticleLayout>
   )
 }

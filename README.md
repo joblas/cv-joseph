@@ -277,7 +277,7 @@ chatbot-prompt.txt           # System prompt (fallback, prod uses Langfuse)
 | Self-Healing Chatbot | `/self-healing-chatbot` | case-study |
 | Career-Ops | `/career-ops-system` | case-study |
 | The Turnover Agent | `/turnover-agent` | case-study |
-| The Archive Beta Loop | `/archive-beta-loop` | case-study |
+| The Salon Beta Loop | `/salon-beta-loop` | case-study |
 | The Cbarrgs Agent | `/cbarrgs-agent` | case-study |
 | The Skate Workshop Loop | `/skate-workshop-loop` | case-study |
 

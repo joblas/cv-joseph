@@ -25,7 +25,7 @@ const ARTICLE_KEYWORDS: Record<string, string[]> = {
   'career-ops':           ['career', 'open-source', 'fork', 'job search', 'resume'],
   'hermes':               ['hermes', 'openclaw', 'lurkr', 'agents', 'migration', 'delegation', 'ollama'],
   'turnover-agent':       ['turnover', 'telegram', 'airbnb', 'vrbo', 'ical', 'cleaner', 'property manager', 'rental'],
-  'archive-beta-loop':    ['archive', 'salon', 'beta', 'inventory', 'expo', 'ota', 'texts'],
+  'salon-beta-loop':      ['salon', 'beta', 'inventory', 'expo', 'ota', 'texts', 'formulas', 'colorist'],
   'cbarrgs-agent':        ['cbarrgs', 'musician', 'artist', 'website', 'coding agent'],
   'skate-workshop-loop':  ['skate', 'willy', 'coach', 'testflight', 'react native', 'tricks'],
 }

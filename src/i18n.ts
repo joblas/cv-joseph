@@ -330,9 +330,9 @@ const _translationsEn = {
         footer: 'Case Study: OpenClaw → Hermes Migration',
       },
       archive: {
-        title: 'Archive — Mobile App',
+        title: 'Salon Formula App — Mobile',
         badge: 'iOS · Android · In Beta',
-        desc: 'Luxury-editorial hair-color formula capture app for a real salon. Expo Router + Supabase, shipping to iOS and Android.',
+        desc: 'A hair-color formula app for a salon. Expo Router + Supabase, shipping to iOS and Android.',
         items: [
           {
             icon: 'smartphone',
@@ -356,7 +356,7 @@ const _translationsEn = {
           },
         ],
         soldWith: 'Case Study: Client Texts Become Shipped Features',
-        caseStudyUrl: '/archive-beta-loop',
+        caseStudyUrl: '/salon-beta-loop',
       },
       webSeo: {
         title: 'Production Applications',

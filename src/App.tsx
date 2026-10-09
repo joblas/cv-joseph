@@ -1708,7 +1708,7 @@ function App() {
               <div className="h-full p-6 rounded-2xl bg-gradient-to-br from-primary/10 to-accent/10 border border-primary/20 hover:border-primary/40 transition-colors duration-200 group flex flex-col">
                 <div className="flex items-start justify-between mb-4">
                   <div className="w-12 h-12 rounded-xl overflow-hidden bg-white flex items-center justify-center shrink-0">
-                    <img src="/archive/archive-icon.png" alt="Archive" className="w-full h-full object-contain" width={48} height={48} loading="lazy" decoding="async" />
+                    <img src="/salon-app/salon-app-icon.png" alt="Salon formula app thumbnail" className="w-full h-full object-contain" width={48} height={48} loading="lazy" decoding="async" />
                   </div>
                   <span className="badge px-3 py-1 bg-primary/10 text-primary">{t.experience.jts.archive.badge}</span>
                 </div>

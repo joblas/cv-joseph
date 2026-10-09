@@ -62,11 +62,11 @@ function run(build: (dist: string) => void): { status: number | null; sections: 
 
 test("a broken internal link and a missing og:image file are errors, and /privacy must exist", () => {
   const { status, sections } = run((dist) => {
-    mkdirSync(join(dist, "archive-beta-loop"), { recursive: true });
+    mkdirSync(join(dist, "salon-beta-loop"), { recursive: true });
     writeFileSync(
-      join(dist, "archive-beta-loop", "index.html"),
-      page("archive-beta-loop", "https://cloudyjoe.com/articles/archive-beta-loop/og-missing.webp", [
-        "/articles/archive-beta-loop", // the planted 404
+      join(dist, "salon-beta-loop", "index.html"),
+      page("salon-beta-loop", "https://cloudyjoe.com/articles/salon-beta-loop/og-missing.webp", [
+        "/articles/salon-beta-loop", // the planted 404
         "/privacy", // not skipped any more, and absent here
         "/hermes", // exists below: must NOT be flagged
       ]),
@@ -76,12 +76,12 @@ test("a broken internal link and a missing og:image file are errors, and /privac
     writeFileSync(join(dist, "og-present.webp"), "x");
   });
 
-  const abl = sections.get("archive-beta-loop") ?? [];
-  assert.ok(abl.includes("ERR  Broken internal link: /articles/archive-beta-loop"), abl.join("\n"));
+  const abl = sections.get("salon-beta-loop") ?? [];
+  assert.ok(abl.includes("ERR  Broken internal link: /articles/salon-beta-loop"), abl.join("\n"));
   assert.ok(abl.includes("ERR  Broken internal link: /privacy"), abl.join("\n"));
   assert.ok(
     abl.includes(
-      "ERR  og:image file missing: dist/articles/archive-beta-loop/og-missing.webp (from https://cloudyjoe.com/articles/archive-beta-loop/og-missing.webp)",
+      "ERR  og:image file missing: dist/articles/salon-beta-loop/og-missing.webp (from https://cloudyjoe.com/articles/salon-beta-loop/og-missing.webp)",
     ),
     abl.join("\n"),
   );

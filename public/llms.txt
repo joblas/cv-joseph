@@ -86,7 +86,7 @@ AI operations system Joe runs for his own business, with models pinned per job o
 - Operate Hermes (Nous Research's open-source agent runtime — Lurkr as CTO, C-suite skills, VPs, 40+ scheduled automations on Ollama Cloud) handling real business operations
 - Previously: ran a 22-agent specialized setup on the open-source OpenClaw runtime (2024–2026), then migrated to Hermes
 - Client offerings at joestechsolutions.com: An agent of your own, Private AI on hardware you own (a 75-minute setup session; no per-query API fees; only on a local install does nothing leave the machine), Get a tool built
-- Three active client builds: a short-term-rental turnover agent (live), the artist Cbarrgs's website, Shopify merch store and site agent (live), and the Archive salon's formula and inventory app (TestFlight beta)
+- Three active client builds: a short-term-rental turnover agent (live), the artist Cbarrgs's website, Shopify merch store and site agent (live), and a hair-color formula app for a salon (TestFlight beta)
 - Ship web apps to production and mobile apps to TestFlight beta: React, Next.js, React Native, TypeScript, Supabase
 - Created Whisper Walkie: open-source push-to-talk voice typing that transcribes locally with OpenAI's open Whisper models via faster-whisper
 - Published the JTS Prompt Library: 33 prompts across ops, sales, content, coding, and research (free PDF at joestechsolutions.com/prompt-library)
@@ -189,7 +189,7 @@ Interactive CV with AI chatbot, Gemini Live voice mode, RAG pipeline, and multi-
 ### The Turnover Agent
 Case study: a Telegram-first LLM ops agent for a short-term-rental manager: iCal checkout detection, cleaner messaging (Telegram-first), escalation ladders and watchdogs. In production since late July 2026.
 
-### The Archive Beta Loop
+### The Salon Beta Loop
 Case study: my client's Telegram messages become shipped app features through an always-on Claude Code loop — with written guardrails on exactly what ships without me. As of the 2026-09-01 write-up: 20 issues, 13 merged PRs, 10 OTA updates, a 13.8-minute median from message to merged fix.
 
 ### Cbarrgs: website, Shopify merch store and site agent
