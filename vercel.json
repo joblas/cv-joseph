@@ -172,7 +172,12 @@
     },
     {
       "source": "/archive-beta-loop",
-      "destination": "/archive-beta-loop/index.html"
+      "destination": "/salon-beta-loop",
+      "permanent": true
+    },
+    {
+      "source": "/salon-beta-loop",
+      "destination": "/salon-beta-loop/index.html"
     },
     {
       "source": "/cbarrgs-agent",

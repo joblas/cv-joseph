@@ -242,7 +242,7 @@ for (const id of PERSONAS) {
 // article's related links and registry entry (its fate is Joe's call) and the
 // "Cloud Infrastructure" card (out of scope, Joe's call).
 const COPY_FILES = ['chatbot-prompt.txt', 'jts-prompt.txt', 'public/llms.txt', 'api/_shared/personas.js', 'api/voice-token.js',
-  'src/turnover-agent-i18n.ts', 'src/archive-beta-loop-i18n.ts', 'src/cbarrgs-agent-i18n.ts', 'src/skate-workshop-loop-i18n.ts',
+  'src/turnover-agent-i18n.ts', 'src/salon-beta-loop-i18n.ts', 'src/cbarrgs-agent-i18n.ts', 'src/skate-workshop-loop-i18n.ts',
   'src/openclaw-i18n.ts', 'src/career-ops-i18n.ts', 'src/about-i18n.ts', 'src/articles/registry.ts']
 const KEPT_BY_DECISION = ['Self-Healing Chatbot', 'Cloud Infrastructure']
 for (const rel of COPY_FILES) {
@@ -376,7 +376,7 @@ const stripAvoid = (text: string) => work.WORK_ITEMS.reduce((t: string, item: an
 // TurnoverAgent.tsx) is scanned for its own claim only.
 const RAW_FILES = [
   'chatbot-prompt.txt', 'jts-prompt.txt', 'public/llms.txt', 'api/_shared/personas.js',
-  'src/turnover-agent-i18n.ts', 'src/archive-beta-loop-i18n.ts', 'src/cbarrgs-agent-i18n.ts',
+  'src/turnover-agent-i18n.ts', 'src/salon-beta-loop-i18n.ts', 'src/cbarrgs-agent-i18n.ts',
   'src/skate-workshop-loop-i18n.ts', 'src/openclaw-i18n.ts', 'src/career-ops-i18n.ts', 'src/about-i18n.ts',
 ]
 for (const rel of ['src/articles/registry.ts', 'src/TurnoverAgent.tsx']) {

@@ -31,7 +31,7 @@ import { chatbotContent } from '../src/chatbot-i18n.ts';
 import { careerOpsContent } from '../src/career-ops-i18n.ts';
 import { openclawContent } from '../src/openclaw-i18n.ts';
 import { turnoverAgentContent } from '../src/turnover-agent-i18n.ts';
-import { archiveBetaLoopContent } from '../src/archive-beta-loop-i18n.ts';
+import { salonBetaLoopContent } from '../src/salon-beta-loop-i18n.ts';
 import { cbarrgsAgentContent } from '../src/cbarrgs-agent-i18n.ts';
 import { skateWorkshopLoopContent } from '../src/skate-workshop-loop-i18n.ts';
 
@@ -41,7 +41,7 @@ const i18nMap: Record<string, { header: { h1: string }; nav: { breadcrumbHome: s
   'career-ops': careerOpsContent,
   'hermes': openclawContent,
   'turnover-agent': turnoverAgentContent,
-  'archive-beta-loop': archiveBetaLoopContent,
+  'salon-beta-loop': salonBetaLoopContent,
   'cbarrgs-agent': cbarrgsAgentContent,
   'skate-workshop-loop': skateWorkshopLoopContent,
 };

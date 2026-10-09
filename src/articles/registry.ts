@@ -261,11 +261,11 @@ export const articleRegistry: ArticleConfig[] = [
     },
   },
   {
-    id: 'archive-beta-loop',
-    slug: 'archive-beta-loop',
-    title: 'Archive Beta Loop',
+    id: 'salon-beta-loop',
+    slug: 'salon-beta-loop',
+    title: 'Salon Beta Loop',
     seo: {
-      title: 'The Archive Beta Loop: Client Texts Become Shipped Features',
+      title: 'The Salon Beta Loop: Client Texts Become Shipped Features',
       description: 'Case study: an agent loop turns a client\'s Telegram messages into shipped app features. As of Sep 1, 2026: 20 issues, 13 PRs, median fix under 14 minutes.',
     },
     sectionLabels: {
@@ -283,10 +283,10 @@ export const articleRegistry: ArticleConfig[] = [
     },
     type: 'case-study',
     ragReady: true,
-    i18nFile: 'src/archive-beta-loop-i18n.ts',
+    i18nFile: 'src/salon-beta-loop-i18n.ts',
     // og/hero images were never committed (they 404'd live); the share card
-    // falls back to the site card until real ones land in public/articles/archive-beta-loop/.
-    component: () => import('../ArchiveBetaLoop.tsx'),
+    // falls back to the site card until real ones land in public/articles/salon-beta-loop/.
+    component: () => import('../SalonBetaLoop.tsx'),
     seoMeta: {
       datePublished: '2026-09-01',
       dateModified: '2026-09-01',
