@@ -143,6 +143,11 @@
       "source": "/joblas-portfolio-founder",
       "destination": "/",
       "permanent": false
+    },
+    {
+      "source": "/archive-beta-loop",
+      "destination": "/salon-beta-loop",
+      "permanent": true
     }
   ],
   "rewrites": [
@@ -169,11 +174,6 @@
     {
       "source": "/turnover-agent",
       "destination": "/turnover-agent/index.html"
-    },
-    {
-      "source": "/archive-beta-loop",
-      "destination": "/salon-beta-loop",
-      "permanent": true
     },
     {
       "source": "/salon-beta-loop",
