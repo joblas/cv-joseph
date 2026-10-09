@@ -51,8 +51,10 @@ export const PERSONA_IDS = ['cloudyjoe', 'jts']
 export const CLIENT_NAMING = {
   // Named on both sites (joestechsolutions.com/portfolio/cbarrgs, cloudyjoe.com/cbarrgs-agent/).
   Cbarrgs: { cloudyjoe: true, jts: true },
-  // The salon's name is on joestechsolutions.com/portfolio/archive-salon and cloudyjoe.com/archive-beta-loop/.
-  Archive: { cloudyjoe: true, jts: true },
+  // Neither site names the salon's brand any more: the case study is
+  // /portfolio/salon-formula-app on joestechsolutions.com and
+  // /salon-beta-loop on cloudyjoe.com, both described without it.
+  Archive: { cloudyjoe: false, jts: false },
   // On the cloudyjoe.com homepage card; JTS keeps him anonymous.
   'Willy Santos': { cloudyjoe: true, jts: false },
   // First names appear in cloudyjoe articles only. Whether they are happy to be
@@ -208,16 +210,16 @@ export const WORK_ITEMS = [
     },
   },
   {
-    id: 'archive-salon-app',
-    name: { cloudyjoe: 'Archive salon app (hair-color formulas and inventory)', jts: 'Archive Salon (hair-color formula and inventory app)' },
+    id: 'salon-formula-app',
+    name: { cloudyjoe: 'Salon formula app (hair-color formulas and inventory)', jts: 'Salon Formula App (hair-color formula and inventory app)' },
     kind: 'client work',
     verdict: 'INCLUDE_WITH_CARE',
-    line: 'Joe built a hair-color formula and inventory app for one salon, Archive. The colorist records each formula (ratio, developer, grams and a photo of the bowl on the scale) and scans products in and out by barcode. It is designed to capture a formula in under 30 seconds. An Expo / React Native + Supabase iOS app, in TestFlight beta with the salon owner and not submitted to the App Store; JavaScript fixes ship over the air.',
-    short: 'For Archive, a hair-color salon, Joe built a formula and inventory app: each color formula with a photo of the bowl, and products scanned in and out by barcode. It is in TestFlight beta with the owner, not on the App Store.',
+    line: 'Joe built a hair-color formula and inventory app for one salon. The colorist records each formula (ratio, developer, grams and a photo of the bowl on the scale) and scans products in and out by barcode. It is designed to capture a formula in under 30 seconds. An Expo / React Native + Supabase iOS app, in TestFlight beta with the salon owner and not submitted to the App Store; JavaScript fixes ship over the air.',
+    short: 'Joe built a formula and inventory app for a hair-color salon: each color formula with a photo of the bowl, and products scanned in and out by barcode. It is in TestFlight beta with the owner, not on the App Store.',
     avoid: ['on the App Store', 'iOS and Android', 'real formulas captured daily', 'salon management app', 'any usage or adoption number'],
-    pages: { cloudyjoe: '/archive-beta-loop', jts: '/portfolio/archive-salon' },
+    pages: { cloudyjoe: '/salon-beta-loop', jts: '/portfolio/salon-formula-app' },
     urls: [],
-    article: 'archive-beta-loop',
+    article: 'salon-beta-loop',
     asked: ['Has Joe built an app for a salon or a beauty business?', 'Can he build an inventory app with barcode scanning?'],
     voiceAvoid: ['on the App Store'],
     expand: {
@@ -228,20 +230,20 @@ export const WORK_ITEMS = [
         /\b(?:salons?|hair ?(?:salons?|stylists?|colou?r\w*|dressers?|studios?)|hairdressers?|barbershops?|beauty (?:salons?|shops?|studios?|business\w*|brands?|industry)|colou?r formulas?|barcodes?)\b/i,
         near('stylists?|colou?rists?|barbers?', 'apps?|software|tools?|inventory|formulas?|bookings?|clients?|business\\w*|shops?|built|build\\w*'),
       ),
-      terms: ['Archive', 'salon', 'formula'],
+      terms: ['salon', 'formula', 'colorist', 'hair color'],
     },
   },
   {
-    id: 'archive-beta-loop',
-    name: 'Archive beta-feedback loop',
+    id: 'salon-beta-loop',
+    name: 'Salon beta-feedback loop',
     kind: 'client work',
     verdict: 'INCLUDE_WITH_CARE',
     line: "For the salon app Joe built a feedback loop: the owner texts a Telegram bot, an AI coding session on Joe's own machine turns each message into a GitHub issue, and clear-cut bugs get a reviewed fix that ships over the air; features go through pull requests Joe merges. The 2026-09-01 write-up counted 20 feedback issues, 13 merged beta pull requests, 10 over-the-air updates and a median of 13.8 minutes from message to merged fix. It runs on Joe's machine and has had outages (a reboot in August 2026 lost about four days of messages).",
     short: "For the salon app, the owner texts a Telegram bot and an AI coding session on Joe's machine turns each message into an issue; clear-cut bugs get a reviewed fix shipped over the air.",
     avoid: ['0 lost messages', "on the client's server", 'a developer on call 24/7'],
-    pages: { cloudyjoe: '/archive-beta-loop', jts: '/portfolio/archive-salon' },
+    pages: { cloudyjoe: '/salon-beta-loop', jts: '/portfolio/salon-formula-app' },
     urls: [],
-    article: 'archive-beta-loop',
+    article: 'salon-beta-loop',
     asked: ['How do client bug reports become fixes?', 'Can a client text in a bug and get it fixed?'],
   },
   {
@@ -449,7 +451,7 @@ export const WORK_ITEMS = [
     name: 'Whisper Walkie (local dictation)',
     kind: 'open source',
     verdict: 'INCLUDE_WITH_CARE',
-    line: "Whisper Walkie is Joe's open-source (MIT) push-to-talk dictation app for Windows, macOS and Linux. It transcribes speech locally with OpenAI's open Whisper models through the faster-whisper library. Released in March 2026, it is now maintained as an archive.",
+    line: "Whisper Walkie is Joe's open-source (MIT) push-to-talk dictation app for Windows, macOS and Linux. It transcribes speech locally with OpenAI's open Whisper models through the faster-whisper library. Released in March 2026, it is now feature-frozen, in maintenance mode.",
     short: "Whisper Walkie is Joe's open-source push-to-talk dictation app; it transcribes locally with OpenAI's open Whisper models through faster-whisper.",
     avoid: ['any download count or popularity', 'that nothing leaves the machine in his other products'],
     pages: { jts: '/whisper-walkie' },

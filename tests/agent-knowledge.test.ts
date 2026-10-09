@@ -99,8 +99,8 @@ const SPEC: Record<string, Frag | Record<PersonaId, Frag>> = {
   'cbarrgs-site-agent': 'Telegram line to an AI coding agent',
   'cbarrgs-news-worker': 'Cloudflare Worker',
   'turnover-agent': 'Turnover Agent',
-  'archive-salon-app': { cloudyjoe: ['Archive salon app', 'TestFlight beta'], jts: ['Archive Salon', 'TestFlight beta'] },
-  'archive-beta-loop': 'Archive beta-feedback loop',
+  'salon-formula-app': { cloudyjoe: ['Salon formula app', 'TestFlight beta'], jts: ['Salon Formula App', 'TestFlight beta'] },
+  'salon-beta-loop': 'Salon beta-feedback loop',
   'skate-workshop-app': ['The Skate Workshop', 'TestFlight beta', 'paused'],
   'skate-workshop-loop': 'Skate Workshop agent dev loop',
   'skate-workshop-site': 'theskateworkshop.app',
@@ -152,7 +152,7 @@ for (const item of work.WORK_ITEMS) {
 const VOICE_GUARDS: Record<string, string[]> = {
   'turnover-agent': ['Twilio'],
   'cbarrgs-site': ['Next.js'],
-  'archive-salon-app': ['on the App Store'],
+  'salon-formula-app': ['on the App Store'],
   'skate-workshop-app': ['live on the App Store', 'Olympic coach'],
   'openclaw-migration': ['that Joe built OpenClaw', 'zero downtime'],
   'hermes-back-office': ['that Joe wrote the Hermes runtime'],
@@ -178,7 +178,7 @@ for (const c of consumers.filter((x) => x.mode === 'voice')) {
 // work.js is a visible test change, not a silent one.
 const NAMING: Record<string, Record<PersonaId, boolean>> = {
   Cbarrgs: { cloudyjoe: true, jts: true },
-  Archive: { cloudyjoe: true, jts: true },
+  Archive: { cloudyjoe: false, jts: false },
   'Willy Santos': { cloudyjoe: true, jts: false },
   Nick: { cloudyjoe: false, jts: false },
   Van: { cloudyjoe: false, jts: false },
@@ -210,15 +210,30 @@ const namingSurfaces: { id: PersonaId; label: string; text: string }[] = [
   }),
   { id: 'cloudyjoe', label: 'cloudyjoe fact cards', text: factCardChunks().map((c: any) => c.content).join('\n') },
 ]
+// Salon surfaces: the brand word never appears as a bare capitalized name on
+// any surface, and no surface carries the old site paths (the names left both
+// sites; the naming pin above covers them like the owner's name, this loop is
+// the belt-and-braces pass over exactly what the model is handed).
+const BRAND = /(?<![A-Za-z])(?:the\s+)?Archive(?:['’]?s)?(?![A-Za-z])/
+const OLD_PATHS = /(?<![A-Za-z])archive-(?:beta-loop|salon)(?![A-Za-z])/i
+for (const s of namingSurfaces) {
+  const brandHit = s.text.match(BRAND)
+  const pathHit = s.text.match(OLD_PATHS)
+  check(`${s.label} never carries the bare salon brand${brandHit ? ` (found "${brandHit[0]}")` : ''}`, !brandHit)
+  check(`${s.label} never carries the old salon page path${pathHit ? ` (found "${pathHit[0]}")` : ''}`, !pathHit)
+}
 for (const s of namingSurfaces) {
   for (const [name, on] of Object.entries(NAMING)) {
     if (on[s.id]) continue
     for (const part of name.split(' ')) check(`${s.label} never names "${part}"`, !word(part).test(s.text))
   }
 }
+// The salon's brand is now unnameable like Van's own name (both sites): the
+// check above guards the generic surfaces; the NAMING pin above drives the
+// per-surface check with the same word() rule the owner's name uses.
 // Names that are never public on either persona (unlisted pages, prospects, people).
 for (const s of namingSurfaces) {
-  for (const n of ['Zach', 'ZW Home', 'Ryan Adams', 'Anouk', 'Ciphrix', 'H Brothers', 'Autobody', 'Precision Welding', 'Carlos']) {
+   for (const n of ['Zach', 'ZW Home', 'Ryan Adams', 'Anouk', 'Ciphrix', 'H Brothers', 'Autobody', 'Precision Welding', 'Carlos']) {
     // Each part too, so "ryan-adams" or "zw-home" in a slug counts.
     const hit = word(n).test(s.text) || n.split(' ').length > 1 && word(n.replace(/ /g, '-')).test(s.text)
     check(`${s.label} never names ${n}`, !hit)
@@ -341,7 +356,7 @@ const BANNED: [RegExp, string][] = [
   [/\d+(?:\.\d+)?k monthly (?:spotify )?listeners|monthly spotify listeners/i, 'the Spotify listener figure'],
   [/android builds rolling|live on ios|olympic-level|olympic (?:skateboarding )?coach\b|400\+ trick|multiplayer sessions|19-table/i, 'Skate Workshop overclaims (TestFlight beta only, no Android release, 140 tricks)'],
   [/on the client'?s own server|cleaning[- ]operations company|cleaning company|booking and support lane|\b0 lost messages/i, 'FixBot overclaims'],
-  [/under thirty seconds,? (?:with )?zero typing|real formulas captured daily|salon management app/i, 'Archive overclaims'],
+  [/under thirty seconds,? (?:with )?zero typing|real formulas captured daily|salon management app/i, 'salon app overclaims'],
   [/unattended for weeks/i, '"unattended for weeks" (the loops run on Joe\'s machine and have had outages)'],
   [/\b(?:available|live|out|launched|released)\s+(?:now\s+)?(?:on|in)\s+(?:the\s+)?(?:app store|play store|google play)/i, 'a store release (every mobile app is TestFlight beta only, never submitted)'],
   [/no data leaving|data never leaves|no data ever leaving|never leaves (?:your|their) (?:hardware|servers?)/i, 'unscoped "no data leaving" for Private AI (only a local install keeps everything on the machine; the server and managed options do not)'],
@@ -713,8 +728,8 @@ const MUST_MAP: [string, string][] = [
   ['vacation rental turnovers', 'cleaner'],
   ['Airbnb cleaning automation', 'turnover'],
   ['VRBO turnovers', 'cleaner'],
-  ['has he built anything for a hair salon', 'Archive'],
-  ['an inventory app for colorists', 'Archive'],
+  ['has he built anything for a hair salon', 'formula'],
+  ['an inventory app for colorists', 'salon'],
   ['a coaching app for skaters', 'athlete'],
   ['an app where athletes upload clips for their coach', 'skate'],
   // Only the explicit Shopify trigger matches these two.
@@ -772,9 +787,9 @@ const LEAVE_ALONE: [string, string][] = [
   ['sensor bands', 'cbarrgs-site'],
   ['Tell me about his work with sensor bands and calibration', 'cbarrgs-site'],
   ['a band of sensors he built for calibration', 'cbarrgs-site'],
-  ['the beauty of composable agents', 'archive-salon-app'],
-  ['Is Joe a stylist?', 'archive-salon-app'],
-  ['Is Joe a colorist?', 'archive-salon-app'],
+  ['the beauty of composable agents', 'salon-formula-app'],
+  ['Is Joe a stylist?', 'salon-formula-app'],
+  ['Is Joe a colorist?', 'salon-formula-app'],
   ['Has Joe worked on sticker detection for perception?', 'cbarrgs-shop'],
   ['Did Joe do T-shirt cannons at Google?', 'cbarrgs-shop'],
 ]
