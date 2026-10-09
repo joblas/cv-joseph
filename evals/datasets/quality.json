@@ -55,11 +55,11 @@
       "lang": "en",
       "conversation": [
         { "role": "user", "content": "What is your experience with AI?" },
-        { "role": "assistant", "content": "I've been building with AI in production for years. I built Archive, a luxury-editorial hair-color formula app for a real salon client, running Expo Router on the front with Supabase behind it and an over-the-air beta loop that takes a client text to a merged fix in a median 13.8 minutes. I also operate Hermes, a multi-agent AI operations system, and built The Skate Workshop for an Olympic skateboarding coach. Now with this portfolio I apply real LLMOps: Langfuse, automated evals, prompt caching. Want me to dig deeper into a specific project?" },
+        { "role": "assistant", "content": "I've been building with AI in production for years. I built a luxury-editorial hair-color formula app for a real salon client, running Expo Router on the front with Supabase behind it and an over-the-air beta loop that takes a client text to a merged fix in a median 13.8 minutes. I also operate Hermes, a multi-agent AI operations system, and built The Skate Workshop for an Olympic skateboarding coach. Now with this portfolio I apply real LLMOps: Langfuse, automated evals, prompt caching. Want me to dig deeper into a specific project?" },
         { "role": "user", "content": "What is your experience with AI?" }
       ],
       "assertions": [
-        { "type": "llm_judge", "criteria": "The response provides new information or a different angle on AI experience, not repeating exactly the same points (Archive, the beta loop, Hermes) from the previous response included in the conversation context" }
+        { "type": "llm_judge", "criteria": "The response provides new information or a different angle on AI experience, not repeating exactly the same points (the salon formula app, the beta loop, Hermes) from the previous response included in the conversation context" }
       ]
     },
     {

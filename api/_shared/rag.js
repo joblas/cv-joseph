@@ -262,7 +262,7 @@ export function boostNamedPages(query, docs) {
 // The case studies joestechsolutions.com actually publishes (src/app/portfolio).
 // Keep in step with that page: a name that drifts silently stops retrieving, and
 // a name that was never there teaches the agent to cite work that does not exist.
-export const JTS_CASE_STUDIES = ['The Skate Workshop', 'RenFaire Directory', 'Cbarrgs Music', 'FixBot', 'Turnover Agent', 'Archive Salon']
+export const JTS_CASE_STUDIES = ['The Skate Workshop', 'RenFaire Directory', 'Cbarrgs Music', 'FixBot', 'Turnover Agent', 'Salon Formula App']
 
 // What a visitor says when they want to SEE Joe's past output. Every alternative
 // here needs a possessive, a retrospective, or an explicit "show me" — never a
@@ -680,7 +680,7 @@ export const ARTICLE_KEYWORDS = {
   'career-ops':           ['career-ops', 'career ops'],
   'hermes':               ['hermes', 'openclaw', 'lurkr'],
   'turnover-agent':       ['turnover', 'nick', 'airbnb', 'vrbo', 'short-term rental', 'short-term-rental', 'property manager'],
-  'archive-beta-loop':    ['archive', 'salon', 'van '],
+  'salon-beta-loop':      ['salon', 'formula', 'colorist'],
   'cbarrgs-agent':        ['cbarrgs', 'musician', 'merch', 'shopify'],
   'skate-workshop-loop':  ['skate', 'willy'],
 }
@@ -690,7 +690,7 @@ export const ARTICLE_DETECT_KEYWORDS = {
   'career-ops':           ['career-ops', 'career ops'],
   'hermes':               ['hermes migration', 'openclaw', 'lurkr', '22-agent', '22 agents'],
   'turnover-agent':       ['turnover agent', 'turnover-agent'],
-  'archive-beta-loop':    ['archive beta', 'archive-beta', 'archive salon', 'archive loop'],
+  'salon-beta-loop':      ['salon beta', 'salon-beta', 'salon app', 'salon loop', 'formula app'],
   'cbarrgs-agent':        ['cbarrgs'],
   'skate-workshop-loop':  ['skate workshop', 'skate-workshop', 'willy santos'],
 }
@@ -716,7 +716,7 @@ export const ARTICLE_ROUTES = {
   'career-ops':           { page_path_es: '/career-ops-system', page_path_en: '/career-ops-system' },
   'hermes':               { page_path_es: '/hermes', page_path_en: '/hermes' },
   'turnover-agent':       { page_path_es: '/turnover-agent', page_path_en: '/turnover-agent' },
-  'archive-beta-loop':    { page_path_es: '/archive-beta-loop', page_path_en: '/archive-beta-loop' },
+  'salon-beta-loop':      { page_path_es: '/salon-beta-loop', page_path_en: '/salon-beta-loop' },
   'cbarrgs-agent':        { page_path_es: '/cbarrgs-agent', page_path_en: '/cbarrgs-agent' },
   'skate-workshop-loop':  { page_path_es: '/skate-workshop-loop', page_path_en: '/skate-workshop-loop' },
 }
