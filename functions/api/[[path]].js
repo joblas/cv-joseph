@@ -34,6 +34,7 @@ const mods = {
   'voice-token': () => import('../api-src/voice-token.js'),
   'voice-trace': () => import('../api-src/voice-trace.js'),
   'voice-live': () => import('../api-src/voice-live.js'),
+  'cron/evaluate': () => import('../api-src/cron/evaluate.js'),
 }
 
 const PERSONA_ROUTES = new Set(['chat', 'rag-search', 'voice-token', 'voice-trace', 'voice-live'])

@@ -1,0 +1,16 @@
+name = "cloudyjoe-cron"
+main = "src/index.js"
+compatibility_date = "2026-09-10"
+
+# Same UTC schedule the retired Vercel cron had (vercel.json before the
+# Cloudflare migration): daily 08:00 UTC.
+[triggers]
+crons = ["0 8 * * *"]
+
+# Joe sets CRON_URL (plain var) and CRON_SECRET (secret) on this Worker.
+# Names only here — no values live in git.
+[vars]
+# CRON_URL = "...set in the Cloudflare dashboard..."
+
+[observability]
+enabled = true
