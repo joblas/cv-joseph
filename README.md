@@ -2,9 +2,9 @@
 
 **[:gb: English](#the-problem)**
 
-> Interactive portfolio with AI chatbot (text + voice), agentic RAG, 71 automated evals, LLMOps dashboard, and 6-layer prompt injection defense
+> Interactive portfolio with AI chatbot (text + voice), agentic RAG, 78 automated eval cases, LLMOps dashboard, and 6-layer prompt injection defense
 
-[![Live Demo](https://img.shields.io/badge/demo-cv--joseph.vercel.app-blue?style=flat-square)](https://cv-joseph-60zq8m380-joes-tech-solutions.vercel.app/)
+[![Live Site](https://img.shields.io/badge/live-cloudyjoe.com-blue?style=flat-square)](https://cloudyjoe.com/)
 [![Built with Claude Code](https://img.shields.io/badge/built%20with-Claude%20Code-blueviolet?style=flat-square)](https://claude.ai/code)
 
 ---
@@ -15,14 +15,14 @@ Static CVs don't show what you can actually build. A PDF lists skills — it doe
 
 ## The Solution
 
-A production-grade interactive portfolio that **demonstrates the skills it describes**: dual-mode AI chatbot (text + voice) with agentic RAG, full LLMOps observability with custom dashboard, 71 automated evals as CI gate, prompt versioning, and a closed-loop that generates tests from production failures.
+A production-grade interactive portfolio that **demonstrates the skills it describes**: dual-mode AI chatbot (text + voice) with agentic RAG, full LLMOps observability with custom dashboard, 78 automated eval cases (run on demand), prompt versioning, and a closed-loop that generates tests from production failures.
 
 **Key Features:**
 - **AI Chatbot "Cloudy-Joe Agent"** — Text (Anthropic-compatible Messages API — Claude by default, currently glm-5.3-flash on Ollama Cloud via `ANTHROPIC_BASE_URL`) + Voice (real-time speech on Gemini Live when `GEMINI_API_KEY` is set; OpenAI Realtime as the legacy alternative). Presents itself as Joe's AI agent (never as Joe), speaks about him in third person as Joseph. Agentic RAG with hybrid search (pgvector + BM25) and Haiku reranking
 - **6-Layer Defense** — Keyword detection, canary tokens, fingerprinting, anti-extraction, online safety scoring, adversarial red team. Real-time jailbreak email alerts
-- **71 Automated Evals** — 10 categories: factual accuracy, persona, boundaries, quality, safety, language, RAG quality, multi-turn, source badges, voice quality. CI gate on every push
+- **78 Automated Eval Cases** — 11 datasets: factual accuracy, persona, JTS persona, boundaries, quality, safety, language, RAG quality, multi-turn, source badges, voice quality. Run by hand (`workflow_dispatch` in `.github/workflows/evals.yml`); the on-push CI gate is switched off to save API credits
 - **LLMOps Dashboard** — Private `/ops` with 8 tabs: Overview, Conversations, Costs, RAG, Security, Evals, Voice, System. Real data from Langfuse + Supabase
-- **Closed Loop** — Trace → online scoring → quality < 0.7 → auto-generate test → CI gate blocks deploy
+- **Closed Loop** — Trace → online scoring → quality < 0.7 → auto-generate test → added to the eval suite
 - **Voice Mode** — Gemini Live API (OpenAI Realtime as the legacy alternative), audio-to-audio, shared RAG pipeline, ~$0.25/session
 - **8 Published Articles** — case studies with JSON-LD, prerendered HTML, cross-linked RAG, and interactive architecture diagrams
 - **Interactive Architecture Diagram** — GSAP-animated SVG with narrated audio, pan/zoom, dark mode sync. [Explore it →](https://cloudyjoe.com/self-healing-chatbot#architecture)
@@ -40,7 +40,7 @@ A production-grade interactive portfolio that **demonstrates the skills it descr
 ![OpenAI](https://img.shields.io/badge/OpenAI_Realtime-412991?style=flat&logo=openai&logoColor=white)
 ![Langfuse](https://img.shields.io/badge/Langfuse-000000?style=flat&logoColor=white)
 ![Supabase](https://img.shields.io/badge/Supabase-3FCF8E?style=flat&logo=supabase&logoColor=white)
-![Vercel](https://img.shields.io/badge/Vercel_Edge-000000?style=flat&logo=vercel&logoColor=white)
+![Cloudflare](https://img.shields.io/badge/Cloudflare_Pages-F38020?style=flat&logo=cloudflare&logoColor=white)
 ![Recharts](https://img.shields.io/badge/Recharts-FF6384?style=flat&logoColor=white)
 
 ---
@@ -113,20 +113,21 @@ Private, password-protected dashboard with 8 tabs showing real production data:
 
 ## Evals & Testing
 
-71 automated tests across 10 categories. ~70% deterministic (contains, regex, word count), ~30% LLM-as-Judge (FAST_MODEL — Haiku by default, `EVAL_JUDGE_MODEL` to override).
+78 automated test cases across 11 datasets. ~70% deterministic (contains, regex, word count), ~30% LLM-as-Judge (FAST_MODEL — Haiku by default, `EVAL_JUDGE_MODEL` to override).
 
-| Category | Tests | Type |
-|----------|-------|------|
-| factual_accuracy | 9 | Deterministic |
-| persona_adherence | 4 | Deterministic |
-| boundary_testing | 7 | Deterministic |
-| response_quality | 7 | Mixed |
-| safety_jailbreak | 7 | Deterministic |
-| language_handling | 5 | Deterministic |
-| rag_quality | 16 | Mixed |
-| multi_turn | 5 | Mixed |
-| source_badges | 5 | Deterministic |
-| voice_quality | 6 | Mixed |
+| Dataset (`evals/datasets/`) | Cases |
+|----------|-------|
+| factual.json | 10 |
+| persona.json | 4 |
+| jts-persona.json | 16 |
+| boundaries.json | 7 |
+| quality.json | 7 |
+| safety.json | 7 |
+| languages.json | 3 |
+| rag.json | 7 |
+| multi-turn.json | 5 |
+| source-badges.json | 5 |
+| voice.json | 7 |
 
 ---
 
@@ -137,7 +138,7 @@ All scripts live in `scripts/` and run via `npm run`:
 ### Chatbot Operations
 | Command | Script | Description |
 |---------|--------|-------------|
-| `npm run evals` | `evals/runner.ts` | Run 71 automated evals |
+| `npm run evals` | `evals/runner.ts` | Run the 78 automated eval cases |
 | `npm run adversarial` | `scripts/adversarial-test.ts` | Red team: 20+ auto-generated attacks |
 | `npm run chats` | `scripts/chats.ts` | View last 50 conversations from Langfuse |
 | `npm run chats -- --full` | `scripts/chats.ts` | Full conversations with messages |
@@ -253,7 +254,7 @@ api/
     └── rag-stats.js         # RAG document stats
 
 evals/
-├── datasets/                # 10 JSON datasets (71 test cases)
+├── datasets/                # 11 JSON datasets (78 test cases)
 ├── assertions.ts            # Deterministic assertions
 ├── llm-judge.ts             # LLM-as-Judge (Haiku by default; EVAL_JUDGE_MODEL)
 └── runner.ts                # Eval runner
@@ -302,6 +303,6 @@ MIT
 
 ## Let's Connect
 
-[![Website](https://img.shields.io/badge/cv--joseph.vercel.app-000?style=for-the-badge&logo=safari&logoColor=white)](https://cloudyjoe.com)
+[![Website](https://img.shields.io/badge/cloudyjoe.com-000?style=for-the-badge&logo=safari&logoColor=white)](https://cloudyjoe.com)
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](https://linkedin.com/in/joseph-blas)
 [![Email](https://img.shields.io/badge/Email-EA4335?style=for-the-badge&logo=gmail&logoColor=white)](mailto:blasj408@gmail.com)
