@@ -161,7 +161,7 @@ Interactive CV with AI chatbot, Gemini Live voice mode, RAG pipeline, and multi-
 - University of Michigan: Programming for Everybody (Python)
 - Johns Hopkins: The Unix Workbench (Linux)
 - IBM: Agile Development & Scrum, Cloud Computing
-- Cloud Bootcamps: AWS, Azure, GCP (59 hrs each)
+- The Cloud Bootcamp: AWS, Azure, GCP bootcamps (2023)
 
 ## Soft Skills
 

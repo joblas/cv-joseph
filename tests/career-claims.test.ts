@@ -653,3 +653,53 @@ test("copy accuracy: no overstated loop stat, uptime claim, or retired stack in 
   }
   assert.deepEqual(offenders, [], "inaccurate copy still present:\n" + offenders.join("\n"));
 });
+
+test("certificates carry the years and issuers printed on the certificates", () => {
+  // Source: the certificate PDFs and Joe's verified inventory, checked 2026-11-22.
+  // The cards dated certificates issued from 2019 to 2023 as 2024 and 2025, and
+  // named "Cloud Academy" as the issuer of bootcamps run by The Cloud Bootcamp.
+  // A resume that links here states the real years, so the two disagreed.
+  //
+  // "Programming for Everybody (Python)" is not pinned: no certificate is on file
+  // for it, so its year is unverified either way.
+  const YEARS: [string, string][] = [
+    ["AWS Cloud Solutions Architect Professional Certificate", "2023"],
+    ["Google IT Support Professional Certificate", "2022"],
+    ["Google Cybersecurity Professional Certificate", "2023"],
+    ["Programming with JavaScript", "2022"],
+    ["Version Control (Git)", "2022"],
+    ["Introduction to Mobile Development", "2022"],
+    ["The Unix Workbench (Linux)", "2019"],
+    ["Introduction to Agile Development and Scrum", "2023"],
+    ["Introduction to Cloud Computing", "2023"],
+    ["Cloud Bootcamp: AWS (59 hrs)", "2023"],
+    ["Cloud Bootcamp: Azure", "2023"],
+  ];
+  const cards = translations.certifications.items as { title: string; year: string; org: string }[];
+  const wrong: string[] = [];
+  for (const [title, year] of YEARS) {
+    const card = cards.find((c) => c.title === title);
+    if (!card) wrong.push(`src/i18n.ts has no certificate titled "${title}"`);
+    else if (card.year !== year) wrong.push(`src/i18n.ts "${title}" is dated ${card.year}, the certificate says ${year}`);
+  }
+  // The AWS program is a Coursera certificate, not the AWS Certified exam. An
+  // issuer of plain "Amazon Web Services" reads as the exam credential.
+  const aws = cards.find((c) => c.title.startsWith("AWS Cloud Solutions Architect"));
+  if (aws && !/Coursera/.test(aws.org)) wrong.push(`src/i18n.ts AWS certificate issuer is "${aws.org}", it must name Coursera`);
+
+  // The /about structured data listed ten credentials with verification links
+  // (Airtable, Make, Anthropic's Skilljar courses). They arrived with the template
+  // in commit 7d55317 and belong to its author, not to Joe.
+  const BANNED: [RegExp, string][] = [
+    [/Cloud Academy/i, "the bootcamps were run by The Cloud Bootcamp"],
+    [/verify\.skilljar\.com/i, "a credential link inherited from the template author"],
+    [/Airtable (?:Builder|Admin) Certification|AI App Builder Certification|Make Academy/i, "a credential inherited from the template author"],
+  ];
+  for (const { file, text } of readAll()) {
+    for (const [re, why] of BANNED) {
+      const m = text.match(re);
+      if (m) wrong.push(`${file}: "${m[0]}" (${why})`);
+    }
+  }
+  assert.deepEqual(wrong, [], "certificate claims that do not match the certificates:\n" + wrong.join("\n"));
+});
