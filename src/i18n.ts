@@ -415,7 +415,7 @@ const _translationsEn = {
       company: 'Quadient',
       location: 'San Diego North County, CA',
       role: 'Field Service Technician',
-      period: 'May 2025 - Present · Field Service',
+      period: 'May 2026 - Present · Field Service',
       desc: [
         'Install, maintain, and repair mailing and shipping systems, including postage meters and folder inserters, at customer sites across a North County territory.',
         'Diagnose electro-mechanical and software faults on site and document each service call and resolution.',
@@ -429,7 +429,7 @@ const _translationsEn = {
       period: '2019 - 2025 · IT / Automation',
       desc: [
         'IT, Linux, cloud, automation, and full-stack product work, including APIs, databases, and deployment tooling.',
-        'Contract field service at OvationCXM (2023 - 2025): deployed and configured customer systems, and troubleshot complex technical issues at enterprise sites.',
+        'Contract field service at OvationCXM (Dec 2023 - May 2026): deployed and configured customer systems, and troubleshot complex technical issues at enterprise sites.',
         "Kept hands on the hardware side throughout, which is what made the move into AI systems a continuation rather than a restart.",
       ],
     },

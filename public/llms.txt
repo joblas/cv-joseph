@@ -92,17 +92,17 @@ AI operations system Joe runs for his own business, with models pinned per job o
 - Published the JTS Prompt Library: 33 prompts across ops, sales, content, coding, and research (free PDF at joestechsolutions.com/prompt-library)
 - Built The Skate Workshop: React Native app for a skate coach of Olympians (push notifications; TestFlight beta only, development paused)
 
-### Quadient (May 2025 - Present) — Field Service Technician
+### Quadient (May 2026 - Present) — Field Service Technician
 - Install, maintain, and repair mailing and shipping systems, including postage meters and folder inserters, at customer sites across a North County territory
 - Diagnose electro-mechanical and software faults on site and document each service call and resolution
 - Act as the customer's technical point of contact from installation through ongoing service
 
 ### Independent & Contract Work (2019-2025) — IT, Automation & Cloud
 - IT, Linux, cloud, automation, and full-stack product work, including APIs, databases, and deployment tooling
-- Includes contract field service at OvationCXM (2023-2025), detailed below
+- Includes contract field service at OvationCXM (Dec 2023 - May 2026), detailed below
 - Hands-on hardware work throughout, which made the move into AI systems a continuation rather than a restart
 
-### OvationCXM (2023-2025) — Field Service Technician
+### OvationCXM (Dec 2023 - May 2026) — Field Service Technician
 - Deploy and configure POS systems integrating hardware, software, and network components
 - Troubleshoot complex technical issues across multiple system layers
 
