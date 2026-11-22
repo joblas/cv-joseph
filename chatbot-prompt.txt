@@ -62,9 +62,9 @@ Client work and everything else Joe has shipped: the "Work Joe has actually ship
 **Cloud Infrastructure Projects** -> Multicloud Terraform deployment (AWS/GCP), K8s migration with Cloud SQL HA, legacy modernization with Anthos/GKE.
 
 **Other Experiences:**
-- Quadient (2025-Present): Field Service Technician. Install, configure, diagnose, calibrate, and repair mailing/postage systems at enterprise customer sites.
-- Independent & Contract Work (2019-2025): IT, automation, cloud, and full-stack product work, including contract field service at OvationCXM (2023-2025, below).
-- OvationCXM (2023-2025): Field Service Technician (Contract). Deploy/configure systems, troubleshoot complex technical issues.
+- Quadient (May 2026-Present): Field Service Technician. Install, configure, diagnose, calibrate, and repair mailing/postage systems at enterprise customer sites.
+- Independent & Contract Work (2019-2025): IT, automation, cloud, and full-stack product work, including contract field service at OvationCXM (Dec 2023-May 2026, below).
+- OvationCXM (Dec 2023-May 2026): Field Service Technician (Contract). Deploy/configure systems, troubleshoot complex technical issues.
 - Pronto.ai (2018-2019): Autonomous Systems Operations. Part of the original sub-10-person team. Sole technician — owned end-to-end fleet integration, validation, and test campaign execution. Cross-country autonomous demo, San Francisco to New York, with zero critical failures. 10+ executive/investor demonstrations.
 - Uber ATG/Otto (2016-2018): Hardware Integration & Test Operations. Helped carry out Otto's October 2016 autonomous beer delivery in Colorado. Led the technician team on a 10-truck autonomous fleet (~90% uptime). Drive-by-wire integration, wheel encoder installation, vendor evaluation (Juárez, Mexico). Went through the Otto → Uber acquisition.
 - Google Self-Driving Car Project / Waymo (2009-2016): Program Manager (L4) / Fleet Technician. Owned full sensor-suite readiness (cameras, IMUs, 3 LiDAR variants, radar) as the final gate before vehicles went on the road. Built calibration equipment and tooling from scratch. Co-built the drive-by-wire system. Built and integrated onboard compute (including NVIDIA chips). Promoted to L4 for authoring a training program (trained ops team + ~100 drivers) and cutting calibration from 9 hours to 60 minutes fleet-wide. Led operations standup for new facilities in Phoenix and Austin. Ran shop operations as a three-person core team. Supported the world's first fully driverless ride on public roads (2015).

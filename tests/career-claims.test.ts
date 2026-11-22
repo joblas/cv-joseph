@@ -225,8 +225,8 @@ test("Joe's Tech Solutions dates are 2025 to present, not 2023", () => {
 
   const wrong: string[] = [];
   for (const { file, text } of readAll()) {
-    // 2023 is only legal as the OvationCXM period, which is a separate question
-    // and deliberately left alone pending Joe's answer.
+    // 2023 is only legal as the OvationCXM start year (Dec 2023 to May 2026),
+    // which has its own test below.
     // The apostrophe may be straight, curly (\u2019), escaped in a TS string
     // (Joe\\'s), or missing.
     const re = /Joe\\?['\u2019]?s Tech Solutions[^.\n]{0,80}?(2023)/gi;
@@ -236,6 +236,42 @@ test("Joe's Tech Solutions dates are 2025 to present, not 2023", () => {
     wrong,
     [],
     "these files date Joe's Tech Solutions to 2023 (it is 2025-present):\n" + wrong.join("\n"),
+  );
+});
+
+test("Quadient starts in 2026 and OvationCXM runs 2023 to 2026, wherever a year is given", () => {
+  // Joe started at Quadient on May 4, 2026, and the OvationCXM contract ran
+  // December 2023 to May 2026 (confirmed by Joe on 2026-08-27, 2026-10-05 and
+  // 2026-11-22). Every surface said 2025 for both, a year early, so the site
+  // contradicted the resume and LinkedIn it is linked from.
+  //
+  // The timeline test further down pins the two rendered Quadient periods. This
+  // one covers the prose it does not import: chatbot-prompt.txt, public/llms.txt
+  // and the FAQ in index.html, where the old year would otherwise survive.
+  //
+  // Every year in the rest of the sentence is checked, not one literal string,
+  // so "Quadient (2025-Present)" fails as well as "May 2025".
+  const years = (s: string) => [...s.matchAll(/\b(?:19|20)\d\d\b/g)].map((m) => m[0]);
+  const wrong: string[] = [];
+  let dated = 0;
+  for (const { file, text } of readAll()) {
+    for (const m of text.matchAll(/Quadient([^.\n]{0,80})/g)) {
+      const ys = years(m[1]);
+      if (ys.length) dated++;
+      if (ys.some((y) => y !== "2026")) wrong.push(`${file}: Quadient${m[1].slice(0, 60)}`);
+    }
+    for (const m of text.matchAll(/OvationCXM([^.\n]{0,60})/g)) {
+      const ys = years(m[1]);
+      if (ys.length) dated++;
+      if (ys.some((y) => y !== "2023" && y !== "2026") || (ys.length && !ys.includes("2026")))
+        wrong.push(`${file}: OvationCXM${m[1].slice(0, 60)}`);
+    }
+  }
+  assert.ok(dated >= 6, `only ${dated} dated mentions found: the guard would pass vacuously`);
+  assert.deepEqual(
+    wrong,
+    [],
+    "these mentions give a year other than Quadient from 2026 / OvationCXM 2023 to 2026:\n" + wrong.join("\n"),
   );
 });
 
@@ -511,7 +547,7 @@ test("every career timeline carries the same entries", () => {
   // to "2017 - 2018" (while "2016 - 2018" survived in prose), still passed.
   const PAIRS: [keyof typeof translations.experience, string, string][] = [
     ["jts", "Joe's Tech Solutions LLC", "2025-Present"],
-    ["quadient", "Quadient", "May 2025-Present"],
+    ["quadient", "Quadient", "May 2026-Present"],
     ["itAutomation", "Independent & Contract Work", "2019-2025"],
     ["pronto", "Pronto.ai", "2018-2019"],
     ["uberAtg", "Uber ATG (Otto)", "2016-2018"],
