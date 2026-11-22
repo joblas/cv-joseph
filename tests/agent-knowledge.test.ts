@@ -451,7 +451,9 @@ let decidedSummary = ''
   for (const rel of ['src/i18n.ts', 'src/about-i18n.ts']) {
     check(`${rel} (visible site copy) is scanned for the AV wording`, siteSurfaces.some((s) => s.label === rel && s.text.length > 1000))
   }
-  const PHONE: [RegExp, string] = [/\(?\b408\)?[\s.-]*401[\s.-]*9943\b|\b4084019943\b/, "Joe's phone number (email only)"]
+  // Any phone-shaped number, not Joe's own spelled out: the rule is "email
+  // only", and writing the number here would publish it in a public repo.
+  const PHONE: [RegExp, string] = [/\(?\b[2-9]\d{2}\)?[\s.-]*[2-9]\d{2}[\s.-]*\d{4}\b|\b1[2-9]\d{2}[2-9]\d{6}\b/, 'phone number (Joe is reached by email only)']
   const AV_WORDING: [RegExp, string][] = [
     [/guinness|\bworld[- ]records?\b/i, 'a Guinness World Record for the Otto delivery (no source)'],
     [/\b2,900\b|\b2900[\s-]*miles?\b/i, 'the 2,900-mile Pronto figure (say cross-country, San Francisco to New York)'],
@@ -485,8 +487,8 @@ let decidedSummary = ''
     }
   }
   for (const { label, text } of botSurfaces) {
-    const m = text.match(PHONE[0])
-    check(`${label}: no ${PHONE[1]}${m ? ` (found "${m[0]}")` : ''}`, !m)
+    // Says that one was found, never which: CI logs are public too.
+    check(`${label}: no ${PHONE[1]}`, !PHONE[0].test(text))
     checkAvWording(label, text)
   }
   for (const { label, text } of siteSurfaces) checkAvWording(label, text)
