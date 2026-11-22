@@ -659,9 +659,6 @@ test("certificates carry the years and issuers printed on the certificates", () 
   // The cards dated certificates issued from 2019 to 2023 as 2024 and 2025, and
   // named "Cloud Academy" as the issuer of bootcamps run by The Cloud Bootcamp.
   // A resume that links here states the real years, so the two disagreed.
-  //
-  // "Programming for Everybody (Python)" is not pinned: no certificate is on file
-  // for it, so its year is unverified either way.
   const YEARS: [string, string][] = [
     ["AWS Cloud Solutions Architect Professional Certificate", "2023"],
     ["Google IT Support Professional Certificate", "2022"],
@@ -669,6 +666,7 @@ test("certificates carry the years and issuers printed on the certificates", () 
     ["Programming with JavaScript", "2022"],
     ["Version Control (Git)", "2022"],
     ["Introduction to Mobile Development", "2022"],
+    ["Programming for Everybody (Getting Started with Python)", "2022"],
     ["The Unix Workbench (Linux)", "2019"],
     ["Introduction to Agile Development and Scrum", "2023"],
     ["Introduction to Cloud Computing", "2023"],

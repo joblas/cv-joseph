@@ -599,8 +599,8 @@ const _translationsEn = {
         url: '',
       },
       {
-        year: '2024',
-        title: 'Programming for Everybody (Python)',
+        year: '2022',
+        title: 'Programming for Everybody (Getting Started with Python)',
         org: 'University of Michigan',
         logo: 'umich',
         url: '',
